@@ -15,10 +15,10 @@
 }
 
 @media (min-width: 550px) {
-#gui_container{
-  position: absolute; 
-  right: 0px;
-  top: 4em;
+  #gui_container{
+    position: absolute; 
+    right: 0px;
+    top: 4em;
 }
 }
 
@@ -53,7 +53,7 @@ p.p_pre {
   font-family: Symbol, serif; 
 }
 .supsub {position: inherit;
-   font-size: 1.0em;
+  font-size: 1.0em;
 }
 .subscript {display: inline-block; position:relative; left:3px; top: 4px}
 .superscript {display: inline-block; position:relative; left:-4px; top: -6px}
@@ -62,14 +62,13 @@ p.p_pre {
   display: inline-block;
 }
 @media(max-width: 400px) { 
-  .equation{
-  font-size: 0.8em;
+.equation{
+    font-size: 0.8em;
 }
 .subscript {display: inline-block; position:relative; left:3px; top: 3px;
   font-size: 0.2em;}
 .superscript {display: inline-block; position:relative; left:-2px; top: -5px;
   font-size: 0.2em;}
-}
 .canvas_container_shift{
   padding-top: 0%;
   overflow: hidden;
@@ -78,7 +77,6 @@ pre{
   font-size: 0.8em;
 }
 }
-  
 .math-box {
   display: inline-block;
   margin-top: 3%;
@@ -117,8 +115,8 @@ pre{
    content: "";
  }
 
-.projects h5 {
-  text-align: left; 
+ .projects h5 {
+   text-align: left; 
 }
 .project:hover  span{
   -webkit-animation: fadein 0.25s; /* Safari, Chrome and Opera > 12.1 */
