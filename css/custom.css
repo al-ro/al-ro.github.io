@@ -74,6 +74,9 @@ p.p_pre {
   padding-top: 0%;
   overflow: hidden;
 }
+pre{
+  font-size: 0.8em;
+}
 }
   
 .math-box {
