@@ -17,9 +17,8 @@
 @media (max-width: 550px) {
 .gui_c{
   position: absolute; 
-  width: 100%;
   text-align: center;
-  left: 14%;
+  left: 15%;
 }
 }
 @media (min-width: 550px) {
