@@ -24,6 +24,10 @@ var loop = 0;
 var line = 0;
 var lineMax = 60;
 var lineMin = 20;
+if(mobile){
+  lineMax = 20;
+  lineMin = 5;
+}
 var TWO_PI = 2 * Math.PI;
 var t = 0;
 var animate = true;
