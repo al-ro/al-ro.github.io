@@ -1,7 +1,20 @@
+const mobile = ( navigator.userAgent.match(/Android/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    || navigator.userAgent.match(/iPad/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+    );
+
 var ctx = canvas_1.getContext("2d");
 var discs = [];
 var walls = [];
 
+if(mobile){
+  canvas_1.width = 770;
+  canvas_1.height = 400;
+}
 var w_ = canvas_1.width;
 var h_ = canvas_1.height;
 var scale = w_/canvas_1.scrollWidth;
@@ -135,7 +148,7 @@ function keyDown(event) {
 }
 
 function keyUp(event) {
-    rotation_speed = 0.02;
+  rotation_speed = 0.02;
 }
 
 window.addEventListener("keydown", keyDown);
@@ -295,11 +308,11 @@ function gravity(g, dt) {
     }
   }
 }
-      rotation_speed = 0;
-      degree += rotation_speed;
-      degree = degree % (TWO_PI);
-      rotate_walls(degree);
-      rotation_speed = 0.02;
+rotation_speed = 0;
+degree += rotation_speed;
+degree = degree % (TWO_PI);
+rotate_walls(degree);
+rotation_speed = 0.02;
 
 function draw() {
 
