@@ -70,6 +70,10 @@ p.p_pre {
 .superscript {display: inline-block; position:relative; left:-2px; top: -5px;
   font-size: 0.2em;}
 }
+.canvas_container_shift{
+  padding-top: 0%;
+  overflow: hidden;
+}
 }
   
 .math-box {
