@@ -120,7 +120,11 @@ function mouse_up(event){
 
 
 for (i = 0; i < discCount; i++) {
+  if(mobile){
+  var r = 50;
+  }else{
   var r = Math.max(10, max_radius - i*2);
+  }
   var disc = {
     x: canvas_1.width/2+i,
     y: canvas_1.height/2+i,
