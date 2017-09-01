@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <!-- THIS PAGE IS BUILT WITH SKELETON: http://getskeleton.com/
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+    <!-- Basic Page Needs
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>Ragdoll</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Mobile Specific Metas
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- FONT
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link href="https://fonts.googleapis.com/css?family=Palanquin:400,300,600" rel="stylesheet">
+
+    <!-- CSS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="../../css/normalize.css">
+    <link rel="stylesheet" href="../../css/skeleton.css">
+    <link rel="stylesheet" href="../../css/custom.css">
+
+    <!-- Favicon
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="icon" type="image/png" href="../../images/favicon_2.png">
+  </head>
+  <body>
+
+    <!-- Primary Page Layout
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="container">
+      <section class="post_header">
+      <div class="row">
+        <div class="four columns offset-by-four columns">
+          <h4 class="title">Ragdoll</h4>
+        </div>
+      </div>
+        <div class="canvas_container u-max-full-width" id="cc_1">
+          <canvas class="canvas" width=1440 height=900 id="canvas_1"></canvas>
+        </div>
+      </section>
+
+      <section class="post">
+      <h5>Background</h5>
+      <p>Detecting and resolving collisions is an aspect of many simulations and games. While truly physically accurate handling of object interaction is complicated and computationally intensive, simplistic treatments can lead to plausible graphics and user interaction. We can abstract away many features of solid dynamics and still produce behaviour that seems plausible to the user. This simulation is a simplified version of my final undergraduate project and demonstrates some basic principles of collision detection and handling.</p>
+      <h5>The Simulation Loop</h5>
+      <p>From CFD to graphics and games, simulations work around the concept of a simulation loop. We discretise reality into timesteps, resolve constraints and update a system of objects. When done quickly enough, the progression of states can look like smooth evolution and even be interactive. Much like frames in a film, we present slightly differing snapshots to give the illusion of motion. Around 60fps is a good rate at which the transition between consecutive instances is almost imperceptible.</p>
+      <p>A simulation can then be implemented as a <code>while</code> loop.</p>
+      </section>
+
+
+    </div>
+    <!-- End Document
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <script type="text/javascript" src="ragdoll.js"></script>
+  </body>
+  <footer>
+  <div class="container">
+    <section class="footer" id="links">
+    <div class="navbar-spacer"></div>
+    <nav class="navbar footer-navbar">
+    <div class="container">
+      <ul class="navbar-list">
+        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+      </ul>
+    </div>
+    </nav>
+  </div>
+  </section>
+  </footer>
+</html>
