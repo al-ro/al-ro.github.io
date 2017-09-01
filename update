@@ -1,0 +1,1 @@
+cp -r ~/Desktop/web/* ./ && git add --all && git commit -m "website" && git push -u origin master
