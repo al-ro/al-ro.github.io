@@ -121,7 +121,7 @@ function mouse_up(event){
 
 for (i = 0; i < discCount; i++) {
   if(mobile){
-  var r = 20;
+  var r = 30;
   }else{
   var r = Math.max(10, max_radius - i*2);
   }
