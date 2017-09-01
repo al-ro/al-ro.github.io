@@ -1,7 +1,19 @@
 //Cloth dynamics based on the tutorial at 
 //https://gamedevelopment.tutsplus.com/tutorials/simulate-tearable-cloth-and-ragdolls-with-simple-verlet-integration--gamedev-519
 
+const mobile = ( navigator.userAgent.match(/Android/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    || navigator.userAgent.match(/iPad/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+    );
 var ctx = canvas_1.getContext("2d");
+if(mobile){
+  canvas_1.width = 720;
+  canvas_1.height = 450;
+}
 var scale = canvas_1.width/canvas_1.scrollWidth;
 //Fabric nodes
 var nodes = [];
@@ -28,6 +40,10 @@ var TWO_PI = 2 * Math.PI;
 //Node count in x and y axes
 var width = 50;
 var height = 50;
+if(mobile){
+var width = 25;
+var height = 25;
+}
 var nodeCount = width * height;
 
 //Noise element count in x axis
