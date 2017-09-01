@@ -67,7 +67,7 @@ p.p_pre {
 }
 .subscript {display: inline-block; position:relative; left:3px; top: 3px;
   font-size: 0.2em;}
-.superscript {display: inline-block; position:relative; left:-5px; top: -4px;
+.superscript {display: inline-block; position:relative; left:-2px; top: -5px;
   font-size: 0.2em;}
 }
 }
