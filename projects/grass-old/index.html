@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <!-- THIS PAGE IS BUILT WITH SKELETON: http://getskeleton.com/
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+    <!-- Basic Page Needs
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>Instancing</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Mobile Specific Metas
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- FONT
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link href="https://fonts.googleapis.com/css?family=Palanquin:400,300,600" rel="stylesheet">
+
+    <!-- CSS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="../../css/normalize.css">
+    <link rel="stylesheet" href="../../css/skeleton.css">
+    <link rel="stylesheet" href="../../css/custom.css">
+    <link rel="stylesheet" href="../../font-awesome-4.7.0/css/font-awesome.min.css">
+
+    <!-- Favicon
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="shortcut icon" type="image/png" href="../../images/favicon_2.png">
+  </head>
+  <body>
+
+    <!-- Primary Page Layout
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="container" id="main-container">
+      <section class="post_header" id="header">
+      <div class="row">
+        <div class="twelve columns">
+          <h4 class="title" id="title">Instancing</h4>
+        </div>
+      </div>
+        <div class="canvas_container u-max-full-width" id="canvas_container">
+	  <div class='fullscreen-button' id='fullscreen-button'><i class="fa fa-2x fa-expand"></i></div>
+          <canvas class="canvas" width=1440 height=900 id="canvas_1"></canvas>
+          <div class='gui_container' id="gui_container"></div>
+        </div>
+      <ul class="navbar-list c_navbar">
+        <li class="navbar-item"><a class="navbar-link" href="grass.js">Source</a></li>
+        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+      </ul>
+      </section>
+      <section class="post">
+      <h5>Controls</h5>
+      <p>Drag to move camera. Scroll to zoom.</p>
+      <h5>Overview</h5>
+      <p>Instancing can be used to render tens of thousands of objects at interactive frame rates. This project creates 100,000 copies of a quad with ten triangles to simulate a field of grass swaying in the wind. It is based on "Realistic real-time grass rendering" by Eddie Lee and examples listed in the source.</p>
+
+      <p>The <code>THREE.InstancedBufferGeometry</code> class of <a href="https://threejs.org/">three.js</a> is used to create copies of <code>THREE.PlaneBufferGeometry</code> position, index and UV attributes. For each copy, additional attributes are added to describe procedural position offset, direction and amounts of stretch and bending. The offset describes the position of the vertices on a rectangular plane that is warped using simplex noise to generate rolling hills. The direction sets where the quad geometry is facing while the stretch variable determines the height of the grass. The bending data is a quaternion describing the direction a blade is growing in. The attributes create variety and produce organic looking shapes. The texture and alpha map are taken from "Realistic real-time grass rendering". After generation, all data is copied to the GPU at the start of the simulation.</p>
+
+      <p>Each frame a time variable is updated and sent to the shaders. The vertex shader transforms a copy of the quad geometry to position, scale and bend it according to the passed attributes. The direction and bending is weighted by the relative height of the vertex giving the grass a twisted and curved shape. Wind is simulated as a simplex noise field which is sampled according to the position offset and time to rotate the transformed vertices around the blade base. The fragment shader applies the alpha map to the quad and displays the texture data for visible fragments. Additional colour is added towards the base of the blades to simulate occlusion.</p>
+      </section>
+    </div>
+    <!-- End Document
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+    <script type="text/javascript" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/896175/perlin.js"></script>
+    <script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+    <script type="text/javascript" src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+    <script type="text/javascript" src="../../utility/fullscreen.js"></script>
+    <script type="text/javascript" src="noise.js"></script>
+    <script type="text/javascript" src="grass.js"></script>
+  </body>
+  <footer>
+  <div class="container">
+    <section class="footer" id="links">
+    <div class="navbar-spacer"></div>
+    <nav class="navbar footer-navbar">
+    <div class="container">
+      <ul class="navbar-list">
+        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+      </ul>
+    </div>
+    </nav>
+  </div>
+  </section>
+  </footer>
+</html>

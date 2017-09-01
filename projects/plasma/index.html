@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <!-- THIS PAGE IS BUILT WITH SKELETON: http://getskeleton.com/
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+    <!-- Basic Page Needs
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>Accumulative Colour</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Mobile Specific Metas
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- FONT
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link href="https://fonts.googleapis.com/css?family=Palanquin:400,300,600" rel="stylesheet">
+
+    <!-- CSS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="../../css/normalize.css">
+    <link rel="stylesheet" href="../../css/skeleton.css">
+    <link rel="stylesheet" href="../../css/custom.css">
+    <link rel="stylesheet" href="../../font-awesome-4.7.0/css/font-awesome.min.css">
+
+    <!-- Favicon
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="icon" type="image/png" href="../../images/favicon_2.png">
+  </head>
+  <body>
+
+    <!-- Primary Page Layout
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="container" id ="main-container">
+      <section class="post_header" id="header">
+      <div class="row">
+        <div class="twelve columns">
+          <h4 class="title" id="title">Accumulative Colour</h4>
+        </div>
+      </div>
+        <div class="canvas_container u-max-full-width" id="canvas_container">
+          <canvas class="canvas" width=720 height=450 id="canvas_1"></canvas>
+          <div class='gui_container' id="gui_container"> </div>
+        </div>
+      <ul class="navbar-list c_navbar">
+        <li class="navbar-item"><a class="navbar-link" href="plasma.js">Source</a></li>
+        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+      </ul>
+      </section>
+
+      <section class="post">
+      <h5>Overview</h5>
+      <p>This simulation uses <a href='https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation'>composite operations</a> of the canvas API. A number of discs are generated which move around at a constant velocity and reflect from the walls. Each is drawn as a radial gradient that fades to the background colour at the edge. As the discs overlap, the colours are added together to produce interesting mixing behaviour, leading to glowing plasma-like graphics.</p>
+      </section>
+
+
+    </div>
+    <!-- End Document
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <script type="text/javascript" src="plasma.js"></script>
+  </body>
+  <footer>
+  <div class="container">
+    <section class="footer" id="links">
+    <div class="navbar-spacer"></div>
+    <nav class="navbar footer-navbar">
+    <div class="container">
+      <ul class="navbar-list">
+        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+      </ul>
+    </div>
+    </nav>
+  </div>
+  </section>
+  </footer>
+</html>

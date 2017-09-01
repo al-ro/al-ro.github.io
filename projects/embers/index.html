@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <!-- THIS PAGE IS BUILT WITH SKELETON: http://getskeleton.com/
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+    <!-- Basic Page Needs
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>3D Curl Noise</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Mobile Specific Metas
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- FONT
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link href="https://fonts.googleapis.com/css?family=Palanquin:400,300,600" rel="stylesheet">
+
+    <!-- CSS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="../../css/normalize.css">
+    <link rel="stylesheet" href="../../css/skeleton.css">
+    <link rel="stylesheet" href="../../css/custom.css">
+    <link rel="stylesheet" href="../../font-awesome-4.7.0/css/font-awesome.min.css">
+
+    <!-- Favicon
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="icon" type="image/png" href="../../images/favicon_2.png">
+  </head>
+  <body>
+
+    <!-- Primary Page Layout
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="container" id="main-container">
+      <section class="post_header" id="header">
+      <div class="row">
+        <div class="twelve columns">
+          <h4 class="title" id="title">3D Curl Noise</h4>
+        </div>
+      </div>
+      <div class="canvas_container u-max-full-width" id="canvas_container">
+	<div class='fullscreen-button' id='fullscreen-button'><i class="fa fa-2x fa-expand"></i></div>
+        <canvas class="canvas" width=2880 height=1800 id="canvas_1"></canvas> 
+        <div class='gui_container' id="gui_container"> </div>
+      </div>
+      <ul class="navbar-list c_navbar">
+        <li class="navbar-item"><a class="navbar-link" href="embers.js">Source</a></li>
+        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+      </ul>
+      </section>
+      <section class="post">
+      <h5>Controls</h5>
+      <p>Drag to move camera, scroll to zoom.</p>
+      <h5>Overview</h5>
+      <p>This is a 3D version of <a href="../curl/">curl visualisation</a> using <a href="https://threejs.org/">three.js</a>.</p>
+      <p>The curl of a vector field can be thought of as describing a local rotation. In graphics, it can be used to render fluid-like flow as discussed in
+        <a href="https://www.cs.ubc.ca/~rbridson/docs/bridson-siggraph2007-curlnoise.pdf">"Curl-Noise for Procedural Fluid Flow"</a> by Bridson <i>et al.</i></p>
+      <p>The original version was based on <a href='http://petewerner.blogspot.co.uk/2015/02/intro-to-curl-noise.html'>a post by Pete Werner</a>. The initial implementation used a scalar noise field
+        and set the velocity of a particle by sampling the separate components on three planes. This formulation was not accurate and led to plane artefacts where the particle movement was 
+        aligned in the (1, 1, 1) direction. The correct method is to use a 3D vector field (a noise function that takes as input a 3D point and outputs a 3D vector). The correct code is listed at 
+        the bottom of this page.</p>
+
+      <p>However, a cheaper formulation exists. As discussed in <a href="https://atyuwen.github.io/posts/bitangent-noise/">a post by atyuwen</a>, "<i>the divergence of the cross product of two gradient fields is always zero</i>". The cheaper
+        method is displayed by default and is shown in the listing below:</p>
+
+<pre><code>function computeCurl(x, y, z){
+
+  var eps = 1e-4;
+
+  //Find rate of change in X
+  var n1 = noise.simplex3(x + eps, y, z); 
+  var n2 = noise.simplex3(x - eps, y, z); 
+  //Average to find approximate derivative
+  var a = (n1 - n2)/(2 * eps);
+
+  //Find rate of change in Y
+  n1 = noise.simplex3(x, y + eps, z); 
+  n2 = noise.simplex3(x, y - eps, z); 
+  //Average to find approximate derivative
+  var b = (n1 - n2)/(2 * eps);
+
+  //Find rate of change in Z
+  n1 = noise.simplex3(x, y, z + eps); 
+  n2 = noise.simplex3(x, y, z - eps); 
+  //Average to find approximate derivative
+  var c = (n1 - n2)/(2 * eps);
+
+  var noiseGrad0 = [a, b, c];
+
+  // Offset position for second noise read
+  x += 10000.5;
+  y += 10000.5;
+  z += 10000.5;
+
+  //Find rate of change in X
+  n1 = noise.simplex3(x + eps, y, z); 
+  n2 = noise.simplex3(x - eps, y, z); 
+  //Average to find approximate derivative
+  a = (n1 - n2)/(2 * eps);
+
+  //Find rate of change in Y
+  n1 = noise.simplex3(x, y + eps, z); 
+  n2 = noise.simplex3(x, y - eps, z); 
+  //Average to find approximate derivative
+  b = (n1 - n2)/(2 * eps);
+
+  //Find rate of change in Z
+  n1 = noise.simplex3(x, y, z + eps); 
+  n2 = noise.simplex3(x, y, z - eps); 
+  //Average to find approximate derivative
+  c = (n1 - n2)/(2 * eps);
+
+  var noiseGrad1 = [a, b, c];
+
+  noiseGrad1 = normalize(noiseGrad1);
+  noiseGrad1 = normalize(noiseGrad1);
+  var curl = cross(noiseGrad0, noiseGrad1);
+
+  return normalize(curl);
+}</code></pre></p>
+
+<p>Corrected original code can be toggled by selecting oldMethod in the controls. Note that <code>noise3D</code> returns an array of 3 elements and this method involves 18 calls to a scalar noise
+  function compared to the 12 call method above: </p>
+
+<pre><code>function computeCurl(x, y, z){
+
+  var eps = 1e-4;
+  var curl = [0, 0, 0];
+  
+  //Find rate of change in X
+  var n1 = noise3D(x + eps, y, z); 
+  var n2 = noise3D(x - eps, y, z);
+  var dx = [n1[0] - n2[0], n1[1] - n2[1], n1[2] - n2[2]];
+
+  //Find rate of change in Y
+  n1 = noise3D(x, y + eps, z); 
+  n2 = noise3D(x, y - eps, z);
+  var dy = [n1[0] - n2[0], n1[1] - n2[1], n1[2] - n2[2]];
+
+  //Find rate of change in Z
+  n1 = noise3D(x, y, z + eps); 
+  n2 = noise3D(x, y, z - eps);
+  var dz = [n1[0] - n2[0], n1[1] - n2[1], n1[2] - n2[2]];
+
+  curl[0] = (dy[2] - dz[1]) / (2.0*eps);
+  curl[1] = (dz[0] - dx[2]) / (2.0*eps);
+  curl[2] = (dx[1] - dy[0]) / (2.0*eps);
+
+  return normalize(curl);
+}</code></pre></p>
+
+      </section>
+    </div>
+    <!-- End Document
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <script src="https://unpkg.com/three@0.147.0/build/three.js"></script>
+	  <script src="https://unpkg.com/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+    <script type="text/javascript" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/896175/perlin.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+    <script type="text/javascript" src="../../utility/fullscreen.js"></script>
+    <script type="text/javascript" src="embers.js"></script>
+  </body>
+  <footer>
+  <div class="container">
+    <section class="footer" id="links">
+    <div class="navbar-spacer"></div>
+    <nav class="navbar footer-navbar">
+    <div class="container">
+      <ul class="navbar-list">
+        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+      </ul>
+    </div>
+    </nav>
+  </div>
+  </section>
+  </footer>
+</html>

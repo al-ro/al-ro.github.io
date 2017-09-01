@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <!-- THIS PAGE IS BUILT WITH SKELETON: http://getskeleton.com/
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+    <!-- Basic Page Needs
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>CFD on GPUs</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Mobile Specific Metas
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- FONT
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link href="https://fonts.googleapis.com/css?family=Palanquin:400,300,600" rel="stylesheet">
+
+    <!-- CSS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="../../css/normalize.css">
+    <link rel="stylesheet" href="../../css/skeleton.css">
+    <link rel="stylesheet" href="../../css/custom.css">
+
+    <!-- Favicon
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="shortcut icon" type="image/png" href="../../images/favicon_2.png">
+  </head>
+  <body>
+  
+      <!-- Primary Page Layout
+      –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+      <div class="container">
+        <section class="header">
+        <div class="row">
+          <div class="twelve columns">
+            <h4 class="title">Computational Fluid Dynamics with Embedded Cut Cells on Graphics Hardware</h4>
+          </div>
+        </div>
+        </section>
+        <section class="post">
+  
+        <div class="row">
+          <div class="twelve columns ">
+            <img class="img u-max-full-width" src="../../images/euler/drivaer_flow_density.jpg">
+            <p align="center">Density pseudocolour of a 100 m/s flow around the DrivAer geometry <a href="#ref">[1]</a></p>
+          </div>
+        </div>
+
+	<p>This work is part of my thesis <a href="https://doi.org/10.17863/CAM.45373">"Computational Fluid Dynamics with Embedded Cut Cells on Graphics Hardware"</a>.
+        
+        <p>As part of my degree I researched speeding up fluid simulations on graphics hardware. The focus was on reducing the runtimes of CFD simulations with embedded cut cell geometries using the CUDA programming platform. The resulting software pipeline uses the Euler equations to model high speed flow and shock waves in domains with static rigid obstacles. These scenarios are applicable to anything from automotive and aerospace research to insurance assessment and mining safety. As the memory on a GPU is relatively limited, we also looked at the performance and scaling of multi-card scenarios using MPI for high resolution simulations.</p>
+  
+  <p>At the core of the simulation implementation is a split Euler solver for high-speed flow. We use a one-dimensional method that achieves coalesced memory access and uses shared memory caching to best harness the potential of GPU hardware. Multidimensional simulations use a framework of data transposes to align data with sweep dimensions to maintain optimal memory access. Analysis of the solver shows that compute resources are used efficiently.</p>
+  
+  <p>The solver was extended to include cut cells describing solid boundaries in the domain with a compression and mapping method to reduce the memory footprint of the surface information. The cut cell solver was validated with different flow regimes and we simulated shock wave interaction with complex geometries to demonstrate the stability of the implementation. Finally, we included a system of domain splitting and message passing with overlapping compute and communication streams. The complete software pipeline demonstrates good scaling for up to thirty-two cards on a GPU cluster.</p>
+  
+        <h5>Validation</h5>
+  
+        <p>The produced code has been validated against several exact and experimental results to show the correctness and accuracy of the software package. We can robustly handle low pressure scenarios, capture shock diffraction and reflection in high speed flow as well as model stable steady state at lower speeds.</p>
+  
+        <!-- NACA
+        –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+        <p>To validate the 2D cut cell code, a subsonic flow around an aerofoil was simulated. Once the simulation has run to steady state and all strong waves have dissipated, the pressure coefficient values along the surface of the aerofoil can be compared against experimental readings.</p> 
+        <div class="row">
+          <div class="six columns ">
+            <img class="img u-max-full-width" src="../../images/euler/pressure.jpg">
+            <p align="center">Pressure pseudocolour at steady state</p>
+          </div>
+          <div class="six columns ">
+            <img class="img u-max-full-width" src="../../images/euler/pressure_coefficient.jpg">
+            <p align="center">Pressure coefficient results</p>
+          </div>
+        </div>  
+  
+        <p>Results of a Mach 0.4 ideal gas flow over a NACA 0012 aerofoil at t = 0.015 s with experimental <a href="#ref">[2]</a> and simulation pressure coefficients Cp at x-coordinates along the chord length c of the aerofoil.</p>
+  
+  
+        <!-- Brittle
+        –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+        <p>For 3D validation, we used the Brittle scenario <a href="#ref">[3]</a> which models a detonation in an irregular street layout. The resulting propagation and reflection of shock waves serves as a validation test for both the robustness and accuracy of the simulation when compared to sensor readings from physical experiments.</p>
+       
+        <div class="row">
+  	<div class="eight columns offset-by-two columns ">
+  	  <img class="img u-max-full-width" src="../../images/euler/brittle_geometry.jpg">
+            <p align="center">The geometry layout of the Brittle test case</p>
+  	</div>
+        </div>
+  
+        <div class="row">
+          <div class="six columns ">
+            <img class="img u-max-full-width" src="../../images/euler/brittle_steps_200.jpg">
+            <p align="center">Numerical Schlieren slice of detonation after 200 timesteps</p>
+          </div>
+          <div class="six columns ">
+            <img class="img u-max-full-width" src="../../images/euler/brittle_steps_400.jpg">
+            <p align="center">400 timesteps</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="six columns ">
+            <img class="img u-max-full-width" src="../../images/euler/brittle_steps_800.jpg">
+            <p align="center">800 timesteps</p>
+          </div>
+          <div class="six columns ">
+            <img class="img u-max-full-width" src="../../images/euler/brittle_steps_1200.jpg">
+            <p align="center">1200 timesteps</p>
+          </div>
+        </div>  
+  
+        <div class="row">
+  	<div class="eight columns offset-by-two columns ">
+  	  <img class="img u-max-full-width" src="../../images/euler/gauges.jpg">
+  	</div>
+        </div>
+  
+        <p>Overpressure readings of several simulations spanning multiple card counts compared to experimental results <a href="#ref">[3]</a>. The measuring point is obscured from the charge location and shock waves pass over and around buildings resulting in reflections and channelling which serves as a good test for the software.</p>
+  
+      <!-- Underside
+      –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  
+        <p>The stability of the methods and the robustness of the software was tested with shock waves within complex geometries where both pressure peaks and near-vacuum conditions can occur.</p>
+        <div class="row">
+  	<div class="eight columns offset-by-two columns ">
+  	  <img class="img u-max-full-width" src="../../images/euler/underside.jpg">
+  	</div>
+        </div>
+        <p>Mach 2.0 shock reflected from the DrivAer geometry. The produced software can robustly handle high pressure at various surface features such as concavities and thin solid area</p>
+  
+      <!-- Performance
+      –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+        <h5>Performance</h5>
+        <p>The software aims to minimise the proportion of time spent on communication. In a multi-card simulation, halo exchange is required to find the information propagation across local subdomain boundaries. CUDA allows for computation to occur simultaneously with communication between device and host. Additional parallelism can be achieved by overlapping kernel execution with MPI communication between nodes. To achieve this, every local subdomain is divided into three regions: the core cells and the communication cells. The core cells can be solved independently from MPI communication of the ghost region data and we mask most message latency.</p>
+        <div class="row">
+          <div class="six columns ">
+            <img class="img u-max-full-width" src="../../images/euler/regions.jpg">
+            <p align="center">Regions of a local subdomain</p>
+          </div>
+          <div class="six columns ">
+            <img class="img u-max-full-width" src="../../images/euler/pie.jpg">
+  	  <p align="center">Accumulated exclusive time per function group</p>
+          </div>
+        </div>  
+        <p>The pie chart shows the proportion of different function types across the whole simulation on four Nvidia Tesla P100 cards. The Kernels portion is the solver code which dominates the runtime. The CUDA section is for memory copies to and from cards and the MPI portion is communication and synchronisation.</p>
+
+	<p>The scaling of the software on a single card is shown in table 1. We list the number of steps and the time taken to simulate a Mach 2.0 shock wave travelling around a cone to a fixed final time using different resolutions. We also show the number of cut cells in the domain.</p>
+	<div class="row">
+  	<div class="eight columns offset-by-two columns ">
+      	<table class="u-full-width">
+      	  <thead>
+      	    <tr>
+      	      <th>Resolution</th>
+      	      <th>Cut cells</th>
+      	      <th>Steps</th>
+      	      <th>Time(s)</th>
+      	    </tr>
+      	  </thead>
+      	  <tbody>
+      	    <tr>
+      	      <td>85 x 85 x 85</td>
+      	      <td>2,890</td>
+      	      <td>396</td>
+      	      <td>6.6</td>
+      	    </tr>
+      	    <tr>
+      	      <td>170 x 170 x 170</td>
+      	      <td>12,124</td>
+      	      <td>815</td>
+      	      <td>91.9</td>
+      	    </tr>
+      	    <tr>
+      	      <td>340 x 340 x 340</td>
+      	      <td>48,200</td>
+      	      <td>1,688</td>
+      	      <td>1,404.1</td>
+      	    </tr>
+      	  </tbody>
+      	</table>
+	<p align="center">Table 1: 3D shock over a cone on an Nvidia Tesla K20 card at increasing resolutions.</p>
+      	</div>
+      	</div>
+
+        <p>The scaling of the code over multiple cards and compute nodes was tested with fixed resolution bubble collapse (425 × 425 × 850) and Brittle (640 × 640 × 320) simulations on a cluster with four Nvidia Tesla P100 cards per node. The clear solver scales excellently for all card counts, demonstrating the efficiency of masking communication time with domain splitting and overlapped solvers. The cut cell simulation scales worse due to a larger message size, but is comparable to the clear solver for up to eight cards.</p>
+
+        <div class="row">
+  	<div class="eight columns offset-by-two columns ">
+  	  <img class="img u-max-full-width" src="../../images/euler/scaling.jpg">
+  	  <p align="center">Scaling of 3D bubble collapse (425 × 425 × 850) and Brittle (640 × 640 × 320) simulations.</p>
+  	</div>
+        </div>
+  	      
+        <!-- References
+        –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+        <ol id="ref">
+          <li><a href="https://www.aer.mw.tum.de/en/research-groups/automotive/drivaer/">DrivAer model</a></li>
+          <li>Amick, J. L. (1950). <i>Comparison of the experimental pressure distribution on an NACA 0012 profile at high speeds with that calculated by the relaxation method</i>. Report, National Advisory Committee for Aeronautics</li>
+          <li>Brittle, M. (2004). <i>Blast propagation in a geometrically complex urban environment</i>. Master’s thesis, Royal Military College of Science</li>
+        </ol>
+  
+      </section>
+      </div>
+      <!-- End Document
+      –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+   </body>
+  <footer>
+  <div class="container">
+    <section class="footer" id="links">
+    <div class="navbar-spacer"></div>
+    <nav class="navbar footer-navbar">
+    <div class="container">
+      <ul class="navbar-list">
+        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+      </ul>
+    </div>
+    </nav>
+  </div>
+  </section>
+  </footer>
+</html>

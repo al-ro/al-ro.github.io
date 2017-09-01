@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <!-- THIS PAGE IS BUILT WITH SKELETON: http://getskeleton.com/
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+    <!-- Basic Page Needs
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>Fast Narrow Band SDF Generation on GPUs</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Mobile Specific Metas
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- FONT
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link href="https://fonts.googleapis.com/css?family=Palanquin:400,300,600" rel="stylesheet">
+
+    <!-- CSS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="../../css/normalize.css">
+    <link rel="stylesheet" href="../../css/skeleton.css">
+    <link rel="stylesheet" href="../../css/custom.css">
+
+    <!-- Favicon
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="icon" type="image/png" href="../../images/favicon_2.png">
+  </head>
+  <body>
+
+    <!-- Primary Page Layout
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="container">
+      <section class="header">
+      <div class="row">
+        <div class="twelve columns">
+          <h4 class="title">Fast Narrow Band SDF Generation on GPUs</h4>
+        </div>
+      </div>
+      </section>
+      <section class="post">
+
+      <p>This work has been published as <a href="http://www.global-sci.com/intro/article_detail/cicp/13141.html">"Fast Distance Fields for Fluid Dynamics Mesh Generation on Graphics Hardware"</a>. <br>The article is also available on <a href="https://arxiv.org/abs/1903.00353">arXiv</a>.</p>
+
+      <h5>Embedded geometries in CFD</h5>
+
+      <p>As part of my research I developed a CUDA implementation of a signed distance field (SDF) generator to reduce preprocessing times in CFD simulations. Simulating fluid interaction with objects requires a description of the surface geometry. While body fitted meshes accurately represent complex surfaces, they can have large generation overheads and may produce highly deformed computational cells. An alternative approach is to maintain discrete cut cells at boundaries inside a regular Cartesian grid. The generation of the cut cells requires information about the intersection of objects and the computational mesh. SDFs offer implicit descriptions of geometric information.</p>
+
+      <p>The main aims were increased generation speeds and improved robustness compared with existing methodologies. A near-exact SDF field can be constructed from closed orientable STL geometries where the precision is limited only by the resolution of the target computational mesh.<p>
+
+      <div class="row">
+        <div class="six columns">
+          <img class="img u-max-full-width" src="../../images/sdf/detail_stl.jpg">
+        </div>
+        <div class="six columns">
+          <img class="img u-max-full-width" src="../../images/sdf/detail_result_2.jpg">
+        </div>
+      </div>
+      <p>Figure 1: Detail of the DrivAer car geometry <a href="#ref">[2]</a>. The input is an STL file that lists the triangular faces of a tessellated surface (left). From the unordered set, we quickly construct unique features which are used to build extrusions. The limited extent of these regions is one of the main benefits of the underlying algorithm - work is only done in a small subset of the domain. The resulting SDF and implicit surface information (right) can then be used to construct cut cells in the regular computational domain. Almost all work, from feature sorting to distance calculations, is done in parallel on GPUs using the CUDA platform, leading to low runtimes for the preprocessing and mesh generation phases of fluid simulations.</p>
+
+      <h5>An improved CSC algorithm on GPUs</h5>
+
+      <p>An extended Characteristics/Scan Conversion (CSC) algorithm <a href="#ref">[1]</a> is used to generate a narrow band SDF from triangulated surfaces (figure 1). 3D extrusions are generated from the features of the input shape. The computational mesh vertices inside these volumes are assigned the minimum distance to the features.</p>
+
+      <p>Introduced improvements of our implementation are:
+      <ul style="list-style-type:disc">
+        <li>Appropriate handling of saddle vertices (figure 2)</li>
+        <li>High performance edge and vertex generation from unordered triangle data (table 1)</li>
+        <li>Generation of simpler vertex extrusions</li>
+        <li>3D work scheduling on GPUs</li>
+      </ul>
+      </p>
+
+      <div class="row">
+        <div class="six columns">
+          <img class="img u-max-full-width" src="../../images/sdf/ear_error_2.jpg">
+        </div>
+        <div class="six columns">
+          <img class="img u-max-full-width" src="../../images/sdf/ear_correct_2.jpg">
+        </div>
+      </div>
+      <p>Figure 2: Detail of Stanford rabbit geometry <a href="#ref">[3]</a>. Many sufficiently complex geometries feature saddle vertices. Leaving these unaddressed in the extrusion phase leads to a erroneous SDF (left). By introducing vertex extrusions to both sides of the saddle regions, we reconstruct the input geometry accurately (right). This results in higher workload but produced correct results in all test cases.</p>
+
+      <h5>Robust generation of complex geometries</h5>
+
+      <p>Geometries in industry and research often feature high curvature topography with multiple saddle regions and ruff vertices. Our implementation was tested with several geometries with varying feature counts and complexities (figure 3). The produced code is able to handle intricate details and captures everything from smooth curves to sharp corners. The robust implementation can be used to quickly generate detailed meshes for numerical simulations.</p>
+
+      <div class="row">
+        <div class="six columns">
+          <img class="img u-max-full-width" src="../../images/sdf/orion.jpg">
+        </div>
+        <div class="six columns">
+          <img class="img u-max-full-width" src="../../images/sdf/lucy.jpg">
+        </div>
+        <div class="six columns">
+          <img class="img u-max-full-width" src="../../images/sdf/xyzrgb_dragon.jpg">
+        </div>
+        <div class="six columns">
+          <img class="img u-max-full-width" src="../../images/sdf/drivaer.jpg">
+        </div>
+      </div>
+      <p>Figure 3: Surface plots and SDF slices of selected test geometries: Orion <a href="#ref">[4]</a>, Stanford Lucy <a href="#ref">[3]</a>, XYZ RGB Dragon <a href="#ref">[3]</a> and DrivAer <a href="#ref">[2]</a>. The software captures intricate details and quickly produces robust and high resolution SDFs which can be imported into a mesh generator.</p>
+
+      <h5>CUDA implementation</h5>
+
+      <p>The CUDA implementation quickly builds an internal geometry representation from unordered surface features and generated an SDF around a boundary to a user defined maximum distance. Based on a testing set of STL files ranging from ~52,000 to ~2,800,000 faces, the resulting pipeline from reading in the file to handing over to a CFD solver takes on the order of seconds for low distance bands (tables 1 and 2).</p>
+      <div class="row">
+      <table class="six columns offset-by-three columns">
+        <thead>
+          <tr>
+            <th>Geometry</th>
+            <th>Faces</th>
+            <th>Time(s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Orion</td>
+            <td>51,770</td>
+            <td>0.095</td>
+          </tr>
+          <tr>
+            <td>Stanford Rabbit</td>
+            <td>69,664</td>
+            <td>0.114</td>
+          </tr>
+          <tr>
+            <td>Stanford Dragon</td>
+            <td>100,000</td>
+            <td>0.154</td>
+          </tr>
+          <tr>
+            <td>XYZ RGB Dragon</td>
+            <td>721,788</td>
+            <td>0.951</td>
+          </tr>
+          <tr>
+            <td>Stanford Lucy</td>
+            <td>2,529,647</td>
+            <td>3.105</td>
+          </tr>
+          <tr>
+            <td>DrivAer</td>
+            <td>2,854,762</td>
+            <td>3.601</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+      <p>Table 1: Feature construction on Nvidia Tesla K20 GPU. The highly parallel implementation sorts and matches face, edge and vertex data quickly to combine them into usable surface features. The processing time depends on both the configuration of the geometry and the number and size variation of the triangles.</p>
+      <div class="row">
+      <table class="six columns offset-by-three columns">
+        <thead>
+          <tr>
+            <th>Geometry</th>
+            <th>Cell size</th>
+            <th>Width</th>
+            <th>Time(s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Orion</td>
+            <td>0.08</td>
+            <td>0.4</td>
+            <td>0.234</td>
+          </tr>
+          <tr>
+            <td>Stanford Rabbit</td>
+            <td>0.25</td>
+            <td>2.0</td>
+            <td>0.072</td>
+          </tr>
+          <tr>
+            <td>Stanford Dragon</td>
+            <td>0.16</td>
+            <td>2.0</td>
+            <td>0.123</td>
+          </tr>
+          <tr>
+            <td>XYZ RGB Dragon</td>
+            <td>0.53</td>
+            <td>5.0</td>
+            <td>0.143</td>
+          </tr>
+          <tr>
+            <td>Stanford Lucy</td>
+            <td>4.0</td>
+            <td>20.0</td>
+            <td>0.071</td>
+          </tr>
+          <tr>
+            <td>DrivAer</td>
+            <td>11.4e-3</td>
+            <td>0.06</td>
+            <td>0.078</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+      <p>Table 2: SDF generation on Nvidia Tesla K20 GPU. The runtime mostly depends on the computational mesh cell size and the distance of the SDF band. A distance of 5 cells is sufficient to generate a field with no gaps. The workload is also dependent on the orientation of the geometry and triangle sizes.</p>
+
+      <ol id="ref">
+        <li><a href="https://www.researchgate.net/publication/2393786_A_Fast_Algorithm_for_Computing_the_Closest_Point_and_Distance_Transform">Sean Mauch. A fast algorithm for computing the closest point and distance transform. 2000</a></li>
+        <li><a href="https://www.aer.mw.tum.de/en/research-groups/automotive/drivaer/">DrivAer model</a></li>
+        <li><a href="http://graphics.stanford.edu/data/3Dscanrep/">The Stanford 3D Scanning Repository</a></li>
+        <li><a href="https://nasa3d.arc.nasa.gov/detail/orion-capsule">Orion Capsule</a></li>
+      </ol>
+
+      </section>
+    </div>
+    <!-- End Document
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  </body>
+  <footer>
+  <div class="container">
+    <section class="footer" id="links">
+    <div class="navbar-spacer"></div>
+    <nav class="navbar footer-navbar">
+    <div class="container">
+      <ul class="navbar-list">
+        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+      </ul>
+    </div>
+    </nav>
+  </div>
+  </section>
+  </footer>
+</html>
