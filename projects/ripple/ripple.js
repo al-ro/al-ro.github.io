@@ -31,8 +31,8 @@
   if(mobile){
     width = 200;
     height = 200;
-    canvas.width = 720;
-    vanvas.height = 450;
+    document.getElementById('cc_1').width = 200;
+    document.getElementById('cc_1').height = 200;
   }else{
     width = 550;
     height = 550;
