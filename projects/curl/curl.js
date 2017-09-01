@@ -122,10 +122,16 @@ window.onresize = function(){
   ctx.fillStyle = "rgb(17,27,68)";
   ctx.fillRect(0,0,canvas_1.width, canvas_1.height);
 }
+var initial_step;
+if(mobile){
+  initial_step = 300;
+}else{
+  initial_step = 1000;
+}
 var variables = {
   speed: 0.5,
   fade: 0.1,
-  step: 1000,
+  step: initial_step,
   particle_size: 1.5, 
   rainbow: true,
   lighten: false,
@@ -133,7 +139,7 @@ var variables = {
 }
 var reset_button = { reset:function(){ 
   variables.speed = 0.5
-  variables.step = 1000;
+  variables.step = initial_step;
   variables.particle_size = 1.5;
   variables.rainbow = true;
   variables.lighten = false;

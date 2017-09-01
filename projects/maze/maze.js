@@ -2,6 +2,19 @@
 //https://stackoverflow.com/questions/29739751/implementing-a-randomly-generated-maze-using-prims-algorithm
 //Using EasyStar.js for path finding
 
+const mobile = ( navigator.userAgent.match(/Android/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    || navigator.userAgent.match(/iPad/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+    );
+
+if(mobile){
+  canvas_1.width = 720;
+  canvas_1.height = 450;
+}
 var ctx = canvas_1.getContext("2d");
 
 var w_ = canvas_1.width;
@@ -30,9 +43,13 @@ for (s = 0; s < colourCount; s++) {
   blu[s] = Math.round(Math.sin(frequency3*s + phase3) * width + center);
 }
 
+if(mobile){
+var sideWidth = 91;
+var sideHeight = 57;
+}else{
 var sideWidth = 181;
 var sideHeight = 113;
-
+}
 var width = (canvas_1.width)/sideWidth;
 var height = width = Math.min(width,(canvas_1.height)/sideHeight);
 
