@@ -3,21 +3,18 @@
 
 var ctx = canvas_1.getContext("2d");
 var TWO_PI = 2 * Math.PI;
-var mobile = false;
-  if( navigator.userAgent.match(/Android/i)
+const mobile = ( navigator.userAgent.match(/Android/i)
       || navigator.userAgent.match(/webOS/i)
       || navigator.userAgent.match(/iPhone/i)
       || navigator.userAgent.match(/iPad/i)
       || navigator.userAgent.match(/iPod/i)
       || navigator.userAgent.match(/BlackBerry/i)
       || navigator.userAgent.match(/Windows Phone/i)
-    ){
-    mobile = true;
-  }
-else {
-  mobile = false;
+    );
+if(mobile){
+  canvas_1.width = 720;
+  canvas_1.height = 450;
 }
-
 var discCount;
 if(mobile){
   discCount = 100;
