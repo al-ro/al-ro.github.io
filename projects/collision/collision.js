@@ -12,8 +12,8 @@ var discs = [];
 var walls = [];
 
 if(mobile){
-  canvas_1.width = 770;
-  canvas_1.height = 400;
+  canvas_1.width = 720;
+  canvas_1.height = 450;
 }
 var w_ = canvas_1.width;
 var h_ = canvas_1.height;
