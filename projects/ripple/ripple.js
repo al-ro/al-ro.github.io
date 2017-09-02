@@ -11,9 +11,7 @@
       || navigator.userAgent.match(/BlackBerry/i)
       || navigator.userAgent.match(/Windows Phone/i)
       );
-
   var animate = true;
-
   //Main display canvas
   var ctx = canvas.getContext("2d");
   //Hidden canvas
@@ -130,6 +128,13 @@ canvas.addEventListener('mouseleave', animate_);
 var t = 0;
 //DRAW
 function draw() {
+  if(mobile){
+    canvas.width = 200;
+    canvas.height = 200;
+  }else{
+    canvas.width = 550;
+    canvas.height = 550;
+  }
   //Animate lemiscate when mouse is not on window
   if(animate){
     t = (t+0.025)%(2*Math.PI);
@@ -144,9 +149,6 @@ function draw() {
     disturb(Math.round(Math.random() * width), Math.round(Math.random() * height), Math.round(Math.random() * 1024));
   }
   frame++;
-
-  canvas.width = 450;
-  canvas.height = 450;
 
   i_ = oldind;
   oldind = newind;
