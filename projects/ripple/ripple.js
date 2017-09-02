@@ -14,6 +14,7 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 
 var animate = true;
 
+document.getElementById('canvas').style.cursor = "none";
 //Main display canvas
 var ctx = canvas.getContext("2d");
 

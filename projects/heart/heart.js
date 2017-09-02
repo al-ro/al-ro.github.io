@@ -15,6 +15,8 @@ var ctx = canvas_1.getContext("2d");
 var body = [];
 
 var scale = canvas_1.width/canvas_1.scrollWidth;
+document.getElementById('canvas_1').style.cursor = "none";
+
 
 var mouse_pos_x = canvas_1.width/2;
 var mouse_pos_y = canvas_1.height/2;
