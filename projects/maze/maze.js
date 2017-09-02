@@ -2,19 +2,20 @@
 //https://stackoverflow.com/questions/29739751/implementing-a-randomly-generated-maze-using-prims-algorithm
 //Using EasyStar.js for path finding
 
-  const mobile = ( navigator.userAgent.match(/Android/i)
-      || navigator.userAgent.match(/webOS/i)
-      || navigator.userAgent.match(/iPhone/i)
-      || navigator.userAgent.match(/iPad/i)
-      || navigator.userAgent.match(/iPod/i)
-      || navigator.userAgent.match(/BlackBerry/i)
-      || navigator.userAgent.match(/Windows Phone/i)
-      );
+const mobile = ( navigator.userAgent.match(/Android/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    || navigator.userAgent.match(/iPad/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+    );
 
-  if(mobile){
-    canvas_1.width = 720;
-    canvas_1.height = 450;
-  }
+if(mobile){
+  canvas_1.width = 720;
+  canvas_1.height = 450;
+}
+
 var ctx = canvas_1.getContext("2d");
 
 var w_ = canvas_1.width;
@@ -37,19 +38,21 @@ phase1 = 0;
 phase2 = 2;
 phase3 = 4;
 var colourCount = 64;
+
 for (s = 0; s < colourCount; s++) {
   red[s] = Math.round(Math.sin(frequency1*s + phase1) * width + center);
   grn[s] = Math.round(Math.sin(frequency2*s + phase2) * width + center);
   blu[s] = Math.round(Math.sin(frequency3*s + phase3) * width + center);
 }
 
+var sideWidth = 181;
+var sideHeight = 113;
+
 if(mobile){
-  var sideWidth = 91;
-  var sideHeight = 57;
-}else{
-  var sideWidth = 181;
-  var sideHeight = 113;
+  sideWidth = 91;
+  sideHeight = 57;
 }
+
 var width = (canvas_1.width)/sideWidth;
 var height = width = Math.min(width,(canvas_1.height)/sideHeight);
 

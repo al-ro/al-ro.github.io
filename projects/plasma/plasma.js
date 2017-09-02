@@ -1,8 +1,8 @@
 var ctx = canvas_1.getContext("2d");
 var discs = [];
 var TWO_PI = 2 * Math.PI;
-discCount = 50;
 
+var discCount = 50;
 
 for(i = 0; i < discCount; i++){
   var disc = {
@@ -14,6 +14,7 @@ for(i = 0; i < discCount; i++){
   };
   discs.push(disc);
 }
+
 //Colours from:
 //https://krazydad.com/tutorials/makecolors.php
 var red = [];

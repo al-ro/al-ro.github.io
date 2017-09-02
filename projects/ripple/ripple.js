@@ -3,38 +3,42 @@
 //http://www.neilwallis.com/projects/java/water/index.php
 //https://web.archive.org/web/20160310071837/http://freespace.virgin.net/hugo.elias/graphics/x_water.htm 
 
-  const mobile = ( navigator.userAgent.match(/Android/i)
-      || navigator.userAgent.match(/webOS/i)
-      || navigator.userAgent.match(/iPhone/i)
-      || navigator.userAgent.match(/iPad/i)
-      || navigator.userAgent.match(/iPod/i)
-      || navigator.userAgent.match(/BlackBerry/i)
-      || navigator.userAgent.match(/Windows Phone/i)
-      );
-  var animate = true;
-  //Main display canvas
-  var ctx = canvas.getContext("2d");
-  //Hidden canvas
-  var ctx_2 = canvas_2.getContext("2d");
+const mobile = ( navigator.userAgent.match(/Android/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    || navigator.userAgent.match(/iPad/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+    );
 
-  //Two height maps are used to store the current and previous states of the water
-  //Use single array with offset
-  var ripplemap = [];
+var animate = true;
 
-  //Displayed image of ripples on background
-  var ripple;
-  //Dimensions of image
-  var width;
-  var height;
-  if(mobile){
-    width = 200;
-    height = 200;
-    canvas.width = 200;
-    canvas.height = 200;
-  }else{
-    width = 550;
-    height = 550;
-  }
+//Main display canvas
+var ctx = canvas.getContext("2d");
+
+//Hidden canvas
+var ctx_2 = canvas_2.getContext("2d");
+
+//Two height maps are used to store the current and previous states of the water
+//Use single array with offset
+var ripplemap = [];
+
+//Displayed image of ripples on background
+var ripple;
+
+//Dimensions of image
+var width;
+var height;
+if(mobile){
+  width = 200;
+  height = 200;
+  canvas.width = 200;
+  canvas.height = 200;
+}else{
+  width = 550;
+  height = 550;
+}
 //Set hidden canvas to the specifed size such that it fits two images next to each other (with a gap of 10 pixels in between)
 canvas_2.width = 2*width+10;
 canvas_2.height = height;
@@ -135,9 +139,11 @@ function mouse_track(event) {
 canvas.addEventListener('mousedown', mouse_down);
 canvas.addEventListener('mousemove', mouse_track);
 canvas.addEventListener('mouseleave', animate_);
+
 //Lemiscate variable
 var t = 0;
-//DRAW
+
+//********************** DRAW **********************
 function draw() {
   if(mobile){
     canvas.width = 200;
@@ -157,9 +163,9 @@ function draw() {
 
   //Raindrops
   if(droplets){
-  if(frame % 5 === 0){
-    disturb(Math.round(Math.random() * width), Math.round(Math.random() * height), Math.round(Math.random() * 1024));
-  }
+    if(frame % 5 === 0){
+      disturb(Math.round(Math.random() * width), Math.round(Math.random() * height), Math.round(Math.random() * 1024));
+    }
   }
   frame++;
 

@@ -4,18 +4,21 @@
 var ctx = canvas_1.getContext("2d");
 var TWO_PI = 2 * Math.PI;
 const mobile = ( navigator.userAgent.match(/Android/i)
-      || navigator.userAgent.match(/webOS/i)
-      || navigator.userAgent.match(/iPhone/i)
-      || navigator.userAgent.match(/iPad/i)
-      || navigator.userAgent.match(/iPod/i)
-      || navigator.userAgent.match(/BlackBerry/i)
-      || navigator.userAgent.match(/Windows Phone/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    || navigator.userAgent.match(/iPad/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
     );
+
 if(mobile){
   canvas_1.width = 720;
   canvas_1.height = 450;
 }
+
 var discCount;
+
 if(mobile){
   discCount = 100;
 }else{
@@ -42,6 +45,7 @@ for (s = 0; s < discCount; s++) {
   grn[s] = Math.round(Math.sin(frequency2*s + phase2) * width + center);
   blu[s] = Math.round(Math.sin(frequency3*s + phase3) * width + center);
 }
+
 var discs = [];
 
 for(i = 0; i < discCount; i++){
@@ -56,6 +60,7 @@ for(i = 0; i < discCount; i++){
   };
   discs.push(disc);
 }
+
 function move() {
   for(i = 0; i < discCount; i++){
     if(discs[i].x < discs[i].radius){
@@ -170,9 +175,10 @@ gui.add(clear_button,'clear');
 gui.close();
 variables.fade = 0.0;
 
-//DRAW//
 ctx.fillStyle = "rgb(17,27,68)";
 ctx.fillRect(0,0,canvas_1.width, canvas_1.height);
+
+//********************** DRAW **********************
 function draw() {
 
   ctx.fillStyle = "rgba(17,27,68, "+variables.fade+")";

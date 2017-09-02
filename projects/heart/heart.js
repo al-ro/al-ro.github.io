@@ -1,11 +1,11 @@
 const mobile = ( navigator.userAgent.match(/Android/i)
-    || navigator.userAgent.match(/webOS/i)
-    || navigator.userAgent.match(/iPhone/i)
-    || navigator.userAgent.match(/iPad/i)
-    || navigator.userAgent.match(/iPod/i)
-    || navigator.userAgent.match(/BlackBerry/i)
-    || navigator.userAgent.match(/Windows Phone/i)
-    );
+  || navigator.userAgent.match(/webOS/i)
+  || navigator.userAgent.match(/iPhone/i)
+  || navigator.userAgent.match(/iPad/i)
+  || navigator.userAgent.match(/iPod/i)
+  || navigator.userAgent.match(/BlackBerry/i)
+  || navigator.userAgent.match(/Windows Phone/i)
+  );
 
 if(mobile){
   canvas_1.width = 720;
@@ -24,10 +24,12 @@ var loop = 0;
 var line = 0;
 var lineMax = 60;
 var lineMin = 20;
+
 if(mobile){
   lineMax = 20;
   lineMin = 5;
 }
+
 var TWO_PI = 2 * Math.PI;
 var t = 0;
 var animate = true;
@@ -36,13 +38,11 @@ var op = 1;
 var bodyLength = 20;
 
 canvas_1.addEventListener('mouseleave', mouse_leave);
-
 canvas_1.addEventListener('mousemove', mouse_track);
 
 function mouse_leave(){
   animate = true;
 }
-
 
 function mouse_track(event) {
   animate = false;
@@ -55,7 +55,6 @@ function mouse_track(event) {
 
 //Colours from:
 //https://krazydad.com/tutorials/makecolors.php
-
 var red = [];
 var grn = [];
 var blu = [];
@@ -89,8 +88,7 @@ for (i = 0; i < bodyLength; i++) {
   body.push(b);
 }
 
-//****** DRAW ******//
-
+//********************** DRAW **********************
 function draw() {
 
   ctx.fillStyle = "rgb(29,32,32)";
@@ -109,6 +107,7 @@ function draw() {
     op = -1;
     line = lineMax-1;
   }
+
   loop++;
   if(loop == 5){
     step++;

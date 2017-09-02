@@ -1,17 +1,16 @@
+const mobile = ( navigator.userAgent.match(/Android/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    || navigator.userAgent.match(/iPad/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+    );
 
-  const mobile = ( navigator.userAgent.match(/Android/i)
-      || navigator.userAgent.match(/webOS/i)
-      || navigator.userAgent.match(/iPhone/i)
-      || navigator.userAgent.match(/iPad/i)
-      || navigator.userAgent.match(/iPod/i)
-      || navigator.userAgent.match(/BlackBerry/i)
-      || navigator.userAgent.match(/Windows Phone/i)
-      );
-
-  if(mobile){
-    canvas_1.width = 720;
-    canvas_1.height = 450;
-  }
+if(mobile){
+  canvas_1.width = 720;
+  canvas_1.height = 450;
+}
 
 var ctx = canvas_1.getContext("2d");
 var scale = canvas_1.width/canvas_1.scrollWidth;
@@ -48,7 +47,6 @@ function dist(a, b){
 }
 
 canvas_1.addEventListener('mousemove', mouse_track);
-
 canvas_1.addEventListener('mousedown', mouse_down);
 canvas_1.addEventListener('mouseup', mouse_up);
 
@@ -81,7 +79,7 @@ function mouse_up(event) {
 }
 
 
-  var l_delta = 300;
+var l_delta = 300;
 if(mobile){
   l_delta = 100;
 }
@@ -166,58 +164,58 @@ if(mobile){
 var clear_area = {x: (canvas_1.width/2-100)-2*delta, y: (canvas_1.height/2-40)-2*delta, width: c_w+2*delta, height: c_h+2*delta};
 
 function generate(){
-//Generate random positions in the free space of the canvas_1
-while(seeds.length < barrierCount){
-  var seed = {
-    x: Math.random() * (canvas_1.width-delta-delta) + delta,
-    y: Math.random() * (canvas_1.height-delta-delta) + delta,
-    radius: delta
-  };
-  //If seed outside the clear area
-  if(!point_in_rectangle(seed.x, seed.y, clear_area)){
-    seeds.push(seed);
-  }
-}
-
-for(s = 0; s < seeds.length-1; s++){
-  for(n = s+1; n < seeds.length; n++){
-    var distance = dist(seeds[s].x - seeds[n].x, seeds[s].y - seeds[n].y);
-    if((distance/2) < seeds[s].radius){
-      seeds[s].radius = distance/2;
-    }if((distance/2) < seeds[n].radius){
-      seeds[n].radius = distance/2;
+  //Generate random positions in the free space of the canvas_1
+  while(seeds.length < barrierCount){
+    var seed = {
+      x: Math.random() * (canvas_1.width-delta-delta) + delta,
+      y: Math.random() * (canvas_1.height-delta-delta) + delta,
+      radius: delta
+    };
+    //If seed outside the clear area
+    if(!point_in_rectangle(seed.x, seed.y, clear_area)){
+      seeds.push(seed);
     }
   }
-}
 
-//Create random regular polygons
-for (i = 0; i < barrierCount; i++) {
-  var a = seeds[i].x;
-  var b = seeds[i].y;
-  //Pick vertex count between 3-7
-  var point_count_ = Math.round(Math.random() * (7 - 3) + 3);
-  //Pick a random offset to make polygons randomly rotated
-  var offset = Math.random() * Math.PI;
-  //Divide a circle into equal size sections
-  var step = TWO_PI/point_count_;
-  var points_ = [];
-  //Travel along circle and place polygon vertices
-  for(p = 0; p < point_count_; p++){
-    var point = {
-      x_: a - (seeds[i].radius * Math.cos(step*p + offset)),
-      y_: b + (seeds[i].radius * Math.sin(step*p + offset))
-    };
-    points_.push(point);
+  for(s = 0; s < seeds.length-1; s++){
+    for(n = s+1; n < seeds.length; n++){
+      var distance = dist(seeds[s].x - seeds[n].x, seeds[s].y - seeds[n].y);
+      if((distance/2) < seeds[s].radius){
+        seeds[s].radius = distance/2;
+      }if((distance/2) < seeds[n].radius){
+        seeds[n].radius = distance/2;
+      }
+    }
   }
-  //Create barrier
-  var barrier = {
-    x: a,
-    y: b,
-    point_count: point_count_,
-    points: points_
-  };
-  barriers.push(barrier);
-}
+
+  //Create random regular polygons
+  for (i = 0; i < barrierCount; i++) {
+    var a = seeds[i].x;
+    var b = seeds[i].y;
+    //Pick vertex count between 3-7
+    var point_count_ = Math.round(Math.random() * (7 - 3) + 3);
+    //Pick a random offset to make polygons randomly rotated
+    var offset = Math.random() * Math.PI;
+    //Divide a circle into equal size sections
+    var step = TWO_PI/point_count_;
+    var points_ = [];
+    //Travel along circle and place polygon vertices
+    for(p = 0; p < point_count_; p++){
+      var point = {
+        x_: a - (seeds[i].radius * Math.cos(step*p + offset)),
+        y_: b + (seeds[i].radius * Math.sin(step*p + offset))
+      };
+      points_.push(point);
+    }
+    //Create barrier
+    var barrier = {
+      x: a,
+      y: b,
+      point_count: point_count_,
+      points: points_
+    };
+    barriers.push(barrier);
+  }
 }
 //Determine if a ray and a line segment intersect, and if so, determine the collision point
 function getIntersection(x1, y1, x2, y2, x3, y3, x4, y4){
@@ -268,6 +266,7 @@ customContainer.appendChild(gui.domElement);
 gui.add(regenerate_button, 'regenerate');
 gui.close();
 generate();
+
 //********************** DRAW **********************
 function draw() {
 
