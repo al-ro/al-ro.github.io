@@ -1,5 +1,4 @@
 var ctx = canvas_1.getContext("2d");
-
 var scale = canvas_1.width/canvas_1.scrollWidth;
 
 //Targets light rays point to
@@ -138,6 +137,7 @@ var delta = Math.min(canvas_1.width, canvas_1.height)/(barrierCount/2);
 //Area to be kept clear for light sources
 var clear_area = {x: (canvas_1.width/2-100)-2*delta, y: (canvas_1.height/2-40)-2*delta, width: 700+2*delta, height: 500+2*delta};
 
+function generate(){
 //Generate random positions in the free space of the canvas_1
 while(seeds.length < barrierCount){
   var seed = {
@@ -190,7 +190,7 @@ for (i = 0; i < barrierCount; i++) {
   };
   barriers.push(barrier);
 }
-
+}
 //Determine if a ray and a line segment intersect, and if so, determine the collision point
 function getIntersection(x1, y1, x2, y2, x3, y3, x4, y4){
   var denom = ((x2 - x1)*(y4 - y3)-(y2 - y1)*(x4 - x3));
@@ -226,6 +226,21 @@ function getIntersection(x1, y1, x2, y2, x3, y3, x4, y4){
 }
 
 
+var regenerate_button = { regenerate:function(){
+  barriers = [];
+  seeds = [];
+  generate();
+}};
+
+//dat.gui library controls
+var gui = new dat.GUI({ autoPlace: false });
+var path = true;
+var customContainer = document.getElementById('gui_container');
+customContainer.appendChild(gui.domElement);
+gui.add(regenerate_button, 'regenerate');
+gui.close();
+generate();
+//********************** DRAW **********************
 function draw() {
 
   scale = canvas_1.width/canvas_1.scrollWidth;
