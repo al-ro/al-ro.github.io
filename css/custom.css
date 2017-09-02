@@ -13,6 +13,9 @@
   text-align: center; 
   font-size: 1em;
 }
+  #gui_container{
+    z-index: 1;
+  }
 
 @media (max-width: 550px) {
   .gui_c{
@@ -221,7 +224,7 @@ pre{
   width: 100%;
   height: 6.5rem;
   background: #fff;
-  z-index: 99;
+  z-index: -1;
   border-bottom: 1px solid #eee; 
 }
 .navbar > .container {
