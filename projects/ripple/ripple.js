@@ -27,8 +27,8 @@
   var width;
   var height;
   if(mobile){
-    width = 200;
-    height = 200;
+    width = 150;
+    height = 150;
     canvas.width = 200;
     canvas.height = 200;
   }else{
