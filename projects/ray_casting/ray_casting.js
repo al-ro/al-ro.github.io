@@ -57,15 +57,36 @@ canvas_1.addEventListener("touchmove", touch_move);
 
 function touch_start(event) {
   event.preventDefault();
+  mouse_pos_x = event.touches[0].offsetX * scale;
+  mouse_pos_y = event.touches[0].offsetY * scale;
+  if(drag){
+    if(active_light != -1){
+      lights[active_light].x = mouse_pos_x;
+      lights[active_light].y = mouse_pos_y;
+    }
+  }
 }
 function touch_end(event) {
   event.preventDefault();
+  drag = false;
 }
 function touch_cancel(event) {
   event.preventDefault();
+  drag = false;
 }
 function touch_move(event) {
   event.preventDefault();
+
+  drag = true;
+  mouse_pos_x = event.touches[0].offsetX * scale;
+  mouse_pos_y = event.touches[0].offsetY * scale;
+  active_light = -1;
+  for(l = 0; l < lights.length; l++){
+    if(dist(mouse_pos_x - lights[l].x, mouse_pos_y - lights[l].y) < 50){
+      active_light = l;
+      break;
+    }
+  }
 }
 
 function mouse_track(event) {
@@ -79,7 +100,6 @@ function mouse_track(event) {
   }
 }
 function mouse_down(event) {
-
   drag = true;
   mouse_pos_x = event.offsetX * scale;
   mouse_pos_y = event.offsetY * scale;
