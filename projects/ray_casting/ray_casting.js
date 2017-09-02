@@ -55,7 +55,7 @@ canvas_1.addEventListener("touchend", touch_end);
 canvas_1.addEventListener("touchcancel", touch_cancel);
 canvas_1.addEventListener("touchmove", touch_move);
 
-function touch_start(event) {
+function touch_move(event) {
   event.preventDefault();
   mouse_pos_x = event.touches[0].clientX * scale;
   mouse_pos_y = event.touches[0].clientY * scale;
@@ -74,7 +74,7 @@ function touch_cancel(event) {
   event.preventDefault();
   drag = false;
 }
-function touch_move(event) {
+function touch_start(event) {
   event.preventDefault();
 
   drag = true;
