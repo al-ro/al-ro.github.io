@@ -2,19 +2,19 @@
 //https://stackoverflow.com/questions/29739751/implementing-a-randomly-generated-maze-using-prims-algorithm
 //Using EasyStar.js for path finding
 
-const mobile = ( navigator.userAgent.match(/Android/i)
-    || navigator.userAgent.match(/webOS/i)
-    || navigator.userAgent.match(/iPhone/i)
-    || navigator.userAgent.match(/iPad/i)
-    || navigator.userAgent.match(/iPod/i)
-    || navigator.userAgent.match(/BlackBerry/i)
-    || navigator.userAgent.match(/Windows Phone/i)
-    );
+  const mobile = ( navigator.userAgent.match(/Android/i)
+      || navigator.userAgent.match(/webOS/i)
+      || navigator.userAgent.match(/iPhone/i)
+      || navigator.userAgent.match(/iPad/i)
+      || navigator.userAgent.match(/iPod/i)
+      || navigator.userAgent.match(/BlackBerry/i)
+      || navigator.userAgent.match(/Windows Phone/i)
+      );
 
-if(mobile){
-  canvas_1.width = 720;
-  canvas_1.height = 450;
-}
+  if(mobile){
+    canvas_1.width = 720;
+    canvas_1.height = 450;
+  }
 var ctx = canvas_1.getContext("2d");
 
 var w_ = canvas_1.width;
@@ -44,11 +44,11 @@ for (s = 0; s < colourCount; s++) {
 }
 
 if(mobile){
-var sideWidth = 91;
-var sideHeight = 57;
+  var sideWidth = 91;
+  var sideHeight = 57;
 }else{
-var sideWidth = 181;
-var sideHeight = 113;
+  var sideWidth = 181;
+  var sideHeight = 113;
 }
 var width = (canvas_1.width)/sideWidth;
 var height = width = Math.min(width,(canvas_1.height)/sideHeight);
@@ -75,6 +75,7 @@ for(i = 0; i < (sideWidth * sideHeight); i++){
   drawCell(i);
 }
 
+
 var pathFound = false;
 var path_ = [];
 function solveMaze(){
@@ -94,6 +95,7 @@ function solveMaze(){
   easystar.findPath(sideWidth-2, sideHeight-2, 1, 1,  function( path ) {
     if (path === null) {
       alert("Path was not found.");
+      regenerate();
     } else {
       path_ = path;
     }
@@ -199,6 +201,41 @@ function drawCell(i){
   ctx.fillRect(startX+(i%sideWidth)*(width), startY + (Math.floor(i/sideWidth))*height,width+1,height+1);
 
 }
+function regenerate(){
+  maze = [];
+  grid = [];
+  frontier = [];
+  path_ = [];
+
+  for(i = 0; i < (sideWidth * sideHeight); i++){
+    var tile = {
+      state: 1
+    };
+    var x = Math.floor(i%sideWidth);
+    var y = Math.floor(i/sideWidth);
+    if((x == 0) || (y == 0) || (x == sideWidth-1) || (y == sideHeight - 1)){
+      tile.state = 1;
+    }
+    maze.push(tile);
+    drawCell(i);
+  }
+  pathFound = false;
+  begin = sideWidth+1;
+  maze[begin].state = 0;
+  drawCell(begin);
+  addFrontier(begin);
+  offset = 0;
+}
+var regenerate_button = { regenerate:function(){regenerate();}};
+//dat.gui library controls
+var gui = new dat.GUI({ autoPlace: false });
+var path = true;
+var customContainer = document.getElementById('gui_container');
+customContainer.appendChild(gui.domElement);
+gui.add(regenerate_button, 'regenerate');
+gui.add(this,'path');
+gui.close();
+
 
 //********************** DRAW **********************
 function draw() {
@@ -211,7 +248,6 @@ function draw() {
     }
   }
 
-
   if(pathFound){
     ctx.lineWidth = ddx;
     offset++;
@@ -222,11 +258,13 @@ function draw() {
       ctx.lineTo(startX+ddx+path_[i].x * width, startY+ddy+path_[i].y*height);
       ctx.stroke();
 
-      ctx.strokeStyle = 'rgba('+red[(i + offset)%colourCount]+','+grn[(i + offset)%colourCount]+','+blu[(i + offset)%colourCount]+', 0.5)';
-      ctx.beginPath();
-      ctx.moveTo(startX+ddx+path_[i-1].x * width, startY+ddy+path_[i-1].y*height);
-      ctx.lineTo(startX+ddx+path_[i].x * width, startY+ddy+path_[i].y*height);
-      ctx.stroke();
+      if(path){
+        ctx.strokeStyle = 'rgba('+red[(i + offset)%colourCount]+','+grn[(i + offset)%colourCount]+','+blu[(i + offset)%colourCount]+', 0.5)';
+        ctx.beginPath();
+        ctx.moveTo(startX+ddx+path_[i-1].x * width, startY+ddy+path_[i-1].y*height);
+        ctx.lineTo(startX+ddx+path_[i].x * width, startY+ddy+path_[i].y*height);
+        ctx.stroke();
+      }
     }
   }
   window.requestAnimationFrame(draw);

@@ -74,6 +74,17 @@ for(i = 1; i < width/rx; i+=2){
     ctx_2.fillRect(i * rx,j * ry,rx,ry);
   } 
 }
+var regenerate_button = { regenerate:function(){ 
+}};
+
+//dat.gui library controls
+var gui = new dat.GUI({ autoPlace: false });
+
+var droplets = true;
+var customContainer = document.getElementById('gui_container');
+customContainer.appendChild(gui.domElement);
+gui.add(this, 'droplets');
+gui.close();
 
 //Set texture, ripple and highlights to the image data
 texture = ctx_2.getImageData(0, 0, width, height);
@@ -145,8 +156,10 @@ function draw() {
   }
 
   //Raindrops
+  if(droplets){
   if(frame % 5 === 0){
     disturb(Math.round(Math.random() * width), Math.round(Math.random() * height), Math.round(Math.random() * 1024));
+  }
   }
   frame++;
 
