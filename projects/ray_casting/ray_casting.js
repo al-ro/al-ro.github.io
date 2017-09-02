@@ -57,8 +57,8 @@ canvas_1.addEventListener("touchmove", touch_move);
 
 function touch_start(event) {
   event.preventDefault();
-  mouse_pos_x = event.touches[0].offsetX * scale;
-  mouse_pos_y = event.touches[0].offsetY * scale;
+  mouse_pos_x = event.touches[0].clientX * scale;
+  mouse_pos_y = event.touches[0].clientY * scale;
   if(drag){
     if(active_light != -1){
       lights[active_light].x = mouse_pos_x;
@@ -78,8 +78,8 @@ function touch_move(event) {
   event.preventDefault();
 
   drag = true;
-  mouse_pos_x = event.touches[0].offsetX * scale;
-  mouse_pos_y = event.touches[0].offsetY * scale;
+  mouse_pos_x = event.touches[0].clientX * scale;
+  mouse_pos_y = event.touches[0].clientY * scale;
   active_light = -1;
   for(l = 0; l < lights.length; l++){
     if(dist(mouse_pos_x - lights[l].x, mouse_pos_y - lights[l].y) < 50){
