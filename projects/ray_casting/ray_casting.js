@@ -50,6 +50,24 @@ canvas_1.addEventListener('mousemove', mouse_track);
 canvas_1.addEventListener('mousedown', mouse_down);
 canvas_1.addEventListener('mouseup', mouse_up);
 
+canvas_1.addEventListener("touchstart", touch_start);
+canvas_1.addEventListener("touchend", touch_end);
+canvas_1.addEventListener("touchcancel", touch_cancel);
+canvas_1.addEventListener("touchmove", touch_move);
+
+function touch_start(event) {
+  event.preventDefault();
+}
+function touch_end(event) {
+  event.preventDefault();
+}
+function touch_cancel(event) {
+  event.preventDefault();
+}
+function touch_move(event) {
+  event.preventDefault();
+}
+
 function mouse_track(event) {
   mouse_pos_x = event.offsetX * scale;
   mouse_pos_y = event.offsetY * scale;
