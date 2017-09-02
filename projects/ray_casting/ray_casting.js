@@ -1,3 +1,18 @@
+
+  const mobile = ( navigator.userAgent.match(/Android/i)
+      || navigator.userAgent.match(/webOS/i)
+      || navigator.userAgent.match(/iPhone/i)
+      || navigator.userAgent.match(/iPad/i)
+      || navigator.userAgent.match(/iPod/i)
+      || navigator.userAgent.match(/BlackBerry/i)
+      || navigator.userAgent.match(/Windows Phone/i)
+      );
+
+  if(mobile){
+    canvas_1.width = 720;
+    canvas_1.height = 450;
+  }
+
 var ctx = canvas_1.getContext("2d");
 var scale = canvas_1.width/canvas_1.scrollWidth;
 
@@ -65,8 +80,13 @@ function mouse_up(event) {
   drag = false;
 }
 
+
+  var l_delta = 300;
+if(mobile){
+  l_delta = 100;
+}
 var yellow = {
-  x: canvas_1.width/2+300,
+  x: canvas_1.width/2+l_delta,
   y: canvas_1.height/2,
   radius: Math.max(canvas_1.height, canvas_1.width)/2,
   colour_1: "rgba(255,255,0,1)",
@@ -75,7 +95,7 @@ var yellow = {
 lights.push(yellow);
 
 var blue = {
-  x: canvas_1.width/2-300,
+  x: canvas_1.width/2-l_delta,
   y: canvas_1.height/2,
   radius: Math.max(canvas_1.height, canvas_1.width)/2,
   colour_1: "rgba(0,255,255,1)",
@@ -134,8 +154,16 @@ var barrierCount = 15;
 var seeds = [];
 var delta = Math.min(canvas_1.width, canvas_1.height)/(barrierCount/2);
 
+var c_w = 700;
+var c_h = 500;
+
+if(mobile){
+  c_w = 300;
+  c_h = 100;
+}
+
 //Area to be kept clear for light sources
-var clear_area = {x: (canvas_1.width/2-100)-2*delta, y: (canvas_1.height/2-40)-2*delta, width: 700+2*delta, height: 500+2*delta};
+var clear_area = {x: (canvas_1.width/2-100)-2*delta, y: (canvas_1.height/2-40)-2*delta, width: c_w+2*delta, height: c_h+2*delta};
 
 function generate(){
 //Generate random positions in the free space of the canvas_1
