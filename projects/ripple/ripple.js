@@ -141,6 +141,35 @@ canvas.addEventListener('mousedown', mouse_down);
 canvas.addEventListener('mousemove', mouse_track);
 canvas.addEventListener('mouseleave', animate_);
 
+function getPos(canvas, evt) {
+  var rect = canvas.getBoundingClientRect();
+  return {
+    x: evt.touches[0].clientX - rect.left,
+    y: evt.touches[0].clientY - rect.top
+  };
+}
+canvas.addEventListener("touchstart", touch_start);
+canvas.addEventListener("touchend", animate_);
+canvas.addEventListener("touchcancel", animate_);
+canvas.addEventListener("touchmove", touch_move);
+
+function touch_start(event) {
+  event.preventDefault();
+  animate = false;
+  x = Math.round(getPos(canvas, event).x - (canvas.width/2-hwidth));
+  y = Math.round(getPos(canvas, event).y - (canvas.height/2-hheight));
+  disturb(x,y, 20000);
+}
+
+function touch_move(event) {
+  event.preventDefault();
+  animate = false;
+  x = Math.round(getPos(canvas, event).x - (canvas.width/2-hwidth));
+  y = Math.round(getPos(canvas, event).y - (canvas.height/2-hheight));
+  disturb(x,y, 1024);
+}
+
+
 //Lemiscate variable
 var t = 0;
 

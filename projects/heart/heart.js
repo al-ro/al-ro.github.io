@@ -63,11 +63,9 @@ function touch_move(event) {
   }
 }
 function touch_end(event) {
-  event.preventDefault();
   animate = true;
 }
 function touch_cancel(event) {
-  event.preventDefault();
   animate = true;
 }
 

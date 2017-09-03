@@ -1,19 +1,19 @@
 //Cloth dynamics based on the tutorial at 
 //https://gamedevelopment.tutsplus.com/tutorials/simulate-tearable-cloth-and-ragdolls-with-simple-verlet-integration--gamedev-519
 
-const mobile = ( navigator.userAgent.match(/Android/i)
-    || navigator.userAgent.match(/webOS/i)
-    || navigator.userAgent.match(/iPhone/i)
-    || navigator.userAgent.match(/iPad/i)
-    || navigator.userAgent.match(/iPod/i)
-    || navigator.userAgent.match(/BlackBerry/i)
-    || navigator.userAgent.match(/Windows Phone/i)
-    );
-var ctx = canvas_1.getContext("2d");
-if(mobile){
-  canvas_1.width = 720;
-  canvas_1.height = 450;
-}
+  const mobile = ( navigator.userAgent.match(/Android/i)
+      || navigator.userAgent.match(/webOS/i)
+      || navigator.userAgent.match(/iPhone/i)
+      || navigator.userAgent.match(/iPad/i)
+      || navigator.userAgent.match(/iPod/i)
+      || navigator.userAgent.match(/BlackBerry/i)
+      || navigator.userAgent.match(/Windows Phone/i)
+      );
+  var ctx = canvas_1.getContext("2d");
+  if(mobile){
+    canvas_1.width = 720;
+    canvas_1.height = 450;
+  }
 var scale = canvas_1.width/canvas_1.scrollWidth;
 //Fabric nodes
 var nodes = [];
@@ -41,8 +41,8 @@ var TWO_PI = 2 * Math.PI;
 var width = 50;
 var height = 50;
 if(mobile){
-var width = 25;
-var height = 25;
+  var width = 25;
+  var height = 25;
 }
 var nodeCount = width * height;
 
@@ -170,7 +170,7 @@ function getPos(canvas, evt) {
   var rect = canvas.getBoundingClientRect();
   return {
     x: evt.touches[0].clientX * scale - rect.left,
-    y: evt.touches[0].clientY * scale - rect.top
+      y: evt.touches[0].clientY * scale - rect.top
   };
 }
 
@@ -203,11 +203,11 @@ function touch_move(event) {
   event.preventDefault();
   mouse_pos_x = getPos(canvas_1, event).x;
   mouse_pos_y = getPos(canvas_1, event).y;
-    if(active_node != -1){
-      nodes[active_node].x = mouse_pos_x;
-      nodes[active_node].y = mouse_pos_y;
-      nodes[active_node].last_x = mouse_pos_x;
-      nodes[active_node].last_y = mouse_pos_y;
+  if(active_node != -1){
+    nodes[active_node].x = mouse_pos_x;
+    nodes[active_node].y = mouse_pos_y;
+    nodes[active_node].last_x = mouse_pos_x;
+    nodes[active_node].last_y = mouse_pos_y;
   }
 }
 
