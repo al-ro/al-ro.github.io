@@ -4,13 +4,10 @@
   text-align: center; 
 }
 @media (max-width: 550px) {
-.header {
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-}
-.navbar-list {
-  margin-bottom: 10rem;
-}
+  .header {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
 }
 .post_header {
   margin-top: 1.5rem;
