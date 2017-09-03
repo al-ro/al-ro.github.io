@@ -141,7 +141,6 @@ var blue = {
 }
 lights.push(blue);
 
-if(!mobile){
 var red = {
   x: canvas_1.width/2,
   y: canvas_1.height/2,
@@ -150,7 +149,7 @@ var red = {
   colour_2: "rgba(225,0,0,0.1)"
 }
 lights.push(red);
-}
+
 function n_x(x1, y1, x2, y2) {
   return -(y2 - y1) / dist(x2 - x1, y2 - y1);
 }
