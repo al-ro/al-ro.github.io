@@ -42,7 +42,6 @@ var bodyLength = 20;
 canvas_1.addEventListener('mouseleave', mouse_leave);
 canvas_1.addEventListener('mousemove', mouse_track);
 
-canvas_1.addEventListener("touchstart", touch_start);
 canvas_1.addEventListener("touchend", touch_end);
 canvas_1.addEventListener("touchcancel", touch_cancel);
 canvas_1.addEventListener("touchmove", touch_move);
@@ -62,14 +61,6 @@ function touch_end(event) {
 function touch_cancel(event) {
   event.preventDefault();
   animate = true;
-}
-function touch_start(event) {
-  event.preventDefault();
-  animate = false;
-  if((Math.abs(mouse_pos_x - event.touches[0].clientX) > delta) || (Math.abs(mouse_pos_y - event.touches[0].clientY) > delta)){
-  mouse_pos_x = event.touches[0].clientX * scale;
-  mouse_pos_y = event.touches[0].clientY * scale;
-  }
 }
 
 function mouse_leave(){
