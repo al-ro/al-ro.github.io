@@ -70,8 +70,8 @@ function mouse_leave(){
 function mouse_track(event) {
   animate = false;
   if((Math.abs(mouse_pos_x - event.clientX) > delta) || (Math.abs(mouse_pos_y - event.clientY) > delta)){
-    mouse_pos_x = event.offsetX * scale;
-    mouse_pos_y = event.offsetY * scale;
+    mouse_pos_x = event.offsetX * scale - 100;
+    mouse_pos_y = event.offsetY * scale - 100;
   }
 }
 
