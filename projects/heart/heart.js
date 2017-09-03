@@ -50,8 +50,8 @@ function touch_move(event) {
   event.preventDefault();
   animate = false;
   if((Math.abs(mouse_pos_x - event.touches[0].clientX) > delta) || (Math.abs(mouse_pos_y - event.touches[0].clientY) > delta)){
-  mouse_pos_x = event.touches[0].clientX * scale;
-  mouse_pos_y = event.touches[0].clientY * scale;
+  mouse_pos_x = event.touches[0].clientX * scale - 100;
+  mouse_pos_y = event.touches[0].clientY * scale - 100;
   }
 }
 function touch_end(event) {
@@ -70,8 +70,8 @@ function mouse_leave(){
 function mouse_track(event) {
   animate = false;
   if((Math.abs(mouse_pos_x - event.clientX) > delta) || (Math.abs(mouse_pos_y - event.clientY) > delta)){
-    mouse_pos_x = event.offsetX * scale - 100;
-    mouse_pos_y = event.offsetY * scale - 100;
+    mouse_pos_x = event.offsetX * scale;
+    mouse_pos_y = event.offsetY * scale;
   }
 }
 
