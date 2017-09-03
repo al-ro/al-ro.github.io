@@ -59,7 +59,7 @@ function getPos(canvas, evt) {
   var rect = canvas.getBoundingClientRect();
   return {
     x: evt.touches[0].clientX * scale - rect.left,
-    y: evt.touches[0].clientY * scale - rect.top
+      y: evt.touches[0].clientY * scale - rect.top
   };
 }
 
@@ -67,9 +67,9 @@ function touch_move(event) {
   event.preventDefault();
   mouse_pos_x = getPos(canvas_1, event).x;
   mouse_pos_y = getPos(canvas_1, event).y;
-    if(active_light != -1){
-      lights[active_light].x = mouse_pos_x;
-      lights[active_light].y = mouse_pos_y;
+  if(active_light != -1){
+    lights[active_light].x = mouse_pos_x;
+    lights[active_light].y = mouse_pos_y;
   }
 }
 function touch_end(event) {
@@ -484,10 +484,12 @@ function draw() {
   //Display a circle around light sources when the cursor is within a certain distance
   for(l = 0; l < lights.length; l++){
     if(dist(mouse_pos_x - lights[l].x, mouse_pos_y - lights[l].y) < 200){
-      ctx.strokeStyle = 'rgb(0,0,0)';
-      ctx.beginPath();
-      ctx.arc(lights[l].x, lights[l].y, 50, 0, TWO_PI);
-      ctx.stroke(); 
+      if(active_light != -1){
+        ctx.strokeStyle = 'rgb(0,0,0)';
+        ctx.beginPath();
+        ctx.arc(lights[l].x, lights[l].y, 50, 0, TWO_PI);
+        ctx.stroke(); 
+      }
     }
   }
 
