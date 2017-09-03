@@ -51,7 +51,7 @@ function touch_move(event) {
   animate = false;
   if((Math.abs(mouse_pos_x - event.touches[0].clientX) > delta) || (Math.abs(mouse_pos_y - event.touches[0].clientY) > delta)){
   mouse_pos_x = event.touches[0].clientX * scale - 100;
-  mouse_pos_y = event.touches[0].clientY * scale - 100;
+  mouse_pos_y = event.touches[0].clientY * scale - 200;
   }
 }
 function touch_end(event) {
