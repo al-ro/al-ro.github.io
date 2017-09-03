@@ -55,10 +55,18 @@ canvas_1.addEventListener("touchend", touch_end);
 canvas_1.addEventListener("touchcancel", touch_cancel);
 canvas_1.addEventListener("touchmove", touch_move);
 
+function getPos(canvas, evt) {
+  var rect = canvas.getBoundingClientRect();
+  return {
+    x: evt.touches[0].clientX * scale - rect.left,
+    y: evt.touches[0].clientY * scale - rect.top
+  };
+}
+
 function touch_move(event) {
   event.preventDefault();
-  mouse_pos_x = event.touches[0].clientX * scale;
-  mouse_pos_y = event.touches[0].clientY * scale;
+  mouse_pos_x = getPos(canvas_1, event).x;
+  mouse_pos_y = getPos(canvas_1, event).y;
   if(drag){
     if(active_light != -1){
       lights[active_light].x = mouse_pos_x;
@@ -78,8 +86,8 @@ function touch_start(event) {
   event.preventDefault();
 
   drag = true;
-  mouse_pos_x = event.touches[0].clientX * scale;
-  mouse_pos_y = event.touches[0].clientY * scale;
+  mouse_pos_x = getPos(canvas_1, event).x;
+  mouse_pos_y = getPos(canvas_1, event).y;
   active_light = -1;
   for(l = 0; l < lights.length; l++){
     if(dist(mouse_pos_x - lights[l].x, mouse_pos_y - lights[l].y) < 50){
@@ -115,7 +123,6 @@ function mouse_down(event) {
 function mouse_up(event) {
   drag = false;
 }
-
 
 var l_delta = 300;
 if(mobile){

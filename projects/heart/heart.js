@@ -1,11 +1,11 @@
 const mobile = ( navigator.userAgent.match(/Android/i)
-  || navigator.userAgent.match(/webOS/i)
-  || navigator.userAgent.match(/iPhone/i)
-  || navigator.userAgent.match(/iPad/i)
-  || navigator.userAgent.match(/iPod/i)
-  || navigator.userAgent.match(/BlackBerry/i)
-  || navigator.userAgent.match(/Windows Phone/i)
-  );
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    || navigator.userAgent.match(/iPad/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+    );
 
 if(mobile){
   canvas_1.width = 720;
@@ -43,7 +43,7 @@ function getPos(canvas, evt) {
   var rect = canvas.getBoundingClientRect();
   return {
     x: evt.touches[0].clientX * scale - rect.left,
-    y: evt.touches[0].clientY * scale - rect.top
+      y: evt.touches[0].clientY * scale - rect.top
   };
 }
 
@@ -58,8 +58,8 @@ function touch_move(event) {
   event.preventDefault();
   animate = false;
   if((Math.abs(mouse_pos_x - event.touches[0].clientX) > delta) || (Math.abs(mouse_pos_y - event.touches[0].clientY) > delta)){
-  mouse_pos_x = getPos(canvas_1, event).x;
-  mouse_pos_y = getPos(canvas_1, event).y;
+    mouse_pos_x = getPos(canvas_1, event).x;
+    mouse_pos_y = getPos(canvas_1, event).y;
   }
 }
 function touch_end(event) {
