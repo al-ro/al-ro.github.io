@@ -68,11 +68,11 @@ function touch_move(event) {
 }
 function touch_end(event) {
   event.preventDefault();
-  //drag = false;
+  drag = false;
 }
 function touch_cancel(event) {
   event.preventDefault();
- // drag = false;
+  drag = false;
 }
 function touch_start(event) {
   event.preventDefault();
