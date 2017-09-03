@@ -8,7 +8,7 @@
     <!-- Basic Page Needs
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
     <meta charset="utf-8">
-    <title>Bezier Trails</title>
+    <title>2D Ray Casting</title>
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -37,15 +37,16 @@
     <div class="container">
       <section class="post_header">
       <div class="row">
-        <div class="four columns offset-by-four columns">
-          <h4 class="title">Bezier Trails</h4>
+        <div class="twelve columns">
+          <h4 class="title">2D Ray Casting</h4>
         </div>
       </div>
         <div class="canvas_container u-max-full-width" id="cc_1">
           <canvas class="canvas" width=2880 height=1800 id="canvas_1"></canvas>
+          <div class='gui_c' id="gui_container"></div>
         </div>
       <ul class="navbar-list c_navbar">
-        <li class="navbar-item"><a class="navbar-link" href="heart.js">Source</a></li>
+        <li class="navbar-item"><a class="navbar-link" href="ray_casting.js">Source</a></li>
         <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
       </ul>
       </section>
@@ -59,7 +60,8 @@
     </div>
     <!-- End Document
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <script type="text/javascript" src="heart.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
+    <script type="text/javascript" src="ray_casting.js"></script>
   </body>
   <footer>
   <div class="container">
