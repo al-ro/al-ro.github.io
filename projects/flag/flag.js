@@ -153,6 +153,11 @@ canvas_1.addEventListener('mousemove', mouse_track);
 canvas_1.addEventListener('mousedown', mouse_down);
 canvas_1.addEventListener('mouseup', mouse_up);
 
+canvas_1.addEventListener("touchstart", touch_start);
+canvas_1.addEventListener("touchend", touch_end);
+canvas_1.addEventListener("touchcancel", touch_cancel);
+canvas_1.addEventListener("touchmove", touch_move);
+
 //Which node was grabbed
 var active_node;
 
@@ -160,6 +165,47 @@ var mouse_pos_x;
 var mouse_pos_y;
 //Is mouse button held down
 var drag = false;
+
+function getPos(canvas, evt) {
+  var rect = canvas.getBoundingClientRect();
+  return {
+    x: evt.touches[0].clientX * scale - rect.left,
+    y: evt.touches[0].clientY * scale - rect.top
+  };
+}
+
+function touch_move(event) {
+  event.preventDefault();
+  mouse_pos_x = getPos(canvas_1, event).x;
+  mouse_pos_y = getPos(canvas_1, event).y;
+    if(active_node != -1){
+      nodes[active_node].x = mouse_pos_x;
+      nodes[active_node].y = mouse_pos_y;
+      nodes[active_node].last_x = mouse_pos_x;
+      nodes[active_node].last_y = mouse_pos_y;
+  }
+}
+function touch_end(event) {
+  event.preventDefault();
+  active_node = -1;
+}
+function touch_cancel(event) {
+  event.preventDefault();
+  active_node = -1;
+}
+function touch_start(event) {
+  event.preventDefault();
+
+  mouse_pos_x = getPos(canvas_1, event).x;
+  mouse_pos_y = getPos(canvas_1, event).y;
+  active_light = -1;
+  for(l = 0; l < lights.length; l++){
+    if(dist(mouse_pos_x - nodes[l].x, mouse_pos_y - nodes[l].y) < 20){
+      active_node = l;
+      break;
+    }
+  }
+}
 
 function mouse_track(event) {
   mouse_pos_x = event.offsetX * scale;
