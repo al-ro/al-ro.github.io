@@ -92,6 +92,8 @@ function touch_start(event) {
   for(l = 0; l < lights.length; l++){
     if(dist(mouse_pos_x - lights[l].x, mouse_pos_y - lights[l].y) < 50){
       active_light = l;
+      lights[active_light].x = mouse_pos_x;
+      lights[active_light].y = mouse_pos_y;
       break;
     }
   }
