@@ -198,7 +198,7 @@ function touch_start(event) {
 
   mouse_pos_x = getPos(canvas_1, event).x;
   mouse_pos_y = getPos(canvas_1, event).y;
-  active_light = -1;
+  active_node = -1;
   for(l = 0; l < lights.length; l++){
     if(dist(mouse_pos_x - nodes[l].x, mouse_pos_y - nodes[l].y) < 20){
       active_node = l;
