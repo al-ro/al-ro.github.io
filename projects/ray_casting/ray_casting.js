@@ -67,25 +67,20 @@ function touch_move(event) {
   event.preventDefault();
   mouse_pos_x = getPos(canvas_1, event).x;
   mouse_pos_y = getPos(canvas_1, event).y;
-  if(drag){
     if(active_light != -1){
       lights[active_light].x = mouse_pos_x;
       lights[active_light].y = mouse_pos_y;
-    }
   }
 }
 function touch_end(event) {
   event.preventDefault();
-  drag = false;
 }
 function touch_cancel(event) {
   event.preventDefault();
-  drag = false;
 }
 function touch_start(event) {
   event.preventDefault();
 
-  drag = true;
   mouse_pos_x = getPos(canvas_1, event).x;
   mouse_pos_y = getPos(canvas_1, event).y;
   active_light = -1;
