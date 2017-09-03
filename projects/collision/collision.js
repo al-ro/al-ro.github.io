@@ -64,6 +64,11 @@ canvas_1.addEventListener("mousedown", mouse_down);
 canvas_1.addEventListener("mousemove", mouse_move);
 canvas_1.addEventListener("mouseup", mouse_up);
 
+canvas_1.addEventListener("touchstart", touch_start);
+canvas_1.addEventListener("touchend", touch_end);
+canvas_1.addEventListener("touchcancel", touch_cancel);
+canvas_1.addEventListener("touchmove", touch_move);
+
 var rotate = false;
 var gravity_on = true;
 //dat.gui library controls
@@ -80,6 +85,51 @@ var mouse_pos_x;
 var mouse_pos_y;
 var mouse_last_x;
 var mouse_last_y;
+
+function getPos(canvas, evt) {
+  var rect = canvas.getBoundingClientRect();
+  return {
+    x: evt.touches[0].clientX * scale - rect.left,
+    y: evt.touches[0].clientY * scale - rect.top
+  };
+}
+
+function touch_start(event) {
+  event.preventDefault();
+
+  active_node = -1;
+  mouse_pos_x = getPos(canvas_1, event).x;
+  mouse_pos_y = getPos(canvas_1, event).y;
+  for(i = 0; i < discCount; i++){
+    if (dist(mouse_pos_x - discs[i].x, mouse_pos_y - discs[i].y) < discs[i].radius){
+      active_node = i;
+      break;
+    }
+  }
+}
+function touch_end(event) {
+  event.preventDefault();
+  active_node = -1;
+}
+function touch_cancel(event) {
+  event.preventDefault();
+  active_node = -1;
+}
+function touch_move(event) {
+  event.preventDefault();
+  mouse_last_x = mouse_pos_x;
+  mouse_last_y = mouse_pos_y;
+  mouse_pos_x = getPos(canvas_1, event).x;
+  mouse_pos_y = getPos(canvas_1, event).y;
+  var dx = mouse_pos_x - mouse_last_x;
+  var dy = mouse_pos_y - mouse_last_y;
+    if(active_node != -1){
+      discs[active_node].x += dx;
+      discs[active_node].y += dy;
+      discs[active_node].x_vel = dx/scale;
+      discs[active_node].y_vel = dy/scale;
+    }
+}
 
 function mouse_down(event){
   drag = true;
