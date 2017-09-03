@@ -97,9 +97,42 @@ character_links.push({first: 3, second: 11, min: 200, max: Infinity});
 //Invisible links between head and anchor
 character_links.push({first: 12, second: 13, min: Math.max(canvas_1.height-250, 200), max: Math.max(canvas_1.height-250, 200)});
 
+function getPos(canvas, evt) {
+  var rect = canvas.getBoundingClientRect();
+  return {
+    x: evt.touches[0].clientX * scale - rect.left,
+      y: evt.touches[0].clientY * scale - rect.top
+  };
+}
+
 canvas_1.addEventListener('mousemove', mouse_track);
 canvas_1.addEventListener('mouseleave', animate_);
 canvas_1.addEventListener('mouseenter', relax_);
+
+canvas_1.addEventListener("touchend", animate_);
+canvas_1.addEventListener("touchcancel", animate);
+canvas_1.addEventListener("touchmove", touch_move);
+
+function touch_move(event) {
+
+  event.preventDefault();
+  relax_()
+  animate=false;
+  mouse_last_x = mouse_pos_x;
+  mouse_last_y = mouse_pos_y;
+  mouse_pos_x = getPos(canvas_1, event).x;
+  mouse_pos_y = getPos(canvas_1, event).y;
+  var dx = mouse_pos_x - mouse_last_x;
+  var dy = mouse_pos_y - mouse_last_y;
+
+  var dx = mouse_last_x - mouse_pos_x;
+  var dy = mouse_last_y - mouse_pos_y;
+
+  dx = Math.sign(dx); 
+  dy = Math.sign(dy);
+  character_nodes[0].x-=dx; character_nodes[3].x-=dx; character_nodes[6].x-=dx; character_nodes[9].x-=dx;
+  character_nodes[0].y-=dy; character_nodes[3].y-=dy; character_nodes[6].y-=dy; character_nodes[9].y-=dy;
+}
 
 function mouse_up(event){
   drag = false;
