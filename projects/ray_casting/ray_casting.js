@@ -85,10 +85,8 @@ function touch_start(event) {
   mouse_pos_y = getPos(canvas_1, event).y;
   active_light = -1;
   for(l = 0; l < lights.length; l++){
-    if(dist(mouse_pos_x - lights[l].x, mouse_pos_y - lights[l].y) < 50){
+    if(dist(mouse_pos_x - lights[l].x, mouse_pos_y - lights[l].y) < 200){
       active_light = l;
-      lights[active_light].x = mouse_pos_x;
-      lights[active_light].y = mouse_pos_y;
       break;
     }
   }
