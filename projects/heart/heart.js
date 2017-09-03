@@ -39,6 +39,14 @@ var op = 1;
 
 var bodyLength = 20;
 
+function getPos(canvas, evt) {
+  var rect = canvas.getBoundingClientRect();
+  return {
+    x: evt.touches[0].clientX * scale - rect.left,
+    y: evt.touches[0].clientY * scale - rect.top
+  };
+}
+
 canvas_1.addEventListener('mouseleave', mouse_leave);
 canvas_1.addEventListener('mousemove', mouse_track);
 
@@ -50,8 +58,8 @@ function touch_move(event) {
   event.preventDefault();
   animate = false;
   if((Math.abs(mouse_pos_x - event.touches[0].clientX) > delta) || (Math.abs(mouse_pos_y - event.touches[0].clientY) > delta)){
-  mouse_pos_x = event.touches[0].clientX * scale - 100;
-  mouse_pos_y = event.touches[0].clientY * scale - 200;
+  mouse_pos_x = getPos(canvas_1, event).x;
+  mouse_pos_y = getPos(canvas_1, event).y;
   }
 }
 function touch_end(event) {
