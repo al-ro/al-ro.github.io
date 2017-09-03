@@ -174,15 +174,21 @@ function getPos(canvas, evt) {
   };
 }
 
-function touch_move(event) {
+function touch_start(event) {
   event.preventDefault();
+
   mouse_pos_x = getPos(canvas_1, event).x;
   mouse_pos_y = getPos(canvas_1, event).y;
-    if(active_node != -1){
+  active_node = -1;
+  for(l = 0; l < nodes.length; l++){
+    if(dist(mouse_pos_x - nodes[l].x, mouse_pos_y - nodes[l].y) < 20){
+      active_node = l;
       nodes[active_node].x = mouse_pos_x;
       nodes[active_node].y = mouse_pos_y;
       nodes[active_node].last_x = mouse_pos_x;
       nodes[active_node].last_y = mouse_pos_y;
+      break;
+    }
   }
 }
 function touch_end(event) {
@@ -193,17 +199,15 @@ function touch_cancel(event) {
   event.preventDefault();
   active_node = -1;
 }
-function touch_start(event) {
+function touch_move(event) {
   event.preventDefault();
-
   mouse_pos_x = getPos(canvas_1, event).x;
   mouse_pos_y = getPos(canvas_1, event).y;
-  active_node = -1;
-  for(l = 0; l < lights.length; l++){
-    if(dist(mouse_pos_x - nodes[l].x, mouse_pos_y - nodes[l].y) < 20){
-      active_node = l;
-      break;
-    }
+    if(active_node != -1){
+      nodes[active_node].x = mouse_pos_x;
+      nodes[active_node].y = mouse_pos_y;
+      nodes[active_node].last_x = mouse_pos_x;
+      nodes[active_node].last_y = mouse_pos_y;
   }
 }
 
