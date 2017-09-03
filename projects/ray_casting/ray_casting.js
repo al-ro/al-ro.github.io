@@ -482,9 +482,9 @@ function draw() {
   ctx.restore();
 
   //Display a circle around light sources when the cursor is within a certain distance
-  for(l = 0; l < lights.length; l++){
-    if(dist(mouse_pos_x - lights[l].x, mouse_pos_y - lights[l].y) < 200){
-      if((!mobile) || (active_light != -1)){
+  if(!mobile){
+    for(l = 0; l < lights.length; l++){
+      if(dist(mouse_pos_x - lights[l].x, mouse_pos_y - lights[l].y) < 200){
         ctx.strokeStyle = 'rgb(0,0,0)';
         ctx.beginPath();
         ctx.arc(lights[l].x, lights[l].y, 50, 0, TWO_PI);
