@@ -76,6 +76,7 @@ var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
 gui.add(this,'rotate');
+gui.add(this,'restitution').min(0.0).max(1.0).step(0.1).listen();
 gui.add(this,'gravity_on');
 gui.close();
 
@@ -270,7 +271,7 @@ function wall_distance(wx, wy, nx, ny, px, py) {
   return ((px - wx) * nx + (py - wy) * ny);
 }
 
-function get_impulse(i, j, point_x, point_y, col_norm_x, col_norm_y, dt) {
+function get_impulse(i, j, point_x, point_y, col_norm_x, col_norm_y) {
   var relative_vel_x = discs[j].x_vel - discs[i].x_vel;
   var relative_vel_y = discs[j].y_vel - discs[i].y_vel;
 
@@ -340,7 +341,7 @@ function collision(dt) {
         }
 
         //impulse to be applied to both objects
-        var impulse = get_impulse(i, j, point_x, point_y, col_norm_x, col_norm_y, dt);
+        var impulse = get_impulse(i, j, point_x, point_y, col_norm_x, col_norm_y);
         if(i != active_node){
           discs[i].x_vel -= impulse / discs[i].mass * col_norm_x;
           discs[i].y_vel -= impulse / discs[i].mass * col_norm_y;
@@ -393,7 +394,7 @@ function draw() {
 
     ctx.strokeStyle = "rgb(255,255,255)";
     dt = 1 / fps;
-    collision(dt);
+    collision();
     if(gravity_on){
       gravity(g_const, dt);
     }

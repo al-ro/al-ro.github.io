@@ -62,7 +62,7 @@
       <pre><code>function draw() {
   fps = 1000 / (Date.now() - time);
   dt = 1 / fps;
-  collision(dt);
+  collision();
   gravity(g_const, dt);
   move();
 
