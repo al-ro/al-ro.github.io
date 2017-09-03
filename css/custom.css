@@ -3,6 +3,12 @@
   margin-bottom: 10rem;
   text-align: center; 
 }
+@media (max-width: 550px) {
+.header {
+  margin-top: 5rem;
+  margin-bottom: 10rem;
+}
+}
 .post_header {
   margin-top: 1.5rem;
   margin-bottom: 5rem;
