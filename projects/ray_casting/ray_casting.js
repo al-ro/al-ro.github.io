@@ -74,9 +74,11 @@ function touch_move(event) {
 }
 function touch_end(event) {
   event.preventDefault();
+  active_light = -1;
 }
 function touch_cancel(event) {
   event.preventDefault();
+  active_light = -1;
 }
 function touch_start(event) {
   event.preventDefault();
@@ -85,7 +87,7 @@ function touch_start(event) {
   mouse_pos_y = getPos(canvas_1, event).y;
   active_light = -1;
   for(l = 0; l < lights.length; l++){
-    if(dist(mouse_pos_x - lights[l].x, mouse_pos_y - lights[l].y) < 200){
+    if(dist(mouse_pos_x - lights[l].x, mouse_pos_y - lights[l].y) < 100){
       active_light = l;
       break;
     }
