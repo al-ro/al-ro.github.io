@@ -194,6 +194,9 @@ function point_in_rectangle(x, y, r){
 }
 
 var barrierCount = 15;
+if(mobile){
+  barrierCount = 5;
+}
 var seeds = [];
 var delta = Math.min(canvas_1.width, canvas_1.height)/(barrierCount/2);
 
