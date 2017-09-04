@@ -225,7 +225,13 @@ function touch_move(event) {
   animate = false;
   x = Math.round(getPos(canvas, event).x - (canvas.width/2-hwidth));
   y = Math.round(getPos(canvas, event).y - (canvas.height/2-hheight));
-  disturb(x,y, 1024);
+  if(discrete){
+    disturb(x_new, y_new, 1024);
+  }else{
+    disturbLine(x_new, y_new);
+  }
+  x_old = x_new;
+  y_old = y_new;
 }
 
 
