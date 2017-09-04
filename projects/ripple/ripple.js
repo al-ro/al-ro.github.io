@@ -93,8 +93,8 @@ customContainer.appendChild(gui.domElement);
 if(!mobile){
   gui.add(this, 'radius').min(1.0).max(10.0).step(1.0);
   gui.add(this, 'fade').min(1.0).max(10.0).step(1.0);
-  gui.add(this, 'discrete');
 }
+  gui.add(this, 'discrete');
 gui.add(this, 'droplets');
 gui.close();
 
