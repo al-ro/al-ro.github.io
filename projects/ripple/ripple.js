@@ -3,43 +3,43 @@
 //http://www.neilwallis.com/projects/java/water/index.php
 //https://web.archive.org/web/20160310071837/http://freespace.virgin.net/hugo.elias/graphics/x_water.htm 
 
-const mobile = ( navigator.userAgent.match(/Android/i)
-    || navigator.userAgent.match(/webOS/i)
-    || navigator.userAgent.match(/iPhone/i)
-    || navigator.userAgent.match(/iPad/i)
-    || navigator.userAgent.match(/iPod/i)
-    || navigator.userAgent.match(/BlackBerry/i)
-    || navigator.userAgent.match(/Windows Phone/i)
-    );
+  const mobile = ( navigator.userAgent.match(/Android/i)
+      || navigator.userAgent.match(/webOS/i)
+      || navigator.userAgent.match(/iPhone/i)
+      || navigator.userAgent.match(/iPad/i)
+      || navigator.userAgent.match(/iPod/i)
+      || navigator.userAgent.match(/BlackBerry/i)
+      || navigator.userAgent.match(/Windows Phone/i)
+      );
 
-var animate = true;
+  var animate = true;
 
-document.getElementById('canvas').style.cursor = "none";
-//Main display canvas
-var ctx = canvas.getContext("2d");
+  document.getElementById('canvas').style.cursor = "none";
+  //Main display canvas
+  var ctx = canvas.getContext("2d");
 
-//Hidden canvas
-var ctx_2 = canvas_2.getContext("2d");
+  //Hidden canvas
+  var ctx_2 = canvas_2.getContext("2d");
 
-//Two height maps are used to store the current and previous states of the water
-//Use single array with offset
-var ripplemap = [];
+  //Two height maps are used to store the current and previous states of the water
+  //Use single array with offset
+  var ripplemap = [];
 
-//Displayed image of ripples on background
-var ripple;
+  //Displayed image of ripples on background
+  var ripple;
 
-//Dimensions of image
-var width;
-var height;
-if(mobile){
-  width = 200;
-  height = 200;
-  canvas.width = 200;
-  canvas.height = 200;
-}else{
-  width = 550;
-  height = 550;
-}
+  //Dimensions of image
+  var width;
+  var height;
+  if(mobile){
+    width = 200;
+    height = 200;
+    canvas.width = 200;
+    canvas.height = 200;
+  }else{
+    width = 550;
+    height = 550;
+  }
 //Set hidden canvas to the specifed size such that it fits two images next to each other (with a gap of 10 pixels in between)
 canvas_2.width = 2*width+10;
 canvas_2.height = height;
@@ -82,12 +82,21 @@ for(i = 1; i < width/rx; i+=2){
 var regenerate_button = { regenerate:function(){ 
 }};
 
+var discrete = true;
+var radius = 3;
+var fade = 5;
+
 //dat.gui library controls
 var gui = new dat.GUI({ autoPlace: false });
 
 var droplets = true;
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
+if(!mobile){
+  gui.add(this, 'radius').min(1.0).max(10.0).step(1.0);
+  gui.add(this, 'fade').min(1.0).max(10.0).step(1.0);
+  gui.add(this, 'discrete');
+}
 gui.add(this, 'droplets');
 gui.close();
 
@@ -110,33 +119,85 @@ var frame = 0;
 var new_pixel;
 var cur_pixel;
 
+
 //Increase height within a radius of a specified location
 function disturb(x,y, strength){
-  for (var j = y - 3; j < y + 3; j++) {
-    for (var k = x - 3; k < x + 3; k++) {
-      if((j>3)&&(j < height-3)&&(k > 3)&&(k<width-3)){
+  for (var j = y - radius; j < y + radius; j++) {
+    for (var k = x - radius; k < x + radius; k++) {
+      if((j>radius)&&(j < height-radius)&&(k > radius)&&(k<width-radius)){
         ripplemap[oldind + (j * width) + k] += strength;
       }
     }
   }
 }
 
+var x_old = -1;
+var y_old = -1;
 //When mouse leaves window, animate a lemiscate
 function animate_(){
   animate = true;
+  x_old = -1;
+  y_old = -1;
 }
+
+function mouse_enter(){
+  x_old = -1;
+  y_old = -1;
+}
+
 function mouse_down(event) {
   x = Math.round(event.offsetX - (canvas.width/2-hwidth));
   y = Math.round(event.offsetY - (canvas.height/2-hheight));
   disturb(x,y, 10000);
 }
 
+function disturbLine(x_new, y_new){
+
+  //Bresenham's line algorithm
+  //https://stackoverflow.com/questions/4672279/bresenham-algorithm-in-javascript
+  var dx = Math.abs(x_old - x_new);
+  var dy = Math.abs(y_old - y_new);
+  var sx = Math.sign(x_old - x_new);
+  var sy = Math.sign(y_old - y_new);
+  var err = dx-dy;
+
+  var x = x_new;
+  var y = y_new;
+
+  if(x_old > 0 && y_old > -1){
+    while(true){
+      disturb(x,y, 256);
+
+      if ((x==x_old) && (y==y_old)){
+        break;
+      }
+      var e2 = err<<1;
+      if (e2 >-dy){
+        err -= dy; 
+        x  += sx; 
+      }
+      if (e2 < dx){ 
+        err += dx; 
+        y += sy; 
+      }
+    }
+  }else{
+    disturb(x,y, 256);
+  }
+}
 function mouse_track(event) {
   animate = false;
-  x = Math.round(event.offsetX - (canvas.width/2-hwidth));
-  y = Math.round(event.offsetY - (canvas.height/2-hheight));
-  disturb(x,y, 1024);
+  x_new = Math.round(event.offsetX - (canvas.width/2-hwidth));
+  y_new = Math.round(event.offsetY - (canvas.height/2-hheight));
+  if(discrete){
+    disturb(x_new, y_new, 1024);
+  }else{
+    disturbLine(x_new, y_new);
+  }
+  x_old = x_new;
+  y_old = y_new;
 }
+canvas.addEventListener('mouseenter', mouse_enter);
 canvas.addEventListener('mousedown', mouse_down);
 canvas.addEventListener('mousemove', mouse_track);
 canvas.addEventListener('mouseleave', animate_);
@@ -145,7 +206,7 @@ function getPos(canvas, evt) {
   var rect = canvas.getBoundingClientRect();
   return {
     x: evt.touches[0].clientX - rect.left,
-    y: evt.touches[0].clientY - rect.top
+      y: evt.touches[0].clientY - rect.top
   };
 }
 canvas.addEventListener("touchstart", touch_start);
@@ -172,6 +233,8 @@ function touch_move(event) {
 
 //Lemiscate variable
 var t = 0;
+var x_new;
+var y_new;
 
 //********************** DRAW **********************
 function draw() {
@@ -188,7 +251,15 @@ function draw() {
     //Parametric equation for lemnsicate taken from:
     //http://mathworld.wolfram.com/Lemniscate.html
     //Some terms are left out
-    disturb(Math.round(width/2+(width/3 * Math.cos(t))), Math.round(height/2+(height/4 * Math.sin(t) * Math.cos(t))), 1024);
+    x_new = Math.round(width/2+(width/3 * Math.cos(t)));
+    y_new = Math.round(height/2+(height/4 * Math.sin(t) * Math.cos(t)));
+    if(discrete){
+      disturb(x_new, y_new, 1024);
+    }else{
+      disturbLine(x_new, y_new, 256);
+    }
+    x_old = x_new;
+    y_old = y_new;
   }
 
   //Raindrops
@@ -218,7 +289,7 @@ function draw() {
       //Subtract the value in the current state map
       data -= ripplemap[newind+i_];
       //Reduce the strength of the ripple by 1/32nd with bitshift
-      data -= data >> 5;
+      data -= data >> (10-fade);
       ripplemap[newind+i_] = data;
 
       //Get ripple strength difference in x and y direction
@@ -238,9 +309,9 @@ function draw() {
       //Pixel data is stored as (red, green, blue, alpha) values. Each pixel index is 4 addresses apart
 
       //The pixel to draw
-      new_pixel = (a + (b * width)) * 4;
+      new_pixel = (a + (b * width))  << 2;
       //The pixel location to draw to
-      cur_pixel = i_ * 4;
+      cur_pixel = i_ << 2;
 
       //Copy appropriate rgb pixel values from texture to ripple image
       ripple.data[cur_pixel] = texture.data[new_pixel];
@@ -253,7 +324,7 @@ function draw() {
         highlights.data[cur_pixel+1] = 128+texture.data[new_pixel+1];
         highlights.data[cur_pixel+2] = 255;
         //Set transparency based on the xoffset. Zero-offset pixels will be transparent
-        highlights.data[cur_pixel+3] = 4*xoffset;
+        highlights.data[cur_pixel+3] = xoffset << 2;
       }
       mapind++;
       i_++;
