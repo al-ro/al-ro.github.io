@@ -220,7 +220,7 @@ function touch_start(event) {
   animate = false;
   x = Math.round(getPos(canvas, event).x - (canvas.width/2-hwidth));
   y = Math.round(getPos(canvas, event).y - (canvas.height/2-hheight));
-  disturb(x,y, 20000);
+  disturb(x,y, 1024);
   x_old = x;
   y_old = y;
 }
