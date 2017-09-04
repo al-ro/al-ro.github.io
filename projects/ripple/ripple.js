@@ -32,10 +32,10 @@
   var width;
   var height;
   if(mobile){
-    width = 200;
-    height = 200;
-    canvas.width = 200;
-    canvas.height = 200;
+    width = 300;
+    height = 300;
+    canvas.width = 300;
+    canvas.height = 300;
   }else{
     width = 550;
     height = 550;
@@ -79,8 +79,6 @@ for(i = 1; i < width/rx; i+=2){
     ctx_2.fillRect(i * rx,j * ry,rx,ry);
   } 
 }
-var regenerate_button = { regenerate:function(){ 
-}};
 
 var discrete = true;
 var radius = 3;
@@ -236,32 +234,36 @@ var t = 0;
 var x_new;
 var y_new;
 
+var TWO_PI = 2 * Math.PI;
+
+
 //********************** DRAW **********************
 function draw() {
   if(mobile){
-    canvas.width = 200;
-    canvas.height = 200;
+    canvas.width = 300;
+    canvas.height = 300;
   }else{
     canvas.width = 550;
     canvas.height = 550;
   }
-  //Animate lemiscate when mouse is not on window
-  if(animate){
-    t = (t+0.025)%(2*Math.PI);
-    //Parametric equation for lemnsicate taken from:
-    //http://mathworld.wolfram.com/Lemniscate.html
-    //Some terms are left out
-    x_new = Math.round(width/2+(width/3 * Math.cos(t)));
-    y_new = Math.round(height/2+(height/4 * Math.sin(t) * Math.cos(t)));
-    if(discrete){
-      disturb(x_new, y_new, 1024);
-    }else{
-      disturbLine(x_new, y_new, 256);
+  if(!mobile){
+    //Animate lemiscate when mouse is not on window
+    if(animate){
+      t = (t+0.025)%(TWO_PI);
+      //Parametric equation for lemnsicate taken from:
+      //http://mathworld.wolfram.com/Lemniscate.html
+      //Some terms are left out
+      x_new = Math.round(width/2+(width/3 * Math.cos(t)));
+      y_new = Math.round(height/2+(height/4 * Math.sin(t) * Math.cos(t)));
+      if(discrete){
+        disturb(x_new, y_new, 1024);
+      }else{
+        disturbLine(x_new, y_new, 256);
+      }
+      x_old = x_new;
+      y_old = y_new;
     }
-    x_old = x_new;
-    y_old = y_new;
   }
-
   //Raindrops
   if(droplets){
     if(frame % 5 === 0){
