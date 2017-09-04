@@ -218,13 +218,15 @@ function touch_start(event) {
   x = Math.round(getPos(canvas, event).x - (canvas.width/2-hwidth));
   y = Math.round(getPos(canvas, event).y - (canvas.height/2-hheight));
   disturb(x,y, 20000);
+  x_old = x;
+  y_old = y;
 }
 
 function touch_move(event) {
   event.preventDefault();
   animate = false;
-  x = Math.round(getPos(canvas, event).x - (canvas.width/2-hwidth));
-  y = Math.round(getPos(canvas, event).y - (canvas.height/2-hheight));
+  x_new = Math.round(getPos(canvas, event).x - (canvas.width/2-hwidth));
+  y_new = Math.round(getPos(canvas, event).y - (canvas.height/2-hheight));
   if(discrete){
     disturb(x_new, y_new, 1024);
   }else{
