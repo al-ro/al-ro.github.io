@@ -278,12 +278,6 @@ function get_impulse(i, j, point_x, point_y, col_norm_x, col_norm_y) {
   return (-(1 + restitution) * (relative_vel_x * col_norm_x + relative_vel_y * col_norm_y)) / (1.0 / discs[i].mass + 1.0 / discs[j].mass);
 }
 
-function get_wall_impulse(i, point_x, point_y, col_norm_x, col_norm_y, dt) {
-  var relative_vel_x = discs[j].x_vel - discs[i].x_vel;
-  //find speed of point on wall
-  //return (-(1 + restitution) * Math.abs(relative_vel_x * col_norm_x + relative_vel_y * col_norm_y)) / (1.0 / discs[i].mass + 1.0 / discs[j].mass);
-}
-
 function collision(dt) {
   for (i = 0; i < discCount; i++) {
     var inside = true;
