@@ -80,10 +80,8 @@ for(i = 1; i < width/rx; i+=2){
   } 
 }
 
-var discrete = true;
-if(mobile){
-  discrete = false;
-}
+var discrete = false;
+
 var radius = 3;
 var fade = 5;
 
