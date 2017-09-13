@@ -54,7 +54,10 @@
       <section class="post">
       <h5>Instructions</h5>
       <p>Drag nodes to affect fabric.</p>
-      <h5>The Simulation Loop</h5>
+      <h5>Overview</h5>
+      <p>This simulation is based on a <a href='https://gamedevelopment.tutsplus.com/tutorials/simulate-tearable-cloth-and-ragdolls-with-simple-verlet-integration--gamedev-519'>tutorial by Jared Counts</a>. We maintain a grid of nodes connected to their neighbours. As the nodes move, they are kept within a maximum distance from 4 adjacent nodes by running several iterations of a constraints solver. Each timestep, every node is pulled towards the bottom of the canvas to simulate gravity and towards the positive x-direction to simulate wind. By keeping the left column of nodes static, we can create a cloth simulation that looks like a flag flapping in the wind.</p>
+      <h5>Wind</h5>
+      <p>A 2D structure of values is mapped to the nodes of the flag and every timestep we shift the wind values along them. There are two wind modes: <strong>uniform</strong> and <strong>noise</strong>. Uniform wind applies a repeating bell curve to the flag. The <strong>speed</strong> variable determines how quickly a wave passes through the entire fabric and <strong>strength</strong> determines the amplitude. The noise wind uses 2D <a href='https://en.wikipedia.org/wiki/Simplex_noise'>simplex noise</a> from the <a href ='https://github.com/josephg/noisejs'> perlin.js </a> library. Using only the absolute values of the noise, we can create abrupt gusts in the field. The strength variable sets the magnitude of the wind whereas speed does not apply to noise wind.</p>
       </section>
 
 
