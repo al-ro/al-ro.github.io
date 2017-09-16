@@ -110,7 +110,7 @@ canvas_1.addEventListener('mouseleave', animate_);
 canvas_1.addEventListener('mouseenter', relax_);
 
 canvas_1.addEventListener("touchend", animate_);
-canvas_1.addEventListener("touchcancel", animate);
+canvas_1.addEventListener("touchcancel", animate_);
 canvas_1.addEventListener("touchmove", touch_move);
 
 function animate_(){
