@@ -292,6 +292,8 @@ var alpha;
 var t = 0;
 function draw() {
 
+
+  console.log("FRAME");
   ctx.fillStyle = "rgb(153,153,153)";
   ctx.fillRect(0,0,canvas_1.width,canvas_1.height);
 
