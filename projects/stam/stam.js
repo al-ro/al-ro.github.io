@@ -264,11 +264,15 @@ function draw_texture(){
   }
 }
 
-//********************** DRAW **********************
 var t = 0;
 var x_old = 0; 
 var y_old = 0;
 prep_colours();
+var strength = 100;
+if(mobile){
+  strength = 10;
+}
+//********************** DRAW **********************
 function draw() {
   if(mobile){
     t = (t+0.05)%(TWO_PI);
@@ -277,8 +281,8 @@ function draw() {
   }
   x_new = Math.round(width/2 + width/4* Math.cos(t));
   y_new = Math.round(height/2 + height/4* Math.sin(t));
-  disturb_u(x_new,y_new,100*(x_new-x_old));
-  disturb_v(x_new,y_new,100*(y_new-y_old));
+  disturb_u(x_new,y_new,strength*(x_new-x_old));
+  disturb_v(x_new,y_new,strength*(y_new-y_old));
   dens_[x_new+(y_new*width)] = 5000;
 
   x_old = x_new;
