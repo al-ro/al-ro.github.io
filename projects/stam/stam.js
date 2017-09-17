@@ -27,6 +27,14 @@ var blu = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
   canvas.height = 600;
   canvas_2.width = width;
   canvas_2.height = height;
+  if(mobile){ 
+    width = 100;
+    height = 100;
+    canvas.width = 300;
+    canvas.height = 300;
+    canvas_2.width = width;
+    canvas_2.height = height;
+  }
 
   var u_ = [];
   var v_ = [];
@@ -271,6 +279,10 @@ function draw() {
 
   canvas.width = 600;
   canvas.height = 600;
+  if(mobile){
+    canvas.width = 300;
+    canvas.height = 300; 
+  }
   vel_step(u_, v_, u_old_, v_old_, visc_, dt_); 
   dens_step(dens_, dens_old_, u_, v_, diff_, dt_); 
   draw_texture();
