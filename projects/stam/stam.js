@@ -298,7 +298,7 @@ function draw() {
   dens_step(dens_, dens_old_, u_, v_, diff_, dt_); 
   draw_texture();
   ctx_2.putImageData(plot_rgba, 0, 0);
-  ctx.drawImage(canvas_2,0,0,width,height,0,0,canvas.width,canvas.height);
+  ctx.drawImage(canvas_2,1,1,width,height,0,0,canvas.width,canvas.height);
   window.requestAnimationFrame(draw);
 }
 
