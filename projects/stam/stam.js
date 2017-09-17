@@ -45,7 +45,7 @@ var blu = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
   var discrete = false;
 
-  var iterations = 3;
+  var iterations = 6;
   var dt_ = 0.0001;
   var diff_ = 0.025;
   var visc_ = 0.01;
