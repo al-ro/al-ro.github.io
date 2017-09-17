@@ -54,7 +54,7 @@ var blu = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
   var minvar = 0;
   var maxvar = 100;
   if(mobile){
-    maxvar = 500;
+    maxvar = 1000;
   }
 
   for(i = 0; i < (width+2)*(height+2); i++){
