@@ -53,6 +53,9 @@ var blu = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
   var minvar = 0;
   var maxvar = 100;
+  if(mobile){
+    maxvar = 50;
+  }
 
   for(i = 0; i < (width+2)*(height+2); i++){
     u_[i] = 0;
@@ -267,7 +270,11 @@ var x_old = 0;
 var y_old = 0;
 prep_colours();
 function draw() {
-  t = (t+0.1)%(TWO_PI);
+  if(mobile){
+    t = (t+0.05)%(TWO_PI);
+  }else{
+    t = (t+0.1)%(TWO_PI); 
+  }
   x_new = Math.round(width/2 + width/4* Math.cos(t));
   y_new = Math.round(height/2 + height/4* Math.sin(t));
   disturb_u(x_new,y_new,100*(x_new-x_old));
