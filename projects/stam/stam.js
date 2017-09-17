@@ -49,7 +49,7 @@ var blu = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
   var dt_ = 0.0001;
   var diff_ = 0.025;
   var visc_ = 0.01;
-  var radius = 1;
+  var radius = 3;
 
   var minvar = 0;
   var maxvar = 100;
