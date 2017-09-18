@@ -429,6 +429,7 @@ prep_colours();
 clear();
 
 //********************** DRAW **********************
+console.log('draw');
 function draw() {
   if(animate && circle){
     if(mobile){
