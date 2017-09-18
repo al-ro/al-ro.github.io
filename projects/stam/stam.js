@@ -441,11 +441,7 @@ clear();
 //********************** DRAW **********************
 function draw() {
   if(animate && circle){
-    if(mobile){
-      t = (t+0.05)%(TWO_PI);
-    }else{
-      t = (t+0.3)%(TWO_PI); 
-    }
+    t = (t+0.1)%(TWO_PI);
     x_new = Math.round(width/2 + width/4* Math.cos(t));
     y_new = Math.round(height/2 + height/4* Math.sin(t));
     disturbLine(x_new, y_new);
