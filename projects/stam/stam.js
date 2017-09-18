@@ -104,24 +104,19 @@ function IX(i,j){
   return j * (width) + i;
 }
 
-function SWAP(x0, x){
-  var tmp = x0;
-  x0 = x;
-  x = tmp;
-}
-
 function set_bnd (b, x){
-  for(i=1; i<=width; i++) {
-    x[IX(0, i)] = b==1 ? -x[IX(1,i)] : x[IX(1,i)]; 
-    x[IX(width+1,i)] = b==1 ? -x[IX(width,i)] : x[IX(width,i)]; 
-    x[IX(i, 0)] = b==2 ? -x[IX(i,1)] : x[IX(i,1)];
-    x[IX(i,width+1)] = b==2 ? -x[IX(i,width)] : x[IX(i,width)]; 
+  for(i=1; i<=height; i++) {
+    x[IX(0, i)]      = 0;// b==1 ? -x[IX(1,i)] : x[IX(1,i)]; 
+    x[IX(width+1,i)] = 0;//b==1 ? -x[IX(width,i)] : x[IX(width,i)]; 
+
+    x[IX(i, 0)]      = 0;//b==2 ? -x[IX(i,1)] : x[IX(i,1)];
+    x[IX(i,width+1)] = 0;//b==2 ? -x[IX(i,height)] : x[IX(i,height)]; 
   }
 
-  x[IX(0, 0)] = 0.5*(x[IX(1,0 )]+x[IX(0  ,1 )]); 
-  x[IX(0,width+1)] = 0.5*(x[IX(1,width+1)]+x[IX(0,width)]); 
-  x[IX(width+1, 0)] = 0.5*(x[IX(width,0 )]+x[IX(width+1,1)]); 
-  x[IX(width+1,width+1)] = 0.5*(x[IX(width,width+1)]+x[IX(width+1,width)]);
+  x[IX(0, 0)] = 0.5*(x[IX(1, 0)]+x[IX(0, 1)]); 
+  x[IX(0,width+1)] = 0.5*(x[IX(1,width+1)]+x[IX(0, height)]); 
+  x[IX(width+1, 0)] = 0.5*(x[IX(width, 0)]+x[IX(width+1,1)]); 
+  x[IX(width+1,height+1)] = 0.5*(x[IX(width,height+1)]+x[IX(width+1,width)]);
 }
 
 function diffuse(b, x, x0, diff, dt){
