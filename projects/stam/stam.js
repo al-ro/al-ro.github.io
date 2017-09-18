@@ -22,17 +22,16 @@ var blu = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
   canvas.width = 600;
   canvas.height = 600;
-  canvas_2.width = width;
-  canvas_2.height = height;
 
   if(mobile){ 
     width = 100;
     height = 100;
     canvas.width = 300;
     canvas.height = 300;
-    canvas_2.width = width;
-    canvas_2.height = height;
   }
+
+canvas_2.width = width; 
+canvas_2.height = height;
 
 var TWO_PI = 2 * Math.PI;
 var scale = canvas.width/width;
@@ -59,9 +58,6 @@ var add_density = true;
 
 var minvar = 0;
 var maxvar = 100;
-if(mobile){
-  maxvar = 200;
-}
 
 var velocity = false;
 var density = true;
