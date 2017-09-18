@@ -19,6 +19,10 @@ var blu = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
   var width = 300;
   var height = 300;
+  var maxDim;
+  var large = false;
+  var canvasContainer = document.getElementById('cc_1');
+  maxDim = Math.max(canvasContainer.offsetWidth,canvasContainer.offsetHeight);
 
   canvas.width = 600;
   canvas.height = 600;
@@ -65,7 +69,7 @@ var maxvar = 100;
 var velocity = false;
 var density = true;
 
-var reset_button = {reset:function(){clear(); iterations = 3; radius = 1; strength = 100; if(mobile){strength = 50;}}};
+var clear_button = {clear:function(){clear(); iterations = 3; radius = 1; strength = 100; if(mobile){strength = 50;}}};
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
@@ -79,7 +83,8 @@ gui.add(this, 'radius').min(1.0).max(10.0).step(1.0).listen();
 gui.add(this, 'strength').min(1.0).max(1000.0).step(10.0).listen();
 gui.add(this, 'visc_').min(0.0).max(1.0).step(0.0001).listen();
 gui.add(this, 'diff_').min(0.0).max(1.0).step(0.0001).listen();
-gui.add(reset_button, 'reset');
+gui.add(clear_button, 'clear');
+gui.add(this, 'large');
 gui.close();
 
 
@@ -450,8 +455,13 @@ function draw() {
     canvas.width = 300;
     canvas.height = 300; 
   }else{
-    canvas.width = 600;
-    canvas.height = 600;
+    if(large){
+      canvas.width = canvas.height = maxDim;
+    }else{
+      canvas.width = 600;
+      canvas.height = 600; 
+    }
+    scale = canvas.width/width;
   }
 
   vel_step(u_, v_, u_old_, v_old_, visc_, dt_); 
