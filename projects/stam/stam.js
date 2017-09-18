@@ -61,7 +61,7 @@ var maxvar = 100;
 
 var velocity = false;
 var density = true;
-
+/*
 var reset_button = {reset:function(){clear(); iterations = 3; radius = 1; strength = 100; }};
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
@@ -78,7 +78,7 @@ gui.add(this, 'visc_').min(0.0).max(1.0).step(0.0001).listen();
 gui.add(this, 'diff_').min(0.0).max(1.0).step(0.0001).listen();
 gui.add(reset_button, 'reset');
 gui.close();
-
+*/
 
 function clear(){
   for(i = 0; i < (width+2)*(height+2); i++){
