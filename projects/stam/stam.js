@@ -313,7 +313,12 @@ function mouse_enter(){
   y_old = -1;
 }
 
+var click = false;
+function mouse_up(event) {
+  click = false;
+}
 function mouse_down(event) {
+  click = true;
   x = Math.round(event.offsetX / scale);
   y = Math.round(event.offsetY / scale);
   add_density_(x,y, strength*10);
@@ -371,14 +376,17 @@ function disturbLine(x_new, y_new){
 }
 function mouse_track(event) {
   animate = false;
+  if(click){
   x_new = Math.round(event.offsetX / scale);
   y_new = Math.round(event.offsetY / scale);
   disturbLine(x_new, y_new);
   x_old = x_new;
   y_old = y_new;
+  }
 }
 canvas.addEventListener('mouseenter', mouse_enter);
 canvas.addEventListener('mousedown', mouse_down);
+canvas.addEventListener('mouseup', mouse_up);
 canvas.addEventListener('mousemove', mouse_track);
 canvas.addEventListener('mouseleave', animate_);
 
