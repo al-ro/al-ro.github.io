@@ -406,6 +406,8 @@ canvas.addEventListener("touchmove", touch_move);
 function touch_start(event) {
   event.preventDefault();
   animate = false;
+  x_old = -1;
+  y_old = -1;
   x = Math.round(getPos(canvas, event).x / scale);
   y = Math.round(getPos(canvas, event).y / scale);
   if(add_density){
