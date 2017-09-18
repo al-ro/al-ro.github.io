@@ -319,9 +319,11 @@ function mouse_up(event) {
 }
 function mouse_down(event) {
   click = true;
-  x = Math.round(event.offsetX / scale);
-  y = Math.round(event.offsetY / scale);
-  add_density_(x,y, strength*10);
+  if(add_density){
+    x = Math.round(event.offsetX / scale);
+    y = Math.round(event.offsetY / scale);
+    add_density_(x,y, strength*10);
+  }
 }
 
 //Increase density within a radius of a specified location
