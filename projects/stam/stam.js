@@ -36,27 +36,60 @@ var blu = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
     canvas_2.height = height;
   }
 
-  var u_ = [];
-  var v_ = [];
-  var u_old_ = [];
-  var v_old_ = [];
-  var dens_ = [];
-  var dens_old_ = [];
+var scale = canvas.width/width;
 
-  var discrete = false;
+var u_ = [];
+var v_ = [];
+var u_old_ = [];
+var v_old_ = [];
+var dens_ = [];
+var dens_old_ = [];
 
-  var iterations = 3;
-  var dt_ = 0.0001;
-  var diff_ = 0.025;
-  var visc_ = 0.01;
-  var radius = 3;
+var discrete = false;
 
-  var minvar = 0;
-  var maxvar = 100;
-  if(mobile){
-    maxvar = 2000;
-  }
+var iterations = 3;
+var dt_ = 0.0001;
+var diff_ = 0.025;
+var visc_ = 0.01;
+var radius = 1;
+var strength = 100;
+if(mobile){
+  strength = 10;
+}
+var t = 0;
+var x_old = 0; 
+var y_old = 0;
 
+var animate = true;
+var add_velocity = true;
+var add_density = true;
+
+var minvar = 0;
+var maxvar = 100;
+if(mobile){
+  maxvar = 200;
+}
+
+var velocity = false;
+var density = true;
+
+var reset_button = {reset:function(){clear(); radius = 1; strength = 100; if(mobile){strength = 10;}}};
+var gui = new dat.GUI({ autoPlace: false });
+var customContainer = document.getElementById('gui_container');
+customContainer.appendChild(gui.domElement);
+gui.add(this, 'density').listen().onChange(function(value){velocity = false; density = true;});
+gui.add(this, 'velocity').listen().onChange(function(value){density  = false; velocity = true;});
+gui.add(this, 'add_density');
+gui.add(this, 'add_velocity');
+gui.add(this, 'radius').min(1.0).max(10.0).step(1.0).listen();
+gui.add(this, 'strength').min(1.0).max(1000.0).step(10.0).listen();
+gui.add(this, 'visc_').min(0.0).max(1.0).step(0.0001).listen();
+gui.add(this, 'diff_').min(0.0).max(1.0).step(0.0001).listen();
+gui.add(reset_button, 'reset');
+gui.close();
+
+
+function clear(){
   for(i = 0; i < (width+2)*(height+2); i++){
     u_[i] = 0;
     v_[i] = 0;
@@ -65,6 +98,7 @@ var blu = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
     dens_[i] = 0;
     dens_old_[i] = 0;
   }
+}
 
 
 function IX(i,j){
@@ -105,6 +139,7 @@ function diffuse(b, x, x0, diff, dt){
     set_bnd(b, x);
   }
 }
+
 function advect(b, d, d0, u, v, dt){
   var i0, j0, i1, j1;
   var x, y, s0, t0, s1, t1, dt0;
@@ -210,6 +245,7 @@ function dens_step(x, x0, u,  v, diff, dt){
   x = tmp;
   advect(0, x, x0, u, v, dt);
 }
+
 function disturb_u(x, y, strength){
   for (j = y - radius; j < y + radius; j++) {
     for (k = x - radius; k < x + radius; k++) {
@@ -219,6 +255,7 @@ function disturb_u(x, y, strength){
     }
   }
 }
+
 function disturb_v(x, y, strength){
   for (j = y - radius; j < y + radius; j++) {
     for (k = x - radius; k < x + radius; k++) {
@@ -241,15 +278,19 @@ function prep_colours(){
     blu[i] = ((blu[i] * 255) << 0);
   }
 }
+
 function draw_texture(){
-  var speed;
+  var value;
   for(x = 0; x < width+2; x++){
     for(y = 0; y < height+2; y++){
       var i = y * width + x;
-      //speed = Math.abs(Math.sqrt(u_[i]*u_[i] + v_[i]*v_[i]));
-      speed = dens_[i]; 
-      frac=(speed-minvar)/(maxvar-minvar);
-      //frac=(u_prev[i]-minvar)/(maxvar-minvar);
+      if(velocity){
+        value = Math.abs(Math.sqrt(u_[i]*u_[i] + v_[i]*v_[i]));
+      }
+      if(density){
+        value = dens_[i];
+      }
+      frac = (value-minvar)/(maxvar-minvar);
       frac = (frac<0.01)?0.01:frac;
       frac = (frac>0.99)?0.99:frac;
       icol = (frac * ncol)<<0;
@@ -264,30 +305,113 @@ function draw_texture(){
   }
 }
 
-var t = 0;
-var x_old = 0; 
-var y_old = 0;
-prep_colours();
-var strength = 100;
-if(mobile){
-  strength = 10;
+var x_old = -1;
+var y_old = -1;
+//When mouse leaves window, animate a lemiscate
+function animate_(){
+  animate = true;
+  x_old = -1;
+  y_old = -1;
 }
-//********************** DRAW **********************
-function draw() {
-  if(mobile){
-    t = (t+0.05)%(TWO_PI);
-  }else{
-    t = (t+0.1)%(TWO_PI); 
-  }
-  x_new = Math.round(width/2 + width/4* Math.cos(t));
-  y_new = Math.round(height/2 + height/4* Math.sin(t));
-  disturb_u(x_new,y_new,strength*(x_new-x_old));
-  disturb_v(x_new,y_new,strength*(y_new-y_old));
-  dens_[x_new+(y_new*width)] = 5000;
 
+function mouse_enter(){
+  x_old = -1;
+  y_old = -1;
+}
+
+function mouse_down(event) {
+  x = Math.round(event.offsetX / scale);
+  y = Math.round(event.offsetY / scale);
+  add_density_(x,y, strength*10);
+}
+
+//Increase density within a radius of a specified location
+function add_density_(x,y, strength){
+  for (var j = y - radius; j < y + radius; j++) {
+    for (var k = x - radius; k < x + radius; k++) {
+      if((j>radius)&&(j < height-radius)&&(k > radius)&&(k<width-radius)){
+        dens_[(j * width) + k] += strength;
+      }
+    }
+  }
+}
+function disturbLine(x_new, y_new){
+
+  //Bresenham's line algorithm
+  //https://stackoverflow.com/questions/4672279/bresenham-algorithm-in-javascript
+  var dx = Math.abs(x_old - x_new);
+  var dy = Math.abs(y_old - y_new);
+  var sx = Math.sign(x_old - x_new);
+  var sy = Math.sign(y_old - y_new);
+  var err = dx-dy;
+
+  var x = x_new;
+  var y = y_new;
+
+  if(x_old > 0 && y_old > -1){
+    while(true){
+      if(add_density){
+        add_density_(x,y, strength);
+      }
+      if(add_velocity){
+        disturb_u(x,y,strength*(x-x_old));
+        disturb_v(x,y,strength*(y-y_old));
+      }
+
+      if ((x==x_old) && (y==y_old)){
+        break;
+      }
+      var e2 = err<<1;
+      if (e2 >-dy){
+        err -= dy; 
+        x  += sx; 
+      }
+      if (e2 < dx){ 
+        err += dx; 
+        y += sy; 
+      }
+    }
+  }else{
+    add_density_(x,y, strength);
+  }
+}
+function mouse_track(event) {
+  animate = false;
+  x_new = Math.round(event.offsetX / scale);
+  y_new = Math.round(event.offsetY / scale);
+  if(discrete){
+    add_density_(x_new, y_new, strength);
+  }else{
+    disturbLine(x_new, y_new);
+  }
   x_old = x_new;
   y_old = y_new;
+}
+canvas.addEventListener('mouseenter', mouse_enter);
+canvas.addEventListener('mousedown', mouse_down);
+canvas.addEventListener('mousemove', mouse_track);
+canvas.addEventListener('mouseleave', animate_);
 
+prep_colours();
+clear();
+
+//********************** DRAW **********************
+function draw() {
+  if(animate){
+    if(mobile){
+      t = (t+0.05)%(TWO_PI);
+    }else{
+      t = (t+0.1)%(TWO_PI); 
+    }
+    x_new = Math.round(width/2 + width/4* Math.cos(t));
+    y_new = Math.round(height/2 + height/4* Math.sin(t));
+    disturb_u(x_new,y_new,strength*(x_new-x_old));
+    disturb_v(x_new,y_new,strength*(y_new-y_old));
+    add_density_(x_new, y_new, strength*10);
+
+    x_old = x_new;
+    y_old = y_new;
+  }
   canvas.width = 600;
   canvas.height = 600;
   if(mobile){
