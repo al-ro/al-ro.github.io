@@ -54,11 +54,9 @@ if(mobile){
   strength = 10;
 }
 var t = 0;
-var x_old = 0; 
-var y_old = 0;
 
 var animate = true;
-  var circle = true;
+var circle = true;
 var add_velocity = true;
 var add_density = true;
 
@@ -316,6 +314,8 @@ function mouse_enter(){
 var click = false;
 function mouse_up(event) {
   click = false;
+  x_old = -1;
+  y_old = -1;
 }
 function mouse_down(event) {
   click = true;
@@ -349,7 +349,7 @@ function disturbLine(x_new, y_new){
   var x = x_new;
   var y = y_new;
 
-  if(x_old > 0 && y_old > -1){
+  if(x_old > -1 && y_old > -1){
     while(true){
       if(add_density){
         add_density_(x,y, strength);
@@ -373,17 +373,19 @@ function disturbLine(x_new, y_new){
       }
     }
   }else{
-    add_density_(x,y, strength);
+    if(add_density){
+      add_density_(x,y, strength);
+    }
   }
 }
 function mouse_track(event) {
   animate = false;
   if(click){
-  x_new = Math.round(event.offsetX / scale);
-  y_new = Math.round(event.offsetY / scale);
-  disturbLine(x_new, y_new);
-  x_old = x_new;
-  y_old = y_new;
+    x_new = Math.round(event.offsetX / scale);
+    y_new = Math.round(event.offsetY / scale);
+    disturbLine(x_new, y_new);
+    x_old = x_new;
+    y_old = y_new;
   }
 }
 canvas.addEventListener('mouseenter', mouse_enter);
@@ -420,7 +422,7 @@ function touch_move(event) {
   x_new = Math.round(getPos(canvas, event).x / scale);
   y_new = Math.round(getPos(canvas, event).y / scale);
   disturbLine(x_new, y_new);
-  
+
   x_old = x_new;
   y_old = y_new;
 }
