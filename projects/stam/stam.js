@@ -407,7 +407,7 @@ function touch_start(event) {
   x = Math.round(getPos(canvas, event).x / scale);
   y = Math.round(getPos(canvas, event).y / scale);
   if(add_density){
-    add_density(x,y, strength);
+    add_density_(x,y, strength);
   }
   x_old = x;
   y_old = y;
@@ -451,8 +451,8 @@ function draw() {
     canvas.height = 600;
   }
 
-  //vel_step(u_, v_, u_old_, v_old_, visc_, dt_); 
-  //dens_step(dens_, dens_old_, u_, v_, diff_, dt_); 
+  vel_step(u_, v_, u_old_, v_old_, visc_, dt_); 
+  dens_step(dens_, dens_old_, u_, v_, diff_, dt_); 
   draw_texture();
   ctx_2.putImageData(plot_rgba, 0, 0);
   ctx.drawImage(canvas_2,1,1,width,height,0,0,canvas.width,canvas.height);
