@@ -50,9 +50,6 @@ var diff_ = 0.025;
 var visc_ = 0.01;
 var radius = 1;
 var strength = 100;
-if(mobile){
-  strength = 10;
-}
 var t = 0;
 
 var animate = true;
@@ -69,7 +66,7 @@ if(mobile){
 var velocity = false;
 var density = true;
 
-var reset_button = {reset:function(){clear(); iterations = 3; radius = 1; strength = 100; if(mobile){strength = 10;}}};
+var reset_button = {reset:function(){clear(); iterations = 3; radius = 1; strength = 100; }};
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
@@ -322,7 +319,7 @@ function mouse_down(event) {
   if(add_density){
     x = Math.round(event.offsetX / scale);
     y = Math.round(event.offsetY / scale);
-    add_density_(x,y, strength*10);
+    add_density_(x,y, strength);
   }
 }
 
@@ -411,7 +408,9 @@ function touch_start(event) {
   animate = false;
   x = Math.round(getPos(canvas, event).x / scale);
   y = Math.round(getPos(canvas, event).y / scale);
-  add_density(x,y, strength);
+  if(add_density){
+    add_density(x,y, strength);
+  }
   x_old = x;
   y_old = y;
 }
@@ -441,19 +440,19 @@ function draw() {
     }
     x_new = Math.round(width/2 + width/4* Math.cos(t));
     y_new = Math.round(height/2 + height/4* Math.sin(t));
-    disturb_u(x_new,y_new,strength*(x_new-x_old));
-    disturb_v(x_new,y_new,strength*(y_new-y_old));
-    add_density_(x_new, y_new, strength*10);
+    disturbLine(x_new, y_new);
 
     x_old = x_new;
     y_old = y_new;
   }
-  canvas.width = 600;
-  canvas.height = 600;
   if(mobile){
     canvas.width = 300;
     canvas.height = 300; 
+  }else{
+    canvas.width = 600;
+    canvas.height = 600;
   }
+
   vel_step(u_, v_, u_old_, v_old_, visc_, dt_); 
   dens_step(dens_, dens_old_, u_, v_, diff_, dt_); 
   draw_texture();
