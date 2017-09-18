@@ -13,20 +13,19 @@ var blu = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
   var animate = true;
 
-  //document.getElementById('canvas').style.cursor = "none";
   //Main display canvas
   var ctx = canvas.getContext("2d");
-
   //Hidden canvas
   var ctx_2 = canvas_2.getContext("2d");
-  var width;
-  var height;
-  width = 300;
-  height = 300;
+
+  var width = 300;
+  var height = 300;
+
   canvas.width = 600;
   canvas.height = 600;
   canvas_2.width = width;
   canvas_2.height = height;
+
   if(mobile){ 
     width = 100;
     height = 100;
@@ -36,6 +35,7 @@ var blu = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
     canvas_2.height = height;
   }
 
+var TWO_PI = 2 * Math.PI;
 var scale = canvas.width/width;
 
 var u_ = [];
@@ -44,8 +44,6 @@ var u_old_ = [];
 var v_old_ = [];
 var dens_ = [];
 var dens_old_ = [];
-
-var discrete = false;
 
 var iterations = 3;
 var dt_ = 0.0001;
@@ -267,7 +265,6 @@ function disturb_v(x, y, strength){
   }
 }
 
-var TWO_PI = 2 * Math.PI;
 var plot_rgba = [];
 plot_rgba = ctx_2.getImageData(0,0,width,height);
 var ncol = 500;
@@ -308,7 +305,7 @@ function draw_texture(){
 
 var x_old = -1;
 var y_old = -1;
-//When mouse leaves window, animate a lemiscate
+//When mouse leaves window, animate a circle
 function animate_(){
   animate = true;
   x_old = -1;
@@ -380,11 +377,7 @@ function mouse_track(event) {
   animate = false;
   x_new = Math.round(event.offsetX / scale);
   y_new = Math.round(event.offsetY / scale);
-  if(discrete){
-    add_density_(x_new, y_new, strength);
-  }else{
-    disturbLine(x_new, y_new);
-  }
+  disturbLine(x_new, y_new);
   x_old = x_new;
   y_old = y_new;
 }
@@ -392,6 +385,40 @@ canvas.addEventListener('mouseenter', mouse_enter);
 canvas.addEventListener('mousedown', mouse_down);
 canvas.addEventListener('mousemove', mouse_track);
 canvas.addEventListener('mouseleave', animate_);
+
+function getPos(canvas, evt) {
+  var rect = canvas.getBoundingClientRect();
+  return {
+    x: evt.touches[0].clientX - rect.left,
+      y: evt.touches[0].clientY - rect.top
+  };
+}
+canvas.addEventListener("touchstart", touch_start);
+canvas.addEventListener("touchend", animate_);
+canvas.addEventListener("touchcancel", animate_);
+canvas.addEventListener("touchmove", touch_move);
+
+function touch_start(event) {
+  event.preventDefault();
+  animate = false;
+  x = Math.round(getPos(canvas, event).x / scale);
+  y = Math.round(getPos(canvas, event).y / scale);
+  add_density(x,y, strength);
+  x_old = x;
+  y_old = y;
+}
+
+function touch_move(event) {
+  event.preventDefault();
+  animate = false;
+  x_new = Math.round(getPos(canvas, event).x / scale);
+  y_new = Math.round(getPos(canvas, event).y / scale);
+  disturbLine(x_new, y_new);
+  
+  x_old = x_new;
+  y_old = y_new;
+}
+
 
 prep_colours();
 clear();
