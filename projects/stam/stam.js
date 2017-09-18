@@ -84,7 +84,9 @@ gui.add(this, 'strength').min(1.0).max(1000.0).step(10.0).listen();
 gui.add(this, 'visc_').min(0.0).max(1.0).step(0.0001).listen();
 gui.add(this, 'diff_').min(0.0).max(1.0).step(0.0001).listen();
 gui.add(clear_button, 'clear');
-gui.add(this, 'large');
+if(!mobile){
+  gui.add(this, 'large');
+}
 gui.close();
 
 
