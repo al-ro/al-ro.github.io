@@ -73,10 +73,11 @@ if(mobile){
 var velocity = false;
 var density = true;
 
-var reset_button = {reset:function(){clear(); radius = 1; strength = 100; if(mobile){strength = 10;}}};
+var reset_button = {reset:function(){clear(); iterations = 3; radius = 1; strength = 100; if(mobile){strength = 10;}}};
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
+gui.add(this, 'iterations').min(1.0).max(5.0).step(1.0).listen();
 gui.add(this, 'density').listen().onChange(function(value){velocity = false; density = true;});
 gui.add(this, 'velocity').listen().onChange(function(value){density  = false; velocity = true;});
 gui.add(this, 'add_density');
