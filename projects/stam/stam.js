@@ -49,6 +49,9 @@ var diff_ = 0.025;
 var visc_ = 0.01;
 var radius = 1;
 var strength = 100;
+if(mobile){
+  strength = 50;
+}
 var t = 0;
 
 var animate = true;
@@ -62,7 +65,7 @@ var maxvar = 100;
 var velocity = false;
 var density = true;
 
-var reset_button = {reset:function(){clear(); iterations = 3; radius = 1; strength = 100; }};
+var reset_button = {reset:function(){clear(); iterations = 3; radius = 1; strength = 100; if(mobile){strength = 50;}}};
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
