@@ -11,7 +11,6 @@ var blu = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
       || navigator.userAgent.match(/Windows Phone/i)
       );
 
-  var animate = true;
 
   //Main display canvas
   var ctx = canvas.getContext("2d");
@@ -59,6 +58,7 @@ var x_old = 0;
 var y_old = 0;
 
 var animate = true;
+  var circle = true;
 var add_velocity = true;
 var add_density = true;
 
@@ -75,6 +75,7 @@ var reset_button = {reset:function(){clear(); iterations = 3; radius = 1; streng
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
+gui.add(this, 'circle');
 gui.add(this, 'iterations').min(1.0).max(5.0).step(1.0).listen();
 gui.add(this, 'density').listen().onChange(function(value){velocity = false; density = true;});
 gui.add(this, 'velocity').listen().onChange(function(value){density  = false; velocity = true;});
@@ -420,7 +421,7 @@ clear();
 
 //********************** DRAW **********************
 function draw() {
-  if(animate){
+  if(animate && circle){
     if(mobile){
       t = (t+0.05)%(TWO_PI);
     }else{
