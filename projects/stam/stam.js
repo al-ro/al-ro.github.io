@@ -429,7 +429,6 @@ prep_colours();
 clear();
 
 //********************** DRAW **********************
-console.log('draw');
 function draw() {
   if(animate && circle){
     if(mobile){
@@ -452,6 +451,7 @@ function draw() {
     canvas.height = 600;
   }
 
+console.log('pre-step');
   vel_step(u_, v_, u_old_, v_old_, visc_, dt_); 
   dens_step(dens_, dens_old_, u_, v_, diff_, dt_); 
   draw_texture();
