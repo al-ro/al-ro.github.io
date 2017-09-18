@@ -49,8 +49,8 @@ var dens_old_ = [];
 
 var iterations = 3;
 var dt_ = 0.0001;
-var diff_ = 0.025;
-var visc_ = 0.01;
+var diff_ = 0.0;
+var visc_ = 0.0;
 var radius = 1;
 var strength = 100;
 if(mobile){
