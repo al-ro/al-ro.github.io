@@ -51,7 +51,10 @@
         <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
       </ul>
       </section>
-
+      <h5>Instructions</h5>
+      <p>Drag on canvas to introduce density and velocity.</p>
+      <h5>Overview</h5>
+      <p>This fluid simulation is based on <a href='http://www.intpowertechcorp.com/GDC03.pdf'>the paper by Jos Stam</a>. In a discretised domain, every cell has three variables: density, x-velocity and y-velocity. We maintain six arrays to store the data together with the states at the last timestep. By applying rules about viscosity, diffusion and the exchange of information between neighbouring cells, we can create an interactive simulation which displays many of the intuitive characteristics of fluids. <strong>visc_</strong> controls the viscosity of the fluid where higher values lead to more rigid behaviour. <strong>diff_</strong> determines the diffusion rate of density.</p>
       <section class="post">
       </section>
 
