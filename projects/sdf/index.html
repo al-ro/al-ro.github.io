@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <!-- THIS PAGE IS BUILT WITH SKELETON: http://getskeleton.com/
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+    <!-- Basic Page Needs
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>Fast Narrow Band SDF Generation on GPUs</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Mobile Specific Metas
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- FONT
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link href="https://fonts.googleapis.com/css?family=Palanquin:400,300,600" rel="stylesheet">
+
+    <!-- CSS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="../../css/normalize.css">
+    <link rel="stylesheet" href="../../css/skeleton.css">
+    <link rel="stylesheet" href="../../css/custom.css">
+
+    <!-- Favicon
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="icon" type="image/png" href="../../images/favicon_2.png">
+  </head>
+  <body>
+
+    <!-- Primary Page Layout
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="container">
+      <section class="post_header">
+      <div class="row">
+        <div class="twelve columns">
+          <h4 class="title">Fast Narrow Band SDF Generation on GPUs</h4>
+        </div>
+      </div>
+      <div class="row">
+        <div class="six columns gallery">
+          <img class="img u-max-full-width" src="../../images/bunny.png">
+        </div>
+        <div class="six columns gallery">
+          <img class="img u-max-full-width" src="../../images/lucy.png">
+        </div>
+        <div class="six columns gallery">
+          <img class="img u-max-full-width" src="../../images/dragon.png">
+        </div>
+        <div class="six columns gallery">
+          <img class="img u-max-full-width" src="../../images/orion.png">
+        </div>
+      </div>
+      <p align = 'center'>(Surface plots (0 crossing) and slices of the produced SDF)</p>
+
+      </section>
+      <section class="post">
+      <h5>Signed Distance Fields</h5>
+      <p>Part of my research is concerned with generating signed distance fields from STL files. The SDF is used to describe complex geometries in regular Cartesian grids and generate cut cells at the object boundaries. The main aims were increased generation speeds and improved robustness compared to existing methodologies. An near-exact SDF field can be constructed from closed orientable STL geometries where the precision is limited only by the resolution of the target computational mesh.</p>
+      <div class="row">
+        <div class="six columns gallery">
+          <img class="img u-max-full-width" src="../../images/bunny_resolution.png">
+        </div>
+        <div class="six columns gallery">
+          <img class="img u-max-full-width" src="../../images/bunny_accuracy.png">
+        </div>
+      </div>
+   <p align = 'center'>(Left: A narrow band SDF is generated at high resolution. Right: The 0 crossing (white) matches the STL input slice (purple) to within &#916;x.)</p>
+      <h5>Robustness</h5>
+      <p>As industrial geometries can feature complex topology where the surfaces are far from smooth, the produced code detects and deals with cases of high curvature at vertices.</p> 
+      <div class="row">
+        <div class="six columns gallery">
+          <img class="img u-max-full-width" src="../../images/pathological_surface.png">
+        </div>
+        <div class="six columns gallery">
+          <img class="img u-max-full-width" src="../../images/pathological_correct.png">
+        </div> 
+      </div>
+      <div class="row">
+        <div class="six columns gallery">
+          <img class="img u-max-full-width" src="../../images/ruff.png">
+        </div>
+        <div class="six columns gallery">
+          <img class="img u-max-full-width" src="../../images/ruff_complete.png">
+        </div>
+      </div>
+      <p align = 'center'>(High curvature geometries and correct SDFs)</p>
+      <h5>Performance</h5>
+      <p>A CUDA implementation was produced which reads in an STL file, quickly builds an internal geometry representation from unordered surface features and then generates an SDF around the boundary to a user defined maximum distance. Based on a testing set of STL files ranging from 52,000 to 2,500,000 faces, the resulting code pipeline from reading in the file to handing over to a CFD solver mostly takes on the order of seconds for low distance bands.</p> 
+      </section>
+
+
+    </div>
+    <!-- End Document
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  </body>
+  <footer>
+  <div class="container">
+    <section class="footer" id="links">
+    <div class="navbar-spacer"></div>
+    <nav class="navbar footer-navbar">
+    <div class="container">
+      <ul class="navbar-list">
+        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+      </ul>
+    </div>
+    </nav>
+  </div>
+  </section>
+  </footer>
+</html>
