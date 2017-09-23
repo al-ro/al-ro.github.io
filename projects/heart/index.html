@@ -8,7 +8,7 @@
     <!-- Basic Page Needs
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
     <meta charset="utf-8">
-    <title>Bezier Trails</title>
+    <title>Bézier Trails</title>
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -38,7 +38,7 @@
       <section class="post_header">
       <div class="row">
         <div class="four columns offset-by-four columns">
-          <h4 class="title">Bezier Trails</h4>
+          <h4 class="title">Bézier Trails</h4>
         </div>
       </div>
         <div class="canvas_container u-max-full-width" id="cc_1">
@@ -53,6 +53,8 @@
       <section class="post">
       <h5>Instructions</h5>
       <p>Move cursor /  drag on device to leave a trail.</p>
+      <h5>Overview</h5>
+      <p>This is based on an <a href='https://stackoverflow.com/questions/7054272/how-to-draw-smooth-curve-through-n-points-using-javascript-html5-canvas'>answer</a> about how to draw a smooth curve through user defined points. We maintain an array of points and every frame the coordinates of point [i] are set to the coordinates of point [i-1]. The first element of the array tracks user input and the rest of the points follow it, thereby creating a snaking body. We approximate a smooth line through the points by drawing a <a href='https://www.w3schools.com/TAGs/canvas_quadraticcurveto.asp'>quadratic curve</a> using the midpoints between the array elements as control points.</p>
       </section>
 
 
