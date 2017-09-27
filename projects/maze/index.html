@@ -50,11 +50,11 @@
         <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
       </ul>
       </section>
-
       <section class="post">
+      <h5>Overview</h5>
+      <p><a href='https://en.wikipedia.org/wiki/Prim%27s_algorithm'>Prim's algorithm</a> can be used to <a href='https://stackoverflow.com/questions/29739751/implementing-a-randomly-generated-maze-using-prims-algorithm'>generate random mazes</a>. We aim to have a collection of tiles marked either 'clear' (light) or 'wall' (dark) such that there is a path from every clear cell to any other without crossing a wall (and that long enough paths are not immediately clear to a viewer). The algorithm starts with a grid of wall tiles. We pick a cell in the top left corner to be starting point and set it to clear. The wall cells at a distance of 2 from the clear cell are stored in an array 'frontier'. One frontier cell is picked randomly, removed from the array and set to be clear. A random clear cell at distance 2 from the frontier is picked as a target. The tile between the newly cleared frontier and the target is set to clear, thereby connecting the new tile with the maze. We add the wall cells at distance 2 from the frontier cell into the array and repeat the algorithm until the frontier array is empty.</p>
+      <p>After the maze has been generated, we use the <a href='http://easystarjs.com/'>Easystar.js</a> library to find a path from the start point to the lower right corner. The library uses <a href='https://en.wikipedia.org/wiki/A*_search_algorithm'>A*</a> and the resulting path is highlighted in the end.</p>
       </section>
-
-
     </div>
     <!-- End Document
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->

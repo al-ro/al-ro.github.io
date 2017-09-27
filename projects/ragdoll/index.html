@@ -52,7 +52,9 @@
 
       <section class="post">
       <h5>Instructions</h5>
-      <p>Move mouse / drag on device to push ragdoll around.</p>
+      <p>Move mouse / drag on device to push ragdoll around. Try to stand it up while keeping the cursor on the grey area.</p>
+      <h5>Overview</h5>
+      <p>This is similar to the <a href='../flag/index.html'>cloth dynamics simulation</a>. We define a set of nodes which are connected to form a ragdoll. The nodes of the limbs act as joints while others act as structural points to keep the body rigid. There is constant gravity pulling the structural points towards the bottom of the canvas and an invisible anchor point pulling the head upward when the cursor is not on the canvas. As the user moves the cursor into the grey area, the anchor constraint is relaxed and the body falls on the floor. Every frame a small nudge is applied to the structural points in the direction of the changing cursor position. To simulate friction, we dampen x-direction movement for nodes at the bottom boundary.</p>
       </section>
 
 
