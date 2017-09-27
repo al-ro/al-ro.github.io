@@ -156,6 +156,21 @@ var clear_button = { clear:function(){
   ctx.fillStyle = "rgb(17,27,68)";
   ctx.fillRect(0,0,canvas_1.width, canvas_1.height);
 }};
+var random_button = { random:function(){ 
+  ctx.fillStyle = "rgb(17,27,68)";
+  ctx.fillRect(0,0,canvas_1.width, canvas_1.height);
+  variables.speed = 0.1 + Math.random() * 0.9;
+  variables.step = Math.round(10 + Math.random() * 2990);
+  variables.particle_size = 0.1 + Math.random() * 4.9;
+  variables.rainbow = false;
+  variables.colour = 'rgb('+Math.round(Math.random()*255)+','+Math.round(Math.random()*255)+','+Math.round(Math.random()*255)+')';
+  variables.lighten = false;
+  if(variables.particle_size >= 2){
+    variables.fade = Math.random() * 0.1;
+  }else{
+    variables.fade = Math.random() * 0.01; 
+  }
+}};
 
 //dat.gui library controls
 var gui = new dat.GUI({ autoPlace: false });
@@ -170,6 +185,7 @@ gui.addColor(variables, 'colour').listen().onChange(function(value) { variables.
 if(!mobile){
   gui.add(variables, 'lighten');
 }
+gui.add(random_button,'random');
 gui.add(reset_button,'reset');
 gui.add(clear_button,'clear');
 gui.close();
