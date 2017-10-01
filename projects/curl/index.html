@@ -50,13 +50,38 @@
         <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
       </ul>
       </section>
-     <!-- <h5>Overview</h5>
-      This 2D curl noise visualiser is based on <a href='http://petewerner.blogspot.co.uk/2015/02/intro-to-curl-noise.html'>a post by Pete Werner</a>. We start by generating simplex noise using the Noise.js
-      -->
       <section class="post">
+      <h5>Overview</h5>
+      <p>This 2D curl noise visualiser is based on <a href='http://petewerner.blogspot.co.uk/2015/02/intro-to-curl-noise.html'>a post by Pete Werner</a>. We start by generating simplex noise using <a href='https://github.com/josephg/noisejs'>Noise.js</a> which produces a 2D field of scalar values. The aim is to have a number of discs move along smooth trajectories, so every time step we set the velocity of each disc according to the curl value at their location.</p>
+      <h5>Curl</h5>
+      <p>The <a href ='https://en.wikipedia.org/wiki/Curl_(mathematics)'>curl</a> of a vector field describes the rotation at any point. In 2D we can think of the curl to be perpendicular to the canvas plane to produce visuals that look like swirling fluid. To find the curl at the (x,y) location of a disc, we find the rate of change in both directions at some small distance around the point and return a tuple velocities (v<sub>x</sub>, v<sub>y</sub>):
+
+      <pre><code>function computeCurl(x, y){
+  var eps = 0.0001;
+
+  //Find rate of change in X direction
+  var n1 = noise.simplex2(x + eps, y);
+  var n2 = noise.simplex2(x - eps, y); 
+
+  //Average to find approximate derivative
+  var a = (n1 - n2)/(2 * eps);
+
+  //Find rate of change in Y direction
+  var n1 = noise.simplex2(x, y + eps); 
+  var n2 = noise.simplex2(x, y - eps); 
+
+  //Average to find approximate derivative
+  var b = (n1 - n2)/(2 * eps);
+
+  //Curl
+  return [b, -a];
+}
+      </code></pre></p>
+
+      <h5>Controls</h5>
+      <p>Adjusting the variables leads to different visuals. <strong>Step</strong> determines the zoom of the noise field where larger values result in bigger vortices. <strong>Fade</strong> determines how opaque the rectangle we draw over the previous scene is and how long the trails left by the discs will be. <strong>Flow</strong> introduces additional velocity in the positive x direction and <strong>lighten</strong> uses composite operations to mix colours.</p>
+
       </section>
-
-
     </div>
     <!-- End Document
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
