@@ -52,9 +52,9 @@
       </section>
       <section class="post">
       <h5>Overview</h5>
-      <p>This 2D curl noise visualiser is based on <a href='http://petewerner.blogspot.co.uk/2015/02/intro-to-curl-noise.html'>a post by Pete Werner</a>. We start by generating simplex noise using <a href='https://github.com/josephg/noisejs'>Noise.js</a> which produces a 2D field of scalar values. The aim is to have a number of discs move along smooth trajectories, so every time step we set the velocity of each disc according to the curl value at its location.</p>
+      <p>This 2D curl noise visualiser is based on <a href='http://petewerner.blogspot.co.uk/2015/02/intro-to-curl-noise.html'>a post by Pete Werner</a>.The aim is to have a number of discs move along smooth trajectories to produce visuals that look like swirling fluid. We start by generating simplex noise using <a href='https://github.com/josephg/noisejs'>Noise.js</a> which produces a 2D field of scalar values and every time step we set the velocity of each disc according to the curl value at its location.</p>
       <h5>Curl</h5>
-      <p>The <a href ='https://en.wikipedia.org/wiki/Curl_(mathematics)'>curl</a> of a vector field describes the rotation at any point. In 2D we can think of the curl being perpendicular to the canvas plane and we can produce visuals that look like swirling fluid. To find the curl at the (x,y) location of a disc, we find the rate of change in both directions at some small distance around the point and return a tuple velocities (v<sub>x</sub>, v<sub>y</sub>):
+      <p>The <a href ='https://en.wikipedia.org/wiki/Curl_(mathematics)'>curl</a> of a vector field describes the rotation at any point. In 2D we can think of the curl being perpendicular to the canvas plane. To find the curl at the (x,y) location of a disc, we find the rate of change in both directions at some small distance around the point and return a tuple velocities (v<sub>x</sub>, v<sub>y</sub>):
 
       <pre><code>function computeCurl(x, y){
   var eps = 0.0001;
