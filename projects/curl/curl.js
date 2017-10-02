@@ -206,7 +206,11 @@ var random_button = { random:function(){
 
   var customContainer = document.getElementById('gui_container');
   customContainer.appendChild(gui.domElement);
-  gui.add(variables, 'step').min(10).max(3000).step(10).listen();
+  if(!mobile){
+    gui.add(variables, 'step').min(10).max(3000).step(10).listen().onChange(function(value) { clear_button.clear();});
+  }else{ 
+    gui.add(variables, 'step').min(10).max(600).step(5).listen().onChange(function(value) { clear_button.clear();});
+  }
   gui.add(variables, 'speed').min(0.0).max(1.0).step(0.01).listen();
   gui.add(variables, 'particle_size').min(0.1).max(5).step(0.1).listen();
   gui.add(variables, 'fade').min(0.0).max(1.0).step(0.01).listen();
