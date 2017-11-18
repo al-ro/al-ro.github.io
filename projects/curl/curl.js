@@ -187,7 +187,11 @@ var random_button = { random:function(){
   ctx.fillStyle = "rgb(17,27,68)";
   ctx.fillRect(0,0,canvas_1.width, canvas_1.height);
   variables.speed = 0.1 + Math.random() * 0.9;
-  variables.step = Math.round(10 + Math.random() * 2990);
+  if(!mobile){
+    variables.step = Math.round(10 + Math.random() * 2990);
+  }else{ 
+    variables.step = Math.round(10 + Math.random() * 590); 
+  }
   variables.particle_size = 0.1 + Math.random() * 4.9;
   variables.rainbow = false;
   var c = Math.round(Math.random() * discCount);

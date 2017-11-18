@@ -297,7 +297,7 @@ function draw() {
       }
       //Subtract the value in the current state map
       data -= ripplemap[newind+i_];
-      //Reduce the strength of the ripple by 1/32nd with bitshift
+      //Reduce the strength of the ripple by a fraction using bitshift
       data -= data >> (10-fade);
       ripplemap[newind+i_] = data;
 
