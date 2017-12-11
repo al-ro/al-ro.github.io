@@ -1,14 +1,29 @@
+.main-title {
+  text-align: center;
+  font-size: 5.0em;
+  line-height: 1.0;
+  font-family: "Roboto", "Palanquin", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+.title-box {
+  border: 6px solid #222;
+  display: inline-block;
+  margin-bottom: 2rem;
+  padding-left: 3rem;
+  padding-right: 3rem;
+  padding-top: 2rem;
+}
+
 .header {
   margin-top: 10rem;
-  margin-bottom: 10rem;
+  margin-bottom: 2rem;
   text-align: center; 
 }
 
 @media (max-width: 550px) {
   .header {
-    margin-top: 2rem;
-    margin-bottom: 2rem;
-  }
+    margin-top: 8rem;
+    margin-bottom: 2rem; 
+}
 }
 
 .gallery{
@@ -26,9 +41,9 @@
   text-align: center; 
   font-size: 1em;
 }
-  #gui_container{
-    z-index: 1;
-  }
+#gui_container{
+  z-index: 1;
+}
 
 @media (max-width: 550px) {
   .gui_c{
@@ -36,9 +51,9 @@
     text-align: center;
     left: 15%;
 }
-  .c_navbar{
-    margin-top: 2em;
-  }
+.c_navbar{
+  margin-top: 2em;
+}
 }
 @media (min-width: 550px) {
   #gui_container{
@@ -145,14 +160,14 @@ pre{
    text-align: left; 
 }
 .container {
-  }
-  .project:hover  span{
-    -webkit-animation: fadein 0.25s; /* Safari, Chrome and Opera > 12.1 */
-    -moz-animation: fadein 0.25s; /* Firefox < 16 */
-    -ms-animation: fadein 0.25s; /* Internet Explorer */
-    -o-animation: fadein 0.25s; /* Opera < 12.1 */
-    animation: fadein 0.25s;
-    animation-fill-mode: forwards;
+}
+.project:hover  span{
+  -webkit-animation: fadein 0.25s; /* Safari, Chrome and Opera > 12.1 */
+  -moz-animation: fadein 0.25s; /* Firefox < 16 */
+  -ms-animation: fadein 0.25s; /* Internet Explorer */
+  -o-animation: fadein 0.25s; /* Opera < 12.1 */
+  animation: fadein 0.25s;
+  animation-fill-mode: forwards;
  }
 
  @keyframes fadein {
