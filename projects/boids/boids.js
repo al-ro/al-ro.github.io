@@ -2,7 +2,16 @@ var canvas = document.getElementById("canvas_1");
 var cont = document.getElementById("cc_1");
 
 var TWO_PI = Math.PI*2;
-
+{
+  const mobile = ( navigator.userAgent.match(/Android/i)
+      || navigator.userAgent.match(/webOS/i)
+      || navigator.userAgent.match(/iPhone/i)
+      //|| navigator.userAgent.match(/iPad/i)
+      || navigator.userAgent.match(/iPod/i)
+      || navigator.userAgent.match(/BlackBerry/i)
+      || navigator.userAgent.match(/Windows Phone/i)
+      );
+}
 //Spatial variables
 var width = 2000;
 var height = 2000;
@@ -14,7 +23,13 @@ var boids = [];
 var food = [];
 var predators = [];
 
-var boidCount = 600;
+var boidCount;
+if(mobile){
+  boidCount = 200;
+}else{
+  boidCount = 600;
+}
+
 var foodCount = 10;
 var predatorCount = 3;
 
