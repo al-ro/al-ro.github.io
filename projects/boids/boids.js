@@ -207,7 +207,9 @@ gui.add(this, 'neighbourhood').min(minNeighbour).max(maxNeighbour).step(10).list
 gui.add(this, 'speed').min(0).max(10).step(1).listen();
 gui.add(this, 'sphere').listen().onChange(function(value) { periodic = false; sphere = true;} );
 gui.add(this, 'periodic').listen().onChange(function(value) { periodic = true; sphere = false;} );
+if(!mobile){
 gui.addColor(this, 'colour').listen().onChange(function(value) { setColour();} );
+}
 gui.add(this, 'toggle_predators').listen().onChange(function(value){ setTransparency();});
 gui.add(reset_button, 'reset');
 
