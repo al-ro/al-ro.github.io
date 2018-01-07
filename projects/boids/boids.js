@@ -3,14 +3,6 @@ var cont = document.getElementById("cc_1");
 
 var TWO_PI = Math.PI*2;
 
-  const mobile = ( navigator.userAgent.match(/Android/i)
-      || navigator.userAgent.match(/webOS/i)
-      || navigator.userAgent.match(/iPhone/i)
-      //|| navigator.userAgent.match(/iPad/i)
-      || navigator.userAgent.match(/iPod/i)
-      || navigator.userAgent.match(/BlackBerry/i)
-      || navigator.userAgent.match(/Windows Phone/i)
-      );
 
 //Spatial variables
 var width = 2000;
@@ -23,12 +15,7 @@ var boids = [];
 var food = [];
 var predators = [];
 
-var boidCount;
-if(mobile){
-  boidCount = 200;
-}else{
-  boidCount = 600;
-}
+var boidCount = 600;
 
 var foodCount = 10;
 var predatorCount = 3;
@@ -207,9 +194,7 @@ gui.add(this, 'neighbourhood').min(minNeighbour).max(maxNeighbour).step(10).list
 gui.add(this, 'speed').min(0).max(10).step(1).listen();
 gui.add(this, 'sphere').listen().onChange(function(value) { periodic = false; sphere = true;} );
 gui.add(this, 'periodic').listen().onChange(function(value) { periodic = true; sphere = false;} );
-if(!mobile){
 gui.addColor(this, 'colour').listen().onChange(function(value) { setColour();} );
-}
 gui.add(this, 'toggle_predators').listen().onChange(function(value){ setTransparency();});
 gui.add(reset_button, 'reset');
 
