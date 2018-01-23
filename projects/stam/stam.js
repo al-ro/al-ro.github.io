@@ -19,32 +19,34 @@ var blu = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 
   //Main display canvas
-  var ctx = canvas.getContext("2d");
+  var ctx = canvas_1.getContext("2d");
   //Hidden canvas
   var ctx_2 = canvas_2.getContext("2d");
 
   var width = 300;
   var height = 300;
+  var width_ = 600;
+  var height_ = 600;
   var maxDim;
   var large = false;
   var canvasContainer = document.getElementById('cc_1');
   maxDim = Math.max(canvasContainer.offsetWidth,canvasContainer.offsetHeight);
 
-  canvas.width = 600;
-  canvas.height = 600;
+  canvas_1.width = width_;
+  canvas_1.height = height_;
 
   if(mobile){ 
     width = 100;
     height = 100;
-    canvas.width = 300;
-    canvas.height = 300;
+    canvas_1.width = 300;
+    canvas_1.height = 300;
   }
 
 canvas_2.width = width; 
 canvas_2.height = height;
 
 var TWO_PI = 2 * Math.PI;
-var scale = canvas.width/width;
+var scale = canvas_1.width/width;
 
 var u_ = [];
 var v_ = [];
@@ -397,23 +399,23 @@ function mouse_track(event) {
     y_old = y_new;
   }
 }
-canvas.addEventListener('mouseenter', mouse_enter);
-canvas.addEventListener('mousedown', mouse_down);
-canvas.addEventListener('mouseup', mouse_up);
-canvas.addEventListener('mousemove', mouse_track);
-canvas.addEventListener('mouseleave', animate_);
+canvas_1.addEventListener('mouseenter', mouse_enter);
+canvas_1.addEventListener('mousedown', mouse_down);
+canvas_1.addEventListener('mouseup', mouse_up);
+canvas_1.addEventListener('mousemove', mouse_track);
+canvas_1.addEventListener('mouseleave', animate_);
 
 function getPos(canvas, evt) {
-  var rect = canvas.getBoundingClientRect();
+  var rect = canvas_1.getBoundingClientRect();
   return {
     x: evt.touches[0].clientX - rect.left,
       y: evt.touches[0].clientY - rect.top
   };
 }
-canvas.addEventListener("touchstart", touch_start);
-canvas.addEventListener("touchend", animate_);
-canvas.addEventListener("touchcancel", animate_);
-canvas.addEventListener("touchmove", touch_move);
+canvas_1.addEventListener("touchstart", touch_start);
+canvas_1.addEventListener("touchend", animate_);
+canvas_1.addEventListener("touchcancel", animate_);
+canvas_1.addEventListener("touchmove", touch_move);
 
 function touch_start(event) {
   event.preventDefault();
@@ -456,23 +458,27 @@ function draw() {
     y_old = y_new;
   }
   if(mobile){
-    canvas.width = 300;
-    canvas.height = 300; 
+    canvas_1.width = 300;
+    canvas_1.height = 300; 
   }else{
-    if(large){
-      canvas.width = canvas.height = maxDim;
+  if((window.innerWidth === screen.width && window.innerHeight === screen.height) || (window.fullScreen)) {
+      canvas_1.width = maxDim;
+      canvas_1.height = maxDim;
     }else{
-      canvas.width = 600;
-      canvas.height = 600; 
+      canvas_1.width = width_;
+      canvas_1.height = height_;
     }
-    scale = canvas.width/width;
+    if(large){
+      canvas_1.width = canvas_1.height = maxDim;
+    }
+    scale = canvas_1.width/width;
   }
 
   vel_step(u_, v_, u_old_, v_old_, visc_, dt_); 
   dens_step(dens_, dens_old_, u_, v_, diff_, dt_); 
   draw_texture();
   ctx_2.putImageData(plot_rgba, 0, 0);
-  ctx.drawImage(canvas_2,3,3,width-3,height-3,0,0,canvas.width,canvas.height);
+  ctx.drawImage(canvas_2,3,3,width-3,height-3,0,0,canvas_1.width,canvas_1.height);
   window.requestAnimationFrame(draw);
 }
 

@@ -25,20 +25,22 @@
     <link rel="stylesheet" href="../../css/normalize.css">
     <link rel="stylesheet" href="../../css/skeleton.css">
     <link rel="stylesheet" href="../../css/custom.css">
+    <link rel="stylesheet" href="../../font-awesome-4.7.0/css/font-awesome.min.css">
 
     <!-- Favicon
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
     <link rel="icon" type="image/png" href="../../images/favicon_2.png">
   </head>
   <body>
+    <div class='fullscreen-button' id='fullscreen-button'><i class="fa fa-2x fa-expand"></i></div>
 
     <!-- Primary Page Layout
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <div class="container">
-      <section class="post_header">
+    <div class="container" id="main-container">
+      <section class="post_header" id="header">
       <div class="row">
         <div class="twelve columns">
-          <h4 class="title">Boids</h4>
+          <h4 class="title" id="title">Boids</h4>
         </div>
       </div>
         <div class="canvas_container u-max-full-width" id="cc_1">
@@ -60,6 +62,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
     <script type="text/javascript" src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
+    <script type="text/javascript" src="../../utility/fullscreen.js"></script>
     <script type="text/javascript" src="boids.js"></script>
   </body>
   <footer>

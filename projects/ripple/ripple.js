@@ -14,9 +14,9 @@
 
   var animate = true;
 
-  document.getElementById('canvas').style.cursor = "none";
+  //document.getElementById('canvas_1').style.cursor = "none";
   //Main display canvas
-  var ctx = canvas.getContext("2d");
+  var ctx = canvas_1.getContext("2d");
 
   //Hidden canvas
   var ctx_2 = canvas_2.getContext("2d");
@@ -31,22 +31,21 @@
   //Dimensions of image
   var width;
   var height;
+  var fullscreen_width = 800;
+  var fullscreen_height = 800;
   if(mobile){
     width = 300;
     height = 300;
-    canvas.width = 300;
-    canvas.height = 300;
   }else{
     width = 550;
     height = 550;
   }
+
+var scale = canvas_1.width/width;
 //Set hidden canvas to the specifed size such that it fits two images next to each other (with a gap of 10 pixels in between)
 canvas_2.width = 2*width+10;
 canvas_2.height = height;
 
-//Half width and half height for displaying image centrally
-var hwidth = width/2;
-var hheight = height/2;
 
 var oldind = width;
 var newind = width * (height+2);
@@ -143,8 +142,8 @@ function mouse_enter(){
 }
 
 function mouse_down(event) {
-  x = Math.round(event.offsetX - (canvas.width/2-hwidth));
-  y = Math.round(event.offsetY - (canvas.height/2-hheight));
+  x = Math.round(event.offsetX / scale);
+  y = Math.round(event.offsetY / scale);
   disturb(x,y, 10000);
 }
 
@@ -184,8 +183,8 @@ function disturbLine(x_new, y_new){
 }
 function mouse_track(event) {
   animate = false;
-  x_new = Math.round(event.offsetX - (canvas.width/2-hwidth));
-  y_new = Math.round(event.offsetY - (canvas.height/2-hheight));
+  x_new = Math.round(event.offsetX / scale);
+  y_new = Math.round(event.offsetY / scale);
   if(discrete){
     disturb(x_new, y_new, 1024);
   }else{
@@ -194,28 +193,28 @@ function mouse_track(event) {
   x_old = x_new;
   y_old = y_new;
 }
-canvas.addEventListener('mouseenter', mouse_enter);
-canvas.addEventListener('mousedown', mouse_down);
-canvas.addEventListener('mousemove', mouse_track);
-canvas.addEventListener('mouseleave', animate_);
+canvas_1.addEventListener('mouseenter', mouse_enter);
+canvas_1.addEventListener('mousedown', mouse_down);
+canvas_1.addEventListener('mousemove', mouse_track);
+canvas_1.addEventListener('mouseleave', animate_);
 
-function getPos(canvas, evt) {
-  var rect = canvas.getBoundingClientRect();
+function getPos(canvas_1, evt) {
+  var rect = canvas_1.getBoundingClientRect();
   return {
     x: evt.touches[0].clientX - rect.left,
       y: evt.touches[0].clientY - rect.top
   };
 }
-canvas.addEventListener("touchstart", touch_start);
-canvas.addEventListener("touchend", animate_);
-canvas.addEventListener("touchcancel", animate_);
-canvas.addEventListener("touchmove", touch_move);
+canvas_1.addEventListener("touchstart", touch_start);
+canvas_1.addEventListener("touchend", animate_);
+canvas_1.addEventListener("touchcancel", animate_);
+canvas_1.addEventListener("touchmove", touch_move);
 
 function touch_start(event) {
   event.preventDefault();
   animate = false;
-  x = Math.round(getPos(canvas, event).x - (canvas.width/2-hwidth));
-  y = Math.round(getPos(canvas, event).y - (canvas.height/2-hheight));
+  x = Math.round(getPos(canvas_1, event).x / scale);
+  y = Math.round(getPos(canvas_1, event).y / scale);
   disturb(x,y, 1024);
   x_old = x;
   y_old = y;
@@ -224,8 +223,8 @@ function touch_start(event) {
 function touch_move(event) {
   event.preventDefault();
   animate = false;
-  x_new = Math.round(getPos(canvas, event).x - (canvas.width/2-hwidth));
-  y_new = Math.round(getPos(canvas, event).y - (canvas.height/2-hheight));
+  x_new = Math.round(getPos(canvas_1, event).x / scale);
+  y_new = Math.round(getPos(canvas_1, event).y / scale);
   if(discrete){
     disturb(x_new, y_new, 1024);
   }else{
@@ -247,12 +246,18 @@ var TWO_PI = 2 * Math.PI;
 //********************** DRAW **********************
 function draw() {
   if(mobile){
-    canvas.width = 300;
-    canvas.height = 300;
+    canvas_1.width = 300;
+    canvas_1.height = 300;
   }else{
-    canvas.width = 550;
-    canvas.height = 550;
+  if((window.innerWidth === screen.width && window.innerHeight === screen.height) || (window.fullScreen)) {
+      canvas_1.width = fullscreen_width;
+      canvas_1.height = fullscreen_height;
+    }else{
+      canvas_1.width = width;
+      canvas_1.height = height;
+    }
   }
+  scale = canvas_1.width/width;
   if(!mobile){
     //Animate lemiscate when mouse is not on window
     if(animate){
@@ -349,10 +354,10 @@ function draw() {
     ctx.globalCompositeOperation = "lighter";
   }
   //Draw ripple data from hidden canvas to main display canvas
-  ctx.drawImage(canvas_2,0,0,width,height,canvas.width/2-hwidth, canvas.height/2-hheight, width,height);
+  ctx.drawImage(canvas_2,0,0,width,height,0, 0, canvas_1.width,canvas_1.height);
   if(!mobile){
     //Draw highlights data from hidden canvas to main display canvas
-    ctx.drawImage(canvas_2,width+10,0,width,height,canvas.width/2-hwidth, canvas.height/2-hheight, width,height);
+    ctx.drawImage(canvas_2,width+10,0,width,height,0, 0, canvas_1.width, canvas_1.height);
   }
 
   window.requestAnimationFrame(draw);

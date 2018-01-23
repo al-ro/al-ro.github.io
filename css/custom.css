@@ -1,3 +1,33 @@
+.fullscreen-container {
+  width: 100%;
+  margin: 0 auto;
+}
+.fullscreen-title {
+  display: none;
+}
+
+.fullscreen-header {
+  margin-top: 0;
+  text-align: center; 
+}
+
+.fullscreen-button {
+  background-color: #999; 
+  padding: 8px 12px;
+  top: 0;
+  left: 0;
+  color: white;
+  text-align: center;
+  display: inline-block;
+  position: absolute;
+}
+
+.fullscreen-button:hover {
+  background: white;
+  color: #999;
+}
+
+
 .main-title {
   text-align: center;
   font-size: 5.0em;
@@ -41,7 +71,7 @@
   text-align: center; 
   font-size: 1em;
 }
-#gui_container{
+.gui_c{
   z-index: 1;
 }
 
@@ -55,8 +85,17 @@
   margin-top: 2em;
 }
 }
+
 @media (min-width: 550px) {
-  #gui_container{
+  .fullscreen_gui_c{
+    position: absolute; 
+    right: 0px;
+    top: 0;
+    z-index: 1;
+}
+}
+@media (min-width: 550px) {
+  .gui_c{
     position: absolute; 
     right: 0px;
     top: 4em;
