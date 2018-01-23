@@ -14,7 +14,7 @@
 
   var animate = true;
 
-  //document.getElementById('canvas_1').style.cursor = "none";
+  document.getElementById('canvas_1').style.cursor = "none";
   //Main display canvas
   var ctx = canvas_1.getContext("2d");
 
