@@ -422,8 +422,8 @@ function touch_start(event) {
   animate = false;
   x_old = -1;
   y_old = -1;
-  x = Math.round(getPos(canvas, event).x / scale);
-  y = Math.round(getPos(canvas, event).y / scale);
+  x = Math.round(getPos(canvas_1, event).x / scale);
+  y = Math.round(getPos(canvas_1, event).y / scale);
   if(add_density){
     add_density_(x,y, strength);
   }
@@ -434,8 +434,8 @@ function touch_start(event) {
 function touch_move(event) {
   event.preventDefault();
   animate = false;
-  x_new = Math.round(getPos(canvas, event).x / scale);
-  y_new = Math.round(getPos(canvas, event).y / scale);
+  x_new = Math.round(getPos(canvas_1, event).x / scale);
+  y_new = Math.round(getPos(canvas_1, event).y / scale);
   disturbLine(x_new, y_new);
 
   x_old = x_new;
