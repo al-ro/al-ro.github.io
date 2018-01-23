@@ -31,8 +31,9 @@
   //Dimensions of image
   var width;
   var height;
-  var fullscreen_width = 800;
-  var fullscreen_height = 800;
+  var maxDim;
+  var canvasContainer = document.getElementById('cc_1');
+  maxDim = Math.max(canvasContainer.offsetWidth,canvasContainer.offsetHeight);
   if(mobile){
     width = 300;
     height = 300;
@@ -250,8 +251,8 @@ function draw() {
     canvas_1.height = 300;
   }else{
   if((window.innerWidth === screen.width && window.innerHeight === screen.height) || (window.fullScreen)) {
-      canvas_1.width = fullscreen_width;
-      canvas_1.height = fullscreen_height;
+      canvas_1.width = maxDim;
+      canvas_1.height = maxDim;
     }else{
       canvas_1.width = width;
       canvas_1.height = height;
