@@ -7,7 +7,6 @@ var cont = document.getElementById("cc_1");
 
 var TWO_PI = Math.PI*2;
 
-
 const mobile = ( navigator.userAgent.match(/Android/i)
   || navigator.userAgent.match(/webOS/i)
   || navigator.userAgent.match(/iPhone/i)
