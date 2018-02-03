@@ -1,3 +1,7 @@
+//Based on:
+//http://www.red3d.com/cwr/boids/
+//http://www.kfish.org/boids/pseudocode.html
+
 var canvas = document.getElementById("canvas_1");
 var cont = document.getElementById("cc_1");
 
@@ -260,17 +264,22 @@ function rules(i){
     if(i != j){
       dist = Math.sqrt((boids[i].geo.position.x - boids[j].geo.position.x) * (boids[i].geo.position.x - boids[j].geo.position.x) + (boids[i].geo.position.y - boids[j].geo.position.y) * (boids[i].geo.position.y - boids[j].geo.position.y) +(boids[i].geo.position.z - boids[j].geo.position.z) * (boids[i].geo.position.z - boids[j].geo.position.z));
       dot = boids[i].vel_x * (boids[j].geo.position.x - boids[i].geo.position.x) + boids[i].vel_y * (boids[j].geo.position.y - boids[i].geo.position.y)  + boids[i].vel_z * (boids[j].geo.position.z - boids[i].geo.position.z);  
+
       if((dist < neighbourhood) && (dot > -0.75)){
         neighbours++;
+
+        //Alignment
         direction.x += boids[j].vel_x;
         direction.y += boids[j].vel_y;
         direction.z += boids[j].vel_z;
 
+        //Cohesion
         position.x += boids[j].geo.position.x;
         position.y += boids[j].geo.position.y;
         position.z += boids[j].geo.position.z;
       }
 
+      //Separation
       if(dist < proximity){
         spread.x = (boids[i].geo.position.x - boids[j].geo.position.x);
         spread.y = (boids[i].geo.position.y - boids[j].geo.position.y);
@@ -306,6 +315,7 @@ function rules(i){
   position.y /= neighbours;
   position.z /= neighbours;
 
+  //Apply alignment and cohesion to velocity
   if(neighbours > 0){
     boids[i].vel_x += (direction.x - boids[i].vel_x)/200;
     boids[i].vel_y += (direction.y - boids[i].vel_y)/200;
@@ -317,6 +327,7 @@ function rules(i){
   }
 }
 
+//Find closest boid and chase it
 function selectPrey(p){
   var prey = 0;
   var minDist = width * 100;
@@ -349,6 +360,8 @@ function selectPrey(p){
 function move(){
   for(i = 0; i < boidCount; i++){
 
+    //Boudnary conditions
+    //A periodic cube
     if(periodic){
       if(boids[i].geo.position.x > width/2){
         boids[i].geo.position.x = -width/2+10;
@@ -371,6 +384,7 @@ function move(){
       }
     }
 
+    //A distance constraint from the centre of the domain
     if(sphere){
       var dist = Math.sqrt(boids[i].geo.position.x * boids[i].geo.position.x + boids[i].geo.position.y * boids[i].geo.position.y + boids[i].geo.position.z * boids[i].geo.position.z); 
       if(dist > width/2){
@@ -388,6 +402,7 @@ function move(){
       boids[i].vel_z /= magnitude;
     }
 
+    //Update position based on velocity
     if(speed > 0){
       boids[i].vel_x *= speed;
       boids[i].vel_y *= speed;
@@ -402,6 +417,7 @@ function move(){
   }
 
   if(toggle_predators){
+    //Predator distance constraint from the centre of the domain
     for(p = 0; p < predatorCount; p++){
       var dist = Math.sqrt(predators[p].geo.position.x * predators[p].geo.position.x + predators[p].geo.position.y * predators[p].geo.position.y + predators[p].geo.position.z * predators[p].geo.position.z); 
       if(dist > width/2){
@@ -441,9 +457,9 @@ controls = new THREE.OrbitControls( camera, renderer.domElement );
 function draw(){
 
   if(toggle_predators){
-  for(p = 0; p < predatorCount; p++){
-    selectPrey(p);
-  }
+    for(p = 0; p < predatorCount; p++){
+      selectPrey(p);
+    }
   }
 
   for(i = 0; i < boidCount; i++){
