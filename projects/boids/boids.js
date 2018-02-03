@@ -7,14 +7,15 @@ var cont = document.getElementById("cc_1");
 
 var TWO_PI = Math.PI*2;
 
-  const mobile = ( navigator.userAgent.match(/Android/i)
-      || navigator.userAgent.match(/webOS/i)
-      || navigator.userAgent.match(/iPhone/i)
-      //|| navigator.userAgent.match(/iPad/i)
-      || navigator.userAgent.match(/iPod/i)
-      || navigator.userAgent.match(/BlackBerry/i)
-      || navigator.userAgent.match(/Windows Phone/i)
-      );
+
+const mobile = ( navigator.userAgent.match(/Android/i)
+  || navigator.userAgent.match(/webOS/i)
+  || navigator.userAgent.match(/iPhone/i)
+//|| navigator.userAgent.match(/iPad/i)
+  || navigator.userAgent.match(/iPod/i)
+  || navigator.userAgent.match(/BlackBerry/i)
+  || navigator.userAgent.match(/Windows Phone/i)
+);
 
 //Spatial variables
 var width = 2000;
@@ -183,21 +184,21 @@ var reset_button = { reset:function(){
   speed = 3;
   neighbourhood = width/6;
   proximity = width/40;
-  
+
   for(i = 0; i < boidCount; i++){
 
-  var x = 0.5 - Math.random();
-  var y = 0.5 - Math.random();
-  var z = 0.5 - Math.random();
+    var x = 0.5 - Math.random();
+    var y = 0.5 - Math.random();
+    var z = 0.5 - Math.random();
 
     boids[i].vel_x = x;
     boids[i].vel_y = y;
     boids[i].vel_z = z;
 
-  boids[i].geo.position.x = width/2 - Math.random() * width;
-  boids[i].geo.position.y = height/2 - Math.random() * height;
-  boids[i].geo.position.z = depth/2 - Math.random() * depth;
-}
+    boids[i].geo.position.x = width/2 - Math.random() * width;
+    boids[i].geo.position.y = height/2 - Math.random() * height;
+    boids[i].geo.position.z = depth/2 - Math.random() * depth;
+  }
 
 }};
 
@@ -212,7 +213,7 @@ gui.add(this, 'speed').min(0).max(10).step(1).listen();
 gui.add(this, 'sphere').listen().onChange(function(value) { periodic = false; sphere = true;} );
 gui.add(this, 'periodic').listen().onChange(function(value) { periodic = true; sphere = false;} );
 if(!mobile){
-gui.addColor(this, 'colour').listen().onChange(function(value) { setColour();} );
+  gui.addColor(this, 'colour').listen().onChange(function(value) { setColour();} );
 }
 gui.add(this, 'toggle_predators').listen().onChange(function(value){ setTransparency();});
 gui.add(reset_button, 'reset');
@@ -227,7 +228,7 @@ function setTransparency(){
   if(toggle_predators){
     for(p = 0; p < predatorCount; p++){
       predators[p].geo.visible = true
-      predators[p].geo.position.x = width/2 - Math.random() * width;
+        predators[p].geo.position.x = width/2 - Math.random() * width;
       predators[p].geo.position.y = height/2 - Math.random() * height;
       predators[p].geo.position.z = depth/2 - Math.random() * depth;;
     }
@@ -350,7 +351,7 @@ function selectPrey(p){
   position.x = (predators[p].geo.position.x - boids[prey].geo.position.x);
   position.y = (predators[p].geo.position.y - boids[prey].geo.position.y);
   position.z = (predators[p].geo.position.z - boids[prey].geo.position.z);
- 
+
   predators[p].vel_x -= position.x/150;
   predators[p].vel_y -= position.y/150;
   predators[p].vel_z -= position.z/150;
