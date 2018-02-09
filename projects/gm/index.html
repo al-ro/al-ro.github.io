@@ -8,7 +8,7 @@
     <!-- Basic Page Needs
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
     <meta charset="utf-8">
-    <title>Boids</title>
+    <title>//title</title>
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -29,43 +29,40 @@
 
     <!-- Favicon
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <link rel="shortcut icon" type="image/png" href="images/favicon_2.png">
+    <link rel="icon" type="image/png" href="../../images/favicon_2.png">
   </head>
   <body>
     <div class='fullscreen-button' id='fullscreen-button'><i class="fa fa-2x fa-expand"></i></div>
 
     <!-- Primary Page Layout
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <div class="container" id="main-container">
+    <div class="container" id ="main-container">
       <section class="post_header" id="header">
       <div class="row">
         <div class="twelve columns">
-          <h4 class="title" id="title">Boids</h4>
+          <h4 class="title" id="title">//Title</h4>
         </div>
       </div>
         <div class="canvas_container u-max-full-width" id="cc_1">
-          <canvas class="canvas" width=1440 height=900 id="canvas_1"></canvas>
-          <div class='gui_c' id="gui_container"></div>
+          <canvas class="canvas" width=720 height=450 id="canvas_1"></canvas>
+          <div class='gui_c' id="gui_container"> </div>
         </div>
       <ul class="navbar-list c_navbar">
-        <li class="navbar-item"><a class="navbar-link" href="boids.js">Source</a></li>
+        <li class="navbar-item"><a class="navbar-link" href="gm.js">Source</a></li>
         <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
       </ul>
       </section>
+
       <section class="post">
-      <h5>Instructions</h5>
-      <p>Drag to move camera. Scroll to zoom.</p>
       <h5>Overview</h5>
-      <p>This is a simulation showing the basic flocking behaviour of <a href="http://www.red3d.com/cwr/boids/">boids</a>. The movement of each agent is governed by three basic rules: separation, alignment and cohesion. Separation doesn't allow a boid to get too close to another one, alignment sets the velocity of a boid to be the average velocity of its neighbours and cohesion keeps a boid from straying too far from a local group. Although the rules are only imposed on individual boids, complex leaderless group behaviour emerges. Additional rules can be added, for example avoiding predators or targeting food. The graphics and camera movement are done using <a href="https://threejs.org/">three.js</a>.</p>
       </section>
+
+
     </div>
     <!-- End Document
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
-    <script type="text/javascript" src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
     <script type="text/javascript" src="../../utility/fullscreen.js"></script>
-    <script type="text/javascript" src="boids.js"></script>
+    <script type="text/javascript" src="gm.js"></script>
   </body>
   <footer>
   <div class="container">
