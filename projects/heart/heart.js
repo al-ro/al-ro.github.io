@@ -151,7 +151,7 @@ function draw() {
     //Heart curve from:
     //http://mathworld.wolfram.com/HeartCurve.html
     mouse_pos_x = canvas_1.width/2 + size * (16 * Math.sin(t) * Math.sin(t) * Math.sin(t));
-    mouse_pos_y = canvas_1.height - (canvas_1.height/2 + ( size * ( 13 * Math.cos(t)  - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t))));
+    mouse_pos_y = 0.95 * canvas_1.height - (canvas_1.height/2 + ( size * ( 13 * Math.cos(t)  - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t))));
   }
 
   for (i = (body.length-1); i > 0; i--) {
