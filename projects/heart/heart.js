@@ -107,7 +107,7 @@ for (s = 0; s < bodyLength; s++) {
 size = Math.min(canvas_1.width, canvas_1.height)/50;
 //See below
 var startX = canvas_1.width/2 + size * (16 * Math.sin(0) * Math.sin(0) * Math.sin(0));
-var startY = canvas_1.height - (canvas_1.height/2 + ( size *( 13 * Math.cos(0)  - 5 * Math.cos(0) - 2 * Math.cos(0) - Math.cos(0))));
+var startY = 0.95*canvas_1.height - (canvas_1.height/2 + ( size *( 13 * Math.cos(0)  - 5 * Math.cos(0) - 2 * Math.cos(0) - Math.cos(0))));
 
 for (i = 0; i < bodyLength; i++) {
   var b = {
