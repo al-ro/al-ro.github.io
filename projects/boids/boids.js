@@ -35,7 +35,7 @@ if(mobile){
 }
 
 //Camera rotate
-var rotate = true;
+var rotate = false;
 
 var foodCount = 10;
 var predatorCount = 3;
