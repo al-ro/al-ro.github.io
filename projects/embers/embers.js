@@ -6,7 +6,6 @@ var canvas = document.getElementById("canvas_1");
 var cont = document.getElementById("cc_1");
 
 var TWO_PI = Math.PI*2;
-
   const mobile = ( navigator.userAgent.match(/Android/i)
       || navigator.userAgent.match(/webOS/i)
       || navigator.userAgent.match(/iPhone/i)
@@ -16,21 +15,25 @@ var TWO_PI = Math.PI*2;
       || navigator.userAgent.match(/Windows Phone/i)
       );
 
-  //Spatial variables
-  var width = 2000;
-  var height = 2000;
-  var depth = 2000;
-  var centre = [width/2,height/2, depth/2];
+//Spatial variables
+var width = 2000;
+var height = 2000;
+var depth = 2000;
+var centre = [width/2,height/2, depth/2];
 
-  var particleCount;
+var particleCount;
 
-  if(mobile){
-    particleCount = 2000;
-  }else{
-    particleCount = 25000;
-  }
+if(mobile){
+  particleCount = 2000;
+}else{
+  particleCount = 25000;
+}
 
-var speed = 4;
+var speed = 5;
+//Noise field zoom
+var step = 2000;
+//Camera rotate
+var rotate = true;
 
 var ratio =  canvas.width / canvas.height;
 var w = cont.offsetWidth;
@@ -55,6 +58,12 @@ camera.lookAt(new THREE.Vector3(centre[0], centre[1], centre[2]));
 
 scene.add(camera);
 
+//OrbitControls.js for camera manipulation
+controls = new THREE.OrbitControls( camera, renderer.domElement );
+controls.maxDistance = 200000-5*width;
+controls.minDistance = 100;
+controls.autoRotate = rotate;
+
 //Particles
 var particles = new THREE.Geometry();
 //Initial ember colour
@@ -73,7 +82,7 @@ if(mobile){
 }
 
 var material = new THREE.PointsMaterial({
-    color: 0xff6800,
+  color: 0xff6800,
     size: size,
     transparent: true,
     opacity: 1.0,
@@ -99,9 +108,6 @@ for(i = 0; i < particleCount; i++){
 
 var particleSystem = new THREE.Points(particles, material);
 scene.add(particleSystem);
-
-//Noise field zoom
-var step = 2000;
 
 //-----------GUI-----------//
 //dat.gui library controls
@@ -142,6 +148,7 @@ if(!mobile){
   gui.addColor(this, 'colour').listen().onChange(function(value) { setColour();} );
 }
 gui.add(reset_button, 'reset');
+gui.add(this, 'rotate').listen().onChange(function(value){ controls.autoRotate = rotate;});
 gui.close();
 
 function setSize(){
@@ -233,14 +240,11 @@ function move(){
   }
 }
 
-
-//OrbitControls.js for camera manipulation
-controls = new THREE.OrbitControls( camera, renderer.domElement );
-controls.maxDistance = 200000-5*width;
-controls.minDistance = 100;
-
 //----------DRAW----------//
 function draw(){
+  if(rotate){
+    controls.update();
+  }
   move();
   //Redraws partciles
   particles.verticesNeedUpdate = true;
