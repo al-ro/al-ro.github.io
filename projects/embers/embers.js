@@ -147,8 +147,8 @@ gui.add(this, 'size').min(1).max(300).step(1).listen().onChange(function(value) 
 if(!mobile){
   gui.addColor(this, 'colour').listen().onChange(function(value) { setColour();} );
 }
-gui.add(reset_button, 'reset');
 gui.add(this, 'rotate').listen().onChange(function(value){ controls.autoRotate = rotate;});
+gui.add(reset_button, 'reset');
 gui.close();
 
 function setSize(){
