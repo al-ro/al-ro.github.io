@@ -25,7 +25,7 @@ var TWO_PI = Math.PI*2;
   var particleCount;
 
   if(mobile){
-    particleCount = 5000;
+    particleCount = 2000;
   }else{
     particleCount = 25000;
   }
