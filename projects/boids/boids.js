@@ -34,6 +34,9 @@ if(mobile){
   boidCount = 600;
 }
 
+//Camera rotate
+var rotate = true;
+
 var foodCount = 10;
 var predatorCount = 3;
 
@@ -86,6 +89,12 @@ var light_3;
 light_3 = new THREE.DirectionalLight(0xa0a0a0, 1);
 light_3.position.set(0, 1, -1);
 scene.add(light_3);
+
+//OrbitControls.js for camera manipulation
+controls = new THREE.OrbitControls( camera, renderer.domElement );
+controls.maxDistance = 20000-5*width;
+controls.minDistance = 100;
+controls.autoRotate = rotate;
 
 //Paper plane geometry
 var geom = new THREE.Geometry();
@@ -216,6 +225,7 @@ if(!mobile){
 }
 gui.add(this, 'toggle_predators').listen().onChange(function(value){ setTransparency();});
 gui.add(reset_button, 'reset');
+gui.add(this, 'rotate').listen().onChange(function(value){ controls.autoRotate = rotate;});
 
 gui.close();
 
@@ -449,13 +459,12 @@ function move(){
   } 
 }
 
-
-//OrbitControls.js for camera manipulation
-controls = new THREE.OrbitControls( camera, renderer.domElement );
-
 //----------DRAW----------//
 function draw(){
 
+  if(rotate){
+    controls.update();
+  }
   if(toggle_predators){
     for(p = 0; p < predatorCount; p++){
       selectPrey(p);
