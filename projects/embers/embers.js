@@ -42,7 +42,7 @@ var scene = new THREE.Scene();
 var renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize(w,h,false);
-renderer.setClearColor("rgb(17,27,68)");
+renderer.setClearColor(0x111b44);
 
 distance = 400;
 
