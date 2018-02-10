@@ -25,7 +25,7 @@ var TWO_PI = Math.PI*2;
   var particleCount;
 
   if(mobile){
-    particleCount = 2000;
+    particleCount = 5000;
   }else{
     particleCount = 25000;
   }
@@ -67,6 +67,10 @@ var texture = THREE.ImageUtils.loadTexture("http://res.cloudinary.com/al-ro/imag
 
 //Variable size for particle material
 var size = 50;
+
+if(mobile){
+  size = 150;
+}
 
 var material = new THREE.PointsMaterial({
     color: 0xff6800,
