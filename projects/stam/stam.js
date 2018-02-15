@@ -481,5 +481,4 @@ function draw() {
   ctx.drawImage(canvas_2,3,3,width-3,height-3,0,0,canvas_1.width,canvas_1.height);
   window.requestAnimationFrame(draw);
 }
-
-window.requestAnimationFrame(draw);
+draw();

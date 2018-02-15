@@ -379,5 +379,4 @@ function draw() {
   }
   window.requestAnimationFrame(draw);
 }
-window.requestAnimationFrame(draw);
-
+draw();

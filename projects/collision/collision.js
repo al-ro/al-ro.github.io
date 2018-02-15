@@ -414,4 +414,4 @@ function draw() {
   frame++;
   window.requestAnimationFrame(draw);
 }
-window.requestAnimationFrame(draw);
+draw();
