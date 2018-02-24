@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <!-- THIS PAGE IS BUILT WITH SKELETON: http://getskeleton.com/
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+    <!-- Basic Page Needs
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>CFD on GPUs</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Mobile Specific Metas
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- FONT
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link href="https://fonts.googleapis.com/css?family=Palanquin:400,300,600" rel="stylesheet">
+
+    <!-- CSS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="../../css/normalize.css">
+    <link rel="stylesheet" href="../../css/skeleton.css">
+    <link rel="stylesheet" href="../../css/custom.css">
+
+    <!-- Favicon
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="shortcut icon" type="image/png" href="../../images/favicon_2.png">
+  </head>
+  <body>
+
+    <!-- Primary Page Layout
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="container">
+      <section class="header">
+      <div class="row">
+        <div class="twelve columns">
+          <h4 class="title">Computational Fluid Dynamics with Embedded Cut Cells on Graphics Hardware</h4>
+        </div>
+      </div>
+      </section>
+      <section class="post">
+      
+      <p>As part of my degree I research speeding up fluid simulations on graphics hardware. The focus is on reducing the runtimes of CFD simulations with embedded cut cell geometries using the CUDA programming platform. The resulting software pipeline uses the Euler equations to model high speed flow and shock waves in domains with static rigid obstacles. These scenarios are applicable to anything from automotive and aerospace research to insurance assessment and mining safety.</p>
+
+      <p>The software uses a dimensionally-split sweeping algorithm to find the propagation of information in each direction of a regular Cartesian domain. The produced code has been validated against several exact and experimental results to show the correctness and accuracy of the software package. We can robustly handle near vacuum scenarios, capture shock diffraction and reflection and high speed vortices.</p>
+
+      <p>As the memory on a GPU relatively limited, we also look at the performance and scaling of multi-card scenarios using MPI for high resolution simulations.</p>
+
+      <h5>Preliminary Results</h5>
+      <div class="row">
+        <div class="six columns ">
+          <img class="img u-max-full-width" src="../../images/euler/schardin_2_exp.png">
+          <p align = 'center'>Experimental shadowgraph</p>
+        </div>
+        <div class="six columns ">
+          <img class="img u-max-full-width" src="../../images/euler/schardin_2_cuda.png">
+          <p align = 'center'>CUDA implementation</p>
+        </div>
+      </div>  
+      <div class="row">
+        <div class="six columns ">
+          <img class="img u-max-full-width" src="../../images/euler/schardin_tip_exp.png">
+          <p align = 'center'>Numerical density contours</p>
+        </div>
+        <div class="six columns ">
+          <img class="img u-max-full-width" src="../../images/euler/schardin_tip_cuda.png">
+          <p align = 'center'>CUDA implementation</p>
+        </div>
+      </div>  
+      <div class="row">
+        <div class="six columns ">
+          <img class="img u-max-full-width" src="../../images/euler/cylinder_exp.png">
+          <p align = 'center'>Experimental shadowgraph</p>
+        </div>
+        <div class="six columns ">
+          <img class="img u-max-full-width" src="../../images/euler/cylinder_cuda.png">
+          <p align = 'center'>CUDA implementation</p>
+        </div>
+      </div>  
+      <div class="row">
+        <div class="six columns ">
+          <img class="img u-max-full-width" src="../../images/euler/cone_exp.png">
+          <p align = 'center'>Experimental shadowgraph</p>
+        </div>
+        <div class="six columns ">
+          <img class="img u-max-full-width" src="../../images/euler/cone_cuda.png">
+          <p align = 'center'>CUDA implementation</p>
+        </div>
+      </div>  
+      </section>
+    </div>
+    <!-- End Document
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  </body>
+  <footer>
+  <div class="container">
+    <section class="footer" id="links">
+    <div class="navbar-spacer"></div>
+    <nav class="navbar footer-navbar">
+    <div class="container">
+      <ul class="navbar-list">
+        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+      </ul>
+    </div>
+    </nav>
+  </div>
+  </section>
+  </footer>
+</html>

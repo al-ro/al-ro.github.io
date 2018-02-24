@@ -229,7 +229,7 @@ function move(){
     particles.vertices[i].y += particles.vertices[i].vel_y ;
     particles.vertices[i].z += particles.vertices[i].vel_z ;
 
-    //Boudnary conditions
+    //Boundary conditions
     //If a particle gets too far away from (0,0,0), reset it to a random location
     var dist = Math.sqrt(particles.vertices[i].x * particles.vertices[i].x + particles.vertices[i].y * particles.vertices[i].y + particles.vertices[i].z * particles.vertices[i].z);
     if(dist > 5*width){
