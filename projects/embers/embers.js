@@ -34,6 +34,8 @@ var speed = 5;
 var step = 2000;
 //Camera rotate
 var rotate = true;
+//Offset to counteract noise flattening when sampling on three planes
+var offset = 0.1;
 
 var ratio =  canvas.width / canvas.height;
 var w = cont.offsetWidth;
@@ -147,6 +149,7 @@ gui.add(this, 'size').min(1).max(300).step(1).listen().onChange(function(value) 
 if(!mobile){
   gui.addColor(this, 'colour').listen().onChange(function(value) { setColour();} );
 }
+gui.add(this, 'offset').min(0.0).max(1.0).step(0.1).listen();
 gui.add(this, 'rotate').listen().onChange(function(value){ controls.autoRotate = rotate;});
 gui.add(reset_button, 'reset');
 gui.close();
@@ -188,26 +191,26 @@ function computeCurl(x, y, z){
   curl.x = a - b;
 
   //Find rate of change in XZ plane
-  n1 = noise.simplex3(x, y, z + eps); 
-  n2 = noise.simplex3(x, y, z - eps); 
+  n1 = noise.simplex3(x, y+offset, z + eps); 
+  n2 = noise.simplex3(x, y+offset, z - eps); 
   //Average to find approximate derivative
   a = (n1 - n2)/(2 * eps);
-  n1 = noise.simplex3(x + eps, y, z); 
-  n2 = noise.simplex3(x + eps, y, z); 
+  n1 = noise.simplex3(x + eps, y+offset, z); 
+  n2 = noise.simplex3(x + eps, y+offset, z); 
   //Average to find approximate derivative
   b = (n1 - n2)/(2 * eps);
   curl.y = a - b;
 
   //Find rate of change in XY plane
-  n1 = noise.simplex3(x + eps, y, z); 
-  n2 = noise.simplex3(x - eps, y, z); 
+  n1 = noise.simplex3(x + eps, y, z+offset); 
+  n2 = noise.simplex3(x - eps, y, z+offset); 
   //Average to find approximate derivative
   a = (n1 - n2)/(2 * eps);
-  n1 = noise.simplex3(x, y + eps, z); 
-  n2 = noise.simplex3(x, y - eps, z); 
+  n1 = noise.simplex3(x, y + eps, z+offset); 
+  n2 = noise.simplex3(x, y - eps, z+offset); 
   //Average to find approximate derivative
   b = (n1 - n2)/(2 * eps);
-  curl.z=a-b;
+  curl.z = a - b;
 
   return curl;
 }
@@ -240,6 +243,7 @@ function move(){
   }
 }
 
+offset = 0;
 //----------DRAW----------//
 function draw(){
   if(rotate){
