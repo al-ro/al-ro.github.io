@@ -66,12 +66,10 @@
   //Find rate of change in YZ plane
   var n1 = noise.simplex3(x, y + eps, z); 
   var n2 = noise.simplex3(x, y - eps, z); 
-
   //Average to find approximate derivative
   var a = (n1 - n2)/(2 * eps);
   var n1 = noise.simplex3(x, y, z + eps); 
   var n2 = noise.simplex3(x, y, z - eps); 
-
   //Average to find approximate derivative
   var b = (n1 - n2)/(2 * eps);
   curl.x = a - b;
