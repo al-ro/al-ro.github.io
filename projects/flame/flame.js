@@ -526,7 +526,7 @@ function step(){
   gl.bindTexture(gl.TEXTURE_2D, null);
   gl.activeTexture(gl.TEXTURE0);
 
-  if(toggle_render && iterations > 0){
+  if(toggle_render || (iterations == 0)){
     //Update time
     time -= dt;
 
