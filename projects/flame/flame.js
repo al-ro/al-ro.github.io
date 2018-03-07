@@ -7,26 +7,26 @@
 //https://webglfundamentals.org/
 //And many more
 
-  const mobile = ( navigator.userAgent.match(/Android/i)
-      || navigator.userAgent.match(/webOS/i)
-      || navigator.userAgent.match(/iPhone/i)
-      //|| navigator.userAgent.match(/iPad/i)
-      || navigator.userAgent.match(/iPod/i)
-      || navigator.userAgent.match(/BlackBerry/i)
-      || navigator.userAgent.match(/Windows Phone/i)
-      );
+const mobile = ( navigator.userAgent.match(/Android/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    //|| navigator.userAgent.match(/iPad/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+);
 
-  var canvas = document.getElementById("canvas_1");
+var canvas = document.getElementById("canvas_1");
 
-  var WIDTH = 600;
-  var HEIGHT = canvas.height;
+var WIDTH = 600;
+var HEIGHT = canvas.height;
 
-  // Initialize the GL context
-  var gl = canvas.getContext('webgl');
+// Initialize the GL context
+var gl = canvas.getContext('webgl');
 
-  if(!gl){
-    alert("Unable to initialize WebGL.");
-  }
+if(!gl){
+  alert("Unable to initialize WebGL.");
+}
 //Time step
 var dt = 0.03;
 //Time
@@ -518,13 +518,15 @@ for(i = 0; i < 2; i++){
 //using bindFramebuffer (and thereby into the texture bound to that frame buffer). 
 //Binding to null displays onto the canvas (which is treated as a texture). 
 
+var iterations = 0;
+
 function step(){
 
   //Unbind any textures
   gl.bindTexture(gl.TEXTURE_2D, null);
   gl.activeTexture(gl.TEXTURE0);
 
-  if(toggle_render){
+  if(toggle_render && iterations > 0){
     //Update time
     time -= dt;
 
@@ -578,8 +580,9 @@ function step(){
 
     //Draw a triangle strip connecting vertices 0-4
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
   }
+
+  iterations = 1;
   requestAnimationFrame(step);
 }
 
