@@ -7,6 +7,15 @@
 //https://webglfundamentals.org/
 //And many more
 
+const mobile = ( navigator.userAgent.match(/Android/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    //|| navigator.userAgent.match(/iPad/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+);
+
 var canvas = document.getElementById("canvas_1");
 
 var WIDTH = 600;
@@ -22,7 +31,12 @@ if(!gl){
 var dt = 0.03;
 //Time
 var time = 0.0;
-var bloom = 0;
+var bloom = 20;
+var blurFactor = 6;
+var blurCount = 5;
+if(mobile){
+  blurCount = 3;
+}
 //For colour modes
 var type = 0;
 
@@ -46,6 +60,8 @@ var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
 gui.add(this, 'dt').min(0.0).max(0.05).step(0.005).listen();
+gui.add(this, 'bloom').min(0.0).max(100.0).step(10).listen();
+gui.add(this, 'blurFactor').min(0.0).max(6.0).step(1).listen();
 gui.add(red_button, 'red');
 gui.add(green_button, 'green');
 gui.add(blue_button, 'blue');
@@ -292,11 +308,12 @@ precision highp float;
 
 varying vec2 texCoord;
 uniform sampler2D brightData;
+uniform float bloom;
 
 void main() {
   vec4 colour = texture2D(brightData, texCoord);
   float brightness = (colour.r * 0.2126) + (colour.g * 0.7152) + (colour.b * 0.0722);
-  gl_FragColor = colour * (brightness * 20.0);
+  gl_FragColor = colour * (brightness * bloom);
 }
 `;
 
@@ -455,6 +472,7 @@ var heightHandle = getUniformLocation(y_blur_program, 'height');
 var srcLocation = gl.getUniformLocation(combine_program, "srcData");
 var blurLocation = gl.getUniformLocation(combine_program, "blurData");
 var brightLocation = gl.getUniformLocation(bright_program, "brightData");
+var bloomHandle = gl.getUniformLocation(bright_program, "bloom");
 
 //Create and bind frame buffer
 var flameFramebuffer = gl.createFramebuffer();
@@ -516,15 +534,14 @@ function step(){
 
   //Bright pass filter to select only light pixels
   gl.useProgram(bright_program);
+  gl.uniform1f(bloomHandle, bloom);
   gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[0]);
   gl.bindTexture(gl.TEXTURE_2D, flameTexture);
   //Draw a triangle strip connecting vertices 0-4
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-  var blurFactor = 6;
-
   //Blur the result of the bright filter
-  for(i = 1; i < 5; i++){
+  for(i = 1; i < blurCount; i++){
     gl.useProgram(x_blur_program);
     gl.uniform1f(widthHandle, WIDTH/(i * blurFactor));
     gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[1]);
