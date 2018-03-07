@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <!-- THIS PAGE IS BUILT WITH SKELETON: http://getskeleton.com/
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+    <!-- Basic Page Needs
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>WebGL and Shaders</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Mobile Specific Metas
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- FONT
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link href="https://fonts.googleapis.com/css?family=Palanquin:400,300,600" rel="stylesheet">
+
+    <!-- CSS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="../../css/normalize.css">
+    <link rel="stylesheet" href="../../css/skeleton.css">
+    <link rel="stylesheet" href="../../css/custom.css">
+    <link rel="stylesheet" href="../../font-awesome-4.7.0/css/font-awesome.min.css">
+
+    <!-- Favicon
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="icon" type="image/png" href="../../images/favicon_2.png">
+  </head>
+  <body>
+    <div class='fullscreen-button' id='fullscreen-button'><i class="fa fa-2x fa-expand"></i></div>
+
+    <!-- Primary Page Layout
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="container" id ="main-container">
+      <section class="post_header" id="header">
+      <div class="row">
+        <div class="twelve columns">
+          <h4 class="title" id="title">WebGL and Shaders</h4>
+        </div>
+      </div>
+      <div class="canvas_container u-max-full-width" id="cc_1">
+        <canvas class="canvas" width=720 height=450 style="background-color: #000" id="canvas_1"></canvas>
+        <div class='gui_c' id="gui_container"> </div>
+      </div>
+      <ul class="navbar-list c_navbar">
+        <li class="navbar-item"><a class="navbar-link" href="flame.js">Source</a></li>
+        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+      </ul>
+      </section>
+
+      <section class="post">
+      <h5>Overview</h5>
+      <p><a href='https://en.wikipedia.org/wiki/WebGL'>WebGL</a> is a graphics API for web browsers. It is very similar to OpenGL and allows for native graphics with an HTML canvas element. WebGL exposes the GPU so that complex 2D and 3D scenes can be rendered with high performance on most modern hardware. Using <a href='https://en.wikipedia.org/wiki/OpenGL_Shading_Language'>GLSL</a> we can specify vertex and fragment shaders to have low level control of graphics rendering. The flame graphics above are based on many great tutorials online, some of which are listed at the start of the source file. The project was inspired by <a href='https://twitter.com/ciaccodavide/status/964407412634472448'>a tweet by Davide Ciacco</a>.</p>
+
+      <h5>WebGL</h5>
+      <p>WebGL presents a programmable rendering pipeline which is executed on the GPU. The programmer can specify the global geometry, shaders and the source and target textures to create complex visual effects. Minute details of the graphics are controllable from the nature and funciton of a camera to post-processing.</p>
+      <p>There exists an implicit 3D coordinate system as the main domain of the renderer. The current code displays a rectangle which fills the entire canvas to display two-dimensional graphics by setting the z coordinate of each vertex to 0.0. As everything exists in this plane, we do not handle depth testing or transformation matrices. The rectangle is made up of two triangles which share a side along the diagonal of the canvas.</p>
+      <p>After setting up the geometry, we need to define a WebGL program which is a combination of shaders: units of code that run on the GPU and determine how certain portions of the ouput graphics look. There are two types of shaders: vertex shaders and fragment shaders. Vertex shaders determine the look of the geometry based on transformation and rotation matrices and how textures map onto objects or the screen. Fragment shaders determine what a single pixel looks like. We use several WebGL programs in our code to create a series of effects that allow us to render fire-like grpahics.</p>
+
+      <h5>Setup</h5>
+      <p>We use the <a href='https://github.com/stegu/webgl-noise'>webgl-noise library</a> by Stefan Gustavson and Ashima Arts to generate a simplex noise field moving along the y direction. We set a colour and visibility gradient towards the top of the screen and add a bloom effect. This results in a flickering and glowing flame look.</p>
+      <p>We start with setting up WebGL, specifying a rectangle and creating a WebGL program to draw the flames:
+      <pre><code>var gl = canvas.getContext('webgl');
+
+//Define rectangle covering the entire canvas
+var vertexData = new Float32Array([
+  -1.0,  1.0, // top left
+  -1.0, -1.0, // bottom left
+  1.0,  1.0, // top right
+  1.0, -1.0, // bottom right
+  ]);
+
+//Create vertex buffer
+var vertexDataBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vertexDataBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
+
+//Create vertex and fragment shaders
+var flameVertexShader = gl.createShader(gl.VERTEX_SHADER);
+gl.shaderSource(flameVertexShader, flameVertexSource);
+gl.compileShader(flameVertexShader);
+
+var flameFragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(flameFragmentShader, flameFragmentSource);
+gl.compileShader(flameFragmentShader);
+
+// Create shader program
+var flame_program = gl.createProgram();
+gl.attachShader(flame_program, flameVertexShader);
+gl.attachShader(flame_program, flameFragmentShader);
+gl.linkProgram(flame_program);
+</code></pre>
+      </p>
+
+      <p>We can then make the program active and draw an image between the vertices:
+      <pre><code>//Set active program
+gl.useProgram(flame_program);
+
+//Draw a triangle strip connecting vertices 0-4
+gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+</code></pre> The <code>drawArrays()</code> function will execute the vertex and fragment shaders of the active program and will output to the active target (canvas by default).</p>
+
+      <h5>Shaders</h5>
+      <p>The source code for the shaders is passed as a string for compilation. The code is written in GLSL, a strongly typed C-like language, and can be stored as an element of the HTML or as a string literal in the .js file. It is common to either use quotes ( ' or " ), which require escaping newline ( \ ), or backticks ( ` ), which <a href='https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals'>allow for multiline content</a>. The two sources are:
+
+      <pre><code>//Specify vertex shader, (x,y) coordinates are variable, z is 0
+var flameVertexSource = `
+  attribute vec2 position;
+  void main() {
+    gl_Position = vec4(position, 0.0, 1.0);
+}`;
+
+//Specify fragment shader and set colour of each pixel
+var flameFragmentSource = `
+  precision highp float;
+
+  //Compile constants WIDTH and HEIGHT into the shader code
+  const float WIDTH = ` + WIDTH + `.0;
+  const float HEIGHT = ` + HEIGHT + `.0;
+  uniform float time;
+
+  [... WEBGL-NOISE CODE...]
+
+  void main() {
+    //Location of pixel
+    float x = gl_FragCoord.x / WIDTH;
+    float y = gl_FragCoord.y / WIDTH;
+    float gradient = gl_FragCoord.y / HEIGHT;
+
+    //RGB values for pixel
+    float r = 1.0;
+    float g = 0.0;
+    float b = 0.0;
+
+    //Get noise value at pixel location 
+    float noise = snoise(vec2(x,y + time));
+
+    //Apply gradient to colour
+    g = 3.0 * noise * gradient;
+    b = noise * (gradient / 2.0);
+
+    //Apply gradient to noise
+    noise *= 0.65 * (1.0 - gradient);
+
+    //m = 1.0 if (gradient * 0.5) < noise, 0.0 otherwise
+    float m = step(gradient * 0.5, noise);
+    gl_FragColor = vec4(m * r, m * g, m * b, 1.0);
+}`;
+</code></pre>
+      Attributes are variables which are different for every vertex and are sent from the CPU to the GPU. In this case it is the array buffer of our rectangle. Uniforms are data which are the same for every pixel and can be sent to the shader from the CPU. We use a single float to update a time variable every invocation. The vertex shader is executed first, setting up position variables which are accessible from the fragment shader. Each shader runs its <code>main</code> function and can have other functions defined in its body.</p>
+
+      <h5>Framebuffer objects and textures</h5>
+      <p>Instead of rendering on the canvas, we can pass the output of a program into textures which allows us to use the results of shaders as input for other programs. We will have a program do a single task and switch to another one to obtain multiple efects. Framebuffer objects can be used as targets for rendering. We create a texture that is bound to the buffer objects and stores the colour data from a shader:
+      <pre><code>//Create and bind frame buffer
+var flameFramebuffer = gl.createFramebuffer();
+flameFramebuffer.width = canvas.width;
+flameFramebuffer.height = canvas.height;
+gl.bindFramebuffer(gl.FRAMEBUFFER, flameFramebuffer);
+
+//Create and bind texture
+var flameTexture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, flameTexture);
+
+// Set up texture so we can render any size
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+//Allocate/send over empty texture data
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, flameFramebuffer.width, 
+    flameFramebuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+//Assign texture as framebuffer colour attachment
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, flameTexture, 0);
+</code></pre>
+      We need to specify the frame buffer as our target to draw to the texture:
+      <pre><code>//Draw flames
+gl.useProgram(flame_program);
+
+//Render to texture
+gl.bindFramebuffer(gl.FRAMEBUFFER, flameFramebuffer);
+
+//Draw a triangle strip connecting vertices 0-4
+gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+</pre></code></p>
+      <p>To draw the contents of a texture on the canvas or another frame buffer, we can bind a texture:
+      <pre><code>gl.bindTexture(gl.TEXTURE_2D, flameTexture);</pre></code>
+      
+      WebGL functions as a state machine, reading from the last texture bound and drawing to the last frame buffer specified, with the default <code>null</code> targeting the screen. To achieve multiple effects, we can keep switching programs, buffers and textures and call <code>drawArrays()</code> after each one. The flame code starts by drawing the gradient coloured noise on a texture and passes it to the bright pass filter and blur shaders, finally combining the original image and the blurred texture to achieve a bloom effect.</p>
+
+      <h5>Bloom</h5>
+      <p>To make the fire glow, we can use shaders to achieve simple <a href='https://en.wikipedia.org/wiki/Bloom_(shader_effect)'>bloom effect</a>. To do this, we apply a bright pass filter to the original flame image to extract pixels with brightness above some threshold value. We then apply <a href='https://en.wikipedia.org/wiki/Gaussian_blur'>Gaussian blur</a> to this image and combine it with the original by adding the colour values at each pixel location. The result is a halolike glow around the flames and brighter colours in bright areas.</p>
+      <p>It is more efficient to apply blurring in each direction in turn. We therefore create two textures to act as the input and output of the two dimensional blur shaders, allowing us to ping-pong the result of the two for multiple iterations and to control the amount of blurring.</p>
+      <h5>Iteration</h5>
+      <p>The final iteration writes the flames to a texture which is used as input to generate an image of the bright pixels into a buffer. We then apply small blurring several times to achieve a smoother look and combine the resulting texture with the original image, outputting the final result to the canvas.
+      <pre><code>function step(){
+
+  //Unbind any textures
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  gl.activeTexture(gl.TEXTURE0);
+
+  //Update time
+  time -= dt;
+
+  //Draw flames
+  gl.useProgram(flame_program);
+  //Send time to program
+  gl.uniform1f(timeHandle, time);
+  //Render to texture
+  gl.bindFramebuffer(gl.FRAMEBUFFER, flameFramebuffer);
+  //Draw a triangle strip connecting vertices 0-4
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  //Bright pass filter to select only light pixels
+  gl.useProgram(bright_program);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[0]);
+  gl.bindTexture(gl.TEXTURE_2D, flameTexture);
+  //Draw a triangle strip connecting vertices 0-4
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  var blurFactor = 6;
+
+  //Blur the result of the bright filter
+  for(i = 1; i < 5; i++){
+    gl.useProgram(x_blur_program);
+    gl.uniform1f(widthHandle, WIDTH/(i * blurFactor));
+    gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[1]);
+    gl.bindTexture(gl.TEXTURE_2D, blurTexture[0]);
+    //Draw a triangle strip connecting vertices 0-4
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    gl.useProgram(y_blur_program);
+    gl.uniform1f(heightHandle, HEIGHT/(i * blurFactor));
+    gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[0]);
+    gl.bindTexture(gl.TEXTURE_2D, blurTexture[1]);
+    //Draw a triangle strip connecting vertices 0-4
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+
+  //Combine original and blurred image 
+  gl.useProgram(combine_program);
+
+  //Draw to canvas
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+  gl.uniform1i(srcLocation, 0);  // texture unit 0
+  gl.uniform1i(blurLocation, 1);  // texture unit 1
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, flameTexture);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, blurTexture[0]);
+
+  //Draw a triangle strip connecting vertices 0-4
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  requestAnimationFrame(step);
+}</code></pre>
+      </p>
+      </section>
+
+    </div>
+    <!-- End Document
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <script type="text/javascript" src="../../utility/fullscreen.js"></script>
+    <script type="text/javascript" src="flame.js"></script>
+  </body>
+  <footer>
+  <div class="container">
+    <section class="footer" id="links">
+    <div class="navbar-spacer"></div>
+    <nav class="navbar footer-navbar">
+    <div class="container">
+      <ul class="navbar-list">
+        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+      </ul>
+    </div>
+    </nav>
+  </div>
+  </section>
+  </footer>
+</html>
