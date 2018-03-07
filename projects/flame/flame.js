@@ -7,26 +7,26 @@
 //https://webglfundamentals.org/
 //And many more
 
-const mobile = ( navigator.userAgent.match(/Android/i)
-    || navigator.userAgent.match(/webOS/i)
-    || navigator.userAgent.match(/iPhone/i)
-    //|| navigator.userAgent.match(/iPad/i)
-    || navigator.userAgent.match(/iPod/i)
-    || navigator.userAgent.match(/BlackBerry/i)
-    || navigator.userAgent.match(/Windows Phone/i)
-);
+  const mobile = ( navigator.userAgent.match(/Android/i)
+      || navigator.userAgent.match(/webOS/i)
+      || navigator.userAgent.match(/iPhone/i)
+      //|| navigator.userAgent.match(/iPad/i)
+      || navigator.userAgent.match(/iPod/i)
+      || navigator.userAgent.match(/BlackBerry/i)
+      || navigator.userAgent.match(/Windows Phone/i)
+      );
 
-var canvas = document.getElementById("canvas_1");
+  var canvas = document.getElementById("canvas_1");
 
-var WIDTH = 600;
-var HEIGHT = canvas.height;
+  var WIDTH = 600;
+  var HEIGHT = canvas.height;
 
-// Initialize the GL context
-var gl = canvas.getContext('webgl');
+  // Initialize the GL context
+  var gl = canvas.getContext('webgl');
 
-if(!gl){
-  alert("Unable to initialize WebGL.");
-}
+  if(!gl){
+    alert("Unable to initialize WebGL.");
+  }
 //Time step
 var dt = 0.03;
 //Time
@@ -34,15 +34,18 @@ var time = 0.0;
 var bloom = 20;
 var blurFactor = 6;
 var blurCount = 5;
-if(mobile){
-  blurFactor = 3;
-  blurCount = 2;
-}
 //For colour modes
 var type = 0;
+var toggle_render = true;
+if(mobile){
+  toggle_render = false;
+}
 
 //-----------GUI-----------//
 //dat.gui library controls
+var toggle_render_button = { toggle_render:function(){
+  toggle_render = !toggle_render;
+}};
 var red_button = { red:function(){
   type = 0;
 }};
@@ -60,6 +63,7 @@ var gradient_button = { gradient:function(){
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
+gui.add(toggle_render_button, 'toggle_render');
 gui.add(this, 'dt').min(0.0).max(0.05).step(0.005).listen();
 gui.add(this, 'bloom').min(0.0).max(100.0).step(10).listen();
 gui.add(this, 'blurFactor').min(0.0).max(6.0).step(1).listen();
@@ -191,7 +195,7 @@ void main() {
   noise += gradient * snoise(vec2(x*6.0,y*6.0 + 3.0 * time));
 
   noise = max(0.0, noise);
-  
+
   //Set colour mode
   if(type == 0){
     //Red to yello
@@ -386,7 +390,7 @@ function createAndSetupTexture(gl) {
   var texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
 
-  // Set up texture so we can render any size
+  // Set up texture so we can toggle_render any size
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -507,7 +511,7 @@ for(i = 0; i < 2; i++){
   blurTexture.push(texture);
 }
 
-//****************** Main render loop ******************
+//****************** Main toggle_render loop ******************
 
 //WebGL works like a state machine. Data is read from the last texture that was bound,
 //using bindTexture, and written into the last framebuffer that was bound,
@@ -520,60 +524,62 @@ function step(){
   gl.bindTexture(gl.TEXTURE_2D, null);
   gl.activeTexture(gl.TEXTURE0);
 
-  //Update time
-  time -= dt;
+  if(toggle_render){
+    //Update time
+    time -= dt;
 
-  //Draw flames
-  gl.useProgram(flame_program);
-  //Send time to program
-  gl.uniform1f(timeHandle, time);
-  gl.uniform1i(typeHandle, type);
-  //Render to texture
-  gl.bindFramebuffer(gl.FRAMEBUFFER, flameFramebuffer);
-  //Draw a triangle strip connecting vertices 0-4
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-  //Bright pass filter to select only light pixels
-  gl.useProgram(bright_program);
-  gl.uniform1f(bloomHandle, bloom);
-  gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[0]);
-  gl.bindTexture(gl.TEXTURE_2D, flameTexture);
-  //Draw a triangle strip connecting vertices 0-4
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-  //Blur the result of the bright filter
-  for(i = 1; i < blurCount; i++){
-    gl.useProgram(x_blur_program);
-    gl.uniform1f(widthHandle, WIDTH/(i * blurFactor));
-    gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[1]);
-    gl.bindTexture(gl.TEXTURE_2D, blurTexture[0]);
+    //Draw flames
+    gl.useProgram(flame_program);
+    //Send time to program
+    gl.uniform1f(timeHandle, time);
+    gl.uniform1i(typeHandle, type);
+    //Render to texture
+    gl.bindFramebuffer(gl.FRAMEBUFFER, flameFramebuffer);
     //Draw a triangle strip connecting vertices 0-4
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-    gl.useProgram(y_blur_program);
-    gl.uniform1f(heightHandle, HEIGHT/(i * blurFactor));
+    //Bright pass filter to select only light pixels
+    gl.useProgram(bright_program);
+    gl.uniform1f(bloomHandle, bloom);
     gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[0]);
-    gl.bindTexture(gl.TEXTURE_2D, blurTexture[1]);
+    gl.bindTexture(gl.TEXTURE_2D, flameTexture);
     //Draw a triangle strip connecting vertices 0-4
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    //Blur the result of the bright filter
+    for(i = 1; i < blurCount; i++){
+      gl.useProgram(x_blur_program);
+      gl.uniform1f(widthHandle, WIDTH/(i * blurFactor));
+      gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[1]);
+      gl.bindTexture(gl.TEXTURE_2D, blurTexture[0]);
+      //Draw a triangle strip connecting vertices 0-4
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      gl.useProgram(y_blur_program);
+      gl.uniform1f(heightHandle, HEIGHT/(i * blurFactor));
+      gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[0]);
+      gl.bindTexture(gl.TEXTURE_2D, blurTexture[1]);
+      //Draw a triangle strip connecting vertices 0-4
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+
+    //Combine original and blurred image 
+    gl.useProgram(combine_program);
+
+    //Draw to canvas
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    gl.uniform1i(srcLocation, 0);  // texture unit 0
+    gl.uniform1i(blurLocation, 1);  // texture unit 1
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, flameTexture);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, blurTexture[0]);
+
+    //Draw a triangle strip connecting vertices 0-4
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
   }
-
-  //Combine original and blurred image 
-  gl.useProgram(combine_program);
-
-  //Draw to canvas
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-  gl.uniform1i(srcLocation, 0);  // texture unit 0
-  gl.uniform1i(blurLocation, 1);  // texture unit 1
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, flameTexture);
-  gl.activeTexture(gl.TEXTURE1);
-  gl.bindTexture(gl.TEXTURE_2D, blurTexture[0]);
-
-  //Draw a triangle strip connecting vertices 0-4
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
   requestAnimationFrame(step);
 }
 
