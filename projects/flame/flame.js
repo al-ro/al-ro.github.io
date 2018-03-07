@@ -18,6 +18,49 @@ var gl = canvas.getContext('webgl');
 if(!gl){
   alert("Unable to initialize WebGL.");
 }
+//Time step
+var dt = 0.03;
+//Time
+var time = 0.0;
+var bloom = 0;
+//For colour modes
+var type = 0;
+
+//-----------GUI-----------//
+//dat.gui library controls
+var red_button = { red:function(){
+  type = 0;
+}};
+var green_button = { green:function(){
+  type = 1;
+}};
+var blue_button = { blue:function(){
+  type = 2;
+}};
+var gradient_button = { gradient:function(){
+  type = 3;
+}};
+
+
+var gui = new dat.GUI({ autoPlace: false });
+var customContainer = document.getElementById('gui_container');
+customContainer.appendChild(gui.domElement);
+gui.add(this, 'dt').min(0.0).max(0.05).step(0.005).listen();
+gui.add(red_button, 'red');
+gui.add(green_button, 'green');
+gui.add(blue_button, 'blue');
+gui.add(gradient_button, 'gradient');
+gui.close();
+
+function setSize(){
+  material.size = size;
+}
+
+function setColour(){
+  material.color.setHex(colour);
+}
+
+
 
 //GLSL code is presented as a string that is passed for compilation. 
 //Can use quotes (' or "), which require escaping newline, or backtick (`), which doesn't.
@@ -37,6 +80,7 @@ precision highp float;
 const float WIDTH = ` + WIDTH + `.0;
 const float HEIGHT = ` + HEIGHT + `.0;
 uniform float time;
+uniform int type;
 
 /*** WEBGL-NOISE FROM https://github.com/stegu/webgl-noise ***/
 
@@ -130,9 +174,29 @@ void main() {
   noise += gradient * snoise(vec2(x*6.0,y*6.0 + 3.0 * time));
 
   noise = max(0.0, noise);
+  
+  //Set colour mode
+  if(type == 0){
+    //Red to yello
+    g = 3.0 * noise * (gradient);
+    b = noise * (gradient)/2.0; 
+  }else if(type == 1){
+    //Green
+    r = noise * (gradient);
+    g = 1.0;
+    b = noise * (gradient)/2.0; 
+  }else if(type == 2){
+    //Blue
+    r = noise * (gradient)/2.0; 
+    g = 3.0 * noise * (gradient);
+    b = 1.0; 
+  }else if(type == 3){
+    //Blue to magenta to yellow
+    r = 3.0 * noise * (gradient * 10.0);
+    g = noise * (gradient);
+    b = 0.5 - gradient; 
+  }
 
-  g = 3.0*noise * (gradient);
-  b = noise * (gradient)/2.0;
   noise *= 0.65*(1.0-gradient);
 
   //m = 1.0 if (gradient * 0.5) < noise, 0.0 otherwise.
@@ -385,6 +449,7 @@ gl.vertexAttribPointer(positionHandle,
 
 //Set uniform handles
 var timeHandle = getUniformLocation(flame_program, 'time');
+var typeHandle = getUniformLocation(flame_program, 'type');
 var widthHandle = getUniformLocation(x_blur_program, 'width');
 var heightHandle = getUniformLocation(y_blur_program, 'height');
 var srcLocation = gl.getUniformLocation(combine_program, "srcData");
@@ -423,11 +488,6 @@ for(i = 0; i < 2; i++){
   blurTexture.push(texture);
 }
 
-//Time step
-var dt = 0.03;
-//Time
-var time = 0.0;
-
 //****************** Main render loop ******************
 
 //WebGL works like a state machine. Data is read from the last texture that was bound,
@@ -448,6 +508,7 @@ function step(){
   gl.useProgram(flame_program);
   //Send time to program
   gl.uniform1f(timeHandle, time);
+  gl.uniform1i(typeHandle, type);
   //Render to texture
   gl.bindFramebuffer(gl.FRAMEBUFFER, flameFramebuffer);
   //Draw a triangle strip connecting vertices 0-4
