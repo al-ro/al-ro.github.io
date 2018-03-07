@@ -35,7 +35,8 @@ var bloom = 20;
 var blurFactor = 6;
 var blurCount = 5;
 if(mobile){
-  blurCount = 3;
+  blurFactor = 3;
+  blurCount = 2;
 }
 //For colour modes
 var type = 0;
