@@ -58,8 +58,8 @@
       <p><a href='https://en.wikipedia.org/wiki/WebGL'>WebGL</a> is a graphics API for web browsers. It is very similar to OpenGL and allows for native graphics with an HTML canvas element. WebGL exposes the GPU so that complex 2D and 3D scenes can be rendered with high performance on most modern hardware. Using <a href='https://en.wikipedia.org/wiki/OpenGL_Shading_Language'>GLSL</a> we can specify vertex and fragment shaders to have low level control of graphics rendering. The flame graphics above are based on many great tutorials online, some of which are listed at the start of the source file. The project was inspired by <a href='https://twitter.com/ciaccodavide/status/964407412634472448'>a tweet by Davide Ciacco</a>.</p>
 
       <h5>WebGL</h5>
-      <p>WebGL presents a programmable rendering pipeline which is executed on the GPU. The programmer can specify the global geometry, shaders and the source and target textures to create complex visual effects. Minute details of the graphics are controllable from the nature and funciton of a camera to post-processing.</p>
-      <p>There exists an implicit 3D coordinate system as the main domain of the renderer. The current code displays a rectangle which fills the entire canvas to display two-dimensional graphics by setting the z coordinate of each vertex to 0.0. As everything exists in this plane, we do not handle depth testing or transformation matrices. The rectangle is made up of two triangles which share a side along the diagonal of the canvas.</p>
+      <p>WebGL presents a programmable rendering pipeline which is executed on the GPU. The programmer can specify the global geometry, shaders and the source and target textures to create complex visual effects. Minute details of the graphics are controllable from the nature and function of a camera to post-processing.</p>
+      <p>The main renderer domain is a 3D coordinate system. The current code uses a rectangle which fills the entire canvas to display two-dimensional graphics by setting the z coordinate of each vertex to 0.0. As everything exists in this plane, we do not handle depth testing or transformation matrices. The rectangle is made up of two triangles which share a side along the diagonal of the canvas.</p>
       <p>After setting up the geometry, we need to define a WebGL program which is a combination of shaders: units of code that run on the GPU and determine how certain portions of the ouput graphics look. There are two types of shaders: vertex shaders and fragment shaders. Vertex shaders determine the look of the geometry based on transformation and rotation matrices and how textures map onto objects or the screen. Fragment shaders determine what a single pixel looks like. We use several WebGL programs in our code to create a series of effects that allow us to render fire-like grpahics.</p>
 
       <h5>Setup</h5>
@@ -79,6 +79,8 @@ var vertexData = new Float32Array([
 var vertexDataBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, vertexDataBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
+
+[...MAKE VERTEX DATA AVAILABLE ON THE GPU...]
 
 //Create vertex and fragment shaders
 var flameVertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -166,7 +168,7 @@ gl.bindFramebuffer(gl.FRAMEBUFFER, flameFramebuffer);
 var flameTexture = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, flameTexture);
 
-// Set up texture so we can render any size
+// Set up texture size to not be limited to powers of two
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -195,8 +197,8 @@ gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       WebGL functions as a state machine, reading from the last texture bound and drawing to the last frame buffer specified, with the default <code>null</code> targeting the screen. To achieve multiple effects, we can keep switching programs, buffers and textures and call <code>drawArrays()</code> after each one. The flame code starts by drawing the gradient coloured noise on a texture and passes it to the bright pass filter and blur shaders, finally combining the original image and the blurred texture to achieve a bloom effect.</p>
 
       <h5>Bloom</h5>
-      <p>To make the fire glow, we can use shaders to achieve simple <a href='https://en.wikipedia.org/wiki/Bloom_(shader_effect)'>bloom effect</a>. To do this, we apply a bright pass filter to the original flame image to extract pixels with brightness above some threshold value. We then apply <a href='https://en.wikipedia.org/wiki/Gaussian_blur'>Gaussian blur</a> to this image and combine it with the original by adding the colour values at each pixel location. The result is a halolike glow around the flames and brighter colours in bright areas.</p>
-      <p>It is more efficient to apply blurring in each direction in turn. We therefore create two textures to act as the input and output of the two dimensional blur shaders, allowing us to ping-pong the result of the two for multiple iterations and to control the amount of blurring.</p>
+      <p>To make the fire glow, we can use shaders to achieve a simple <a href='https://en.wikipedia.org/wiki/Bloom_(shader_effect)'>bloom effect</a>. To do this, we apply a bright pass filter to the original flame image to extract pixels with brightness above some threshold value. We then apply <a href='https://en.wikipedia.org/wiki/Gaussian_blur'>Gaussian blur</a> to this image and combine it with the original by adding the colour values at each pixel location. The result is a halolike glow around the flames and lighter colours in bright areas.</p>
+      <p>It is more efficient to apply blurring in each direction in turn. We therefore create two textures to act as the input and output of the blur shaders, allowing us to ping-pong the result of the two for multiple iterations and control the amount of blurring.</p>
       <h5>Iteration</h5>
       <p>The final iteration writes the flames to a texture which is used as input to generate an image of the bright pixels into a buffer. We then apply small blurring several times to achieve a smoother look and combine the resulting texture with the original image, outputting the final result to the canvas.
       <pre><code>function step(){
