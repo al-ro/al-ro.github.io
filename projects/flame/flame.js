@@ -183,7 +183,7 @@ void main() {
   float y = gl_FragCoord.y/(WIDTH);
   float gradient = gl_FragCoord.y/(HEIGHT);
 
-  //Create red to yellow gradient for flame
+  //RGB values for flame
   float r = 1.0;
   float g = 0.0;
   float b = 0.0;
@@ -198,7 +198,7 @@ void main() {
 
   //Set colour mode
   if(type == 0){
-    //Red to yello
+    //Red to yellow
     g = 3.0 * noise * (gradient);
     b = noise * (gradient)/2.0; 
   }else if(type == 1){
@@ -390,7 +390,7 @@ function createAndSetupTexture(gl) {
   var texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
 
-  // Set up texture so we can toggle_render any size
+  // Set up texture so we can render any size
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -511,7 +511,7 @@ for(i = 0; i < 2; i++){
   blurTexture.push(texture);
 }
 
-//****************** Main toggle_render loop ******************
+//****************** Main render loop ******************
 
 //WebGL works like a state machine. Data is read from the last texture that was bound,
 //using bindTexture, and written into the last framebuffer that was bound,
