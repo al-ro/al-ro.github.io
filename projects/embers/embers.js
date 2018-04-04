@@ -38,15 +38,11 @@ var rotate = true;
 var offset = 0.1;
 
 var ratio =  canvas.width / canvas.height;
-var w = cont.offsetWidth;
-var h = w/ratio;
 
 //Initialise three.js
 var scene = new THREE.Scene();
 
 var renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
-renderer.setPixelRatio( window.devicePixelRatio );
-renderer.setSize(w,h,false);
 renderer.setClearColor(0x111b44);
 
 distance = 400;
