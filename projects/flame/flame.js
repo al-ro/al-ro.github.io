@@ -7,7 +7,7 @@
 //https://webglfundamentals.org/
 //And many more
 
-const mobile = ( navigator.userAgent.match(/Android/i)
+mobile = ( navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/webOS/i)
     || navigator.userAgent.match(/iPhone/i)
     //|| navigator.userAgent.match(/iPad/i)
@@ -17,14 +17,14 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 );
 
 var canvas = document.getElementById("canvas_1");
-
+mobile = true;
 if(mobile){
   canvas.width = 360;
   canvas.height = 225;
 }
 
-var WIDTH = 0.9*canvas.width;
-var HEIGHT = 0.9*canvas.height;
+var WIDTH = Math.floor(0.9*canvas.width);
+var HEIGHT = Math.floor(0.9*canvas.height);
 
 // Initialize the GL context
 var gl = canvas.getContext('webgl');
@@ -44,6 +44,8 @@ var type = 0;
 var toggle_render = true;
 if(mobile){
   toggle_render = false;
+  bloom - 50;
+  blurFactor= 3;
 }
 
 //-----------GUI-----------//
