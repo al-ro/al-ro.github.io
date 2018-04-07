@@ -19,8 +19,8 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 var canvas = document.getElementById("canvas_1");
 
 if(mobile){
-  canvas.width = 720;
-  canvas.height = 450;
+  canvas.width = 360;
+  canvas.height = 225;
 }
 
 var WIDTH = 0.9*canvas.width;
