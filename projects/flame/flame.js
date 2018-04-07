@@ -7,7 +7,7 @@
 //https://webglfundamentals.org/
 //And many more
 
-mobile = ( navigator.userAgent.match(/Android/i)
+const mobile = ( navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/webOS/i)
     || navigator.userAgent.match(/iPhone/i)
     //|| navigator.userAgent.match(/iPad/i)
@@ -17,7 +17,7 @@ mobile = ( navigator.userAgent.match(/Android/i)
 );
 
 var canvas = document.getElementById("canvas_1");
-mobile = true;
+
 if(mobile){
   canvas.width = 360;
   canvas.height = 225;
