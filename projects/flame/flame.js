@@ -18,8 +18,8 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 
 var canvas = document.getElementById("canvas_1");
 
-var WIDTH = 600;
-var HEIGHT = canvas.height;
+var WIDTH = 0.9*canvas.width;
+var HEIGHT = 0.9*canvas.height;
 
 // Initialize the GL context
 var gl = canvas.getContext('webgl');
@@ -28,7 +28,7 @@ if(!gl){
   alert("Unable to initialize WebGL.");
 }
 //Time step
-var dt = 0.03;
+var dt = 0.025;
 //Time
 var time = 0.0;
 var bloom = 20;
