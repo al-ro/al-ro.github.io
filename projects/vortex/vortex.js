@@ -45,7 +45,6 @@ var h = w/ratio;
 var scene = new THREE.Scene();
 
 var renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
-renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize(w,h,false);
 renderer.setClearColor(0xffffff);
 
@@ -101,7 +100,7 @@ for(i = 0; i < particleCount; i++){
   var particle = {
     x: width/2 - Math.random() * width,
     y: height/2 - Math.random() * height,
-    z: depth - Math.random() * depth,
+    z: depth/2 - Math.random() * depth,
     vel_x: 0.5 - Math.random(),
     vel_y: 0.5 - Math.random(),
     vel_z: 0.5 - Math.random()
@@ -232,8 +231,11 @@ function move(){
       particles.vertices[i].vel_z -= speed/60;
     }
 
-    if(particles.vertices[i].z < 0.0){
-      particles.vertices[i].z = 0.0; 
+    if(particles.vertices[i].z < -(depth/2)){
+      particles.vertices[i].x = width/2 - Math.random() * width; 
+      particles.vertices[i].y = height/2 - Math.random() * height; 
+      particles.vertices[i].z = depth/2; 
+      particles.vertices[i].vel_z = 0; 
     }else{
       //Update particle position based on velocity
       particles.vertices[i].x += particles.vertices[i].vel_x ;
