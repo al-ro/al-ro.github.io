@@ -81,19 +81,14 @@ controls.maxDistance = 200000-5*width;
 controls.minDistance = 100;
 controls.autoRotate = rotate;
 
-//Add texture to flakes
-//https://stackoverflow.com/questions/24087757/three-js-and-loading-a-cross-domain-image
-THREE.ImageUtils.crossOrigin = '';
-var texture = THREE.ImageUtils.loadTexture("http://res.cloudinary.com/al-ro/image/upload/c_scale,h_512/v1518264821/ember_ihk6rp.png");
-
-var material = new THREE.MeshPhongMaterial( { color: 0x00AAFF, shininess: 30, specular: 0x111111  } );
+var material_1 = new THREE.MeshPhongMaterial( { color: 0x00AAFF, shininess: 30, specular: 0x111111  } );
 
 var loader = new THREE.STLLoader();
 loader.load( "./ballerina_1.stl", function ( event ) {
 
     var geometry = event.content;
     geometry.computeTangents();
-    var mesh = new THREE.Mesh( geometry, material );
+    var mesh = new THREE.Mesh( geometry, material_1 );
 
     mesh.position.set( 0, -10, 0 );
     mesh.rotation.set( - Math.PI / 2, 0, 0 );
