@@ -90,10 +90,6 @@ loader.load( "./ballerina_1.stl", function ( event ) {
     geometry.computeTangents();
     var mesh = new THREE.Mesh( geometry, material_1 );
 
-    mesh.position.set( 0, -10, 0 );
-    mesh.rotation.set( - Math.PI / 2, 0, 0 );
-    mesh.scale.set( 15, 15, 15 );
-
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
