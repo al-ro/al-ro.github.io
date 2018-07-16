@@ -84,16 +84,13 @@ controls.autoRotate = rotate;
 var material_1 = new THREE.MeshPhongMaterial( { color: 0x00AAFF, shininess: 30, specular: 0x111111  } );
 
 var loader = new THREE.STLLoader();
-loader.load( "./ballerina_1.stl", function ( event ) {
+loader.load( "./ballerina_1.stl", function (geometry) {
 
-    var geometry = event.content;
-    geometry.computeTangents();
     var mesh = new THREE.Mesh( geometry, material_1 );
 
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
-    objects.push(mesh);
     scene.add( mesh );
 
 } );
