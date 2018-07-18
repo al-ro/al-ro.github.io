@@ -237,7 +237,7 @@ function setTransparency(){
   if(toggle_predators){
     for(p = 0; p < predatorCount; p++){
       predators[p].geo.visible = true
-        predators[p].geo.position.x = width/2 - Math.random() * width;
+      predators[p].geo.position.x = width/2 - Math.random() * width;
       predators[p].geo.position.y = height/2 - Math.random() * height;
       predators[p].geo.position.z = depth/2 - Math.random() * depth;;
     }
