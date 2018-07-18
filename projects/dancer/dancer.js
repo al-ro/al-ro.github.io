@@ -54,7 +54,7 @@ var FOV = 2 * Math.atan( window.innerHeight / ( 2 * distance ) ) * 90 / Math.PI;
 var camera = new THREE.PerspectiveCamera(FOV, ratio, 1, 200000);
 
 camera.up.set(0,0,1);
-camera.position.set(0, -height, 0);
+camera.position.set(width/1.8, -height/1.8, depth/4);
 camera.lookAt(new THREE.Vector3(centre[0], centre[1], centre[2]));
 
 scene.add(camera);
