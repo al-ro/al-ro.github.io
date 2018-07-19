@@ -182,7 +182,7 @@ function draw() {
 
   frameCount++;
   if(frameCount > updateDelay){
-    ctx.fillStyle = "rgb(255,255,255,"+alpha+")";
+    ctx.fillStyle = "rgba(255,255,255,"+alpha+")";
     ctx.fillRect(0,0,canvas_1.width, canvas_1.height);
     tick();
     frameCount = 0;
