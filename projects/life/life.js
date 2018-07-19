@@ -14,15 +14,16 @@ if(mobile){
 
 var ctx = canvas_1.getContext("2d");
 
-var sideWidth = 360;
-var sideHeight = 225;
-
-var length = sideWidth * sideHeight;
+var sideWidth = Math.floor(canvas_1.width/18);
+var sideHeight = Math.floor(canvas_1.height/18);
 
 if(mobile){
   sideWidth = 90;
   sideHeight = 58;
 }
+
+var length = sideWidth * sideHeight;
+
 var grid = [];
 
 var width = (canvas_1.width)/sideWidth;
