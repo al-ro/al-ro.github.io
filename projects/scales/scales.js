@@ -17,24 +17,33 @@ var height = 2000;
 var depth = 2000;
 var centre = [width/2,height/2, depth/2];
 
-var flakes = [];
+var origin = new THREE.Vector3(0,0,0);
+var x_axis = new THREE.Vector3(1,0,0);
+var y_axis = new THREE.Vector3(0,1,0);
+var z_axis = new THREE.Vector3(0,0,1);
 
-var flakeCount;
+var scales = [];
+
+var scaleCount;
 
 if(mobile){
-  flakeCount = 2000;
+  scaleCount = 20;
 }else{
-  flakeCount = 4000;
+  scaleCount = 40;
 }
 
+var radius = 10
+var rings = 10
+var density = 100
+
 //Speed of falling
-var fall = 2;
+var fall = 0;
 //Rotation around z axis
-var swirl = 1;
+var swirl = 0;
 //Noise field zoom
 var step = 100;
 //Camera rotate
-var rotate = true;
+var rotate = false;
 
 var ratio =  canvas.width / canvas.height;
 var w = cont.offsetWidth;
@@ -54,15 +63,15 @@ var FOV = 2 * Math.atan( window.innerHeight / ( 2 * distance ) ) * 90 / Math.PI;
 var camera = new THREE.PerspectiveCamera(FOV, ratio, 1, 200000);
 
 camera.up.set(0,0,1);
-camera.position.set(width/1.8, -height/1.8, depth/4);
+camera.position.set(2*radius, -radius, radius/4);
 camera.lookAt(new THREE.Vector3(centre[0], centre[1], centre[2]));
 
 scene.add(camera);
 
 //OrbitControls.js for camera manipulation
 controls = new THREE.OrbitControls( camera, renderer.domElement );
-controls.maxDistance = 2*width;
-controls.minDistance = width/2;
+//controls.maxDistance = 2*width;
+//controls.minDistance = width/2;
 controls.autoRotate = rotate;
 
 //Lights
@@ -84,35 +93,7 @@ light_4 = new THREE.DirectionalLight(0x3333ff, 1.0);
 light_4.position.set(1, -1, 1);
 scene.add(light_4);
 
-//Material for dancer and base
-var material_d = new THREE.MeshLambertMaterial( { color: 0xffffff} );
-
-var loader = new THREE.STLLoader();
-//Load dancer
-loader.load( "https://res.cloudinary.com/al-ro/raw/upload/v1531776249/ballerina_1_mu2pmx.stl", function (geometry) {
-
-  var mesh = new THREE.Mesh( geometry, material_d);
-
-  mesh.scale.set( depth/22, depth/22, depth/22 );
-  mesh.position.set( -20, -30, -depth/3 + 75 );
-
-  scene.add( mesh );
-
-} );
-
-//Load base
-loader.load( "https://res.cloudinary.com/al-ro/raw/upload/v1531777915/base_uluxjn.stl", function (geometry) {
-
-  var mesh = new THREE.Mesh( geometry, material_d);
-
-  mesh.scale.set( depth/2, depth/2, depth/2 );
-  mesh.position.set(-725, -725, -1050);
-
-  scene.add( mesh );
-
-} );
-
-//Define hexagon shape for flakes
+//Define hexagon shape for scales
 var geom = new THREE.Geometry();
 
 //Brackets for purely aesthetic considerations
@@ -132,42 +113,60 @@ geom.faces.push( new THREE.Face3( 0, 2, 3 ) );
 geom.faces.push( new THREE.Face3( 0, 3, 4 ) );
 geom.faces.push( new THREE.Face3( 0, 4, 5 ) );
 
-geom.scale(7,7,7);
+geom.scale(1,1,1);
+geom.up = [0,0,1];
 
 var colour = 0x939393;
 
-var material = new THREE.MeshPhongMaterial( {color: colour, specular: 0xffffff, shininess: 100, side: THREE.DoubleSide, shading: THREE.FlatShading} );
+var material = new THREE.MeshPhongMaterial( {color: colour, emissive: colour, emissiveIntensity: 0.2, specular: 0xffffff, shininess: 100, side: THREE.DoubleSide, shading: THREE.FlatShading} );
 
+//Set location on sphere given a polar angle, an azimuthal angle and a radius 
+function setLocationOnSphere(theta, phi, radius, scale){
 
-//Generate random flakes
-for(i = 0; i < flakeCount; i++){
+  scale.geo.position.x = radius * Math.sin(theta) * Math.cos(phi);
+  scale.geo.position.y = radius * Math.sin(theta) * Math.sin(phi);
+  scale.geo.position.z = radius * Math.cos(theta);
 
-  var g_ = new THREE.Mesh(geom, material);
-
-  var x = 0.5 - Math.random();
-  var y = 0.5 - Math.random();
-  var z = 0.5 - Math.random();
-
-  var flake = {
-    vel_x: x,
-    vel_y: y,
-    vel_z: z,
-    geo: g_
-  };
-
-  flake.geo.position.x = width/2 - Math.random() * width;
-  flake.geo.position.y = height/2 - Math.random() * height;
-  flake.geo.position.z = depth/2 - Math.random() * depth;
-  
-  flake.geo.rotation.x = 2 * (Math.random() - 1.0);
-  flake.geo.rotation.y = 2 * (Math.random() - 1.0);
-  flake.geo.rotation.z = 2 * (Math.random() - 1.0);
-
-  flakes.push(flake);
 }
 
-for(i = 0; i < flakes.length; i++){
-  scene.add(flakes[i].geo);
+//Generate scales on a sphere
+var a = (4 * Math.PI * (radius * radius)) / scaleCount;
+var d = Math.sqrt(a);
+var M_theta = 40;//Math.round(Math.PI/d);
+var d_theta = Math.PI/M_theta;
+var d_phi = a / d_theta;
+var theta;
+var phi;
+var M_phi;
+
+for(i = 0; i < M_theta; i++){
+
+  theta = Math.PI * (i + 0.5) / M_theta;
+  M_phi = 40;//Math.round(2 * Math.PI * Math.sin(theta) / d_phi);
+  for(j = 0; j < M_phi; j++){
+    phi = 2 * Math.PI * j / M_phi;
+
+    var g_ = new THREE.Mesh(geom, material);
+    var scale = {
+      vel_x: 0,
+      vel_y: 0,
+      vel_z: 0,
+      geo: g_
+    };
+
+    setLocationOnSphere(theta, phi, radius, scale);
+    rx = scale.geo.position.x / radius;
+    ry = scale.geo.position.y / radius;
+    rz = scale.geo.position.z / radius;
+
+    scale.geo.lookAt(origin);
+
+    scales.push(scale);
+  } 
+}
+
+for(i = 0; i < scales.length; i++){
+  scene.add(scales[i].geo);
 }
 
 
@@ -182,19 +181,19 @@ var reset_button = { reset:function(){
     console.log(err.message);
   }
 
-  for(i = 0; i < flakeCount; i++){
+  for(i = 0; i < scales.length; i++){
 
     var x = 0.5 - Math.random();
     var y = 0.5 - Math.random();
     var z = 0.5 - Math.random();
 
-    flakes[i].vel_x = x;
-    flakes[i].vel_y = y;
-    flakes[i].vel_z = z;
+    scales[i].vel_x = x;
+    scales[i].vel_y = y;
+    scales[i].vel_z = z;
 
-    flakes[i].geo.position.x = width/2 - Math.random() * width;
-    flakes[i].geo.position.y = height/2 - Math.random() * height;
-    flakes[i].geo.position.z = depth/2 - Math.random() * depth;
+    scales[i].geo.position.x = width/2 - Math.random() * width;
+    scales[i].geo.position.y = height/2 - Math.random() * height;
+    scales[i].geo.position.z = depth/2 - Math.random() * depth;
 
   }
 
@@ -217,7 +216,7 @@ function setColour(){
   material.color.setHex(colour);
 }
 
-//Used for flake position
+//USed for scale position
 var A = {
   x: 0,
   y: 0,
@@ -229,14 +228,14 @@ var B = {
   x: 0,
   y: 0,
   z: 1
-};
+}
 
 //Vector tangent to A and B to define movement around B
 var n = {
   x: 0,
   y: 0,
   z: 0
-};
+};;
 
 //cross product
 function cross(A, B, n){
@@ -256,7 +255,7 @@ catch(err) {
   console.log(err.message);
 }
 
-//Find the curl of the noise field based on on the noise value at the location of a flake
+//Find the curl of the noise field based on on the noise value at the location of a scale
 function computeCurl(x, y, z){
   var eps = 0.0001;
 
@@ -300,56 +299,66 @@ function computeCurl(x, y, z){
 
 //----------MOVE----------//
 function move(){
-  for(i = 0; i < flakeCount; i++){
+  for(i = 0; i < scales.length; i++){
+    //scales[i].geo.lookAt(origin);
+    
+    x_ = scales[i].geo.rotation.x;
+    y_ = scales[i].geo.rotation.y;
+    z_ = scales[i].geo.rotation.z;
 
-    A.x = flakes[i].geo.position.x;
-    A.y = flakes[i].geo.position.y;
-    A.z = flakes[i].geo.position.z;
+
+    scales[i].geo.rotation.x = 0;
+    scales[i].geo.rotation.y = 0;
+    scales[i].geo.rotation.z = 0;
+    scales[i].geo.translateOnAxis(x_axis, 10);
+    scales[i].geo.rotation.x += 0.01;
+    scales[i].geo.translateOnAxis(x_axis, -10);
+    scales[i].geo.rotation.x += x_;
+    scales[i].geo.rotation.y += y_;
+    scales[i].geo.rotation.z += z_;
+
+
+    A.x = scales[i].geo.position.x;
+    A.y = scales[i].geo.position.y;
+    A.z = scales[i].geo.position.z;
 
     cross(A, B, n);
     var mag_n = Math.sqrt(n.x * n.x + n.y * n.y + n.z * n.z);
-    flakes[i].vel_x = swirl * (n.x/mag_n);
-    flakes[i].vel_y = swirl * (n.y/mag_n);
+    scales[i].vel_x = swirl * (n.x/mag_n);
+    scales[i].vel_y = swirl * (n.y/mag_n);
 
-    var curl = computeCurl(flakes[i].geo.position.x/step, flakes[i].geo.position.y/step, flakes[i].geo.position.z/step);
+    var curl = computeCurl(scales[i].geo.position.x/step, scales[i].geo.position.y/step, scales[i].geo.position.z/step);
     var mag_c = Math.sqrt(curl.x * curl.x + curl.y * curl.y + curl.z * curl.z);
 
-    //Update flake velocity according to curl direction and fall
-    flakes[i].vel_x -= (fall/4)*(curl.x/mag_c);
-    flakes[i].vel_y -= (fall/4)*(curl.y/mag_c);
+    //Update scale velocity according to curl direction and fall
+    scales[i].vel_x -= (fall/4)*(curl.x/mag_c);
+    scales[i].vel_y -= (fall/4)*(curl.y/mag_c);
 
     if(fall > 0){
-      flakes[i].vel_z -= (fall/60);
-      flakes[i].vel_z = Math.max(flakes[i].vel_z, -fall);
+      scales[i].vel_z -= (fall/60);
+      scales[i].vel_z = Math.max(scales[i].vel_z, -fall);
     }else{
-      flakes[i].vel_z = 0;
+      scales[i].vel_z = 0;
     }
 
-    flakes[i].geo.rotation.x += flakes[i].vel_x/10+flakes[i].vel_z/60;
-    flakes[i].geo.rotation.y += flakes[i].vel_y/10+flakes[i].vel_z/60;
+    //scales[i].geo.rotation.x += scales[i].vel_x/10+scales[i].vel_z/60;
+    //scales[i].geo.rotation.y += scales[i].vel_y/10+scales[i].vel_z/60;
+/*
 
-    var distanceFromCentre = Math.sqrt(A.x * A.x + A.y * A.y + A.z * A.z);  
-    if(distanceFromCentre > width/2){
-      flakes[i].geo.visible = false;
-    }else{
-      flakes[i].geo.visible = true;
-    }
-
-
-    if(flakes[i].geo.position.z < -(depth/2) || Math.sqrt(A.x * A.x + A.y * A.y) > width){
+    if(scales[i].geo.position.z < -(depth/2) || Math.sqrt(A.x * A.x + A.y * A.y) > width){
       //If outside bounding volume, reset to top
-      flakes[i].geo.position.x = width/2 - Math.random() * width; 
-      flakes[i].geo.position.y = height/2 - Math.random() * height; 
-      flakes[i].geo.position.z = depth/2; 
-      flakes[i].vel_x = 0;
-      flakes[i].vel_y = 0;
+      scales[i].geo.position.x = width/2 - Math.random() * width; 
+      scales[i].geo.position.y = height/2 - Math.random() * height; 
+      scales[i].geo.position.z = depth/2; 
+      scales[i].vel_x = 0;
+      scales[i].vel_y = 0;
 
     }else{
-      //Update flake position based on velocity
-      flakes[i].geo.position.x += flakes[i].vel_x ;
-      flakes[i].geo.position.y += flakes[i].vel_y ;
-      flakes[i].geo.position.z += flakes[i].vel_z ;
-    }
+      //Update scale position based on velocity
+      scales[i].geo.position.x += scales[i].vel_x ;
+      scales[i].geo.position.y += scales[i].vel_y ;
+      scales[i].geo.position.z += scales[i].vel_z ;
+    }*/
   }
 }
 
