@@ -21,20 +21,21 @@ var flakes = [];
 
 var flakeCount;
 
+var p_mesh;
 if(mobile){
-  flakeCount = 2000;
+  flakeCount = 0;
 }else{
-  flakeCount = 4000;
+  flakeCount = 0;
 }
 
 //Speed of falling
-var fall = 2;
+var fall = 0;
 //Rotation around z axis
-var swirl = 1;
+var swirl = 0;
 //Noise field zoom
 var step = 100;
 //Camera rotate
-var rotate = true;
+var rotate = false;
 
 var ratio =  canvas.width / canvas.height;
 var w = cont.offsetWidth;
@@ -45,7 +46,7 @@ var scene = new THREE.Scene();
 
 var renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
 renderer.setSize(w,h,false);
-renderer.setClearColor(0x114457, 0.5);
+renderer.setClearColor(0x9999ff, 0.5);
 
 distance = 400;
 
@@ -54,7 +55,7 @@ var FOV = 2 * Math.atan( window.innerHeight / ( 2 * distance ) ) * 90 / Math.PI;
 var camera = new THREE.PerspectiveCamera(FOV, ratio, 1, 200000);
 
 camera.up.set(0,0,1);
-camera.position.set(width/1.8, -height/1.8, depth/4);
+camera.position.set(width/2, -height/2, depth);
 camera.lookAt(new THREE.Vector3(centre[0], centre[1], centre[2]));
 
 scene.add(camera);
@@ -72,43 +73,96 @@ light_1.position.set(0, 0, -depth);
 light_1.lookAt(0, 0, -1);
 scene.add(light_1);
 
-light_2 = new THREE.DirectionalLight(0xff0000, 1.0);
+light_2 = new THREE.DirectionalLight(0xff0000, 0.2);
 light_2.position.set(-1, 1, 1);
 scene.add(light_2);
 var light_3;
-light_3 = new THREE.DirectionalLight(0x00ff00, 1.0);
+light_3 = new THREE.DirectionalLight(0x00ff00, 0.2);
 light_3.position.set(-1, -1, 1);
 scene.add(light_3);
 var light_4;
-light_4 = new THREE.DirectionalLight(0x3333ff, 1.0);
+light_4 = new THREE.DirectionalLight(0x3333ff, 0.2);
 light_4.position.set(1, -1, 1);
 scene.add(light_4);
 
 //Material for dancer and base
-var material_d = new THREE.MeshLambertMaterial( { color: 0xffffff} );
+var material = new THREE.MeshPhongMaterial( {color: 0xff3300, specular: 0xffffff, shininess: 100, side: THREE.DoubleSide, morphTargets: true} );
 
+var m_vertices = [];
+var m_normals = [];
 var loader = new THREE.STLLoader();
 //Load dancer
-loader.load( "https://res.cloudinary.com/al-ro/raw/upload/v1531776249/ballerina_1_mu2pmx.stl", function (geometry) {
+loader.load( "https://res.cloudinary.com/al-ro/raw/upload/v1537037873/open_hjehmc.stl", function (object) {
 
-  var mesh = new THREE.Mesh( geometry, material_d);
+  var attrib = object.getAttribute('position');
+  if(attrib === undefined) {
+    throw new Error('a given BufferGeometry object must have a position attribute.');
+  }
+  var positions = attrib.array;
+  var vertices = [];
+  for(var i = 0, n = positions.length; i < n; i += 3) {
+    var x = positions[i];
+    var y = positions[i + 1];
+    var z = positions[i + 2];
+    vertices.push(new THREE.Vector3(x, y, z));
+    m_vertices.push(new THREE.Vector3(x, y, z));
+  }
+  var faces = [];
+  for(var i = 0, n = vertices.length; i < n; i += 3) {
+    faces.push(new THREE.Face3(i, i + 1, i + 2));
+  }
 
-  mesh.scale.set( depth/22, depth/22, depth/22 );
-  mesh.position.set( -20, -30, -depth/3 + 75 );
+  var geometry = new THREE.Geometry();
+  geometry.vertices = vertices;
+  geometry.faces = faces;
+  geometry.computeFaceNormals();              
 
-  scene.add( mesh );
+  geometry.mergeVertices()
+  geometry.computeVertexNormals();
 
-} );
-
-//Load base
-loader.load( "https://res.cloudinary.com/al-ro/raw/upload/v1531777915/base_uluxjn.stl", function (geometry) {
-
-  var mesh = new THREE.Mesh( geometry, material_d);
+  var mesh = new THREE.Mesh( geometry, material);
 
   mesh.scale.set( depth/2, depth/2, depth/2 );
-  mesh.position.set(-725, -725, -1050);
+  mesh.position.set(0, 0, 0);
 
-  scene.add( mesh );
+  scene.add(mesh);
+
+} );
+var geometry;
+//Load base
+loader.load( "https://res.cloudinary.com/al-ro/raw/upload/v1537037856/closed_tskwbb.stl", function (object) {
+
+  var attrib = object.getAttribute('position');
+  if(attrib === undefined) {
+    throw new Error('a given BufferGeometry object must have a position attribute.');
+  }
+  var positions = attrib.array;
+  var vertices = [];
+  for(var i = 0, n = positions.length; i < n; i += 3) {
+    var x = positions[i];
+    var y = positions[i + 1];
+    var z = positions[i + 2];
+    vertices.push(new THREE.Vector3(x, y, z));
+  }
+  var faces = [];
+  for(var i = 0, n = vertices.length; i < n; i += 3) {
+    faces.push(new THREE.Face3(i, i + 1, i + 2));
+  }
+
+
+  geometry = new THREE.Geometry();
+  geometry.vertices = vertices;
+  geometry.faces = faces;
+  geometry.computeFaceNormals();              
+  geometry.mergeVertices()
+  geometry.computeVertexNormals();
+
+  p_mesh = new THREE.Mesh( geometry, material);
+  p_mesh.scale.set( depth/2, depth/2, depth/2 );
+  p_mesh.position.set(0, 0, 0);
+
+  scene.add(p_mesh);
+  console.log(p_mesh);
 
 } );
 
@@ -134,9 +188,8 @@ geom.faces.push( new THREE.Face3( 0, 4, 5 ) );
 
 geom.scale(7,7,7);
 
-var colour = 0x939393;
+var colour = 0xff3300;
 
-var material = new THREE.MeshPhongMaterial( {color: colour, specular: 0xffffff, shininess: 100, side: THREE.DoubleSide, shading: THREE.FlatShading} );
 
 
 //Generate random flakes
@@ -355,6 +408,7 @@ function move(){
 
 //----------DRAW----------//
 function draw(){
+  //p_mesh.faces;
   if(rotate){
     controls.update();
   }
