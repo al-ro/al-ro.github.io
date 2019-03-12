@@ -44,6 +44,7 @@ var h = w/ratio;
 var scene = new THREE.Scene();
 
 var renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(w,h,false);
 renderer.setClearColor(0x114457, 0.5);
 
