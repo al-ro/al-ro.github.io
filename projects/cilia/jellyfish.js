@@ -260,9 +260,9 @@ function createStrandGeometry ( sizing ) {
 }
 
 var body_material = new THREE.MeshPhongMaterial( { color: 0xffffff, side: THREE.DoubleSide } );
-var body_mesh = new THREE.Mesh( body_geometry, body_material );
-body_mesh.rotateX(Math.PI/2);
-scene.add( body_mesh );
+//var body_mesh = new THREE.Mesh( body_geometry, body_material );
+//body_mesh.rotateX(Math.PI/2);
+//scene.add( body_mesh );
 var bodyRadius = 5;
 //The body will be a hemisphere with two bones to control pulsating
 function createBodyGeometry ( sizing ) {
