@@ -43,7 +43,6 @@ var blurCount = 5;
 var type = 0;
 var toggle_render = true;
 if(mobile){
-  toggle_render = false;
   bloom = 50;
   blurFactor= 3;
 }
