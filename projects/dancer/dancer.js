@@ -73,7 +73,7 @@ light_1.position.set(0, 0, -depth);
 light_1.lookAt(0, 0, -1);
 scene.add(light_1);
 
-light_2 = new THREE.DirectionalLight(0xff0000, 1.0);
+var light_2 = new THREE.DirectionalLight(0xff0000, 1.0);
 light_2.position.set(-1, 1, 1);
 scene.add(light_2);
 var light_3;

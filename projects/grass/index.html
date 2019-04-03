@@ -8,7 +8,7 @@
     <!-- Basic Page Needs
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
     <meta charset="utf-8">
-    <title>Kaleidoscope</title>
+    <title>Instancing</title>
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -29,40 +29,44 @@
 
     <!-- Favicon
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <link rel="icon" type="image/png" href="../../images/favicon_2.png">
+    <link rel="shortcut icon" type="image/png" href="../../images/favicon_2.png">
   </head>
   <body>
-    <div class='fullscreen-button' id='fullscreen-button'><i class="fa fa-2x fa-expand"></i></div>
 
     <!-- Primary Page Layout
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <div class="container" id ="main-container">
+    <div class="container" id="main-container">
       <section class="post_header" id="header">
       <div class="row">
         <div class="twelve columns">
-          <h4 class="title" id="title">Kaleidoscope</h4>
+          <h4 class="title" id="title">Instancing</h4>
         </div>
       </div>
-      <div class="canvas_container u-max-full-width" id="cc_1">
-        <canvas class="canvas" width=1440 height=900 style="background-color: #000" id="canvas_1"></canvas>
-        <div class='gui_c' id="gui_container"> </div>
-      </div>
+        <div class="canvas_container u-max-full-width" id="cc_1">
+	  <div class='fullscreen-button' id='fullscreen-button'><i class="fa fa-2x fa-expand"></i></div>
+          <canvas class="canvas" width=1440 height=900 id="canvas_1"></canvas>
+          <div class='gui_c' id="gui_container"></div>
+        </div>
       <ul class="navbar-list c_navbar">
-        <li class="navbar-item"><a class="navbar-link" href="kaleidoscope.js">Source</a></li>
+        <li class="navbar-item"><a class="navbar-link" href="grass.js">Source</a></li>
         <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
       </ul>
       </section>
-
       <section class="post">
-      <h5>Overview</h5>
+      <h5>Instructions</h5>
+      <p>Drag to move camera. Scroll to zoom.</p>
       </section>
-
     </div>
     <!-- End Document
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
+
+    <script type="text/javascript" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/896175/perlin.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+    <script type="text/javascript" src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
     <script type="text/javascript" src="../../utility/fullscreen.js"></script>
-    <script type="text/javascript" src="kaleidoscope.js"></script>
+    <script type="text/javascript" src="noise.js"></script>
+    <script type="text/javascript" src="grass.js"></script>
   </body>
   <footer>
   <div class="container">

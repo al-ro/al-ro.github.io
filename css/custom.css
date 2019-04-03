@@ -18,33 +18,27 @@
 } 
 }
 
-.fullscreen-container {
-  width: 100%;
-  margin: 0 auto;
-}
-.fullscreen-title {
-  display: none;
-}
-
-.fullscreen-header {
-  margin-top: 0;
-  text-align: center; 
-}
-
 .fullscreen-button {
-  background-color: #999; 
-  padding: 8px 12px;
+  padding: 9px 12px;
+  top: 4em;
+  left: 0;
+  text-align: center;
+  display: inline-block;
+  position: absolute;
+}
+.fullscreen-fullscreen-button {
+  padding: 9px 12px;
   top: 0;
   left: 0;
-  color: white;
   text-align: center;
   display: inline-block;
   position: absolute;
 }
 
-.fullscreen-button:hover {
-  background: white;
-  color: #999;
+.fa-compress, .fa-expand{
+  color: #fff;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: black;
 }
 
 
