@@ -111,6 +111,11 @@
 }
 }
 
+@media (max-width: 550px) {
+  .fullscreen-button{
+    display: none;
+}
+}
 .hidden_canvas {
   display: none;
 }
