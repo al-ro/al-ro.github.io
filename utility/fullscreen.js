@@ -2,7 +2,7 @@
 //https://codepen.io/ludviglindblom/pen/medXwN
 
 var enterFullscreen = function(el) {
-  if(!isCCInFullscreen()) {
+  if(el.requestFullscreen) {
     el.requestFullscreen();
   } else if(el.msRequestFullscreen) {
     el.msRequestFullscreen();
@@ -16,8 +16,7 @@ var enterFullscreen = function(el) {
 };
 
 var exitFullscreen = function() {
-  var success = true;
-  if(isCCInFullscreen()) {
+  if(document.exitFullscreen) {
     document.exitFullscreen();
   } else if(document.msExitFullscreen) {
     document.msExitFullscreen();
