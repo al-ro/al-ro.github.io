@@ -41,6 +41,7 @@ document.addEventListener('mozfullscreenchange', exitHandler);
 document.addEventListener('MSFullscreenChange', exitHandler);
 
 function exitHandler() {
+  console.log("change");
   gui_.classList.toggle("gui_c");
   gui_.classList.toggle("fullscreen_gui_c");
   fullscreenButton.classList.toggle("fullscreen-button");
@@ -48,13 +49,13 @@ function exitHandler() {
 }  
 
 function escHandler() {
-  if (isCCInFullscreen()) {
+  if (isInFullscreen()) {
     exitFullscreen();
   }
 }
 
 function toggle_fullscreen(e) {
-  if(isCCInFullscreen()) {
+  if(isInFullscreen()) {
     exitFullscreen();
   } else {
     enterFullscreen(document.getElementById("cc_1"));
@@ -66,12 +67,12 @@ fullscreenButton.addEventListener('click', toggle_fullscreen);
 document.addEventListener("keypress", function(e) {
     //ESC key
     if (e.keyCode === 27) {
-    escHandler();
+      escHandler();
     }
-    }, false);
+}, false);
 
-function isCCInFullscreen() {
-  if (document.fullscreenElement) {
+function isInFullscreen() {
+  if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement) {
     return true;
   }
   return false;
