@@ -72,7 +72,7 @@ controls.autoRotateSpeed = 0.5;
 const stats = new Stats();
 stats.showPanel(0);
 stats.domElement.style.position = 'relative';
-stats.domElement.style.bottom = '54px';
+stats.domElement.style.bottom = '48px';
 document.getElementById('cc_1').appendChild(stats.domElement);
 
 //http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm
