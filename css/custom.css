@@ -124,6 +124,7 @@
   background-color: #999;
   width: 100%;
   height: 100%;
+  vertical-align: middle;
 }
 
 .canvas_container {
