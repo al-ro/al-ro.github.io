@@ -18,6 +18,27 @@
 } 
 }
 
+@media (min-width: 550px) {
+  .in-five,
+  .in-fives {
+    margin-left: 0.5%; 
+    margin-right: 0.5%;  
+}
+.in-five:first-child,
+.in-fives:first-child {
+  margin-left: 0; 
+}
+.in-five:nth-of-type(5n+0),
+.in-fives:nth-of-type(5n+0) {
+  margin-right: 0px; 
+} 
+.in-five:nth-of-type(5n+1),
+.in-fives:nth-of-type(5n+1) {
+  margin-left: 0px; 
+} 
+}
+
+
 .fullscreen-button {
   padding: 9px 12px;
   top: 4em;
@@ -58,14 +79,14 @@
 }
 
 .header {
-  margin-top: 7rem;
+  margin-top: 5rem;
   margin-bottom: 3rem;
-  text-align: center; 
+  text-align: left; 
 }
 
 @media (max-width: 550px) {
   .header {
-    margin-top: 7rem;
+    margin-top: 4rem;
     margin-bottom: 2rem; 
 }
 }
@@ -213,8 +234,7 @@ pre{
  .projects h5 {
    text-align: left; 
 }
-.container {
-}
+
 .project:hover  span{
   -webkit-animation: fadein 0.25s; /* Safari, Chrome and Opera > 12.1 */
   -moz-animation: fadein 0.25s; /* Firefox < 16 */
@@ -255,8 +275,8 @@ pre{
 
 .project{
   position: relative;
-  margin-bottom: 4%;
-  overflow: hidden;
+  margin-bottom: 1%;
+  /*overflow: hidden;*/
   /*A hack to stop safari flicker on fadein. If you know the real problem/solution write in.*/
   -webkit-perspective: 1000;
 }
