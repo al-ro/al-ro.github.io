@@ -15,7 +15,6 @@ var TWO_PI = Math.PI*2;
 var width = 2000;
 var height = 2000;
 var depth = 2000;
-var centre = [width/2,height/2, depth/2];
 
 var flakes = [];
 
@@ -56,9 +55,18 @@ var camera = new THREE.PerspectiveCamera(FOV, ratio, 1, 200000);
 
 camera.up.set(0,0,1);
 camera.position.set(width/1.8, -height/1.8, depth/4);
-camera.lookAt(new THREE.Vector3(centre[0], centre[1], centre[2]));
 
 scene.add(camera);
+window.addEventListener('resize', onWindowResize, false);
+
+function onWindowResize(){
+  camera.aspect = cont.clientWidth / cont.clientHeight;
+  camera.updateProjectionMatrix();
+  var ratio =  canvas.width / canvas.height;
+  var w = cont.offsetWidth;
+  var h = w/ratio;
+  renderer.setSize(w, h, false);
+}
 
 //OrbitControls.js for camera manipulation
 controls = new THREE.OrbitControls( camera, renderer.domElement );
