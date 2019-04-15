@@ -52,10 +52,10 @@
 
       <div class="row">
         <div class="six columns">
-          <img class="img u-max-full-width" src="../../images/sdf/detail_stl.png">
+          <img class="img u-max-full-width" src="../../images/sdf/detail_stl.jpg">
         </div>
         <div class="six columns">
-          <img class="img u-max-full-width" src="../../images/sdf/detail_result_2.png">
+          <img class="img u-max-full-width" src="../../images/sdf/detail_result_2.jpg">
         </div>
       </div>
       <p>Figure 1: Detail of the DrivAer car geometry <a href="#ref">[2]</a>. The input is an STL file that lists the triangular faces of a tessellated surface (left). From the unordered set, we quickly construct unique features which are used to build extrusions. The limited extent of these regions is one of the main benefits of the underlying algorithm - work is only done in a small subset of the domain. The resulting SDF and implicit surface information (right) can then be used to construct cut cells in the regular computational domain. Almost all work, from feature sorting to distance calculations, is done in parallel on GPUs using the CUDA platform, leading to low runtimes for the preprocessing and mesh generation phases of fluid simulations.</p>
@@ -75,10 +75,10 @@
 
       <div class="row">
         <div class="six columns">
-          <img class="img u-max-full-width" src="../../images/sdf/ear_error_2.png">
+          <img class="img u-max-full-width" src="../../images/sdf/ear_error_2.jpg">
         </div>
         <div class="six columns">
-          <img class="img u-max-full-width" src="../../images/sdf/ear_correct_2.png">
+          <img class="img u-max-full-width" src="../../images/sdf/ear_correct_2.jpg">
         </div>
       </div>
       <p>Figure 2: Detail of Stanford rabbit geometry <a href="#ref">[3]</a>. Many sufficiently complex geometries feature saddle vertices. Leaving these unaddressed in the extrusion phase leads to a erroneous SDF (left). By introducing vertex extrusions to both sides of the saddle regions, we reconstruct the input geometry accurately (right). This results in higher workload but produced correct results in all test cases.</p>
@@ -89,16 +89,16 @@
 
       <div class="row">
         <div class="six columns">
-          <img class="img u-max-full-width" src="../../images/sdf/orion.png">
+          <img class="img u-max-full-width" src="../../images/sdf/orion.jpg">
         </div>
         <div class="six columns">
-          <img class="img u-max-full-width" src="../../images/sdf/lucy.png">
+          <img class="img u-max-full-width" src="../../images/sdf/lucy.jpg">
         </div>
         <div class="six columns">
-          <img class="img u-max-full-width" src="../../images/sdf/xyzrgb_dragon.png">
+          <img class="img u-max-full-width" src="../../images/sdf/xyzrgb_dragon.jpg">
         </div>
         <div class="six columns">
-          <img class="img u-max-full-width" src="../../images/sdf/drivaer.png">
+          <img class="img u-max-full-width" src="../../images/sdf/drivaer.jpg">
         </div>
       </div>
       <p>Figure 3: Surface plots and SDF slices of selected test geometries: Orion <a href="#ref">[4]</a>, Stanford Lucy <a href="#ref">[3]</a>, XYZ RGB Dragon <a href="#ref">[3]</a> and DrivAer <a href="#ref">[2]</a>. The software captures intricate details and quickly produces robust and high resolution SDFs which can be imported into a mesh generator.</p>
@@ -109,14 +109,14 @@
 
       <div class="row">
         <div class="twelve columns">
-          <img class="img u-max-full-width" src="../../images/sdf/table_1.png">
+          <img class="img u-max-full-width" src="../../images/sdf/table_1.jpg">
         </div>
       </div>
       <p>Table 1: Feature construction on Nvidia Tesla K20 GPU. The highly parallel implementation sorts and matches face, edge and vertex data quickly to combine them into usable surface features. The processing time depends on both the configuration of the geometry and the number and size variation of the triangles.</p>
 
       <div class="row">
         <div class="twelve columns">
-          <img class="img u-max-full-width" src="../../images/sdf/table_2.png">
+          <img class="img u-max-full-width" src="../../images/sdf/table_2.jpg">
         </div>
       </div>
       <p>Table 2: SDF generation on Nvidia Tesla K20 GPU. The runtime mostly depends on the computational mesh cell size and the distance of the SDF band. A distance of 5 cells is sufficient to generate a field with no gaps. The workload is also dependent on the orientation of the geometry and triangle sizes.</p>

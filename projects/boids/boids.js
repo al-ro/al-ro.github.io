@@ -72,9 +72,18 @@ var FOV = 2 * Math.atan( window.innerHeight / ( 2 * distance ) ) * 90 / Math.PI;
 var camera = new THREE.PerspectiveCamera(FOV, ratio, 1, 20000);
 
 camera.position.set(centre[0], centre[1], -width/2);
-camera.lookAt(new THREE.Vector3(centre[0], centre[1], centre[2]));
 
 scene.add(camera);
+window.addEventListener('resize', onWindowResize, false);
+
+function onWindowResize(){
+  camera.aspect = cont.clientWidth / cont.clientHeight;
+  camera.updateProjectionMatrix();
+  var ratio =  canvas.width / canvas.height;
+  var w = cont.offsetWidth;
+  var h = w/ratio;
+  renderer.setSize(w, h, false);
+}
 
 //Lights
 var light_1 = new THREE.AmbientLight( 0xffffff, 1.7); 
