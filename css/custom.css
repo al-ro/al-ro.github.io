@@ -91,7 +91,7 @@
 .header {
   margin-top: 5rem;
   margin-bottom: 3rem;
-  text-align: left; 
+  text-align: center; 
 }
 
 @media (max-width: 550px) {
