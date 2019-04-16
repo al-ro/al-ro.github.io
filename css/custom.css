@@ -330,7 +330,16 @@ pre{
 
 @media (max-width: 860px){
 .project span p{
+  font-size: 0.8em;
+}
+}
+@media (max-width: 600px){
+.project span p{
   font-size: 0.6em;
+}
+@media (max-width: 400px){
+.project span p{
+  font-size: 0.4em;
 }
 }
 .code a{ 
