@@ -242,7 +242,11 @@ pre{
  }
 
  .projects h5 {
-   text-align: left; 
+    text-align: left; 
+}
+
+.row {
+    margin-bottom: 1em;
 }
 
 .project:hover  span{
