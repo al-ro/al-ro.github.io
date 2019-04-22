@@ -1,4 +1,4 @@
-var noise_src = `
+var noiseSource = `
 /*** WEBGL-NOISE FROM https://github.com/stegu/webgl-noise ***/
 
 // Description : Array and textureless GLSL 2D simplex noise function.
