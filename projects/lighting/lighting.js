@@ -87,16 +87,22 @@ void main(){
 
 var vertexSource = `
 precision mediump float;
+attribute vec4 tangent;
 uniform mat4 lightViewMatrix;
 uniform mat4 lightProjectionMatrix;
 varying vec3 vNormal;
 varying vec3 vPosition;
 varying vec4 lightSpaceVPosition;
 varying vec2 textureCoord;
+varying mat3 tbn;
 
 void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0 );
   vNormal = normal;
+  vec3 T = normalize(vec3(modelMatrix * tangent));
+  vec3 N = normalize(vec3(modelMatrix * vec4(normal,    0.0)));
+  vec3 B = normalize(cross(N, T));
+  tbn = mat3(T, B, N);
   vPosition = vec3(modelMatrix * vec4(position, 1.0));
   lightSpaceVPosition = vec4(lightProjectionMatrix * lightViewMatrix * vec4(vPosition, 1.0));
   //UV for texture
@@ -124,6 +130,7 @@ varying vec3 vNormal;
 varying vec3 vPosition;
 varying vec4 lightSpaceVPosition;
 varying vec2 textureCoord;
+varying mat3 tbn;
 
 
 float near = 1.0; 
@@ -171,10 +178,16 @@ void main() {
 
   //Normalize interpolated normal
   //http://learnwebgl.brown37.net/10_surface_properties/smooth_vertex_normals.html
-  vec3 normal = normalize(vNormal);
+  //vec3 normalTex = normalize(vNormal);
+
+  vec3 normalColour = normalize(texture2D(normalMap, textureCoord).rgb*2.0-1.0);
+  // Transform the normal vector in the RGB channels to tangent space
+  vec3 normal = normalize(tbn * normalColour.rgb);
+  //normal = normalize(vNormal);
+
   vec3 lightDirection = normalize(lightPosition); 
   //Ambient colour is constant
-  vec3 ambient = ambientColour * lightColour;
+  vec3 ambient = textureColour.xyz * lightColour;
 
   //How much a fragment faces the light
   float diff = max(dot(normal, lightDirection), 0.0);
@@ -196,7 +209,7 @@ void main() {
   vec3 result =  ambientStrength * ambient + (1.0-shadow) * diffuseStrength * diffuse + (1.0-shadow) * specularStrength * specular;
   float depth = LinearizeDepth(gl_FragCoord.z) / far;
   gl_FragColor = vec4(vec3(depth), 1.0);
-  gl_FragColor = vec4(textureColour.xyz, 1.0);
+  gl_FragColor = vec4(result, 1.0);
 }`;
 
 
@@ -214,7 +227,7 @@ shadowTarget.depthTexture = new THREE.DepthTexture();
 var loader = new THREE.TextureLoader();
 //allow cross origin loading
 loader.crossOrigin = '';
-var texture =  loader.load( 'https://al-ro.github.io/images/pbr/normals.jpg' );
+var texture =  loader.load( 'https://al-ro.github.io/images/pbr/texture.jpg' );
 var normals =  loader.load( 'https://al-ro.github.io/images/pbr/normals.jpg' );
 
 //var geometry = new THREE.SphereGeometry( 5, 32, 32 );
@@ -251,14 +264,16 @@ scene.add(pointLight);
 
 var loader = new THREE.STLLoader();
 //Load dancer
-loader.load( "https://res.cloudinary.com/al-ro/raw/upload/v1531776249/ballerina_1_mu2pmx.stl", function (geometry) {
+//loader.load( "https://res.cloudinary.com/al-ro/raw/upload/v1531776249/ballerina_1_mu2pmx.stl", function (geometry) {
 //https://stackoverflow.com/questions/16469270/transforming-vertex-normals-in-three-js
 //geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
 //geometry.computeFaceNormals();
 //geometry.computeVertexNormals();
 
-geometry = new THREE.SphereGeometry(25, 32, 32);
+geometry = new THREE.SphereBufferGeometry(25, 32, 32);
 geometry.translate(0,25,0);
+THREE.BufferGeometryUtils.computeTangents(geometry);
+//THREE.GeometryBufferUtils.computeTangents(geometry);
 var mesh = new THREE.Mesh( geometry, material);
 //mesh.matrixAutoUpdate  = false;
   //mesh.scale.set( 10, 10, 10);
@@ -270,7 +285,7 @@ var mesh = new THREE.Mesh( geometry, material);
 
   scene.add( mesh );
 
-} );
+//} );
 
 var floor_geometry = new THREE.PlaneBufferGeometry(1000,1000,2,2);
 floor_geometry.lookAt(new THREE.Vector3(0,1,0));
