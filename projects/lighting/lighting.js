@@ -227,8 +227,8 @@ shadowTarget.depthTexture = new THREE.DepthTexture();
 var loader = new THREE.TextureLoader();
 //allow cross origin loading
 loader.crossOrigin = '';
-var texture =  loader.load( 'https://al-ro.github.io/images/pbr/texture.jpg' );
-var normals =  loader.load( 'https://al-ro.github.io/images/pbr/Plaster_Rough_001_NORM.jpg' );
+var texture =  loader.load( 'https://al-ro.github.io/images/pbr/marble_coloured_001_COLOR.jpg' );
+var normals =  loader.load( 'https://al-ro.github.io/images/pbr/marble_coloured_001_NORM.jpg' );
 
 //var geometry = new THREE.SphereGeometry( 5, 32, 32 );
 //Define the material, specifying attributes, uniforms, shaders etc.
