@@ -41,7 +41,7 @@ scene.add(camera);
 
 //OrbitControls.js for camera manipulation
 controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.target = new THREE.Vector3(0,50,0);
+controls.target = new THREE.Vector3(0,25,0);
 controls.autoRotate = rotate;
 controls.autoRotateSpeed = 2.5;
 controls.update();
@@ -92,12 +92,15 @@ uniform mat4 lightProjectionMatrix;
 varying vec3 vNormal;
 varying vec3 vPosition;
 varying vec4 lightSpaceVPosition;
+varying vec2 textureCoord;
 
 void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0 );
   vNormal = normal;
   vPosition = vec3(modelMatrix * vec4(position, 1.0));
   lightSpaceVPosition = vec4(lightProjectionMatrix * lightViewMatrix * vec4(vPosition, 1.0));
+  //UV for texture
+  textureCoord = uv;
 }`;
 
 var fragmentSource = `
@@ -115,9 +118,13 @@ uniform vec3 ambientColour;
 uniform vec3 diffuseColour;
 uniform vec3 specularColour;
 uniform bool blinn;
+uniform sampler2D diffuseMap;
+uniform sampler2D normalMap;
 varying vec3 vNormal;
 varying vec3 vPosition;
 varying vec4 lightSpaceVPosition;
+varying vec2 textureCoord;
+
 
 float near = 1.0; 
 float far = 100.0; 
@@ -139,6 +146,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal
     float currentDepth = projCoords.z;
     // check whether current frag pos is in shadow
     float bias = 0.005;
+    bias = max(0.05 * (1.0 - dot(normal, lightDirection)), 0.005);
     float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;  
 
     shadow = 0.0;
@@ -158,6 +166,9 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal
 } 
 
 void main() {
+
+  vec4 textureColour = texture2D(diffuseMap, textureCoord);
+
   //Normalize interpolated normal
   //http://learnwebgl.brown37.net/10_surface_properties/smooth_vertex_normals.html
   vec3 normal = normalize(vNormal);
@@ -167,7 +178,7 @@ void main() {
 
   //How much a fragment faces the light
   float diff = max(dot(normal, lightDirection), 0.0);
-  vec3 diffuse = diff * diffuseColour * lightColour;
+  vec3 diffuse = diff * textureColour.xyz * lightColour;
 
   //How much a fragment directly reflects the light to the camera
   vec3 viewDirection = normalize(cameraPosition - vPosition);
@@ -185,7 +196,7 @@ void main() {
   vec3 result =  ambientStrength * ambient + (1.0-shadow) * diffuseStrength * diffuse + (1.0-shadow) * specularStrength * specular;
   float depth = LinearizeDepth(gl_FragCoord.z) / far;
   gl_FragColor = vec4(vec3(depth), 1.0);
-  gl_FragColor = vec4(result, 1.0);
+  gl_FragColor = vec4(textureColour.xyz, 1.0);
 }`;
 
 
@@ -199,6 +210,12 @@ scene.add(light_mesh);
 var shadowTarget = new THREE.WebGLRenderTarget(1024, 1024);
 shadowTarget.depthBuffer = true;
 shadowTarget.depthTexture = new THREE.DepthTexture();
+
+var loader = new THREE.TextureLoader();
+//allow cross origin loading
+loader.crossOrigin = '';
+var texture =  loader.load( 'https://al-ro.github.io/images/pbr/texture.jpg' );
+var normals =  loader.load( 'https://al-ro.github.io/images/pbr/normal.jpg' );
 
 //var geometry = new THREE.SphereGeometry( 5, 32, 32 );
 //Define the material, specifying attributes, uniforms, shaders etc.
@@ -217,7 +234,9 @@ var material = new THREE.ShaderMaterial( {
     specularColour: { value: new THREE.Vector3(1.0, 0.8, 0.8) },
     lightViewMatrix: {value: new THREE.Matrix4()},
     lightProjectionMatrix: {value: new THREE.Matrix4()},
-    shadowMap: {value: shadowTarget.depthTexture}
+    shadowMap: {value: shadowTarget.depthTexture},
+    diffuseMap: { value: texture},
+    normalMap: { value: normals}
   },
   vertexShader: vertexSource,
   fragmentShader: fragmentSource,
@@ -234,13 +253,16 @@ var loader = new THREE.STLLoader();
 //Load dancer
 loader.load( "https://res.cloudinary.com/al-ro/raw/upload/v1531776249/ballerina_1_mu2pmx.stl", function (geometry) {
 //https://stackoverflow.com/questions/16469270/transforming-vertex-normals-in-three-js
-geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
-geometry.computeFaceNormals();
-geometry.computeVertexNormals();
+//geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
+//geometry.computeFaceNormals();
+//geometry.computeVertexNormals();
+
+geometry = new THREE.SphereGeometry(25, 32, 32);
+geometry.translate(0,25,0);
 var mesh = new THREE.Mesh( geometry, material);
 //mesh.matrixAutoUpdate  = false;
-  mesh.scale.set( 10, 10, 10);
-  mesh.position.set( 0, -4, 0 );
+  //mesh.scale.set( 10, 10, 10);
+  //mesh.position.set( 0, -4, 0 );
 
   //mesh.geometry.computeFaceNormals();
   helper = new THREE.VertexNormalsHelper( mesh, 2, 0x00ff00, 1 );
