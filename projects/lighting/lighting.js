@@ -228,7 +228,7 @@ var loader = new THREE.TextureLoader();
 //allow cross origin loading
 loader.crossOrigin = '';
 var texture =  loader.load( 'https://al-ro.github.io/images/pbr/Black_Marble_001_COLOR.jpg' );
-var normals =  loader.load( 'https://al-ro.github.io/images/pbr/Black_Marble_001_NORM.jpg' );
+var normals =  loader.load( 'https://al-ro.github.io/images/pbr/marble_coloured_001_NORM.jpg' );
 
 //var geometry = new THREE.SphereGeometry( 5, 32, 32 );
 //Define the material, specifying attributes, uniforms, shaders etc.
@@ -270,7 +270,7 @@ var loader = new THREE.STLLoader();
 //geometry.computeFaceNormals();
 //geometry.computeVertexNormals();
 
-geometry = new THREE.SphereBufferGeometry(25, 32, 32);
+geometry = new THREE.SphereBufferGeometry(10, 32, 32);
 geometry.translate(0,25,0);
 THREE.BufferGeometryUtils.computeTangents(geometry);
 //THREE.GeometryBufferUtils.computeTangents(geometry);
