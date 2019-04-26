@@ -93,6 +93,8 @@ varying vec3 vPosition;
 varying vec4 lightSpaceVPosition;
 varying vec2 textureCoord;
 varying mat3 tbn;
+varying vec3 tangentViewPos;
+varying vec3 tangentPos;
 
 void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0 );
@@ -112,6 +114,10 @@ void main() {
   tbn = mat3(T, B, N);
 
   vPosition = vec3(modelMatrix * vec4(position, 1.0));
+
+  tangentViewPos  = tbn * cameraPosition;
+  tangentPos  = tbn * vPosition;
+
   lightSpaceVPosition = vec4(lightProjectionMatrix * lightViewMatrix * vec4(vPosition, 1.0));
   //UV for texture
   textureCoord = uv;
@@ -134,11 +140,14 @@ uniform vec3 specularColour;
 uniform bool blinn;
 uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
+uniform sampler2D displacementMap;
 varying vec3 vNormal;
 varying vec3 vPosition;
 varying vec4 lightSpaceVPosition;
 varying vec2 textureCoord;
 varying mat3 tbn;
+varying vec3 tangentViewPos;
+varying vec3 tangentPos;
 
 float near = 1.0; 
 float far = 100.0; 
@@ -179,17 +188,30 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal
     return shadow;
 } 
 
-void main() {
+//https://learnopengl.com/Advanced-Lighting/Parallax-Mapping
+vec2 ParallaxMapping(vec2 textureCoord, vec3 viewDirection){ 
+    float height =  1.0 - texture2D(displacementMap, textureCoord).r;    
+    float height_scale = 0.01;
+    vec2 p = viewDirection.xy / viewDirection.z * (height * height_scale);
+    return textureCoord - p;    
+} 
 
-  vec4 textureColour = texture2D(diffuseMap, textureCoord);
+void main() {
+  //offset texture coordinates with Parallax Mapping
+  vec3 viewDir = normalize(tangentViewPos - tangentPos);
+  vec2 texCoords = ParallaxMapping(textureCoord,  viewDir);
+  if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
+    discard;
+  //vec4 textureColour = texture2D(diffuseMap, textureCoord);
+  vec4 textureColour = texture2D(diffuseMap, texCoords);
   vec3 normal;
   bool useNormalMap = true;
   if(useNormalMap){
     //https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     //Transform RGB normal map data from [0, 1] to [-1, 1]
-    vec3 normalColour = normalize(texture2D(normalMap, textureCoord).rgb*2.0-1.0);
+    vec3 normalColour = normalize(texture2D(normalMap, texCoords).rgb*2.0-1.0);
     // Transform the normal vector in the RGB channels to tangent space
-    normal = normalize(tbn * normalColour.rgb);
+    normal = normalColour;//normalize(tbn * normalColour.rgb);
   }else{
     normal = normalize(vNormal);
   }
@@ -203,14 +225,14 @@ void main() {
   vec3 diffuse = diff * textureColour.xyz * lightColour;
 
   //How much a fragment directly reflects the light to the camera
-  vec3 viewDirection = normalize(cameraPosition - vPosition);
+  vec3 _viewDirection = normalize(cameraPosition - vPosition);
   float spec;
   if(blinn){
-    vec3 halfwayDir = normalize(lightDirection + viewDirection);  
+    vec3 halfwayDir = normalize(lightDirection + _viewDirection);  
     spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
   }else{
     vec3 reflectDirection = reflect(-lightDirection, normal);  
-    spec = pow(max(dot(viewDirection, reflectDirection), 0.0), shininess);
+    spec = pow(max(dot(_viewDirection, reflectDirection), 0.0), shininess);
   }
   vec3 specular = spec * specularColour * lightColour;  
 
@@ -238,6 +260,7 @@ var loader = new THREE.TextureLoader();
 loader.crossOrigin = '';
 var texture =  loader.load( 'https://al-ro.github.io/images/pbr/roof_09_diff_1k.jpg' );
 var normals =  loader.load( 'https://al-ro.github.io/images/pbr/roof_09_nor_1k.jpg' );
+var displacement =  loader.load( 'https://al-ro.github.io/images/pbr/roof_09_disp_1k.jpg' );
 
 //var geometry = new THREE.SphereGeometry( 5, 32, 32 );
 //Define the material, specifying attributes, uniforms, shaders etc.
@@ -258,18 +281,12 @@ var material = new THREE.ShaderMaterial( {
     lightProjectionMatrix: {value: new THREE.Matrix4()},
     shadowMap: {value: shadowTarget.depthTexture},
     diffuseMap: { value: texture},
-    normalMap: { value: normals}
+    normalMap: { value: normals},
+    displacementMap: { value: displacement}
   },
   vertexShader: vertexSource,
   fragmentShader: fragmentSource,
 } );
-
-var phongMaterial = new THREE.MeshPhongMaterial({color: 0xff0000, specular: 0xffffff, shininess: 1.5});
-var pointLight = new THREE.PointLight( 0xffffff, 1, 0 );
-pointLight.position.set( light_mesh.position );
-scene.add(pointLight);
-//var mesh = new THREE.Mesh(geometry, material);
-//scene.add(mesh);
 
 var loader = new THREE.STLLoader();
 //Load dancer
