@@ -190,7 +190,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal
 
 //https://learnopengl.com/Advanced-Lighting/Parallax-Mapping
 vec2 ParallaxMapping(vec2 textureCoord, vec3 viewDirection){ 
-    float height =  1.0 - texture2D(displacementMap, textureCoord).r;    
+    float height =  texture2D(displacementMap, textureCoord).r;    
     float height_scale = 0.01;
     vec2 p = viewDirection.xy / viewDirection.z * (height * height_scale);
     return textureCoord - p;    
@@ -258,9 +258,9 @@ shadowTarget.depthTexture = new THREE.DepthTexture();
 var loader = new THREE.TextureLoader();
 //allow cross origin loading
 loader.crossOrigin = '';
-var texture =  loader.load( 'https://al-ro.github.io/images/pbr/roof_09_diff_1k.jpg' );
-var normals =  loader.load( 'https://al-ro.github.io/images/pbr/roof_09_nor_1k.jpg' );
-var displacement =  loader.load( 'https://al-ro.github.io/images/pbr/roof_09_disp_1k.jpg' );
+var texture =  loader.load( 'https://al-ro.github.io/images/pbr/bricks2.jpg' );
+var normals =  loader.load( 'https://al-ro.github.io/images/pbr/bricks2_normal.jpg' );
+var displacement =  loader.load( 'https://al-ro.github.io/images/pbr/bricks2_disp.jpg' );
 
 //var geometry = new THREE.SphereGeometry( 5, 32, 32 );
 //Define the material, specifying attributes, uniforms, shaders etc.
