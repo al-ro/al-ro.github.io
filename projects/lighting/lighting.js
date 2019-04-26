@@ -77,11 +77,9 @@ float LinearizeDepth(float depth) {
 }
 
 void main(){
-
   float depth = gl_FragCoord.z;
   depth = texture2D(map, texCoord).r;
   gl_FragColor = vec4(vec3(depth), 1.0);
-
 }  
 `;
 
@@ -99,10 +97,20 @@ varying mat3 tbn;
 void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0 );
   vNormal = normal;
+
+  //https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+  //Create matrix to transform normal to tangent space i.e. transform static normal map data into the underlying triangle frame
+  //The tangent (calculated on the CPU using THREE.BufferGeometryUtils.computeTangents() )
   vec3 T = normalize(vec3(modelMatrix * tangent));
-  vec3 N = normalize(vec3(modelMatrix * vec4(normal,    0.0)));
+  //The triangle normal
+  vec3 N = normalize(vec3(modelMatrix * vec4(normal, 0.0)));
+  //Re-orthogonalize T with respect to N
+  T = normalize(T - dot(T, N) * N);
+  //The bitangent vector is perpendicular to N and T
   vec3 B = normalize(cross(N, T));
+  //Create matrix from three vectors
   tbn = mat3(T, B, N);
+
   vPosition = vec3(modelMatrix * vec4(position, 1.0));
   lightSpaceVPosition = vec4(lightProjectionMatrix * lightViewMatrix * vec4(vPosition, 1.0));
   //UV for texture
@@ -132,9 +140,9 @@ varying vec4 lightSpaceVPosition;
 varying vec2 textureCoord;
 varying mat3 tbn;
 
-
 float near = 1.0; 
 float far = 100.0; 
+
 //https://learnopengl.com/Advanced-OpenGL/Depth-testing
 float LinearizeDepth(float depth) {
     float z = depth * 2.0 - 1.0; // back to NDC 
@@ -158,32 +166,33 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal
 
     shadow = 0.0;
     float texelSize = 1.0 / 1024.0;
-    for(int x = -2; x <= 2; ++x)
-    {
-      for(int y = -2; y <= 2; ++y)
-      {
+    for(int x = -2; x <= 2; x++){
+      for(int y = -2; y <= 2; y++){
 	float pcfDepth = texture2D(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
 	shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
       }    
     }
     shadow /= 25.0;
-    if(projCoords.z > 0.95)
+    if(projCoords.z > 0.95){
       shadow = 0.0;
+    }
     return shadow;
 } 
 
 void main() {
 
   vec4 textureColour = texture2D(diffuseMap, textureCoord);
-
-  //Normalize interpolated normal
-  //http://learnwebgl.brown37.net/10_surface_properties/smooth_vertex_normals.html
-  //vec3 normalTex = normalize(vNormal);
-
-  vec3 normalColour = normalize(texture2D(normalMap, textureCoord).rgb*2.0-1.0);
-  // Transform the normal vector in the RGB channels to tangent space
-  vec3 normal = normalize(tbn * normalColour.rgb);
-  //normal = normalize(vNormal);
+  vec3 normal;
+  bool useNormalMap = true;
+  if(useNormalMap){
+    //https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+    //Transform RGB normal map data from [0, 1] to [-1, 1]
+    vec3 normalColour = normalize(texture2D(normalMap, textureCoord).rgb*2.0-1.0);
+    // Transform the normal vector in the RGB channels to tangent space
+    normal = normalize(tbn * normalColour.rgb);
+  }else{
+    normal = normalize(vNormal);
+  }
 
   vec3 lightDirection = normalize(lightPosition); 
   //Ambient colour is constant
@@ -227,8 +236,8 @@ shadowTarget.depthTexture = new THREE.DepthTexture();
 var loader = new THREE.TextureLoader();
 //allow cross origin loading
 loader.crossOrigin = '';
-var texture =  loader.load( 'https://al-ro.github.io/images/pbr/white_plaster_COLOR.jpg' );
-var normals =  loader.load( 'https://al-ro.github.io/images/pbr/white_plaster_NORM.jpg' );
+var texture =  loader.load( 'https://al-ro.github.io/images/pbr/roof_09_diff_1k.jpg' );
+var normals =  loader.load( 'https://al-ro.github.io/images/pbr/roof_09_nor_1k.jpg' );
 
 //var geometry = new THREE.SphereGeometry( 5, 32, 32 );
 //Define the material, specifying attributes, uniforms, shaders etc.
@@ -238,7 +247,7 @@ var material = new THREE.ShaderMaterial( {
     time: { value: 0.0 },
     ambientStrength: { value: 0.3 },
     diffuseStrength: { value: 0.7 },
-    specularStrength: { value: 0.8 },
+    specularStrength: { value: 0.5 },
     shininess: { value: 128},
     lightColour: { value: new THREE.Vector3(1.0, 1.0, 1.0) },
     lightPosition: { value: light_mesh.position },
@@ -270,7 +279,7 @@ var loader = new THREE.STLLoader();
 //geometry.computeFaceNormals();
 //geometry.computeVertexNormals();
 
-geometry = new THREE.SphereBufferGeometry(10, 32, 32);
+geometry = new THREE.SphereBufferGeometry(20, 32, 32);
 geometry.translate(0,25,0);
 THREE.BufferGeometryUtils.computeTangents(geometry);
 //THREE.GeometryBufferUtils.computeTangents(geometry);
