@@ -239,6 +239,19 @@ loader.crossOrigin = '';
 var texture =  loader.load( 'https://al-ro.github.io/images/pbr/bricks2.jpg' );
 var normals =  loader.load( 'https://al-ro.github.io/images/pbr/bricks2_normal.jpg' );
 var displacement =  loader.load( 'https://al-ro.github.io/images/pbr/bricks2_disp.jpg' );
+var skyBoxLoader = new THREE.CubeTextureLoader();
+skyBoxLoader.crossOrigin = '';
+skyBoxLoader.setPath('https://al-ro.github.io/images/pbr/');
+var skyBox = skyBoxLoader.load( [
+		'0001.jpg',
+		'0003.jpg',
+		'0006.jpg',
+		'0005.jpg',
+		'0002.jpg',
+		'0004.jpg'
+	] );
+scene.background = skyBox;
+
 
 //var geometry = new THREE.SphereGeometry( 5, 32, 32 );
 //Define the material, specifying attributes, uniforms, shaders etc.
