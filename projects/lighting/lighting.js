@@ -93,8 +93,6 @@ varying vec3 vPosition;
 varying vec4 lightSpaceVPosition;
 varying vec2 textureCoord;
 varying mat3 tbn;
-varying vec3 tangentViewPos;
-varying vec3 tangentPos;
 
 void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0 );
@@ -114,10 +112,6 @@ void main() {
   tbn = mat3(T, B, N);
 
   vPosition = vec3(modelMatrix * vec4(position, 1.0));
-
-  tangentViewPos  = tbn * cameraPosition;
-  tangentPos  = tbn * vPosition;
-
   lightSpaceVPosition = vec4(lightProjectionMatrix * lightViewMatrix * vec4(vPosition, 1.0));
   //UV for texture
   textureCoord = uv;
@@ -140,14 +134,11 @@ uniform vec3 specularColour;
 uniform bool blinn;
 uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
-uniform sampler2D displacementMap;
 varying vec3 vNormal;
 varying vec3 vPosition;
 varying vec4 lightSpaceVPosition;
 varying vec2 textureCoord;
 varying mat3 tbn;
-varying vec3 tangentViewPos;
-varying vec3 tangentPos;
 
 float near = 1.0; 
 float far = 100.0; 
@@ -188,30 +179,17 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal
     return shadow;
 } 
 
-//https://learnopengl.com/Advanced-Lighting/Parallax-Mapping
-vec2 ParallaxMapping(vec2 textureCoord, vec3 viewDirection){ 
-    float height =  texture2D(displacementMap, textureCoord).r;    
-    float height_scale = 0.01;
-    vec2 p = viewDirection.xy / viewDirection.z * (height * height_scale);
-    return textureCoord - p;    
-} 
-
 void main() {
-  //offset texture coordinates with Parallax Mapping
-  vec3 viewDir = normalize(tangentViewPos - tangentPos);
-  vec2 texCoords = ParallaxMapping(textureCoord,  viewDir);
-  if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
-    discard;
-  //vec4 textureColour = texture2D(diffuseMap, textureCoord);
-  vec4 textureColour = texture2D(diffuseMap, texCoords);
+
+  vec4 textureColour = texture2D(diffuseMap, textureCoord);
   vec3 normal;
   bool useNormalMap = true;
   if(useNormalMap){
     //https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     //Transform RGB normal map data from [0, 1] to [-1, 1]
-    vec3 normalColour = normalize(texture2D(normalMap, texCoords).rgb*2.0-1.0);
+    vec3 normalColour = normalize(texture2D(normalMap, textureCoord).rgb*2.0-1.0);
     // Transform the normal vector in the RGB channels to tangent space
-    normal = normalColour;//normalize(tbn * normalColour.rgb);
+    normal = normalize(tbn * normalColour.rgb);
   }else{
     normal = normalize(vNormal);
   }
@@ -225,14 +203,14 @@ void main() {
   vec3 diffuse = diff * textureColour.xyz * lightColour;
 
   //How much a fragment directly reflects the light to the camera
-  vec3 _viewDirection = normalize(cameraPosition - vPosition);
+  vec3 viewDirection = normalize(cameraPosition - vPosition);
   float spec;
   if(blinn){
-    vec3 halfwayDir = normalize(lightDirection + _viewDirection);  
+    vec3 halfwayDir = normalize(lightDirection + viewDirection);  
     spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
   }else{
     vec3 reflectDirection = reflect(-lightDirection, normal);  
-    spec = pow(max(dot(_viewDirection, reflectDirection), 0.0), shininess);
+    spec = pow(max(dot(viewDirection, reflectDirection), 0.0), shininess);
   }
   vec3 specular = spec * specularColour * lightColour;  
 
