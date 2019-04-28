@@ -289,6 +289,9 @@ var loader = new THREE.STLLoader();
 
 geometry = new THREE.SphereBufferGeometry(20, 32, 32);
 geometry.translate(0,25,0);
+//Generate vertex indices
+geometry = THREE.BufferGeometryUtils.mergeVertices(geometry);
+console.log(geometry);
 THREE.BufferGeometryUtils.computeTangents(geometry);
 //THREE.GeometryBufferUtils.computeTangents(geometry);
 var mesh = new THREE.Mesh( geometry, material);
