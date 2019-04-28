@@ -221,11 +221,11 @@ void main() {
   gl_FragColor = vec4(vec3(depth), 1.0);
   gl_FragColor = vec4(result, 1.0);
   //The reflected skybox vector
-  vec3 reflectionVector = refract(-viewDirection, normal, 1.0/1.2);
+  //vec3 reflectionVector = refract(-viewDirection, normal, 1.0/1.2);
   //vec3 reflectionVector = reflect(-viewDirection, normal);
   //Three.js flips cubemaps in the x-direction (see uniforms.flipEnvMap.value = material.envMap.isCubeTexture ? - 1 : 1; in WebGLRenderer.js).
   //Since we use a three.js skybox, flip the x-value of the reflection vector for consistency
-  gl_FragColor = textureCube(environmentMap, vec3(-reflectionVector.x, reflectionVector.yz));
+  //gl_FragColor = textureCube(environmentMap, vec3(-reflectionVector.x, reflectionVector.yz));
 }`;
 
 
@@ -244,7 +244,7 @@ var loader = new THREE.TextureLoader();
 //allow cross origin loading
 loader.crossOrigin = '';
 var texture =  loader.load( 'https://al-ro.github.io/images/pbr/bricks2.jpg' );
-var normals =  loader.load( 'https://al-ro.github.io/images/pbr/bricks2_normal.jpg' );
+var normals =  loader.load( 'https://al-ro.github.io/images/pbr/normals.png' );
 var displacement =  loader.load( 'https://al-ro.github.io/images/pbr/bricks2_disp.jpg' );
 var skyBoxLoader = new THREE.CubeTextureLoader();
 skyBoxLoader.crossOrigin = '';
