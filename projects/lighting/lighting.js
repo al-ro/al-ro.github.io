@@ -134,6 +134,7 @@ uniform vec3 specularColour;
 uniform bool blinn;
 uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
+uniform samplerCube environmentMap;
 varying vec3 vNormal;
 varying vec3 vPosition;
 varying vec4 lightSpaceVPosition;
@@ -219,6 +220,12 @@ void main() {
   float depth = LinearizeDepth(gl_FragCoord.z) / far;
   gl_FragColor = vec4(vec3(depth), 1.0);
   gl_FragColor = vec4(result, 1.0);
+  //The reflected skybox vector
+  vec3 reflectionVector = refract(-viewDirection, normal, 1.0/1.2);
+  //vec3 reflectionVector = reflect(-viewDirection, normal);
+  //Three.js flips cubemaps in the x-direction (see uniforms.flipEnvMap.value = material.envMap.isCubeTexture ? - 1 : 1; in WebGLRenderer.js).
+  //Since we use a three.js skybox, flip the x-value of the reflection vector for consistency
+  gl_FragColor = textureCube(environmentMap, vec3(-reflectionVector.x, reflectionVector.yz));
 }`;
 
 
@@ -273,11 +280,14 @@ var material = new THREE.ShaderMaterial( {
     shadowMap: {value: shadowTarget.depthTexture},
     diffuseMap: { value: texture},
     normalMap: { value: normals},
-    displacementMap: { value: displacement}
+    displacementMap: { value: displacement},
+    environmentMap: {value: skyBox}
   },
   vertexShader: vertexSource,
   fragmentShader: fragmentSource,
 } );
+
+console.log(skyBox);
 
 var loader = new THREE.STLLoader();
 //Load dancer
@@ -291,7 +301,7 @@ geometry = new THREE.SphereBufferGeometry(20, 32, 32);
 geometry.translate(0,25,0);
 //Generate vertex indices
 geometry = THREE.BufferGeometryUtils.mergeVertices(geometry);
-console.log(geometry);
+//console.log(geometry);
 THREE.BufferGeometryUtils.computeTangents(geometry);
 //THREE.GeometryBufferUtils.computeTangents(geometry);
 var mesh = new THREE.Mesh( geometry, material);
