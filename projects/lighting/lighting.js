@@ -243,8 +243,8 @@ shadowTarget.depthTexture = new THREE.DepthTexture();
 var loader = new THREE.TextureLoader();
 //allow cross origin loading
 loader.crossOrigin = '';
-var texture =  loader.load( 'https://al-ro.github.io/images/pbr/bricks2.jpg' );
-var normals =  loader.load( 'https://al-ro.github.io/images/pbr/normals.png' );
+var texture =  loader.load( 'https://al-ro.github.io/images/pbr/col.jpg' );
+var normals =  loader.load( 'https://al-ro.github.io/images/pbr/nor.jpg' );
 var displacement =  loader.load( 'https://al-ro.github.io/images/pbr/bricks2_disp.jpg' );
 var skyBoxLoader = new THREE.CubeTextureLoader();
 skyBoxLoader.crossOrigin = '';
