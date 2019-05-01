@@ -290,17 +290,24 @@ var material = new THREE.ShaderMaterial( {
 var gltfLoader = new THREE.GLTFLoader();
 gltfLoader.crossOrigin = '';
 gltfLoader.setPath('https://al-ro.github.io/images/pbr/');
+var light = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(light);
+
+    var light2 = new THREE.PointLight(0xffffff, 3.5);
+    scene.add(light2);
 
 function handle_load(gltf){
 
-  var m = gltf.scene;
-  m.material = new THREE.MeshBasicMaterial({wireframe: true, color: 0xff0000});
-  console.log(m);
-  m.translateY(40);
-  scene.add(m);
+        mesh = gltf.scene;
+        console.log(mesh.children[0]);
+        mesh.children[0].material = new THREE.MeshBasicMaterial();
+	scene.add( mesh );
+        mesh.position.y = 50;
+	console.log(mesh);
+
 
 }
-gltfLoader.load('scene.glb', handle_load);
+gltfLoader.load('untitled.glb', handle_load);
 var loader = new THREE.STLLoader();
 loader.crossOrigin = '';
 //Load dancer
