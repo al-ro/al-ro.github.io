@@ -24,7 +24,6 @@ crossOrigin: 'anonymous',
 load: function ( url, onLoad, onProgress, onError ) {
 
 var scope = this;
-console.log("---", THREE.LoaderUtils);
 
 var resourcePath;
 
