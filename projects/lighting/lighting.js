@@ -301,7 +301,7 @@ function handle_load(gltf){
 var loader = new THREE.STLLoader();
 loader.crossOrigin = '';
 //Load dancer
-loader.load("https://al-ro.github.io/geometry/goat_simplified", function (geometry) {
+loader.load("https://al-ro.github.io/geometry/goat_simplified.png", function (geometry) {
 //https://stackoverflow.com/questions/16469270/transforming-vertex-normals-in-three-js
 geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
 geometry.computeFaceNormals();
