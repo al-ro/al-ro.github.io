@@ -52,8 +52,7 @@ scene.add(camera);
 controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.target = new THREE.Vector3(0,20,0);
 controls.maxDistance = 500;
-controls.minDistance = 50;
-controls.minDistance = 50;
+controls.minDistance = 10;
 controls.maxPolarAngle = Math.PI/2;
 controls.update();
 
@@ -270,12 +269,12 @@ var skyBoxLoader = new THREE.CubeTextureLoader();
 skyBoxLoader.crossOrigin = '';
 skyBoxLoader.setPath('https://al-ro.github.io/images/pbr/');
 var skyBox = skyBoxLoader.load( [
-		'0004.jpg',
-		'0002.jpg',
-		'0006.jpg',
-		'0005.jpg',
-		'0001.jpg',
-		'0003.jpg'
+		'pos_x.jpg',
+		'neg_x.jpg',
+		'pos_y.jpg',
+		'neg_y.jpg',
+		'pos_z.jpg',
+		'neg_z.jpg'
 	] );
 //scene.background = skyBox;
 
