@@ -307,7 +307,7 @@ function handle_load(gltf){
 
 
 }
-gltfLoader.load('glTF2_Principled.glb', handle_load);
+gltfLoader.load('untitled.glb', handle_load);
 var loader = new THREE.STLLoader();
 loader.crossOrigin = '';
 //Load dancer
