@@ -297,16 +297,18 @@ function handle_load(gltf){
   console.log("handle_load");
 
 }
-gltfLoader.load('untitled.glb', handle_load, null, console.log("ERROR"));
+//gltfLoader.load('scene.glb', handle_load, null, console.log("ERROR"));
+var loader = new THREE.STLLoader();
+loader.crossOrigin = '';
 //Load dancer
-//loader.load( "https://res.cloudinary.com/al-ro/raw/upload/v1531776249/ballerina_1_mu2pmx.stl", function (geometry) {
+loader.load("https://al-ro.github.io/geometry/goat_simplified", function (geometry) {
 //https://stackoverflow.com/questions/16469270/transforming-vertex-normals-in-three-js
-//geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
-//geometry.computeFaceNormals();
-//geometry.computeVertexNormals();
+geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
+geometry.computeFaceNormals();
+geometry.computeVertexNormals();
 
-geometry = new THREE.BoxBufferGeometry(32, 32, 32);
-geometry.translate(0,25,0);
+//geometry = new THREE.BoxBufferGeometry(32, 32, 32);
+//geometry.translate(-100,-100,0);
 //Generate vertex indices
 geometry = THREE.BufferGeometryUtils.mergeVertices(geometry);
 //console.log(geometry);
@@ -323,7 +325,7 @@ var mesh = new THREE.Mesh( geometry, material);
 
   scene.add( mesh );
 
-//} );
+} );
 
 var floor_geometry = new THREE.PlaneBufferGeometry(1000,1000,2,2);
 floor_geometry.lookAt(new THREE.Vector3(0,1,0));
