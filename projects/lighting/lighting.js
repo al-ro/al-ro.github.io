@@ -1,7 +1,7 @@
+//Based on the tutorials series https://learnopengl.com/
+
 var canvas = document.getElementById("canvas_1");
 var cont = document.getElementById("cc_1");
-
-var TWO_PI = Math.PI*2;
 
 const mobile = ( navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/webOS/i)
@@ -11,14 +11,23 @@ const mobile = ( navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/Windows Phone/i)
     );
 
-//Camera rotate
-var rotate = false;
+//Lighting variables
+var ambient_strength = 0.3;
+var diffuse_strength = 0.7;
+var specular_strength = 0.5;
+var shininess = 128;
+var textured = true;
+var normal_map = true;
+var blinn = true;
+var environment_map = false;
+var reflection = true;
+var refraction = false;
+var rotate_light = true;
+var shadow_camera = false;
 
 var ratio =  canvas.width / canvas.height;
 var w = cont.offsetWidth;
 var h = w/ratio;
-var WIDTH = 0.25;
-var HEIGHT = 0.25;
 
 //Initialise three.js
 var scene = new THREE.Scene();
@@ -26,24 +35,26 @@ var scene = new THREE.Scene();
 var renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize(w,h,false);
-renderer.setClearColor( 0x000000, 1);
+renderer.setClearColor( 0xaaaaaa, 1);
 distance = 400;
 
 var FOV = 2 * Math.atan( window.innerHeight / ( 2 * distance ) ) * 90 / Math.PI;
 
 //Camera
 var camera = new THREE.PerspectiveCamera(FOV, ratio, 0.1, 20000);
-camera.position.set(10, 40, 100);
+camera.position.set(0, 40, 100);
 if(mobile){
-  camera.position.set(-40, 20, 40);
+  camera.position.set(0, 20, 40);
 }
 scene.add(camera);
 
 //OrbitControls.js for camera manipulation
 controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.target = new THREE.Vector3(0,50,0);
-controls.autoRotate = rotate;
-controls.autoRotateSpeed = 2.5;
+controls.target = new THREE.Vector3(0,20,0);
+controls.maxDistance = 500;
+controls.minDistance = 50;
+controls.minDistance = 50;
+controls.maxPolarAngle = Math.PI/2;
 controls.update();
 
 const stats = new Stats();
@@ -56,11 +67,9 @@ document.getElementById('cc_1').appendChild(stats.domElement);
 var shadowVertexSource = `
 varying vec3 vPosition;
 varying vec2 texCoord;
-const float WIDTH = ` + WIDTH + `;
-const float HEIGHT = ` + HEIGHT + `;
 void main() {
   texCoord = uv;
-  gl_Position = vec4(position.x*WIDTH+0.75, position.y*HEIGHT+0.75, 0.0, 1.0 );
+  gl_Position = vec4(position.x*0.25+0.75, position.y*0.25-0.75, 0.0, 1.0 );
 }
 `;
 
@@ -125,13 +134,17 @@ uniform float ambientStrength;
 uniform float diffuseStrength;
 uniform float specularStrength;
 uniform float shininess;
-uniform float time;
 uniform vec3 lightColour;
 uniform vec3 lightPosition;
 uniform vec3 ambientColour;
 uniform vec3 diffuseColour;
 uniform vec3 specularColour;
 uniform bool blinn;
+uniform bool useTexture;
+uniform bool useNormalMap;
+uniform bool environmentMapping;
+uniform bool reflection;
+uniform bool refraction;
 uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
 uniform samplerCube environmentMap;
@@ -150,7 +163,6 @@ float LinearizeDepth(float depth) {
     return (2.0 * near * far) / (far + near - z * (far - near));	
 }
 
-
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal){
     // perform perspective divide
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
@@ -160,13 +172,12 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal
     float closestDepth = texture2D(shadowMap, projCoords.xy).r; 
     // get depth of current fragment from light's perspective
     float currentDepth = projCoords.z;
+    float bias = max(0.01 * (1.0 - dot(normal, lightDirection)), 0.005);
     // check whether current frag pos is in shadow
-    float bias = 0.005;
-    bias = max(0.05 * (1.0 - dot(normal, lightDirection)), 0.005);
     float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;  
 
     shadow = 0.0;
-    float texelSize = 1.0 / 1024.0;
+    float texelSize = 1.0 / 2048.0;
     for(int x = -2; x <= 2; x++){
       for(int y = -2; y <= 2; y++){
 	float pcfDepth = texture2D(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
@@ -184,7 +195,6 @@ void main() {
 
   vec4 textureColour = texture2D(diffuseMap, textureCoord);
   vec3 normal;
-  bool useNormalMap = true;
   if(useNormalMap){
     //https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     //Transform RGB normal map data from [0, 1] to [-1, 1]
@@ -197,12 +207,21 @@ void main() {
 
   vec3 lightDirection = normalize(lightPosition); 
   //Ambient colour is constant
-  vec3 ambient = textureColour.xyz * lightColour;
+  vec3 ambient;
+  if(useTexture){
+    ambient = textureColour.xyz * lightColour;
+  }else{
+    ambient = ambientColour * lightColour;
+  }
 
   //How much a fragment faces the light
   float diff = max(dot(normal, lightDirection), 0.0);
-  vec3 diffuse = diff * textureColour.xyz * lightColour;
-
+  vec3 diffuse;
+  if(useTexture){
+    diffuse = diff * textureColour.xyz * lightColour;
+  }else{
+    diffuse = diff * diffuseColour * lightColour;
+  }
   //How much a fragment directly reflects the light to the camera
   vec3 viewDirection = normalize(cameraPosition - vPosition);
   float spec;
@@ -213,39 +232,40 @@ void main() {
     vec3 reflectDirection = reflect(-lightDirection, normal);  
     spec = pow(max(dot(viewDirection, reflectDirection), 0.0), shininess);
   }
+
   vec3 specular = spec * specularColour * lightColour;  
 
   float shadow = ShadowCalculation(lightSpaceVPosition, lightDirection, normal);
   vec3 result =  ambientStrength * ambient + (1.0-shadow) * diffuseStrength * diffuse + (1.0-shadow) * specularStrength * specular;
-  float depth = LinearizeDepth(gl_FragCoord.z) / far;
-  gl_FragColor = vec4(vec3(depth), 1.0);
-  gl_FragColor = vec4(result, 1.0);
-  //The reflected skybox vector
-  //vec3 reflectionVector = refract(-viewDirection, normal, 1.0/1.2);
-  //vec3 reflectionVector = reflect(-viewDirection, normal);
-  //Three.js flips cubemaps in the x-direction (see uniforms.flipEnvMap.value = material.envMap.isCubeTexture ? - 1 : 1; in WebGLRenderer.js).
-  //Since we use a three.js skybox, flip the x-value of the reflection vector for consistency
-  //gl_FragColor = textureCube(environmentMap, vec3(-reflectionVector.x, reflectionVector.yz));
+
+  if(environmentMapping){
+    //The reflected/refracted skybox vector 
+    vec3 environmentVector;
+    if(reflection){
+      environmentVector = reflect(-viewDirection, normal);
+    }
+    if(refraction){
+      environmentVector = refract(-viewDirection, normal, 1.0/1.2);
+    }
+    //Three.js flips cubemaps in the x-direction (see uniforms.flipEnvMap.value = material.envMap.isCubeTexture ? - 1 : 1; in WebGLRenderer.js).
+    //Since we use a three.js skybox, flip the x-value of the reflection/refraction vector for consistency
+    result = (textureCube(environmentMap, vec3(-environmentVector.x, environmentVector.yz))).xyz;
+  }
+  gl_FragColor = vec4(result, 1.0); 
 }`;
 
-
+//Visualise light direction as a sphere
 var light_geometry = new THREE.SphereGeometry( 1, 32, 32 );
 var light_material = new THREE.MeshBasicMaterial({color: 0xffffff });
 var light_mesh = new THREE.Mesh(light_geometry, light_material);
-light_mesh.translateY(200.0);
+light_mesh.translateY(150.0);
 scene.add(light_mesh);
-
-//Target where shadows are rendered
-var shadowTarget = new THREE.WebGLRenderTarget(1024, 1024);
-shadowTarget.depthBuffer = true;
-shadowTarget.depthTexture = new THREE.DepthTexture();
 
 var loader = new THREE.TextureLoader();
 //allow cross origin loading
 loader.crossOrigin = '';
-var texture =  loader.load( 'https://al-ro.github.io/images/pbr/4k.jpg' );
-var normals =  loader.load( 'https://al-ro.github.io/images/pbr/normals.png' );
-var displacement =  loader.load( 'https://al-ro.github.io/images/pbr/bricks2_disp.jpg' );
+var texture =  loader.load( 'https://al-ro.github.io/images/pbr/white_plaster_DIFF.jpg' );
+var normals =  loader.load( 'https://al-ro.github.io/images/pbr/white_plaster_NORM.jpg' );
 var skyBoxLoader = new THREE.CubeTextureLoader();
 skyBoxLoader.crossOrigin = '';
 skyBoxLoader.setPath('https://al-ro.github.io/images/pbr/');
@@ -257,96 +277,103 @@ var skyBox = skyBoxLoader.load( [
 		'0001.jpg',
 		'0003.jpg'
 	] );
-scene.background = skyBox;
+//scene.background = skyBox;
 
+//Target where shadows are rendered
+var shadowTarget = new THREE.WebGLRenderTarget(2048, 2048);
+shadowTarget.depthBuffer = true;
+shadowTarget.depthTexture = new THREE.DepthTexture();
 
-//var geometry = new THREE.SphereGeometry( 5, 32, 32 );
 //Define the material, specifying attributes, uniforms, shaders etc.
 var material = new THREE.ShaderMaterial( {
   uniforms: {
-    blinn: {value: true},
-    time: { value: 0.0 },
-    ambientStrength: { value: 0.3 },
-    diffuseStrength: { value: 0.7 },
-    specularStrength: { value: 0.5 },
-    shininess: { value: 128},
+    blinn: {value: blinn},
+    useTexture: {value: textured},
+    useNormalMap: {value: normal_map},
+    environmentMapping: {value: environment_map},
+    reflection: {value: reflection},
+    refraction: {value: refraction},
+    ambientStrength: { value: ambient_strength },
+    diffuseStrength: { value: diffuse_strength },
+    specularStrength: { value: specular_strength },
+    shininess: { value: shininess},
     lightColour: { value: new THREE.Vector3(1.0, 1.0, 1.0) },
     lightPosition: { value: light_mesh.position },
-    ambientColour: { value: new THREE.Vector3(0.74725, 0.4995, 0.0745) },
-    diffuseColour: { value: new THREE.Vector3(0.90164, 0.80648, 0.22648) },
-    specularColour: { value: new THREE.Vector3(1.0, 0.8, 0.8) },
+    ambientColour: { value: new THREE.Vector3(0.8, 0.8, 0.8) },
+    diffuseColour: { value: new THREE.Vector3(0.9, 0.9, 0.9) },
+    specularColour: { value: new THREE.Vector3(1.0, 1.0, 1.0) },
     lightViewMatrix: {value: new THREE.Matrix4()},
     lightProjectionMatrix: {value: new THREE.Matrix4()},
     shadowMap: {value: shadowTarget.depthTexture},
     diffuseMap: { value: texture},
     normalMap: { value: normals},
-    displacementMap: { value: displacement},
     environmentMap: {value: skyBox}
   },
   vertexShader: vertexSource,
   fragmentShader: fragmentSource,
 } );
 
-var gltfLoader = new THREE.GLTFLoader();
-gltfLoader.crossOrigin = '';
-gltfLoader.setPath('https://al-ro.github.io/images/pbr/');
-var light = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(light);
-
-    var light2 = new THREE.PointLight(0xffffff, 3.5);
-    scene.add(light2);
-
-function handle_load(gltf){
-
-        mesh = gltf.scene;
-        console.log(mesh.children[0]);
-        mesh.children[0].material = new THREE.MeshBasicMaterial();
-	scene.add( mesh );
-        mesh.position.y = 50;
-	console.log(gltf.scene.children[0]);
-
-
-}
-gltfLoader.load('untitled.glb', handle_load);
-var loader = new THREE.STLLoader();
-loader.crossOrigin = '';
-//Load dancer
-/*
-loader.load("https://al-ro.github.io/geometry/goat_simplified.stl", function (geometry) {
-//https://stackoverflow.com/questions/16469270/transforming-vertex-normals-in-three-js
-geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
-geometry.computeFaceNormals();
-geometry.computeVertexNormals();
-
-//geometry = new THREE.BoxBufferGeometry(32, 32, 32);
-//geometry.translate(-100,-100,0);
-//Generate vertex indices
-geometry = THREE.BufferGeometryUtils.mergeVertices(geometry);
-//console.log(geometry);
-THREE.BufferGeometryUtils.computeTangents(geometry);
-//THREE.GeometryBufferUtils.computeTangents(geometry);
-var mesh = new THREE.Mesh( geometry, material);
-//mesh.matrixAutoUpdate  = false;
-  //mesh.scale.set( 10, 10, 10);
-  mesh.position.set( -55, 0, -15 );
-
-  //mesh.geometry.computeFaceNormals();
-  helper = new THREE.VertexNormalsHelper( mesh, 2, 0x00ff00, 1 );
-  //scene.add( helper );
-
-  scene.add( mesh );
-
+var floor_material = new THREE.ShaderMaterial( {
+  uniforms: {
+    blinn: {value: true},
+    useTexture: {value: false},
+    useNormalMap: {value: false},
+    environmentMapping: {value: false},
+    reflection: {value: false},
+    refraction: {value: false},
+    ambientStrength: { value: 0.3 },
+    diffuseStrength: { value: 0.7 },
+    specularStrength: { value: 0.0 },
+    shininess: { value: 128},
+    lightColour: { value: new THREE.Vector3(1.0, 1.0, 1.0) },
+    lightPosition: { value: light_mesh.position },
+    ambientColour: { value: new THREE.Vector3(0.66, 0.66, 0.66) },
+    diffuseColour: { value: new THREE.Vector3(0.66, 0.66, 0.66) },
+    specularColour: { value: new THREE.Vector3(1.0, 1.0, 1.0) },
+    lightViewMatrix: {value: new THREE.Matrix4()},
+    lightProjectionMatrix: {value: new THREE.Matrix4()},
+    shadowMap: {value: shadowTarget.depthTexture},
+    diffuseMap: { value: texture},
+    normalMap: { value: normals},
+    environmentMap: {value: skyBox}
+  },
+  vertexShader: vertexSource,
+  fragmentShader: fragmentSource,
 } );
-*/
+
+function addGeometry(geo, offset){
+  //Generate vertex indices
+  geo.translate(offset.x, offset.y, offset.z);
+  //Generate tangents
+  THREE.BufferGeometryUtils.computeTangents(geo);
+  var mesh = new THREE.Mesh(geo, material);
+  scene.add(mesh);
+}
+
+//Add a sphere, torus knot and cube
+addGeometry(new THREE.SphereBufferGeometry(15, 20, 20), new THREE.Vector3(-40,15,0));
+addGeometry(new THREE.TorusKnotBufferGeometry(10, 3, 100, 16), new THREE.Vector3(0,20,0));
+addGeometry(new THREE.BoxBufferGeometry(20, 20, 20), new THREE.Vector3(40,10,0));
+
 var floor_geometry = new THREE.PlaneBufferGeometry(1000,1000,2,2);
 floor_geometry.lookAt(new THREE.Vector3(0,1,0));
-var floor = new THREE.Mesh(floor_geometry, material);
+
+var floor = new THREE.Mesh(floor_geometry, floor_material);
 scene.add(floor);
 
 //Shadow camera and geometry
 //https://github.com/mrdoob/three.js/blob/master/examples/webgl_depth_texture.html
+var shadowCamera = new THREE.OrthographicCamera(-100, 100, 100, -100, 1, 400);
+shadowCamera.position.x = light_mesh.position.x;
+shadowCamera.position.y = light_mesh.position.y;
+shadowCamera.position.z = light_mesh.position.z;
+shadowCamera.lookAt(new THREE.Vector3(0,0,0));
 
-var shadowCamera = new THREE.OrthographicCamera(-120, 120, 120, -120, 1, 400);
+//Shadow camera frustum 
+var shadowCameraHelper = new THREE.CameraHelper(shadowCamera);
+
+scene.add(shadowCamera);
+
 var shadowMaterial = new THREE.ShaderMaterial( {
   vertexShader: shadowVertexSource, 
   fragmentShader: shadowFragmentSource,
@@ -354,37 +381,61 @@ var shadowMaterial = new THREE.ShaderMaterial( {
     map: {value: shadowTarget.depthTexture}
   }
 });
+
+//Visuals for shadow depth image
 var shadowPlane = new THREE.PlaneBufferGeometry(2, 2);
-shadowPlane.translate(0,0,0);
 var shadowBuffer = new THREE.Mesh( shadowPlane, shadowMaterial);
-//scene.add(shadowBuffer);
-scene.add(shadowCamera);
-shadowCamera.position.x = light_mesh.position.x;
-shadowCamera.position.y = light_mesh.position.y;
-shadowCamera.position.z = light_mesh.position.z;
-shadowCamera.lookAt(new THREE.Vector3(0,0,0));
-var helper = new THREE.CameraHelper(shadowCamera);
-//scene.add(helper);
 
 
-//----------DRAW----------//
+//dat.gui library controls
+var gui = new dat.GUI({ autoPlace: false });
+var customContainer = document.getElementById('gui_container');
+customContainer.appendChild(gui.domElement);
+gui.add(this, 'ambient_strength').min(0).max(1).step(0.05).onChange(function(value){material.uniforms.ambientStrength.value = value;});
+gui.add(this, 'diffuse_strength').min(0).max(1).step(0.05).onChange(function(value){material.uniforms.diffuseStrength.value = value;});
+gui.add(this, 'specular_strength').min(0).max(1).step(0.05).onChange(function(value){material.uniforms.specularStrength.value = value;});
+gui.add(this, 'shininess').min(1).max(128).step(1).onChange(function(value){material.uniforms.shininess.value = value;});
+gui.add(this, 'blinn').onChange(function(value){ material.uniforms.blinn.value = value;});
+gui.add(this, 'textured').onChange(function(value){ material.uniforms.useTexture.value = value;});
+gui.add(this, 'normal_map').onChange(function(value){ material.uniforms.useNormalMap.value = value;});
+gui.add(this, 'environment_map').onChange(function(value){ material.uniforms.environmentMapping.value = value;});
+gui.add(this, 'reflection').listen().onChange(function(value){reflection = true; refraction = false;  material.uniforms.reflection.value = true; material.uniforms.refraction.value = false;});
+gui.add(this, 'refraction').listen().onChange(function(value){refraction = true; reflection = false;  material.uniforms.refraction.value = true; material.uniforms.reflection.value = false;});
+gui.add(this, 'rotate_light');
+gui.add(this, 'shadow_camera');
+gui.close();
+
+function updateLight(mat){
+  mat.uniforms.lightPosition.x  = light_mesh.position.x;
+  mat.uniforms.lightPosition.y  = light_mesh.position.y;
+  mat.uniforms.lightPosition.z  = light_mesh.position.z;
+}
+
+function updateShadow(mat){
+  mat.uniforms.lightViewMatrix.value = shadowCamera.matrixWorldInverse;
+  mat.uniforms.lightProjectionMatrix.value = shadowCamera.projectionMatrix;
+}
 var time = 0;
+//----------DRAW----------//
 function draw(){
+
   stats.begin();
-  time += 1/160;
-  material.uniforms.time.value = time;
-  light_mesh.position.x=(205*Math.cos(time));
-  light_mesh.position.z=(205*Math.sin(time));
-  //console.log(material.uniforms);
-  material.uniforms.lightPosition.x  = light_mesh.position.x;
-  material.uniforms.lightPosition.y  = light_mesh.position.y;
-  material.uniforms.lightPosition.z  = light_mesh.position.z;
+  if(rotate_light){
+    time += 1/160;
+    light_mesh.position.x=(205*Math.cos(time));
+    light_mesh.position.z=(205*Math.sin(time));
+  }
+  
+  updateLight(material);
+  updateLight(floor_material);
+
   shadowCamera.position.x = light_mesh.position.x;
   shadowCamera.position.y = light_mesh.position.y;
   shadowCamera.position.z = light_mesh.position.z;
   shadowCamera.lookAt(new THREE.Vector3(0,0,0));
-  material.uniforms.lightViewMatrix.value = shadowCamera.matrixWorldInverse;
-  material.uniforms.lightProjectionMatrix.value = shadowCamera.projectionMatrix;
+
+  updateShadow(material);
+  updateShadow(floor_material);
 
   controls.update();
 
@@ -393,8 +444,18 @@ function draw(){
   renderer.render(scene, shadowCamera);
 
   //Render whole scene
+  if(shadow_camera){
+    scene.add(shadowBuffer);
+    scene.add(shadowCameraHelper);
+  }
+
   renderer.setRenderTarget(null);
   renderer.render(scene, camera);
+
+  if(shadow_camera){
+    scene.remove(shadowBuffer);
+    scene.remove(shadowCameraHelper);
+  }
   stats.end();
   requestAnimationFrame(draw);
 }
