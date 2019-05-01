@@ -287,9 +287,17 @@ var material = new THREE.ShaderMaterial( {
   fragmentShader: fragmentSource,
 } );
 
-console.log(skyBox);
+//console.log(skyBox);
 
-var loader = new THREE.STLLoader();
+var gltfLoader = new THREE.GLTFLoader();
+gltfLoader.crossOrigin = '';
+
+function handle_load(gltf){
+
+  console.log("handle_load");
+
+}
+gltfLoader.load('https://al-ro.github.io/images/pbr/untitled.glb', handle_load, null, console.log("ERROR"));
 //Load dancer
 //loader.load( "https://res.cloudinary.com/al-ro/raw/upload/v1531776249/ballerina_1_mu2pmx.stl", function (geometry) {
 //https://stackoverflow.com/questions/16469270/transforming-vertex-normals-in-three-js
