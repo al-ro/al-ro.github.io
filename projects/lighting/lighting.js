@@ -303,11 +303,12 @@ function handle_load(gltf){
         mesh.children[0].material = new THREE.MeshBasicMaterial();
 	scene.add( mesh );
         mesh.position.y = 50;
+	var m = new THREE.mesh
 	console.log(gltf.scene.children[0]);
 
 
 }
-gltfLoader.load('monkey.glb', handle_load);
+gltfLoader.load('glTF2_Principled.glb', handle_load);
 var loader = new THREE.STLLoader();
 loader.crossOrigin = '';
 //Load dancer
