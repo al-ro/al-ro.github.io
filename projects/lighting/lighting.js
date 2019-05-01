@@ -41,7 +41,7 @@ scene.add(camera);
 
 //OrbitControls.js for camera manipulation
 controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.target = new THREE.Vector3(0,25,0);
+controls.target = new THREE.Vector3(0,50,0);
 controls.autoRotate = rotate;
 controls.autoRotateSpeed = 2.5;
 controls.update();
@@ -287,21 +287,25 @@ var material = new THREE.ShaderMaterial( {
   fragmentShader: fragmentSource,
 } );
 
-console.log(THREE.LoaderUtils);
 var gltfLoader = new THREE.GLTFLoader();
 gltfLoader.crossOrigin = '';
 gltfLoader.setPath('https://al-ro.github.io/images/pbr/');
 
 function handle_load(gltf){
 
-  console.log("handle_load");
+  var m = gltf.scene;
+  m.material = new THREE.MeshBasicMaterial({wireframe: true, color: 0xff0000});
+  console.log(m);
+  m.translateY(40);
+  scene.add(m);
 
 }
-//gltfLoader.load('scene.glb', handle_load, null, console.log("ERROR"));
+gltfLoader.load('scene.glb', handle_load);
 var loader = new THREE.STLLoader();
 loader.crossOrigin = '';
 //Load dancer
-loader.load("https://al-ro.github.io/geometry/goat_simplified.png", function (geometry) {
+/*
+loader.load("https://al-ro.github.io/geometry/goat_simplified.stl", function (geometry) {
 //https://stackoverflow.com/questions/16469270/transforming-vertex-normals-in-three-js
 geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI/2));
 geometry.computeFaceNormals();
@@ -317,7 +321,7 @@ THREE.BufferGeometryUtils.computeTangents(geometry);
 var mesh = new THREE.Mesh( geometry, material);
 //mesh.matrixAutoUpdate  = false;
   //mesh.scale.set( 10, 10, 10);
-  //mesh.position.set( 0, -4, 0 );
+  mesh.position.set( -55, 0, -15 );
 
   //mesh.geometry.computeFaceNormals();
   helper = new THREE.VertexNormalsHelper( mesh, 2, 0x00ff00, 1 );
@@ -326,7 +330,7 @@ var mesh = new THREE.Mesh( geometry, material);
   scene.add( mesh );
 
 } );
-
+*/
 var floor_geometry = new THREE.PlaneBufferGeometry(1000,1000,2,2);
 floor_geometry.lookAt(new THREE.Vector3(0,1,0));
 var floor = new THREE.Mesh(floor_geometry, material);
@@ -335,7 +339,7 @@ scene.add(floor);
 //Shadow camera and geometry
 //https://github.com/mrdoob/three.js/blob/master/examples/webgl_depth_texture.html
 
-var shadowCamera = new THREE.OrthographicCamera(-100, 100, 100, -100, 1, 400);
+var shadowCamera = new THREE.OrthographicCamera(-120, 120, 120, -120, 1, 400);
 var shadowMaterial = new THREE.ShaderMaterial( {
   vertexShader: shadowVertexSource, 
   fragmentShader: shadowFragmentSource,
