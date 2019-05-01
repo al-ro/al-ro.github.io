@@ -244,7 +244,7 @@ var loader = new THREE.TextureLoader();
 //allow cross origin loading
 loader.crossOrigin = '';
 var texture =  loader.load( 'https://al-ro.github.io/images/pbr/4k.jpg' );
-var normals =  loader.load( 'https://al-ro.github.io/images/pbr/4k.jpg' );
+var normals =  loader.load( 'https://al-ro.github.io/images/pbr/normals.png' );
 var displacement =  loader.load( 'https://al-ro.github.io/images/pbr/bricks2_disp.jpg' );
 var skyBoxLoader = new THREE.CubeTextureLoader();
 skyBoxLoader.crossOrigin = '';
