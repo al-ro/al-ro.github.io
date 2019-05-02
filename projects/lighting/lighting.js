@@ -219,7 +219,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal
     if(softShadows){
       //Soften shadow edges
       shadow = 0.0;
-      float texelSize = 1.0 / float(`+ textureSize +`);
+      float texelSize = 1.0 / float(2048);
       //Average the shadow depth using surrounding fragments
       for(int x = -2; x <= 2; x++){
 	for(int y = -2; y <= 2; y++){
@@ -318,12 +318,12 @@ light_mesh.translateY(150.0);
 scene.add(light_mesh);
 
 //Get images for texture, normal map and skybox
-var textureLoader = new THREE.TextureLoader();
-textureLoader.crossOrigin = '';
+var oader = new THREE.TextureLoader();
+oader.crossOrigin = '';
 //Texture and normal map taken from https://texturehaven.com/
-var texture = textureLoader.load( 'https://al-ro.github.io/images/lighting/diffuse.jpg' );
-var normals = textureLoader.load( 'https://al-ro.github.io/images/lighting/normals.jpg' );
-var specular = textureLoader.load( 'https://al-ro.github.io/images/lighting/specular.jpg' );
+var texture = oader.load( 'https://al-ro.github.io/images/lighting/grass_thumbnail.jpg' );
+var normals = oader.load( 'https://al-ro.github.io/images/lighting/normals.jpg' );
+var specular = oader.load( 'https://al-ro.github.io/images/lighting/specular.jpg' );
 
 //Create Three.js skybox
 var skyBoxLoader = new THREE.CubeTextureLoader();
@@ -342,7 +342,7 @@ var skyBox = skyBoxLoader.load( [
 
 //Target where shadows are rendered
 //https://github.com/mrdoob/three.js/blob/master/examples/webgl_depth_texture.html
-var shadowTarget = new THREE.WebGLRenderTarget(texelSize, textureSize);
+var shadowTarget = new THREE.WebGLRenderTarget(textureSize, textureSize);
 shadowTarget.depthBuffer = true;
 shadowTarget.depthTexture = new THREE.DepthTexture();
 
