@@ -30,6 +30,8 @@ var shadow_camera = false;
 var soft_shadows = true;
 var time = 0;
 
+var centre = new THREE.Vector3(0,0,0);
+
 var ratio =  canvas.width / canvas.height;
 var w = cont.offsetWidth;
 var h = w/ratio;
@@ -414,7 +416,7 @@ var shadowCamera = new THREE.OrthographicCamera(-100, 100, 100, -100, 1, 400);
 shadowCamera.position.x = light_mesh.position.x;
 shadowCamera.position.y = light_mesh.position.y;
 shadowCamera.position.z = light_mesh.position.z;
-shadowCamera.lookAt(new THREE.Vector3(0,0,0));
+shadowCamera.lookAt(centre);
 
 //Visualise shadow camera frustum 
 var shadowCameraHelper = new THREE.CameraHelper(shadowCamera);
@@ -434,7 +436,7 @@ var shadowPlane = new THREE.PlaneBufferGeometry(2, 2);
 var shadowBuffer = new THREE.Mesh( shadowPlane, shadowMaterial);
 
 
-//dat.gui library controls
+//Dat.gui library controls
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
@@ -464,7 +466,6 @@ function updateShadow(mat){
   mat.uniforms.lightProjectionMatrix.value = shadowCamera.projectionMatrix;
 }
 
-var centre = new THREE.Vector3(0,0,0);
 //----------DRAW----------//
 function draw(){
 
