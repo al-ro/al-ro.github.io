@@ -14,13 +14,6 @@ const mobile = ( navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/Windows Phone/i)
     );
 
-//Shadow texture size
-var textureSize = 2048;
-
-if(mobile){
-  textureSize = 1024;
-}
-
 //Lighting variables
 var ambient_strength = 0.3;
 var diffuse_strength = 0.7;
@@ -38,6 +31,12 @@ var shadow_camera = false;
 var soft_shadows = true;
 var time = 0;
 
+var textureSize = 2048;
+if(mobile){
+  textureSize = 1024;
+}
+
+var grey = new THREE.Color(0xaaaaaa);
 var centre = new THREE.Vector3(0,0,0);
 
 var ratio =  canvas.width / canvas.height;
@@ -50,7 +49,7 @@ var scene = new THREE.Scene();
 var renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize(w,h,false);
-renderer.setClearColor( 0xaaaaaa, 1);
+renderer.setClearColor( grey, 1);
 distance = 400;
 
 var FOV = 2 * Math.atan( window.innerHeight / ( 2 * distance ) ) * 90 / Math.PI;
@@ -58,6 +57,9 @@ var FOV = 2 * Math.atan( window.innerHeight / ( 2 * distance ) ) * 90 / Math.PI;
 //Camera
 var camera = new THREE.PerspectiveCamera(FOV, ratio, 0.1, 20000);
 camera.position.set(0, 40, 100);
+if(mobile){
+  camera.position.set(0, 20, 40);
+}
 scene.add(camera);
 
 //OrbitControls.js for camera manipulation
@@ -219,7 +221,8 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal
     if(softShadows){
       //Soften shadow edges
       shadow = 0.0;
-      float texelSize = 1.0 / float(2048);
+      //Shadow texture size is 2048x2048
+      float texelSize = 1.0 / float(`+ textureSize+`);
       //Average the shadow depth using surrounding fragments
       for(int x = -2; x <= 2; x++){
 	for(int y = -2; y <= 2; y++){
@@ -318,12 +321,12 @@ light_mesh.translateY(150.0);
 scene.add(light_mesh);
 
 //Get images for texture, normal map and skybox
-var oader = new THREE.TextureLoader();
-oader.crossOrigin = '';
-//Texture and normal map taken from https://texturehaven.com/
-var texture = oader.load( 'https://al-ro.github.io/images/lighting/grass_thumbnail.jpg' );
-var normals = oader.load( 'https://al-ro.github.io/images/lighting/normals.jpg' );
-var specular = oader.load( 'https://al-ro.github.io/images/lighting/specular.jpg' );
+var loader = new THREE.TextureLoader();
+loader.crossOrigin = '';
+//Normal map and edited texture from https://www.sharetextures.com/
+var texture =  loader.load( 'https://al-ro.github.io/images/lighting/diffuse.jpg' );
+var normals =  loader.load( 'https://al-ro.github.io/images/lighting/normals.jpg' );
+var specular =  loader.load( 'https://al-ro.github.io/images/lighting/specular.jpg' );
 
 //Create Three.js skybox
 var skyBoxLoader = new THREE.CubeTextureLoader();
@@ -465,7 +468,7 @@ gui.add(this, 'blinn').onChange(function(value){ material.uniforms.blinn.value =
 gui.add(this, 'textured').onChange(function(value){ material.uniforms.useTexture.value = value;});
 gui.add(this, 'normal_map').onChange(function(value){ material.uniforms.useNormalMap.value = value;});
 gui.add(this, 'specular_map').onChange(function(value){ material.uniforms.useSpecularMap.value = value;});
-gui.add(this, 'environment_map').onChange(function(value){ material.uniforms.environmentMapping.value = value;});
+gui.add(this, 'environment_map').onChange(function(value){ material.uniforms.environmentMapping.value = value; value ? scene.background = skyBox : scene.background = grey});
 gui.add(this, 'reflection').listen().onChange(function(value){reflection = true; refraction = false;  material.uniforms.reflection.value = true; material.uniforms.refraction.value = false;});
 gui.add(this, 'refraction').listen().onChange(function(value){refraction = true; reflection = false;  material.uniforms.refraction.value = true; material.uniforms.reflection.value = false;});
 gui.add(this, 'rotate_light');
