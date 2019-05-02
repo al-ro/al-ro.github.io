@@ -21,6 +21,7 @@ var specular_strength = 0.5;
 var shininess = 128;
 var textured = true;
 var normal_map = true;
+var specular_map = true;
 var blinn = true;
 var environment_map = false;
 var reflection = true;
@@ -166,6 +167,7 @@ uniform vec3 specularColour;
 uniform bool blinn;
 uniform bool useTexture;
 uniform bool useNormalMap;
+uniform bool useSpecularMap;
 uniform bool environmentMapping;
 uniform bool reflection;
 uniform bool refraction;
@@ -175,6 +177,8 @@ uniform bool softShadows;
 uniform sampler2D diffuseMap;
 //Normals
 uniform sampler2D normalMap;
+//Specular values
+uniform sampler2D specularMap;
 //Cubemap
 uniform samplerCube environmentMap;
 //Passed by vertex shader
@@ -278,8 +282,8 @@ void main() {
 
   //Colour of light sharply reflected into the camera
   vec3 specular;  
-  if(useTexture){
-    specular = spec * textureColour.rgb * lightColour;  
+  if(useSpecularMap){
+    specular = spec * texture2D(specularMap, textureCoord).rgb * lightColour;
   }else{
     specular = spec * specularColour * lightColour;   
   }
@@ -316,6 +320,7 @@ loader.crossOrigin = '';
 //Texture and normal map taken from https://texturehaven.com/
 var texture =  loader.load( 'https://al-ro.github.io/images/pbr/diffuse.jpg' );
 var normals =  loader.load( 'https://al-ro.github.io/images/pbr/normals.jpg' );
+var specular =  loader.load( 'https://al-ro.github.io/images/pbr/specular.jpg' );
 
 //Create Three.js skybox
 var skyBoxLoader = new THREE.CubeTextureLoader();
@@ -344,6 +349,7 @@ var material = new THREE.ShaderMaterial( {
     blinn: {value: blinn},
     useTexture: {value: textured},
     useNormalMap: {value: normal_map},
+    useSpecularMap: {value: specular_map},
     environmentMapping: {value: environment_map},
     reflection: {value: reflection},
     refraction: {value: refraction},
@@ -362,6 +368,7 @@ var material = new THREE.ShaderMaterial( {
     softShadows: {value: soft_shadows},
     diffuseMap: { value: texture},
     normalMap: { value: normals},
+    specularMap: { value: specular},
     environmentMap: {value: skyBox}
   },
   vertexShader: vertexSource,
@@ -373,6 +380,7 @@ var floor_material = new THREE.ShaderMaterial( {
     blinn: {value: true},
     useTexture: {value: false},
     useNormalMap: {value: false},
+    useSpecularMap: {value: false},
     environmentMapping: {value: false},
     reflection: {value: false},
     refraction: {value: false},
@@ -391,6 +399,7 @@ var floor_material = new THREE.ShaderMaterial( {
     softShadows: {value: soft_shadows},
     diffuseMap: { value: texture},
     normalMap: { value: normals},
+    specularMap: { value: specular},
     environmentMap: {value: skyBox}
   },
   vertexShader: vertexSource,
@@ -452,6 +461,7 @@ gui.add(this, 'shininess').min(1).max(128).step(1).onChange(function(value){mate
 gui.add(this, 'blinn').onChange(function(value){ material.uniforms.blinn.value = value;});
 gui.add(this, 'textured').onChange(function(value){ material.uniforms.useTexture.value = value;});
 gui.add(this, 'normal_map').onChange(function(value){ material.uniforms.useNormalMap.value = value;});
+gui.add(this, 'specular_map').onChange(function(value){ material.uniforms.useSpecularMap.value = value;});
 gui.add(this, 'environment_map').onChange(function(value){ material.uniforms.environmentMapping.value = value;});
 gui.add(this, 'reflection').listen().onChange(function(value){reflection = true; refraction = false;  material.uniforms.reflection.value = true; material.uniforms.refraction.value = false;});
 gui.add(this, 'refraction').listen().onChange(function(value){refraction = true; reflection = false;  material.uniforms.refraction.value = true; material.uniforms.reflection.value = false;});
