@@ -309,8 +309,8 @@ scene.add(light_mesh);
 var loader = new THREE.TextureLoader();
 loader.crossOrigin = '';
 //Texture and normal map taken from https://texturehaven.com/
-var texture =  loader.load( 'https://al-ro.github.io/images/pbr/white_plaster_DIFF.jpg' );
-var normals =  loader.load( 'https://al-ro.github.io/images/pbr/white_plaster_NORM.jpg' );
+var texture =  loader.load( 'https://al-ro.github.io/images/pbr/diffuse.jpg' );
+var normals =  loader.load( 'https://al-ro.github.io/images/pbr/normals.jpg' );
 
 //Create Three.js skybox
 var skyBoxLoader = new THREE.CubeTextureLoader();
