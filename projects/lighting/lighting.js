@@ -277,7 +277,12 @@ void main() {
   }
 
   //Colour of light sharply reflected into the camera
-  vec3 specular = spec * specularColour * lightColour;  
+  vec3 specular;  
+  if(useTexture){
+    specular = spec * textureColour.rgb * lightColour;  
+  }else{
+    specular = spec * specularColour * lightColour;   
+  }
 
   float shadow = ShadowCalculation(lightSpaceVPosition, lightDirection, normal);
   vec3 result =  ambientStrength * ambient + (1.0-shadow) * diffuseStrength * diffuse + (1.0-shadow) * specularStrength * specular;
