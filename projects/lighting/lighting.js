@@ -14,6 +14,13 @@ const mobile = ( navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/Windows Phone/i)
     );
 
+//Shadow texture size
+var textureSize = 2048;
+
+if(mobile){
+  textureSize = 1024;
+}
+
 //Lighting variables
 var ambient_strength = 0.3;
 var diffuse_strength = 0.7;
@@ -51,9 +58,6 @@ var FOV = 2 * Math.atan( window.innerHeight / ( 2 * distance ) ) * 90 / Math.PI;
 //Camera
 var camera = new THREE.PerspectiveCamera(FOV, ratio, 0.1, 20000);
 camera.position.set(0, 40, 100);
-if(mobile){
-  camera.position.set(0, 20, 40);
-}
 scene.add(camera);
 
 //OrbitControls.js for camera manipulation
@@ -215,8 +219,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal
     if(softShadows){
       //Soften shadow edges
       shadow = 0.0;
-      //Shadow texture size is 2048x2048
-      float texelSize = 1.0 / 2048.0;
+      float texelSize = 1.0 / float(`+ textureSize +`);
       //Average the shadow depth using surrounding fragments
       for(int x = -2; x <= 2; x++){
 	for(int y = -2; y <= 2; y++){
@@ -315,18 +318,18 @@ light_mesh.translateY(150.0);
 scene.add(light_mesh);
 
 //Get images for texture, normal map and skybox
-var loader = new THREE.TextureLoader();
-loader.crossOrigin = '';
+var textureLoader = new THREE.TextureLoader();
+textureLoader.crossOrigin = '';
 //Texture and normal map taken from https://texturehaven.com/
-var texture =  loader.load( 'https://al-ro.github.io/images/pbr/diffuse.jpg' );
-var normals =  loader.load( 'https://al-ro.github.io/images/pbr/normals.jpg' );
-var specular =  loader.load( 'https://al-ro.github.io/images/pbr/specular.jpg' );
+var texture = textureLoader.load( 'https://al-ro.github.io/images/lighting/diffuse.jpg' );
+var normals = textureLoader.load( 'https://al-ro.github.io/images/lighting/normals.jpg' );
+var specular = textureLoader.load( 'https://al-ro.github.io/images/lighting/specular.jpg' );
 
 //Create Three.js skybox
 var skyBoxLoader = new THREE.CubeTextureLoader();
 skyBoxLoader.crossOrigin = '';
 //Skybox image taken from https://hdrihaven.com/
-skyBoxLoader.setPath('https://al-ro.github.io/images/pbr/');
+skyBoxLoader.setPath('https://al-ro.github.io/images/lighting/');
 var skyBox = skyBoxLoader.load( [
 		'pos_x.jpg',
 		'neg_x.jpg',
@@ -339,7 +342,7 @@ var skyBox = skyBoxLoader.load( [
 
 //Target where shadows are rendered
 //https://github.com/mrdoob/three.js/blob/master/examples/webgl_depth_texture.html
-var shadowTarget = new THREE.WebGLRenderTarget(2048, 2048);
+var shadowTarget = new THREE.WebGLRenderTarget(texelSize, textureSize);
 shadowTarget.depthBuffer = true;
 shadowTarget.depthTexture = new THREE.DepthTexture();
 
