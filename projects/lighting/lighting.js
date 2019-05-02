@@ -1,4 +1,7 @@
-//Based on the tutorials series https://learnopengl.com/
+//Manual lighting, shadow and surface calculations using Three.js shader material
+//Based on the tutorial series https://learnopengl.com/
+//Texture and normal map taken from https://texturehaven.com/
+//Skybox image taken from https://hdrihaven.com/
 
 var canvas = document.getElementById("canvas_1");
 var cont = document.getElementById("cc_1");
@@ -24,6 +27,8 @@ var reflection = true;
 var refraction = false;
 var rotate_light = true;
 var shadow_camera = false;
+var soft_shadows = true;
+var time = 0;
 
 var ratio =  canvas.width / canvas.height;
 var w = cont.offsetWidth;
@@ -62,12 +67,16 @@ stats.domElement.style.position = 'relative';
 stats.domElement.style.bottom = '48px';
 document.getElementById('cc_1').appendChild(stats.domElement);
 
-//https://learnopengl.com/Lighting/Basic-Lighting
+//----------SHADOWS----------//
+
+//https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping
+//Used to calculate shadows and optionally display the depth map
 var shadowVertexSource = `
 varying vec3 vPosition;
 varying vec2 texCoord;
 void main() {
   texCoord = uv;
+  //Place the quad at the lower right corner of the screen
   gl_Position = vec4(position.x*0.25+0.75, position.y*0.25-0.75, 0.0, 1.0 );
 }
 `;
@@ -76,8 +85,10 @@ var shadowFragmentSource = `
 uniform sampler2D map;
 varying vec2 texCoord;
 
+//Shadow camera extent
 float near = 1.0; 
-float far = 100.0; 
+float far = 400.0; 
+
 //https://learnopengl.com/Advanced-OpenGL/Depth-testing
 float LinearizeDepth(float depth) {
     float z = depth * 2.0 - 1.0; // back to NDC 
@@ -91,8 +102,11 @@ void main(){
 }  
 `;
 
+//----------LIGHTING----------//
 var vertexSource = `
 precision mediump float;
+
+//The surface tangent calculated on the CPU using THREE.BufferGeometryUtils.computeTangents()
 attribute vec4 tangent;
 uniform mat4 lightViewMatrix;
 uniform mat4 lightProjectionMatrix;
@@ -103,58 +117,74 @@ varying vec2 textureCoord;
 varying mat3 tbn;
 
 void main() {
+  //Position of vertex on the screen
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0 );
   vNormal = normal;
 
   //https://learnopengl.com/Advanced-Lighting/Normal-Mapping
   //Create matrix to transform normal to tangent space i.e. transform static normal map data into the underlying triangle frame
-  //The tangent (calculated on the CPU using THREE.BufferGeometryUtils.computeTangents() )
   vec3 T = normalize(vec3(modelMatrix * tangent));
   //The triangle normal
   vec3 N = normalize(vec3(modelMatrix * vec4(normal, 0.0)));
-  //Re-orthogonalize T with respect to N
+  //Re-orthogonalize T with respect to N (for small optional correction)
   T = normalize(T - dot(T, N) * N);
   //The bitangent vector is perpendicular to N and T
   vec3 B = normalize(cross(N, T));
   //Create matrix from three vectors
   tbn = mat3(T, B, N);
 
+  //Position of vertex in the world
   vPosition = vec3(modelMatrix * vec4(position, 1.0));
+  //Position of vertex from the point of view of the light (for shadow testing)
   lightSpaceVPosition = vec4(lightProjectionMatrix * lightViewMatrix * vec4(vPosition, 1.0));
-  //UV for texture
+
+  //UV for texture (passed by Three.js)
   textureCoord = uv;
 }`;
 
 var fragmentSource = `
 precision mediump float;
 
+//Calculated depth map from the point of view of the light
 uniform sampler2D shadowMap;
+//Light uniforms
 uniform float ambientStrength;
 uniform float diffuseStrength;
 uniform float specularStrength;
 uniform float shininess;
 uniform vec3 lightColour;
 uniform vec3 lightPosition;
+
+//Surface uniforms
 uniform vec3 ambientColour;
 uniform vec3 diffuseColour;
 uniform vec3 specularColour;
+
+//Blinn-Phong switch
 uniform bool blinn;
 uniform bool useTexture;
 uniform bool useNormalMap;
 uniform bool environmentMapping;
 uniform bool reflection;
 uniform bool refraction;
+//Blur shadow edges
+uniform bool softShadows;
+//Texture
 uniform sampler2D diffuseMap;
+//Normals
 uniform sampler2D normalMap;
+//Cubemap
 uniform samplerCube environmentMap;
+//Passed by vertex shader
 varying vec3 vNormal;
 varying vec3 vPosition;
 varying vec4 lightSpaceVPosition;
 varying vec2 textureCoord;
 varying mat3 tbn;
 
+//Shadow camera extent
 float near = 1.0; 
-float far = 100.0; 
+float far = 400.0; 
 
 //https://learnopengl.com/Advanced-OpenGL/Depth-testing
 float LinearizeDepth(float depth) {
@@ -163,27 +193,36 @@ float LinearizeDepth(float depth) {
 }
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal){
-    // perform perspective divide
+    //Perform perspective divide
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    // transform to [0,1] range
+    //Transform to [0,1] range
     projCoords = projCoords * 0.5 + 0.5;
-    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    //Get closest depth value from light's perspective (using [0,1] range lightSpaceVPosition as coordinates)
     float closestDepth = texture2D(shadowMap, projCoords.xy).r; 
-    // get depth of current fragment from light's perspective
+    //Get depth of current fragment from light's perspective
     float currentDepth = projCoords.z;
+    //Use bias to remove line artifacts
     float bias = max(0.01 * (1.0 - dot(normal, lightDirection)), 0.005);
-    // check whether current frag pos is in shadow
+    //Check whether current fragment is in shadow
     float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;  
 
-    shadow = 0.0;
-    float texelSize = 1.0 / 2048.0;
-    for(int x = -2; x <= 2; x++){
-      for(int y = -2; y <= 2; y++){
-	float pcfDepth = texture2D(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
-	shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
-      }    
+    if(softShadows){
+      //Soften shadow edges
+      shadow = 0.0;
+      //Shadow texture size is 2048x2048
+      float texelSize = 1.0 / 2048.0;
+      //Average the shadow depth using surrounding fragments
+      for(int x = -2; x <= 2; x++){
+	for(int y = -2; y <= 2; y++){
+	  float pcfDepth = texture2D(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
+	  //Check whether current fragment is in shadow
+	  shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+	}    
+      }
+      //Blurring in a 5x5 square
+      shadow /= 25.0;
     }
-    shadow /= 25.0;
+    //Cut off at the top to make everything outside the shadow camera's view be lit
     if(projCoords.z > 0.95){
       shadow = 0.0;
     }
@@ -192,6 +231,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal
 
 void main() {
 
+  //Texture value at fragment
   vec4 textureColour = texture2D(diffuseMap, textureCoord);
   vec3 normal;
   if(useNormalMap){
@@ -205,22 +245,24 @@ void main() {
   }
 
   vec3 lightDirection = normalize(lightPosition); 
-  //Ambient colour is constant
+  //Colour when not directly lit
   vec3 ambient;
   if(useTexture){
-    ambient = textureColour.xyz * lightColour;
+    ambient = textureColour.xyz;
   }else{
-    ambient = ambientColour * lightColour;
+    ambient = ambientColour;
   }
 
   //How much a fragment faces the light
   float diff = max(dot(normal, lightDirection), 0.0);
+  //Colour when lit by light
   vec3 diffuse;
   if(useTexture){
     diffuse = diff * textureColour.xyz * lightColour;
   }else{
     diffuse = diff * diffuseColour * lightColour;
   }
+
   //How much a fragment directly reflects the light to the camera
   vec3 viewDirection = normalize(cameraPosition - vPosition);
   float spec;
@@ -232,6 +274,7 @@ void main() {
     spec = pow(max(dot(viewDirection, reflectDirection), 0.0), shininess);
   }
 
+  //Colour of light sharply reflected into the camera
   vec3 specular = spec * specularColour * lightColour;  
 
   float shadow = ShadowCalculation(lightSpaceVPosition, lightDirection, normal);
@@ -253,20 +296,24 @@ void main() {
   gl_FragColor = vec4(result, 1.0); 
 }`;
 
-//Visualise light direction as a sphere
+//Visualise the directional light as a sphere
 var light_geometry = new THREE.SphereGeometry( 1, 32, 32 );
 var light_material = new THREE.MeshBasicMaterial({color: 0xffffff });
 var light_mesh = new THREE.Mesh(light_geometry, light_material);
 light_mesh.translateY(150.0);
 scene.add(light_mesh);
 
+//Get images for texture, normal map and skybox
 var loader = new THREE.TextureLoader();
-//allow cross origin loading
 loader.crossOrigin = '';
+//Texture and normal map taken from https://texturehaven.com/
 var texture =  loader.load( 'https://al-ro.github.io/images/pbr/white_plaster_DIFF.jpg' );
 var normals =  loader.load( 'https://al-ro.github.io/images/pbr/white_plaster_NORM.jpg' );
+
+//Create Three.js skybox
 var skyBoxLoader = new THREE.CubeTextureLoader();
 skyBoxLoader.crossOrigin = '';
+//Skybox image taken from https://hdrihaven.com/
 skyBoxLoader.setPath('https://al-ro.github.io/images/pbr/');
 var skyBox = skyBoxLoader.load( [
 		'pos_x.jpg',
@@ -279,6 +326,7 @@ var skyBox = skyBoxLoader.load( [
 //scene.background = skyBox;
 
 //Target where shadows are rendered
+//https://github.com/mrdoob/three.js/blob/master/examples/webgl_depth_texture.html
 var shadowTarget = new THREE.WebGLRenderTarget(2048, 2048);
 shadowTarget.depthBuffer = true;
 shadowTarget.depthTexture = new THREE.DepthTexture();
@@ -304,6 +352,7 @@ var material = new THREE.ShaderMaterial( {
     lightViewMatrix: {value: new THREE.Matrix4()},
     lightProjectionMatrix: {value: new THREE.Matrix4()},
     shadowMap: {value: shadowTarget.depthTexture},
+    softShadows: {value: soft_shadows},
     diffuseMap: { value: texture},
     normalMap: { value: normals},
     environmentMap: {value: skyBox}
@@ -332,6 +381,7 @@ var floor_material = new THREE.ShaderMaterial( {
     lightViewMatrix: {value: new THREE.Matrix4()},
     lightProjectionMatrix: {value: new THREE.Matrix4()},
     shadowMap: {value: shadowTarget.depthTexture},
+    softShadows: {value: soft_shadows},
     diffuseMap: { value: texture},
     normalMap: { value: normals},
     environmentMap: {value: skyBox}
@@ -341,18 +391,17 @@ var floor_material = new THREE.ShaderMaterial( {
 } );
 
 function addGeometry(geo, offset){
-  //Generate vertex indices
   geo.translate(offset.x, offset.y, offset.z);
-  //Generate tangents
+  //Generate tangents for normal mapping
   THREE.BufferGeometryUtils.computeTangents(geo);
   var mesh = new THREE.Mesh(geo, material);
   scene.add(mesh);
 }
 
 //Add a sphere, torus knot and cube
-addGeometry(new THREE.SphereBufferGeometry(15, 20, 20), new THREE.Vector3(-40,15,0));
+addGeometry(new THREE.SphereBufferGeometry(15, 20, 20), new THREE.Vector3(-40,20,0));
 addGeometry(new THREE.TorusKnotBufferGeometry(10, 3, 100, 16), new THREE.Vector3(0,20,0));
-addGeometry(new THREE.BoxBufferGeometry(20, 20, 20), new THREE.Vector3(40,10,0));
+addGeometry(new THREE.BoxBufferGeometry(22, 22, 22), new THREE.Vector3(40,20,0));
 
 var floor_geometry = new THREE.PlaneBufferGeometry(1000,1000,2,2);
 floor_geometry.lookAt(new THREE.Vector3(0,1,0));
@@ -361,14 +410,13 @@ var floor = new THREE.Mesh(floor_geometry, floor_material);
 scene.add(floor);
 
 //Shadow camera and geometry
-//https://github.com/mrdoob/three.js/blob/master/examples/webgl_depth_texture.html
 var shadowCamera = new THREE.OrthographicCamera(-100, 100, 100, -100, 1, 400);
 shadowCamera.position.x = light_mesh.position.x;
 shadowCamera.position.y = light_mesh.position.y;
 shadowCamera.position.z = light_mesh.position.z;
 shadowCamera.lookAt(new THREE.Vector3(0,0,0));
 
-//Shadow camera frustum 
+//Visualise shadow camera frustum 
 var shadowCameraHelper = new THREE.CameraHelper(shadowCamera);
 
 scene.add(shadowCamera);
@@ -401,6 +449,7 @@ gui.add(this, 'environment_map').onChange(function(value){ material.uniforms.env
 gui.add(this, 'reflection').listen().onChange(function(value){reflection = true; refraction = false;  material.uniforms.reflection.value = true; material.uniforms.refraction.value = false;});
 gui.add(this, 'refraction').listen().onChange(function(value){refraction = true; reflection = false;  material.uniforms.refraction.value = true; material.uniforms.reflection.value = false;});
 gui.add(this, 'rotate_light');
+gui.add(this, 'soft_shadows').onChange(function(value){material.uniforms.softShadows.value = value; floor_material.uniforms.softShadows.value = value;});
 gui.add(this, 'shadow_camera');
 gui.close();
 
@@ -414,7 +463,8 @@ function updateShadow(mat){
   mat.uniforms.lightViewMatrix.value = shadowCamera.matrixWorldInverse;
   mat.uniforms.lightProjectionMatrix.value = shadowCamera.projectionMatrix;
 }
-var time = 0;
+
+var centre = new THREE.Vector3(0,0,0);
 //----------DRAW----------//
 function draw(){
 
@@ -431,7 +481,7 @@ function draw(){
   shadowCamera.position.x = light_mesh.position.x;
   shadowCamera.position.y = light_mesh.position.y;
   shadowCamera.position.z = light_mesh.position.z;
-  shadowCamera.lookAt(new THREE.Vector3(0,0,0));
+  shadowCamera.lookAt(centre);
 
   updateShadow(material);
   updateShadow(floor_material);
