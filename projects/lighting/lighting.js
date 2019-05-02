@@ -1,6 +1,6 @@
 //Manual lighting, shadow and surface calculations using Three.js shader material
 //Based on the tutorial series https://learnopengl.com/
-//Texture and normal map taken from https://texturehaven.com/
+//Normal map and edited texture from https://www.sharetextures.com/
 //Skybox image taken from https://hdrihaven.com/
 
 var canvas = document.getElementById("canvas_1");
