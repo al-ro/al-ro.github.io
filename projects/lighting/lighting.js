@@ -60,9 +60,7 @@ var FOV = 2 * Math.atan( window.innerHeight / ( 2 * distance ) ) * 90 / Math.PI;
 //Camera
 var camera = new THREE.PerspectiveCamera(FOV, ratio, 0.1, 20000);
 camera.position.set(0, 40, 100);
-if(mobile){
-  camera.position.set(0, 20, 40);
-}
+
 scene.add(camera);
 
 //OrbitControls.js for camera manipulation
