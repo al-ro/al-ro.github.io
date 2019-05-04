@@ -12,7 +12,7 @@ const mobile = ( navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/iPod/i)
     || navigator.userAgent.match(/BlackBerry/i)
     || navigator.userAgent.match(/Windows Phone/i)
-    );
+);
 
 //Lighting variables
 var ambient_strength = 0.3;
@@ -46,6 +46,9 @@ var h = w/ratio;
 //Initialise three.js
 var scene = new THREE.Scene();
 
+//Specified when doing depth rendering to avoid feedback and other errors. Thanks to Mugen87 for the solution.
+var overrideMaterial = new THREE.MeshBasicMaterial();
+
 var renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize(w,h,false);
@@ -70,12 +73,6 @@ controls.minDistance = 10;
 controls.maxPolarAngle = Math.PI/2;
 controls.update();
 
-const stats = new Stats();
-stats.showPanel(0);
-stats.domElement.style.position = 'relative';
-stats.domElement.style.bottom = '48px';
-document.getElementById('cc_1').appendChild(stats.domElement);
-
 //----------SHADOWS----------//
 
 //https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping
@@ -86,7 +83,7 @@ varying vec2 texCoord;
 void main() {
   texCoord = uv;
   //Place the quad at the lower right corner of the screen
-  gl_Position = vec4(position.x*0.25+0.75, position.y*0.25-0.75, 0.0, 1.0 );
+  gl_Position = vec4(position.x*0.2+0.8, position.y*0.25-0.75, 0.0, 1.0 );
 }
 `;
 
@@ -348,6 +345,11 @@ var skyBox = skyBoxLoader.load( [
 var shadowTarget = new THREE.WebGLRenderTarget(textureSize, textureSize);
 shadowTarget.depthBuffer = true;
 shadowTarget.depthTexture = new THREE.DepthTexture();
+shadowTarget.texture.format = THREE.RGBFormat;
+shadowTarget.texture.minFilter = THREE.NearestFilter;
+shadowTarget.texture.magFilter = THREE.NearestFilter;
+shadowTarget.texture.generateMipmaps = false;
+shadowTarget.stencilBuffer = false;
 
 //Define the material, specifying attributes, uniforms, shaders etc.
 var material = new THREE.ShaderMaterial( {
@@ -420,10 +422,12 @@ function addGeometry(geo, offset){
   scene.add(mesh);
 }
 
-//Add a sphere, torus knot and cube
-addGeometry(new THREE.SphereBufferGeometry(15, 20, 20), new THREE.Vector3(-40,20,0));
+//Add a torus knot, sphere and cube
 addGeometry(new THREE.TorusKnotBufferGeometry(10, 3, 100, 16), new THREE.Vector3(0,20,0));
-addGeometry(new THREE.BoxBufferGeometry(22, 22, 22), new THREE.Vector3(40,20,0));
+if(!mobile){
+  addGeometry(new THREE.SphereBufferGeometry(15, 20, 20), new THREE.Vector3(-40,20,0));
+  addGeometry(new THREE.BoxBufferGeometry(22, 22, 22), new THREE.Vector3(40,20,0));
+}
 
 var floor_geometry = new THREE.PlaneBufferGeometry(1000,1000,2,2);
 floor_geometry.lookAt(new THREE.Vector3(0,1,0));
@@ -454,7 +458,6 @@ var shadowMaterial = new THREE.ShaderMaterial( {
 //Visuals for shadow depth image
 var shadowPlane = new THREE.PlaneBufferGeometry(2, 2);
 var shadowBuffer = new THREE.Mesh( shadowPlane, shadowMaterial);
-
 
 //Dat.gui library controls
 var gui = new dat.GUI({ autoPlace: false });
@@ -490,7 +493,6 @@ function updateShadow(mat){
 //----------DRAW----------//
 function draw(){
 
-  stats.begin();
   if(rotate_light){
     time += 1/160;
     light_mesh.position.x=(205*Math.cos(time));
@@ -512,14 +514,18 @@ function draw(){
 
   //Render depth values from light to shadow texture
   renderer.setRenderTarget(shadowTarget);
+  //Set override material to use when rendering
+  scene.overrideMaterial = overrideMaterial;
   renderer.render(scene, shadowCamera);
+  //Unset to use our material
+  scene.overrideMaterial = null;
 
-  //Render whole scene
   if(shadow_camera){
     scene.add(shadowBuffer);
     scene.add(shadowCameraHelper);
   }
 
+  //Render whole scene
   renderer.setRenderTarget(null);
   renderer.render(scene, camera);
 
@@ -527,8 +533,8 @@ function draw(){
     scene.remove(shadowBuffer);
     scene.remove(shadowCameraHelper);
   }
-  stats.end();
+
   requestAnimationFrame(draw);
 }
 
-requestAnimationFrame(draw);
+draw();
