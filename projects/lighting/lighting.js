@@ -74,7 +74,7 @@ controls.update();
 //----------SHADOWS----------//
 
 //https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping
-//Used to calculate shadows and optionally display the depth map
+//Used to display the depth map
 var shadowVertexSource = `
 varying vec3 vPosition;
 varying vec2 texCoord;
@@ -216,7 +216,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDirection, vec3 normal
     if(softShadows){
       //Soften shadow edges
       shadow = 0.0;
-      //Shadow texture size is 2048x2048
+      //Shadow texture size is textureSize*textureSize
       float texelSize = 1.0 / float(`+ textureSize+`);
       //Average the shadow depth using surrounding fragments
       for(int x = -2; x <= 2; x++){
@@ -328,14 +328,14 @@ var skyBoxLoader = new THREE.CubeTextureLoader();
 skyBoxLoader.crossOrigin = '';
 //Skybox image taken from https://hdrihaven.com/
 skyBoxLoader.setPath('https://al-ro.github.io/images/lighting/');
-var skyBox = skyBoxLoader.load( [
-		'pos_x.jpg',
-		'neg_x.jpg',
-		'pos_y.jpg',
-		'neg_y.jpg',
-		'pos_z.jpg',
-		'neg_z.jpg'
-	] );
+var skyBox = skyBoxLoader.load([
+  'pos_x.jpg',
+  'neg_x.jpg',
+  'pos_y.jpg',
+  'neg_y.jpg',
+  'pos_z.jpg',
+  'neg_z.jpg'
+]);
 //scene.background = skyBox;
 
 //Target where shadows are rendered
