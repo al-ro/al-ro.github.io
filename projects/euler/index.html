@@ -51,75 +51,107 @@
         </div>
       </div>
       
-      <p>As part of my degree I researched speeding up fluid simulations on graphics hardware. The focus was on reducing the runtimes of CFD simulations with embedded cut cell geometries using the CUDA programming platform. The resulting software pipeline uses the Euler equations to model high speed flow and shock waves in domains with static rigid obstacles. These scenarios are applicable to anything from automotive and aerospace research to insurance assessment and mining safety.</p>
+      <p>As part of my degree I researched speeding up fluid simulations on graphics hardware. The focus was on reducing the runtimes of CFD simulations with embedded cut cell geometries using the CUDA programming platform. The resulting software pipeline uses the Euler equations to model high speed flow and shock waves in domains with static rigid obstacles. These scenarios are applicable to anything from automotive and aerospace research to insurance assessment and mining safety. As the memory on a GPU is relatively limited, we also looked at the performance and scaling of multi-card scenarios using MPI for high resolution simulations.</p>
 
-      <p>The software uses a dimensionally-split sweeping algorithm to find the propagation of information in each direction of a regular Cartesian domain. The produced code has been validated against several exact and experimental results to show the correctness and accuracy of the software package. We can robustly handle near vacuum scenarios, capture shock diffraction and reflection and high speed vortices.</p>
+<p>At the core of the simulation implementation is a split Euler solver for high-speed flow. We use a one-dimensional method that achieves coalesced memory access and uses shared memory caching to best harness the potential of GPU hardware. Multidimensional simulations use a framework of data transposes to align data with sweep dimensions to maintain optimal memory access. Analysis of the solver shows that compute resources are used efficiently.</p>
 
-      <p>As the memory on a GPU is relatively limited, we also looked at the performance and scaling of multi-card scenarios using MPI for high resolution simulations.</p>
+<p>The solver was extended to include cut cells describing solid boundaries in the domain with a compression and mapping method to reduce the memory footprint of the surface information. The cut cell solver was validated with different flow regimes and we simulate shock wave interaction with complex geometries to demonstrate the stability of the implementation. Finally, we included a system of domain splitting and message passing with overlapping compute and communication streams. The complete software pipeline demonstrates good scaling for up to thirty-two cards on a GPU cluster.</p>
 
-      <h5>Some Results</h5>
+      <h5>Validation</h5>
+
+      <p>The produced code has been validated against several exact and experimental results to show the correctness and accuracy of the software package. We can robustly handle near vacuum scenarios, capture shock diffraction and reflection in high speed flow as well as model stable steady state at lower speeds.</p>
+
+      <!-- NACA
+      –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+      <p>To validate the 2D cut cell code, a subsonic flow around an aerofoil was simulated. Once the simulation has run to steady state and all strong waves have dissipated, the pressure coefficient values along the surface of the aerofoil can be compared against experimental readings.</p> 
       <div class="row">
         <div class="six columns ">
-          <img class="img u-max-full-width" src="../../images/euler/brittle_1_200.jpg">
-          <p align = 'center'>Numerical Schlieren of detonation after 200 timesteps</p>
+          <img class="img u-max-full-width" src="../../images/euler/pressure.jpg">
+          <p align = 'center'>Pressure pseudocolour at steady state</p>
         </div>
         <div class="six columns ">
-          <img class="img u-max-full-width" src="../../images/euler/brittle_1_500.jpg">
-          <p align = 'center'>Numerical Schlieren of detonation after 500 timesteps</p>
+          <img class="img u-max-full-width" src="../../images/euler/pressure_coefficient.jpg">
+          <p align = 'center'>Pressure coefficient rtesults</p>
+        </div>
+      </div>  
+
+      <p>Results of a Mach 0.4 ideal gas flow over a NACA 0012 aerofoil at t = 0.015 s with experimental and simulation pressure coefficients Cp at x-coordinates along the chord length c of the aerofoil.</p>
+
+
+      <!-- Brittle
+      –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+      <p>For 3D validation, we used the Brittle scenario which models a detonation in an irregular street layout. The resulting propagation and reflection of shock waves serves as a validation test for both the robustness and accuracy of the simulation when compared to sensor readings from physical experiments.</p>
+     
+      <div class="row">
+	<div class="eight columns offset-by-two columns ">
+	  <img class="img u-max-full-width" src="../../images/euler/brittle_geometry.jpg">
+          <p align = 'center'>The geometry layout of the Brittle test case</p>
+	</div>
+      </div>
+
+      <div class="row">
+        <div class="six columns ">
+          <img class="img u-max-full-width" src="../../images/euler/brittle_steps_200.jpg">
+          <p align = 'center'>Numerical Schlieren slice of detonation after 200 timesteps</p>
+        </div>
+        <div class="six columns ">
+          <img class="img u-max-full-width" src="../../images/euler/brittle_steps_400.jpg">
+          <p align = 'center'>400 timesteps</p>
         </div>
       </div>
       <div class="row">
         <div class="six columns ">
-          <img class="img u-max-full-width" src="../../images/euler/brittle_1_1000.jpg">
-          <p align = 'center'>Numerical Schlieren of detonation after 1000 timesteps</p>
+          <img class="img u-max-full-width" src="../../images/euler/brittle_steps_800.jpg">
+          <p align = 'center'>800 timesteps</p>
         </div>
         <div class="six columns ">
-          <img class="img u-max-full-width" src="../../images/euler/brittle_1_1500.jpg">
-          <p align = 'center'>Numerical Schlieren of detonation after 1500 timesteps</p>
+          <img class="img u-max-full-width" src="../../images/euler/brittle_steps_1200.jpg">
+          <p align = 'center'>1200 timesteps</p>
         </div>
       </div>  
 
       <div class="row">
-        <div class="six columns ">
-          <img class="img u-max-full-width" src="../../images/euler/schardin_2_exp.jpg">
-          <p align = 'center'>Experimental shadowgraph</p>
-        </div>
-        <div class="six columns ">
-          <img class="img u-max-full-width" src="../../images/euler/schardin_2_cuda.jpg">
-          <p align = 'center'>CUDA implementation</p>
-        </div>
-      </div>  
+	<div class="eight columns offset-by-two columns ">
+	  <img class="img u-max-full-width" src="../../images/euler/gauges.jpg">
+	</div>
+      </div>
+
+      <p>Overpressure readings of several simulations spanning multiple card counts compared to experimental results. The measuring point is obscured from the charge location and shock waves pass over and around buildings resulting in reflections and channelling, serving as a good test for the software.</p>
+
+    <!-- Underside
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+      <p>The stability of the methods and the robustness of the software was tested with shock waves within complex geometries where both pressure peaks and near-vacuum conditions can occur.</p>
+      <div class="row">
+	<div class="eight columns offset-by-two columns ">
+	  <img class="img u-max-full-width" src="../../images/euler/underside.jpg">
+	</div>
+      </div>
+      <p>Mach 2.0 shock reflected from the DrivAer geometry. The produced software can robustly handle high pressure at various surface features such as concavities and thin solid area</p>
+
+      <h5>Performance</h5>
+      <p>The software aims to minimise the proportion of time spent on communication. In a multi-card simulation, halo exchange is required to find the information propagation across local subdomain boundaries. CUDA allows for communication and compute to occur simultaneously between a device and host. Additional parallelism can be achieved by overlapping kernel execution with MPI communication between nodes. To achieve this, every local subdomain is divided into three regions: the core cells and the communication cells. The core cells can be solved independently from MPI communication of the ghost region data and we mask most message latency.</p>
       <div class="row">
         <div class="six columns ">
-          <img class="img u-max-full-width" src="../../images/euler/schardin_tip_exp.jpg">
-          <p align = 'center'>Numerical density contours</p>
+          <img class="img u-max-full-width" src="../../images/euler/regions.jpg">
+          <p align = 'center'>Regions of a local subdomain</p>
         </div>
         <div class="six columns ">
-          <img class="img u-max-full-width" src="../../images/euler/schardin_tip_cuda.jpg">
-          <p align = 'center'>CUDA implementation</p>
+          <img class="img u-max-full-width" src="../../images/euler/pie.jpg">
+	  <p align = 'center'>Accumulated exclusive time per function group</p>
         </div>
       </div>  
+      <p>The pie chart shows the proportion of different function types across the whole simulation on four P100 cards. The Kernels portion is the solver code which dominates the runtime. The CUDA section is for memory copies to and from cards and the MPI portion is communication and synchronisation.</p>
+
+      <p>The scaling of the code was tested with fixed resolution bubble collapse and Brittle simulations. The clear solver scales excellently for all card counts, demonstrating the efficiency of masking communication time with domain splitting and overlapped solvers. The cut cell simulation scales worse due to a more time-consuming solver and an increased message size, but is comparable to the clear solver for up to eight nodes.</p>
       <div class="row">
-        <div class="six columns ">
-          <img class="img u-max-full-width" src="../../images/euler/cylinder_exp.jpg">
-          <p align = 'center'>Experimental shadowgraph</p>
-        </div>
-        <div class="six columns ">
-          <img class="img u-max-full-width" src="../../images/euler/cylinder_cuda.jpg">
-          <p align = 'center'>CUDA implementation</p>
-        </div>
-      </div>  
-      <div class="row">
-        <div class="six columns ">
-          <img class="img u-max-full-width" src="../../images/euler/cone_exp.jpg">
-          <p align = 'center'>Experimental shadowgraph</p>
-        </div>
-        <div class="six columns ">
-          <img class="img u-max-full-width" src="../../images/euler/cone_cuda.jpg">
-          <p align = 'center'>CUDA implementation</p>
-        </div>
-      </div>  
-      </section>
+	<div class="eight columns offset-by-two columns ">
+	  <img class="img u-max-full-width" src="../../images/euler/scaling.jpg">
+	  <p align='center'>Scaling of 3D bubble collapse (425 &times; 425 &times; 850) and Brittle (640 &times; 640 &times; 320) simulations.</p>
+	</div>
+      </div>
+
+    </section>
     </div>
     <!-- End Document
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
