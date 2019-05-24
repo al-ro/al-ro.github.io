@@ -526,69 +526,76 @@ for(i = 0; i < 2; i++){
 
 var iterations = 0;
 
+function isVisible(obj){
+  var clientRect = obj.getBoundingClientRect();
+  return (clientRect.y > -clientRect.height/2) && (clientRect.y < clientRect.height/2);
+}
+
 function step(){
 
-  //Unbind any textures
-  gl.bindTexture(gl.TEXTURE_2D, null);
-  gl.activeTexture(gl.TEXTURE0);
+  if(isVisible(canvas)){
+    //Unbind any textures
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.activeTexture(gl.TEXTURE0);
 
-  if(toggle_render || (iterations == 0)){
-    //Update time
-    time -= dt;
+    if(toggle_render || (iterations == 0)){
+      //Update time
+      time -= dt;
 
-    //Draw flames
-    gl.useProgram(flame_program);
-    //Send time to program
-    gl.uniform1f(timeHandle, time);
-    gl.uniform1i(typeHandle, type);
-    //Render to texture
-    gl.bindFramebuffer(gl.FRAMEBUFFER, flameFramebuffer);
-    //Draw a triangle strip connecting vertices 0-4
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-    //Bright pass filter to select only light pixels
-    gl.useProgram(bright_program);
-    gl.uniform1f(bloomHandle, bloom);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[0]);
-    gl.bindTexture(gl.TEXTURE_2D, flameTexture);
-    //Draw a triangle strip connecting vertices 0-4
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-    //Blur the result of the bright filter
-    for(i = 1; i < blurCount; i++){
-      gl.useProgram(x_blur_program);
-      gl.uniform1f(widthHandle, WIDTH/(i * blurFactor));
-      gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[1]);
-      gl.bindTexture(gl.TEXTURE_2D, blurTexture[0]);
+      //Draw flames
+      gl.useProgram(flame_program);
+      //Send time to program
+      gl.uniform1f(timeHandle, time);
+      gl.uniform1i(typeHandle, type);
+      //Render to texture
+      gl.bindFramebuffer(gl.FRAMEBUFFER, flameFramebuffer);
       //Draw a triangle strip connecting vertices 0-4
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-      gl.useProgram(y_blur_program);
-      gl.uniform1f(heightHandle, HEIGHT/(i * blurFactor));
+      //Bright pass filter to select only light pixels
+      gl.useProgram(bright_program);
+      gl.uniform1f(bloomHandle, bloom);
       gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[0]);
-      gl.bindTexture(gl.TEXTURE_2D, blurTexture[1]);
+      gl.bindTexture(gl.TEXTURE_2D, flameTexture);
+      //Draw a triangle strip connecting vertices 0-4
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      //Blur the result of the bright filter
+      for(i = 1; i < blurCount; i++){
+	gl.useProgram(x_blur_program);
+	gl.uniform1f(widthHandle, WIDTH/(i * blurFactor));
+	gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[1]);
+	gl.bindTexture(gl.TEXTURE_2D, blurTexture[0]);
+	//Draw a triangle strip connecting vertices 0-4
+	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+	gl.useProgram(y_blur_program);
+	gl.uniform1f(heightHandle, HEIGHT/(i * blurFactor));
+	gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[0]);
+	gl.bindTexture(gl.TEXTURE_2D, blurTexture[1]);
+	//Draw a triangle strip connecting vertices 0-4
+	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      }
+
+      //Combine original and blurred image 
+      gl.useProgram(combine_program);
+
+      //Draw to canvas
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+      gl.uniform1i(srcLocation, 0);  // texture unit 0
+      gl.uniform1i(blurLocation, 1);  // texture unit 1
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, flameTexture);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, blurTexture[0]);
+
       //Draw a triangle strip connecting vertices 0-4
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 
-    //Combine original and blurred image 
-    gl.useProgram(combine_program);
-
-    //Draw to canvas
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-    gl.uniform1i(srcLocation, 0);  // texture unit 0
-    gl.uniform1i(blurLocation, 1);  // texture unit 1
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, flameTexture);
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, blurTexture[0]);
-
-    //Draw a triangle strip connecting vertices 0-4
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    iterations = 1;
   }
-
-  iterations = 1;
   requestAnimationFrame(step);
 }
 
