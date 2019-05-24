@@ -8,7 +8,20 @@
 //https://www.youtube.com/watch?v=PGtv-dBi2wE
 //https://www.youtube.com/playlist?list=PL3POsQzaCw53iK_EhOYR39h1J9Lvg-m-g
 
+const mobile = ( navigator.userAgent.match(/Android/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+);
+
 var canvas = document.getElementById("canvas_1");
+
+if(mobile){
+  canvas.width = 360;
+  canvas.height = 225;
+}
 
 // Initialize the GL context
 var gl = canvas.getContext('webgl');
