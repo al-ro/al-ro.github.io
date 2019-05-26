@@ -1,6 +1,6 @@
-//Learning ray marching
+//Ray marching
 //Features: domain manipulation, sdf operations, floor plane, Phong shading, soft shadows, 
-//	    ambient occlusion, reflection
+//	    ambient occlusion, reflection, smooth union, material, colour interpolation
 
 //Based on 
 //http://jamie-wong.com/2016/07/15/ray-marching-signed-distance-functions/
