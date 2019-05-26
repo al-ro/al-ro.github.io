@@ -33,12 +33,33 @@ if(!gl){
 var dt = 0.02;
 //Time
 var time = 0.0;
+var smoothness = 0.5;
 
 const stats = new Stats();
 stats.showPanel(0);
 stats.domElement.style.position = 'relative';
 stats.domElement.style.bottom = '48px';
 document.getElementById('cc_1').appendChild(stats.domElement);
+
+//****************** GUI *********************
+var armillary_button = { solid_surface:function(){
+  scene = 0;
+  gl.uniform1i(sceneHandle, scene);
+}};
+var blob_button = { smooth_union:function(){
+  scene = 1;
+  gl.uniform1i(sceneHandle, scene);
+}};
+
+
+var gui = new dat.GUI({ autoPlace: false });
+var customContainer = document.getElementById('gui_container');
+customContainer.appendChild(gui.domElement);
+gui.add(armillary_button, 'solid_surface');
+gui.add(blob_button, 'smooth_union');
+gui.add(this, 'smoothness').min(0.0).max(1.0).step(0.05).onChange(function(value){gl.uniform1f(smoothnessHandle, smoothness)});
+gui.add(this, 'dt').min(0.0).max(0.1).step(0.005).listen();
+gui.close();
 
 //************** Shader sources **************
 
@@ -57,6 +78,8 @@ uniform float height;
 vec2 resolution = vec2(width, height);
 
 uniform float time;
+uniform int scene;
+uniform float k;
 
 const int MAX_STEPS = 100;
 const float MIN_DIST = 0.0;
@@ -85,6 +108,7 @@ struct Light{
 
 vec4 getColour(vec3 cameraPos, vec3 rayDir, float dist);
 
+Material sphere_material = Material(vec3(0.9, 0.9, 0.9), vec3(1.0, 1.0, 1.0), vec3(1.0), 0.8, 1.0, 128.0, 1.0);
 Material ring_material = Material(vec3(0.9, 0.6, 0.0), vec3(1.0, 0.7, 0.2), vec3(1.0), 0.4, 0.9, 128.0, 1.0);
 Material floor_material = Material(vec3(0.8), vec3(1.0), vec3(1.0), 0.6, 0.7, 128.0, 0.0);
 
@@ -96,19 +120,16 @@ vec3 rotate(vec3 p, vec4 q){
 
 vec3 rotate_xyz(vec3 p, float angle){
   vec3 position = p;
-  position = rotate(position, vec4(sin(angle/2.0), 0.0, 0.0, cos(angle/2.0)));
-  position = rotate(position, vec4(0.0, sin(angle/2.0), 0.0, cos(angle/2.0)));
-  position = rotate(position, vec4(0.0, 0.0, sin(angle), cos(angle)));
+  float sa = sin(angle*0.5);
+  float ca = cos(angle*0.5);
+  position = rotate(position, vec4(sa, 0.0, 0.0, ca));
+  position = rotate(position, vec4(0.0, sa, 0.0, ca));
+  sa = sin(angle);
+  ca = cos(angle);
+  position = rotate(position, vec4(0.0, 0.0, sa, ca));
   return position;
 }
 
-vec3 rotate_zyx(vec3 p, float angle){
-  vec3 position = p;
-  position = rotate(position, vec4(0.0, 0.0, sin(angle), cos(angle)));
-  position = rotate(position, vec4(0.0, sin(angle/2.0), 0.0, cos(angle/2.0)));
-  position = rotate(position, vec4(sin(angle/2.0), 0.0, 0.0, cos(angle/2.0)));
-  return position;
-}
 
 
 float sphereSDF(vec3 p, float radius) {
@@ -119,9 +140,27 @@ float torusSDF(vec3 p, float smallRadius, float largeRadius) {
   return length(vec2(length(p.xz) - largeRadius, p.y)) - smallRadius;
 }
 
-float getSDF(vec3 position) {
+void setColour(const int c_id, float weight){
+  vec3 c;
+  if(c_id == 0){
+    c = vec3(1.0, 0.0, 0.0);
+  }else if (c_id == 1){
+    c = vec3(0.0, 1.0, 1.0);
+  }else if (c_id == 2){
+    c = vec3(1.0, 0.0, 1.0);
+  }else if (c_id == 3){
+    c = vec3(1.0, 1.0, 0.0);
+  }
+
+  vec3 col = mix(sphere_material.diffuseColour, c, weight);
+  sphere_material.ambientColour = 0.8*col;
+  sphere_material.diffuseColour = col;
+}
+
+float armillaryScene(vec3 position){
   //Lift object above XZ plane
   position.y -= 1.5;
+  vec3 pos = position;
 
   //Cut a ring out of a torus using a sphere, and rotate
   float angle = 0.4*2.0*time;
@@ -133,7 +172,7 @@ float getSDF(vec3 position) {
 
   //Middle
   //Undo centre rotation
-  position = rotate_zyx(position, -angle);
+  position = pos;
 
   angle = 0.4*time + 0.2;
   position = rotate_xyz(position, angle);
@@ -142,12 +181,70 @@ float getSDF(vec3 position) {
 
   //Outer
   //Undo middle rotation
-  position = rotate_zyx(position, -angle);
+  position = pos;
   angle = 0.4*-time;
   position = rotate_xyz(position, angle);
   radius = 1.4;
   dist =  min(max(sphereSDF(position, radius), torusSDF(position, 0.1, radius)), dist);;
   return dist;
+}
+//https://www.iquilezles.org/www/articles/smin/smin.htm
+float smoothMin(float a, float b, float k, const int c_id){
+    float h = clamp(0.5+0.5*(b-a)/k, 0.0, 1.0 );
+    setColour(c_id,h);
+    return mix( b, a, h ) - k*h*(1.0-h);
+}
+
+float blobScene(vec3 position) {
+    position.y -= 1.5 + sin(3.0*time) * 0.1;
+    float t = time*0.6;
+    float angle = PI*0.5;
+    float sa = sin(angle*0.5);
+    float ca = sin(angle*0.5);
+    vec3 axis = normalize(vec3(0.0, 1.0, 0.0));
+    position = rotate(position, vec4(axis * sa, ca)); 
+    vec3 pos = position;
+    float radius = 0.2;
+    float dist = sphereSDF(position, radius);
+    
+    position = pos;
+    radius = 0.25; 
+    axis = normalize(vec3(-1));
+    position = rotate(position, vec4(axis * sa, ca)); 
+   
+    position.x -= sin(5.0*t)*0.6;
+    position.z -= cos(5.0*t)*0.6;
+    dist = smoothMin(sphereSDF(position, radius), dist, k, 0);
+
+    position = pos;
+    axis = normalize(vec3(1.0,0.0,1.0));
+    position = rotate(position, vec4(axis * sa, ca)); 
+    position.x -= sin(2.0*t)*0.6;
+    position.z -= cos(4.0*t)*0.6;
+    dist = smoothMin(sphereSDF(position, radius), dist, k, 1);
+
+    position = pos;
+    axis = normalize(vec3(0.0, 1.0, 1.0));
+    position = rotate(position, vec4(axis * sa, ca)); 
+    position.x += sin(3.0*t)*0.6;
+    position.z += cos(1.0*t)*0.6;
+    dist = smoothMin(sphereSDF(position, radius), dist, k, 2);
+
+    position = pos;
+    axis = normalize(vec3(1.0, 1.0, 0.0));
+    position = rotate(position, vec4(axis * sa, ca)); 
+    position.x += sin(7.0*t)*0.6;
+    position.z += cos(3.0*t)*0.6;
+    dist = smoothMin(sphereSDF(position, radius), dist, k, 3);
+    return dist;
+}
+
+float getSDF(vec3 position){
+  if(scene == 0){
+    return armillaryScene(position);
+  }else{
+    return blobScene(position);
+  }
 }
 
 vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
@@ -181,7 +278,7 @@ float softShadow(vec3 pos, vec3 rayDir, float start, float end, float k ){
   float depth = start;
   for(int counter = 0; counter < (MAX_STEPS); counter++){
     float dist = getSDF(pos + rayDir * depth);
-    if( abs(dist) < 100.0*EPSILON){ return 0.0; }       
+    if( abs(dist) < 2.0*EPSILON){ return 0.0; }       
     if( depth > end){ break; }
     res = min(res, k*dist/depth);
     depth += dist;
@@ -293,7 +390,7 @@ vec3 phongShading(vec3 position, vec3 normal, vec3 cameraPosition,
   float attenuation = 1.0 / (1.0 + light.attn_linear * distToLight + 
       light.attn_quad * (distToLight * distToLight)); 
   //Path to light blocked     
-  float shadow = softShadow(position + normal * EPSILON * 128.0, lightDirection, MIN_DIST,
+  float shadow = softShadow(position + normal * EPSILON * 8.0, lightDirection, MIN_DIST,
       distToLight, shadow_sharpness);
   //Get ambient occlusion
   float ao = ambientOcclusion(position, normal);
@@ -309,7 +406,11 @@ Material getMaterial(int id){
   if(id == 0){
     return floor_material;
   }else{
-    return ring_material;
+    if(scene == 0){
+      return ring_material;
+    }else{
+      return sphere_material;
+    }
   }
 }
 
@@ -480,9 +581,12 @@ gl.vertexAttribPointer(positionHandle,
 var timeHandle = getUniformLocation(program, 'time');
 var widthHandle = getUniformLocation(program, 'width');
 var heightHandle = getUniformLocation(program, 'height');
+var sceneHandle = getUniformLocation(program, 'scene');
+var smoothnessHandle = getUniformLocation(program, 'k');
 
 gl.uniform1f(widthHandle, canvas.width);
 gl.uniform1f(heightHandle, canvas.height);
+gl.uniform1f(smoothnessHandle, smoothness);
 
 function draw(){
   stats.begin();
@@ -495,7 +599,9 @@ function draw(){
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
   stats.end();
-  requestAnimationFrame(draw);
+  if(!mobile){
+    requestAnimationFrame(draw);
+  }
 }
 
 draw();
