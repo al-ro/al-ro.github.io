@@ -33,7 +33,7 @@ if(!gl){
 var dt = 0.02;
 //Time
 var time = 0.0;
-var smoothness = 0.5;
+var smoothness = 0.7;
 
 const stats = new Stats();
 stats.showPanel(0);
