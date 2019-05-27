@@ -53,6 +53,8 @@
       </ul>
       </section>
       <section class="post">
+      <h5>Overview</h5>
+      <p>Ray marching with distance fields can be used to generate <a href='https://iquilezles.org/www/articles/raymarchingdf/raymarchingdf.htm'>impressive graphics</a>. This project is similar to the <a href='https://al-ro.github.io/projects/flame/'>flame shader</a> and is written using WebGL and GLSL. The scene is rendered using just four vertices which make up two triangles covering the canvas and all work is done in a fragment shader. The embedded geometry is defined by the union and intersection of the signed distance functions of primitive shapes. At each point in space, this global function can be queried to know how far the closest point to the objects is. For each pixel, a ray is cast in the camera view direction and marched forward by the distance field values at their endpoints until they arrive at a surface or reach a maximum distance. By recording where a ray comes to a stop, we determine surface colour, lighting, reflections, shadows and ambient occlusion. The armillary rings are constructed from the intersection of a sphere and a torus. The blob geometry demonstrates a smooth union operator applied to the distance fields and colours of multiple spheres.</p>
       </section>
     </div>
     <!-- End Document
