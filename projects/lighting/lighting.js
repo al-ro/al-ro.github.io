@@ -71,7 +71,7 @@ controls.minDistance = 10;
 controls.maxPolarAngle = Math.PI/2;
 controls.update();
 
-//----------SHADOWS----------//
+//************** Shadows **************
 
 //https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping
 //Used to display the depth map
@@ -106,7 +106,8 @@ void main(){
 }  
 `;
 
-//----------LIGHTING----------//
+//************** Lighting **************
+
 var vertexSource = `
 precision mediump float;
 
@@ -488,7 +489,7 @@ function updateShadow(mat){
   mat.uniforms.lightProjectionMatrix.value = shadowCamera.projectionMatrix;
 }
 
-//----------DRAW----------//
+//************** Draw **************
 function draw(){
 
   if(rotate_light){

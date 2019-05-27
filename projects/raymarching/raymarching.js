@@ -39,7 +39,9 @@ const stats = new Stats();
 stats.showPanel(0);
 stats.domElement.style.position = 'relative';
 stats.domElement.style.bottom = '48px';
-document.getElementById('cc_1').appendChild(stats.domElement);
+if(!mobile){
+  document.getElementById('cc_1').appendChild(stats.domElement);
+}
 
 //****************** GUI *********************
 var armillary_button = { solid_surface:function(){
@@ -51,10 +53,11 @@ var blob_button = { smooth_union:function(){
   gl.uniform1i(sceneHandle, scene);
 }};
 
-
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
-customContainer.appendChild(gui.domElement);
+if(!mobile){
+  customContainer.appendChild(gui.domElement);
+}
 gui.add(armillary_button, 'solid_surface');
 gui.add(blob_button, 'smooth_union');
 gui.add(this, 'smoothness').min(0.0).max(1.0).step(0.05).onChange(function(value){gl.uniform1f(smoothnessHandle, smoothness)});
@@ -588,6 +591,7 @@ gl.uniform1f(widthHandle, canvas.width);
 gl.uniform1f(heightHandle, canvas.height);
 gl.uniform1f(smoothnessHandle, smoothness);
 
+//************** Draw **************
 function draw(){
   stats.begin();
   //Update time
@@ -604,4 +608,9 @@ function draw(){
   }
 }
 
-draw();
+//Don't run if on mobile
+if(!mobile){
+  draw();
+}else{
+  alert("Due to prohibitively low FPS this project is not available on mobile");
+}
