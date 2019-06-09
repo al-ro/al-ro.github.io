@@ -12,10 +12,9 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 var scene = new THREE.Scene();
 
 var width = 400;
-var resolution = 64;
+var resolution = 128;
 var radius = 210;
 var repeat = 8;
-var dt = 0.1;
 var treeCount = 64;
 var trees = [];
 
@@ -63,7 +62,6 @@ var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
 gui.add(this, 'radius').min(10).max(400).step(5);
 gui.add(this, 'repeat').min(1).max(400).step(1);
-gui.add(this, 'dt').min(0).max(1).step(0.01);
 
 //Use noise.js library to generate a grid of 2D simplex noise values
 noise.seed(Math.random());
@@ -109,125 +107,80 @@ scene.add(ground);
 
 
 //************** Trees **************
-//var tree_geometry = new THREE.ConeGeometry(0.5, 64, 8);
-//tree_geometry.translate(0,32,0);
+var tree_geometry = new THREE.ConeGeometry(1, 64, 8);
+tree_geometry.translate(0,32,0);
 var bark_texture =  loader.load( 'https://al-ro.github.io/images/planet/ulrick-wery-soil.jpg' );
 bark_texture.wrapS = THREE.RepeatWrapping;
 bark_texture.wrapT = THREE.RepeatWrapping;
 bark_texture.offset.set(Math.random(), Math.random());
 bark_texture.repeat.set(4, 4);
-var tree_material = new THREE.MeshLambertMaterial( {color: 0xdddddd, map: bark_texture} );
-
-var foliage_texture =  loader.load( 'https://al-ro.github.io/images/planet/ulrick-wery-grass2.jpg' );
-//foliage_texture.wrapS = THREE.RepeatWrapping;
-//foliage_texture.wrapT = THREE.RepeatWrapping;
-//foliage_texture.offset.set(Math.random(), Math.random());
-//foliage_texture.repeat.set(4, 4);
-var foliage_material = new THREE.MeshLambertMaterial( {color: 0xdddddd, map: foliage_texture, side: THREE.DoubleSide});
+var tree_material = new THREE.MeshBasicMaterial( {color: 0xdddddd, map: bark_texture} );
 
 for(i = 0; i < treeCount; i++){
-  var tree = new THREE.Group();
-  var tree_geometry = new THREE.ConeGeometry(1, 40, 8);
-  tree_geometry.translate(0,20,0);
   var t = new THREE.Mesh(tree_geometry, tree_material);
-  var scale = 1.0 - Math.random() * 0.3;
-
-  t.geometry.scale(scale,scale,scale);
+  t.geometry.scale(2.0);
   t.position.x = width/2-Math.random() * width;
   t.position.z = width/2-Math.random() * width;
-
-  tree.add(t);
-
-  var foliage_geometry = new THREE.ConeGeometry(3, 8, 8, 8, true);
-  foliage_geometry.scale(scale,scale,scale);
-  foliage_geometry.translate(0,33*scale,0);
-  var foliage = new THREE.Mesh(foliage_geometry, foliage_material);
-  foliage.position.x = t.position.x;
-  foliage.position.y = 0;
-  foliage.position.z = t.position.z;
-  tree.add(foliage);
-
-  var foliage_geometry2 = new THREE.ConeGeometry(6, 12, 8, 8, true);
-  foliage_geometry2.scale(scale,scale,scale);
-  foliage_geometry2.translate(0,25*scale,0);
-  var foliage2 = new THREE.Mesh(foliage_geometry2, foliage_material);
-  foliage2.position.x = t.position.x;
-  foliage2.position.y = 0;
-  foliage2.position.z = t.position.z;
-  tree.add(foliage2);
-
-  var foliage_geometry3 = new THREE.ConeGeometry(8, 12, 8, 8, true);
-  foliage_geometry3.scale(scale,scale,scale);
-  foliage_geometry3.translate(0,18*scale,0);
-  var foliage3 = new THREE.Mesh(foliage_geometry3, foliage_material);
-  foliage3.position.x = t.position.x;
-  foliage3.position.y = 0;
-  foliage3.position.z = t.position.z;
-  tree.add(foliage3);
-
-  scene.add(tree);
-  trees.push(tree);
+  scene.add(t);
+  trees.push(t);
 }
 
-var yAxis = new THREE.Vector3(0,1,0);
-var targetAxis = new THREE.Vector3(0,0,0);
-function update(t){
+function update(c){
   for(i = 0; i < treeCount; i++){
     var tree = trees[i];
-    for(j = 0; j < tree.children.length; j++){
-      var child = tree.children[j];
-      if(child.position.x > width/2){
-	child.position.x = -width/2+10;
-      }
-      if(child.position.z > width/2){
-	child.position.z = -width/2+10;
-      }
 
-      if(child.position.x < -width/2){
-	child.position.x = width/2-10;
-      }
-      if(child.position.z < -width/2){
-	child.position.z = width/2-10;
-      }
-
-      child.position.x -= dt*width/resolution;
-      child.position.z -= dt*width/resolution;
-
-      child.position.y = Math.max(0, placeOnSphere(child.position)) - radius;
-      child.position.y += getYPosition(child.position.x+delta*t, child.position.z+delta*t)-1;
-      targetAxis.x = child.position.x/radius;
-      targetAxis.y = Math.max(0, placeOnSphere(child.position))/radius;
-      targetAxis.z = child.position.z/radius;
-
-      child.quaternion.setFromUnitVectors(yAxis, targetAxis.normalize());
+    if(tree.position.x > width/2){
+      tree.position.x = -width/2+10;
     }
+    if(tree.position.z > width/2){
+      tree.position.z = -width/2+10;
+    }
+
+    if(tree.position.x < -width/2){
+      tree.position.x = width/2-10;
+    }
+    if(tree.position.z < -width/2){
+      tree.position.z = width/2-10;
+    }
+
+    tree.position.x -= 0.01*width/resolution;
+    tree.position.z -= 0.01*width/resolution;
+
+    tree.position.y = Math.max(0, placeOnSphere(tree.position)) - radius;
+    tree.position.y += getYPosition(tree.position.x+delta*c, tree.position.z+delta*c)-1;
+    //tree.lookAt(new THREE.Vector3(0, 1, 0));
+    tree.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), new THREE.Vector3(tree.position.x/radius, Math.max(0, placeOnSphere(tree.position))/radius ,tree.position.z/radius).normalize());
   }
 }
 
-  ground_texture.repeat.set(repeat, repeat);
 
 //************** Draw **************
 var time = 0;
 var delta = width/resolution;
-var t = 10;
+var c = 10;
 function draw(){
   stats.begin();
-  t += dt;
+  time += 0.01* (width/10);
+  c += 0.01;
   var difference = 0;
   var dist = 0;
-  for (i = 0; i < ground.geometry.vertices.length; i++){
+  for (var i = 0; i < ground.geometry.vertices.length; i++){
     var v = ground.geometry.vertices[i];
     var b = base_geometry.vertices[i];
-    v.x = b.x - (delta*t%delta);
-    v.z = b.z - (delta*t%delta);
+    v.x = b.x - (delta*c%delta);
+    v.z = b.z - (delta*c%delta);
     v.y = Math.max(0, placeOnSphere(v)) - radius;
-    v.y += getYPosition(b.x+delta*Math.floor(t), b.z+delta*Math.floor(t)); 
+    v.y += getYPosition(b.x+delta*Math.floor(c), b.z+delta*Math.floor(c)); 
   }
-  update(t);
-  ground_texture.offset.set((delta*Math.floor(t))/(width/repeat), (-delta*Math.floor(t))/(width/repeat));
+  update(c);
+  ground_texture.repeat.set(repeat, repeat);
+  ground_texture.offset.set((delta*Math.floor(c))/(width/repeat), (-delta*Math.floor(c))/(width/repeat));
   ground.geometry.computeVertexNormals();
   ground_geometry.verticesNeedUpdate = true;
   renderer.render(scene, camera);
+  if(rotate){
+    controls.update();
+  }
   stats.end();
   requestAnimationFrame(draw);
 }
