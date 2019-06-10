@@ -1,3 +1,5 @@
+//Using textures by Ulrick Wery, Kuko Cai
+
 var canvas = document.getElementById("canvas_1");
 var cont = document.getElementById("cc_1");
 
@@ -126,7 +128,7 @@ scene.add(ground);
 //************** Trees **************
 var loader = new THREE.TextureLoader();
 loader.crossOrigin = '';
-var bark_texture =  loader.load( 'https://al-ro.github.io/images/planet/ulrick-wery-soil.jpg' );
+var bark_texture =  loader.load( 'https://al-ro.github.io/images/planet/bark_texture.jpg' );
 bark_texture.wrapS = THREE.RepeatWrapping;
 bark_texture.wrapT = THREE.RepeatWrapping;
 bark_texture.offset.set(Math.random(), Math.random());
