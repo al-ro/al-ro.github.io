@@ -19,7 +19,7 @@ var dt = 0.03;
 var tree_height = 35;
 var treeCount = 128;
 var trees = [];
-var bend = 2;
+var bend = 2.5;
 var branch_count = 20;
 
 //The global coordinates
@@ -110,6 +110,7 @@ ground_geometry.verticesNeedUpdate = true;
 
 var loader = new THREE.TextureLoader();
 loader.crossOrigin = '';
+//Ground texture by Ulrick Wery
 var ground_texture =  loader.load( 'https://al-ro.github.io/images/planet/ulrick-wery-grassflower.jpg' );
 ground_texture.wrapS = THREE.RepeatWrapping;
 ground_texture.wrapT = THREE.RepeatWrapping;
@@ -132,6 +133,7 @@ bark_texture.offset.set(Math.random(), Math.random());
 bark_texture.repeat.set(4, 4);
 var tree_material = new THREE.MeshLambertMaterial( {color: 0xdddddd, map: bark_texture} );
 
+//Foliage texture is an edited version of work by Kuko Cai
 var foliage_texture =  loader.load( 'https://al-ro.github.io/images/planet/foliage_diffuse.jpg' );
 var foliage_alpha =  loader.load( 'https://al-ro.github.io/images/planet/foliage_alpha.jpg' );
 var foliage_material = new THREE.MeshLambertMaterial( {color: 0xdddddd, map: foliage_texture, alphaMap: foliage_alpha, alphaTest: 0.5, side: THREE.DoubleSide, wireframe: false});
@@ -139,7 +141,7 @@ var foliage_material = new THREE.MeshLambertMaterial( {color: 0xdddddd, map: fol
 var tree_geometry = new THREE.ConeBufferGeometry(1, tree_height, 8);
 tree_geometry.translate(0, tree_height/2, 0);
 
-var branch_geometry = new THREE.PlaneBufferGeometry(8,10,2,4);
+var branch_geometry = new THREE.PlaneBufferGeometry(10,12,2,4);
 branch_geometry.lookAt(new THREE.Vector3(0,1,0));
 branch_geometry.translate(0,0,4);
 for(v = 3; v < 45; v+=9){
@@ -160,16 +162,15 @@ for(i = 0; i < treeCount; i++){
 
   tree.add(trunk);
 
-  var branches = new THREE.Group();
-  
+  var branches = new THREE.Group(); 
+ 
   for(j = 0; j < branch_count; j++){
     var branch = new THREE.Mesh(branch_geometry, foliage_material);
 
-    var sc = scale*(branch_count-j)/branch_count;
+    var sc = scale*(branch_count-Math.max(j, 1))/branch_count;
     branch.scale.set(sc,sc,sc);
     branch.rotateY(Math.random() + (j/branch_count)*6.28*6);
 
-    branch.translateZ(-(j/branch_count)*0.1);
     var step = (scale*tree_height-scale*8)/branch_count;
     branch.translateY(scale*8 + j * step);
     if(scale > 0.5){
