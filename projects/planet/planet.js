@@ -11,13 +11,26 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 //Initialise three.js
 var scene = new THREE.Scene();
 
-var width = 400;
+var width = 256;
 var resolution = 64;
-var radius = 210;
+var radius = 128;
 var repeat = 8;
-var dt = 0.1;
-var treeCount = 64;
+var dt = 0.03;
+var tree_height = 35;
+var treeCount = 128;
 var trees = [];
+var bend = 2;
+var branch_count = 20;
+
+//The global coordinates
+//The geometry never leaves a box of width*width around (0, 0)
+//But we track where in space the camera would be globally
+//The current tile
+var id_x;
+var id_z;
+var delta = width/resolution;
+var pos = {x:0, z:0};
+var del = {x:dt, z:0};
 
 var ratio =  canvas.width / canvas.height;
 var w = cont.offsetWidth;
@@ -28,13 +41,13 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(w, h, false);
 renderer.setClearColor( 0x87cefa, 1);
 
-distance = 400;
+var distance = 400;
 
 var FOV = 2 * Math.atan( window.innerHeight / ( 2 * distance ) ) * 90 / Math.PI;
 
 //Camera
 var camera = new THREE.PerspectiveCamera(FOV, ratio, 1, 20000);
-camera.position.set(-50, 10, -50);
+camera.position.set(-50, 10, 50);
 scene.add(camera);
 
 //Lights
@@ -62,7 +75,7 @@ var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
 gui.add(this, 'radius').min(10).max(400).step(5);
-gui.add(this, 'repeat').min(1).max(400).step(1);
+gui.add(this, 'repeat').min(1).max(400).step(1).onChange(function(val){ground_texture.repeat.set(val, val);});
 gui.add(this, 'dt').min(0).max(1).step(0.01);
 
 //Use noise.js library to generate a grid of 2D simplex noise values
@@ -72,7 +85,7 @@ function getYPosition(x, z){
   var y = 8*noise.simplex2(x/150, z/150);
   y += 4*noise.simplex2(x/50, z/50);
   y += 2*noise.simplex2(x/30, z/30);
-  return y;
+  return y*0.5;
 };
 
 function placeOnSphere(v){
@@ -87,11 +100,11 @@ function placeOnSphere(v){
 
 //************** Ground **************
 //The ground
-var base_geometry = new THREE.PlaneGeometry(width, width, resolution, resolution);
+var base_geometry = new THREE.PlaneBufferGeometry(width, width, resolution, resolution);
 base_geometry.lookAt(new THREE.Vector3(0,1,0));
 base_geometry.verticesNeedUpdate = true;
 
-var ground_geometry = new THREE.PlaneGeometry(width, width, resolution, resolution);
+var ground_geometry = new THREE.PlaneBufferGeometry(width, width, resolution, resolution);
 ground_geometry.lookAt(new THREE.Vector3(0,1,0));
 ground_geometry.verticesNeedUpdate = true;
 
@@ -101,7 +114,8 @@ var ground_texture =  loader.load( 'https://al-ro.github.io/images/planet/ulrick
 ground_texture.wrapS = THREE.RepeatWrapping;
 ground_texture.wrapT = THREE.RepeatWrapping;
 ground_texture.repeat.set(repeat, repeat);
-var ground_material = new THREE.MeshLambertMaterial({color: 0xffffff, map: ground_texture});
+ground_texture.offset.set(0,0);
+var ground_material = new THREE.MeshLambertMaterial({color: 0xffffff, map: ground_texture, wireframe: false});
 var ground = new THREE.Mesh(ground_geometry, ground_material);
 
 ground.geometry.computeVertexNormals();
@@ -109,8 +123,8 @@ scene.add(ground);
 
 
 //************** Trees **************
-//var tree_geometry = new THREE.ConeGeometry(0.5, 64, 8);
-//tree_geometry.translate(0,32,0);
+var loader = new THREE.TextureLoader();
+loader.crossOrigin = '';
 var bark_texture =  loader.load( 'https://al-ro.github.io/images/planet/ulrick-wery-soil.jpg' );
 bark_texture.wrapS = THREE.RepeatWrapping;
 bark_texture.wrapT = THREE.RepeatWrapping;
@@ -118,118 +132,153 @@ bark_texture.offset.set(Math.random(), Math.random());
 bark_texture.repeat.set(4, 4);
 var tree_material = new THREE.MeshLambertMaterial( {color: 0xdddddd, map: bark_texture} );
 
-var foliage_texture =  loader.load( 'https://al-ro.github.io/images/planet/ulrick-wery-grass2.jpg' );
-//foliage_texture.wrapS = THREE.RepeatWrapping;
-//foliage_texture.wrapT = THREE.RepeatWrapping;
-//foliage_texture.offset.set(Math.random(), Math.random());
-//foliage_texture.repeat.set(4, 4);
-var foliage_material = new THREE.MeshLambertMaterial( {color: 0xdddddd, map: foliage_texture, side: THREE.DoubleSide});
+var foliage_texture =  loader.load( 'https://al-ro.github.io/images/planet/foliage_diffuse.jpg' );
+var foliage_alpha =  loader.load( 'https://al-ro.github.io/images/planet/foliage_alpha.jpg' );
+var foliage_material = new THREE.MeshLambertMaterial( {color: 0xdddddd, map: foliage_texture, alphaMap: foliage_alpha, alphaTest: 0.5, side: THREE.DoubleSide, wireframe: false});
+
+var tree_geometry = new THREE.ConeBufferGeometry(1, tree_height, 8);
+tree_geometry.translate(0, tree_height/2, 0);
+
+var branch_geometry = new THREE.PlaneBufferGeometry(8,10,2,4);
+branch_geometry.lookAt(new THREE.Vector3(0,1,0));
+branch_geometry.translate(0,0,4);
+for(v = 3; v < 45; v+=9){
+  branch_geometry.getAttribute("position").array[v+1] += bend;	
+}
+branch_geometry.verticesNeedUpdate = true;
+branch_geometry.computeVertexNormals();
 
 for(i = 0; i < treeCount; i++){
   var tree = new THREE.Group();
-  var tree_geometry = new THREE.ConeGeometry(1, 40, 8);
-  tree_geometry.translate(0,20,0);
-  var t = new THREE.Mesh(tree_geometry, tree_material);
-  var scale = 1.0 - Math.random() * 0.3;
 
-  t.geometry.scale(scale,scale,scale);
-  t.position.x = width/2-Math.random() * width;
-  t.position.z = width/2-Math.random() * width;
+  var trunk = new THREE.Mesh(tree_geometry, tree_material);
+  var scale = 1.0 - Math.random() * 0.8;
 
-  tree.add(t);
+  trunk.scale.set(scale,scale,scale);
+  trunk.position.x = width/2-Math.random() * width;
+  trunk.position.z = width/2-Math.random() * width;
 
-  var foliage_geometry = new THREE.ConeGeometry(3, 8, 8, 8, true);
-  foliage_geometry.scale(scale,scale,scale);
-  foliage_geometry.translate(0,33*scale,0);
-  var foliage = new THREE.Mesh(foliage_geometry, foliage_material);
-  foliage.position.x = t.position.x;
-  foliage.position.y = 0;
-  foliage.position.z = t.position.z;
-  tree.add(foliage);
+  tree.add(trunk);
 
-  var foliage_geometry2 = new THREE.ConeGeometry(6, 12, 8, 8, true);
-  foliage_geometry2.scale(scale,scale,scale);
-  foliage_geometry2.translate(0,25*scale,0);
-  var foliage2 = new THREE.Mesh(foliage_geometry2, foliage_material);
-  foliage2.position.x = t.position.x;
-  foliage2.position.y = 0;
-  foliage2.position.z = t.position.z;
-  tree.add(foliage2);
+  var branches = new THREE.Group();
+  
+  for(j = 0; j < branch_count; j++){
+    var branch = new THREE.Mesh(branch_geometry, foliage_material);
 
-  var foliage_geometry3 = new THREE.ConeGeometry(8, 12, 8, 8, true);
-  foliage_geometry3.scale(scale,scale,scale);
-  foliage_geometry3.translate(0,18*scale,0);
-  var foliage3 = new THREE.Mesh(foliage_geometry3, foliage_material);
-  foliage3.position.x = t.position.x;
-  foliage3.position.y = 0;
-  foliage3.position.z = t.position.z;
-  tree.add(foliage3);
+    var sc = scale*(branch_count-j)/branch_count;
+    branch.scale.set(sc,sc,sc);
+    branch.rotateY(Math.random() + (j/branch_count)*6.28*6);
 
+    branch.translateZ(-(j/branch_count)*0.1);
+    var step = (scale*tree_height-scale*8)/branch_count;
+    branch.translateY(scale*8 + j * step);
+    if(scale > 0.5){
+      branch.rotateX(1-sc+0.4);
+    }else{
+      branch.rotateX(scale);
+    }
+    branches.add(branch);
+  }
+  branches.rotateY(Math.random() * 6.28);
+  branches.position.x = trunk.position.x;
+  branches.position.z = trunk.position.z;
+  tree.add(branches);
   scene.add(tree);
   trees.push(tree);
 }
 
+//************** Update **************
 var yAxis = new THREE.Vector3(0,1,0);
 var targetAxis = new THREE.Vector3(0,0,0);
-function update(t){
-  for(i = 0; i < treeCount; i++){
+var v = new THREE.Vector3(0,0,0);
+var b = new THREE.Vector3(0,0,0);
+var dx;
+var dz;
+
+function update(pos, del){
+
+  for (i = 0; i < ground.geometry.getAttribute("position").array.length; i+=3){
+
+    v.x = ground.geometry.getAttribute("position").array[i];
+    v.y = ground.geometry.getAttribute("position").array[i+1];
+    v.z = ground.geometry.getAttribute("position").array[i+2];
+    b.x = base_geometry.getAttribute("position").array[i];
+    b.y = base_geometry.getAttribute("position").array[i+1];
+    b.z = base_geometry.getAttribute("position").array[i+2];
+
+    //https://dev.to/maurobringolf/a-neat-trick-to-compute-modulo-of-negative-numbers-111e
+    v.x = b.x - ((delta*pos.x)%delta + delta)%delta;
+    v.z = b.z - ((delta*pos.z)%delta + delta)%delta;
+    v.y = Math.max(0, placeOnSphere(v)) - radius;
+    v.y += getYPosition(b.x+delta*Math.floor(pos.x), b.z+delta*Math.floor(pos.z));
+    
+    ground.geometry.getAttribute("position").array[i] = v.x;
+    ground.geometry.getAttribute("position").array[i+1] = v.y;
+    ground.geometry.getAttribute("position").array[i+2] = v.z;
+  }
+
+  ground_texture.offset.set((delta*Math.floor(pos.x))/(width/repeat), (-delta*Math.floor(pos.z))/(width/repeat));
+  ground.geometry.attributes.position.needsUpdate = true
+  ground.geometry.computeVertexNormals();
+
+  for(i = 0; i < trees.length; i++){
     var tree = trees[i];
+
     for(j = 0; j < tree.children.length; j++){
       var child = tree.children[j];
-      if(child.position.x > width/2){
-	child.position.x = -width/2+10;
-      }
-      if(child.position.z > width/2){
-	child.position.z = -width/2+10;
-      }
 
-      if(child.position.x < -width/2){
-	child.position.x = width/2-10;
+      if(j < 1){
+	if(child.position.x > width/2){
+	  child.position.x = -width/2+10;
+	}
+	if(child.position.z > width/2){
+	  child.position.z = -width/2+10;
+	}
+
+	if(child.position.x < -width/2){
+	  child.position.x = width/2-10;
+	}
+	if(child.position.z < -width/2){
+	  child.position.z = width/2-10;
+	}
+
+	child.position.x -= del.x*delta;
+	child.position.z -= del.z*delta;
+
+	child.position.y = Math.max(0, placeOnSphere(child.position)) - radius;
+	child.position.y += getYPosition(child.position.x+delta*pos.x, child.position.z+delta*pos.z)-1;
+
+	targetAxis.x = child.position.x/radius;
+	targetAxis.y = Math.max(0, placeOnSphere(child.position))/radius;
+	targetAxis.z = child.position.z/radius;
+
+	child.quaternion.setFromUnitVectors(yAxis, targetAxis.normalize());
+
+      }else{
+	child.position.copy(tree.children[0].position);
+	child.quaternion.copy(tree.children[0].quaternion);
       }
-      if(child.position.z < -width/2){
-	child.position.z = width/2-10;
-      }
-
-      child.position.x -= dt*width/resolution;
-      child.position.z -= dt*width/resolution;
-
-      child.position.y = Math.max(0, placeOnSphere(child.position)) - radius;
-      child.position.y += getYPosition(child.position.x+delta*t, child.position.z+delta*t)-1;
-      targetAxis.x = child.position.x/radius;
-      targetAxis.y = Math.max(0, placeOnSphere(child.position))/radius;
-      targetAxis.z = child.position.z/radius;
-
-      child.quaternion.setFromUnitVectors(yAxis, targetAxis.normalize());
     }
   }
 }
 
-  ground_texture.repeat.set(repeat, repeat);
-
 //************** Draw **************
-var time = 0;
-var delta = width/resolution;
-var t = 10;
+var vector = new THREE.Vector3();
+var length;
 function draw(){
   stats.begin();
-  t += dt;
-  var difference = 0;
-  var dist = 0;
-  for (i = 0; i < ground.geometry.vertices.length; i++){
-    var v = ground.geometry.vertices[i];
-    var b = base_geometry.vertices[i];
-    v.x = b.x - (delta*t%delta);
-    v.z = b.z - (delta*t%delta);
-    v.y = Math.max(0, placeOnSphere(v)) - radius;
-    v.y += getYPosition(b.x+delta*Math.floor(t), b.z+delta*Math.floor(t)); 
-  }
-  update(t);
-  ground_texture.offset.set((delta*Math.floor(t))/(width/repeat), (-delta*Math.floor(t))/(width/repeat));
-  ground.geometry.computeVertexNormals();
-  ground_geometry.verticesNeedUpdate = true;
+  camera.getWorldDirection(vector);
+  length = Math.sqrt(vector.x*vector.x + vector.z*vector.z);
+  vector.x /= length;
+  vector.z /= length;
+  del.x = vector.x * dt;
+  del.z = vector.z * dt;
+  pos.x += del.x;
+  pos.z += del.z;
+  update(pos, del);
   renderer.render(scene, camera);
   stats.end();
   requestAnimationFrame(draw);
 }
 
-requestAnimationFrame(draw);
+draw();
