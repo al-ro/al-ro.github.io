@@ -166,7 +166,7 @@ void main() {
 
   //Apply wind
   float angle = noise * 0.3;
-  vPosition = rotateVectorByQuaternion(vPosition, normalize(vec4(sin(angle/2.0), 0.0, -sin(angle/2.0), cos(angle/1.0))));
+  vPosition = rotateVectorByQuaternion(vPosition, normalize(vec4(sin(angle/2.0), 0.0, -sin(angle/2.0), cos(angle/2.0))));
 
   //UV for texture
   vUv = uv;
@@ -259,7 +259,7 @@ for (var i = 0; i < instances; i++){
   x = Math.random() * width - width/2;
   z = Math.random() * width - width/2;
   y = getYPosition(x, z); 
-  offsets.push( x, y, z);
+  offsets.push(x, y, z);
 
   //Define random growth directions
   //Rotate around Y
@@ -281,7 +281,7 @@ for (var i = 0; i < instances; i++){
   y = RotationAxis.y * Math.sin(angle / 2.0);
   z = RotationAxis.z * Math.sin(angle / 2.0);
   w = Math.cos(angle / 2.0);
-  quaternion_1.set( x, y, z, w).normalize();
+  quaternion_1.set(x, y, z, w).normalize();
 
   //Combine rotations to a single quaternion
   quaternion_0 = multiplyQuaternions(quaternion_0, quaternion_1);
