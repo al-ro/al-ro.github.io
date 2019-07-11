@@ -84,6 +84,7 @@ function multiplyQuaternions(q1, q2){
   return new THREE.Vector4(x, y, z, w);
 }
 
+//************** Shader sources **************
 //Web-GL noise is stored in noise.js for clarity
 //Concatenate the source strings
 var vertexSource = noiseSource + `
@@ -136,7 +137,7 @@ vec4 slerp(vec4 v0, vec4 v1, float t) {
   }
 
   // Since dot is in range [0, DOT_THRESHOLD], acos is safe
-  float theta_0 = acos(dot_);        // theta_0 = angle between input vectors
+  float theta_0 = acos(dot_);       // theta_0 = angle between input vectors
   float theta = theta_0*t;          // theta = angle between v0 and result
   float sin_theta = sin(theta);     // compute this value only once
   float sin_theta_0 = sin(theta_0); // compute this value only once
@@ -198,6 +199,7 @@ void main() {
   gl_FragColor = col;
 }`;
 
+//************** Setup **************
 //Use noise.js library to generate a grid of 2D simplex noise values
 noise.seed(Math.random());
 
@@ -232,7 +234,7 @@ var base_blade = new THREE.Mesh(base_geometry, base_material);
 //https://github.com/mrdoob/three.js/blob/master/examples/webgl_buffergeometry_instancing_dynamic.html
 var instanced_geometry = new THREE.InstancedBufferGeometry();
 
-//----------ATTRIBUTES----------//
+//************** Attributes **************
 instanced_geometry.index = base_geometry.index;
 instanced_geometry.attributes.position = base_geometry.attributes.position;
 instanced_geometry.attributes.uv = base_geometry.attributes.uv;
@@ -322,9 +324,10 @@ instanced_geometry.addAttribute( 'halfRootAngleCos', halfRootAngleCosAttribute);
 
 //Get alpha map and blade texture
 //These have been taken from "Realistic real-time grass rendering" by Eddie Lee, 2010
+var loader = new THREE.TextureLoader();
 THREE.ImageUtils.crossOrigin = '';
-var texture = THREE.ImageUtils.loadTexture("https://res.cloudinary.com/al-ro/image/upload/v1552838655/v2_iqvzcx.png");
-var alphaMap = THREE.ImageUtils.loadTexture("https://res.cloudinary.com/al-ro/image/upload/v1552834315/Screen_Shot_2019-03-17_at_15.50.35_y5zfyu.png");
+var texture =  loader.load( 'https://al-ro.github.io/images/grass/blade_diffuse.jpg' );
+var alphaMap =  loader.load( 'https://al-ro.github.io/images/grass/blade_alpha.jpg' );
 
 //Define the material, specifying attributes, uniforms, shaders etc.
 var material = new THREE.RawShaderMaterial( {
@@ -344,7 +347,7 @@ scene.add(mesh);
 //Show base geometry
 //scene.add(base_blade);
 
-//----------DRAW----------//
+//************** Draw **************
 var time = 0;
 function draw(){
   stats.begin();

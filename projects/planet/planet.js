@@ -16,16 +16,17 @@ var scene = new THREE.Scene();
 var width = 256;
 var resolution = 64;
 var delta = width/resolution;
-var radius = 200;
+var radius = 160;
 var repeat = 5;
-var dPos = 0.00;
-var treeHeight = 32;
-var treeCount = 256;
+var dPos = 0.1;
+var treeHeight = 36;
+var treeCount = 200;
 var trees = [];
 var positions = [];
 var bend = 2.0;
 var branchCount = 40;
 var speed = 0.1;
+var treeBend = 0.5;
 
 //The global coordinates
 //The geometry never leaves a box of width*width around (0, 0)
@@ -42,7 +43,7 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(w, h, false);
 renderer.setClearColor( 0x6ac3ff, 1);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+//renderer.shadowMap.type = THREE.BasicShadowMap;
 //renderer.shadowMap.renderSingleSided = false;
 //renderer.setClearColor( 0x221155, 0);
 
@@ -52,8 +53,24 @@ var FOV = 2 * Math.atan( window.innerHeight / ( 2 * distance ) ) * 90 / Math.PI;
 
 //Camera
 var camera = new THREE.PerspectiveCamera(FOV, ratio, 1, 20000);
-camera.position.set(-50, 10, 50);
+camera.position.set(-5, 40, 50);
 scene.add(camera);
+
+//Create Three.js skybox
+var skyBoxLoader = new THREE.CubeTextureLoader();
+skyBoxLoader.crossOrigin = '';
+//Skybox image taken from https://hdrihaven.com/
+skyBoxLoader.setPath('https://al-ro.github.io/images/planet/');
+var skyBox = skyBoxLoader.load([
+  'side.jpg',
+  'side.jpg',
+  'top.jpg',
+  'bottom.jpg',
+  'side.jpg',
+  'side.jpg'
+]);
+scene.background = skyBox;
+
 
 //Lights
 var ambientLight = new THREE.AmbientLight(0xffffff, 1.2); 
@@ -65,13 +82,15 @@ directionalLight.lookAt(0,0,0);
 directionalLight.castShadow = true;
 directionalLight.shadow.mapSize.width = 1024;  // default
 directionalLight.shadow.mapSize.height = 1024; // default
-directionalLight.shadow.camera.near = 0.5;       // default
-directionalLight.shadow.camera.far = 200      // default
-directionalLight.shadow.camera.top = 64;
-directionalLight.shadow.camera.bottom = -64;
-directionalLight.shadow.camera.right = 64;
-directionalLight.shadow.camera.left = -64;
-directionalLight.shadow.bias = -0.002;
+directionalLight.shadow.camera.near = -10.0;       // default
+directionalLight.shadow.camera.far = 150      // default
+
+directionalLight.shadow.camera.top = 60;
+directionalLight.shadow.camera.bottom = -60;
+directionalLight.shadow.camera.right = 60;
+directionalLight.shadow.camera.left = -60;
+
+directionalLight.shadow.bias = -0.003;
 directionalLight.shadow.radius = 1.0;
 var helper = new THREE.CameraHelper(directionalLight.shadow.camera);
 //scene.add(helper);
@@ -320,7 +339,7 @@ barkTexture.wrapS = THREE.RepeatWrapping;
 barkTexture.wrapT = THREE.RepeatWrapping;
 barkTexture.offset.set(Math.random(), Math.random());
 barkTexture.repeat.set(4, 4);
-var trunkMaterial = new THREE.MeshPhongMaterial( {color: 0xbbbbbb, map: barkTexture, reflectivity: 0, shininess: 0} );
+var trunkMaterial = new THREE.MeshPhongMaterial( {color: 0xbbbbbb, map: barkTexture, reflectivity: 0, shininess: 0, wireframe: false} );
 
 //************** Trunk shader **************
 var trunkVertexPrefix = vertexPrefix + `
@@ -406,8 +425,27 @@ foliageMaterial.onBeforeCompile = function(shader){
   augmentShader(shader);
   foliageShader = shader;
 };
-var trunkGeometry = new THREE.ConeBufferGeometry(1, treeHeight, 8);
+var trunkGeometry = new THREE.ConeBufferGeometry(1, treeHeight, 8, 8);
+//trunkGeometry = THREE.BufferGeometryUtils.mergeVertices(trunkGeometry);
+console.log(trunkGeometry);
 trunkGeometry.translate(0, treeHeight/2, 0);
+trunkGeometry.verticesNeedUpdate = true;
+trunkGeometry.computeVertexNormals();
+for(v = 0; v < trunkGeometry.getAttribute("position").array.length; v++){
+  var yPos = trunkGeometry.getAttribute("position").array[3*v+1];
+  if(yPos == 0){
+    trunkGeometry.getAttribute("position").array[3*v] *= 1.3;
+    trunkGeometry.getAttribute("position").array[3*v+2] *= 1.3;
+  }	
+  if(yPos == 4){
+    trunkGeometry.getAttribute("position").array[3*v] *= 1.1;
+    trunkGeometry.getAttribute("position").array[3*v+2] *= 1.1;
+  }	
+  trunkGeometry.getAttribute("position").array[3*v] += Math.sin((treeHeight-yPos)/6)*treeBend;
+  trunkGeometry.getAttribute("position").array[3*v+2] += Math.sin((treeHeight-yPos)/6)*treeBend;
+}
+trunkGeometry.verticesNeedUpdate = true;
+trunkGeometry.computeVertexNormals();
 
 var instancedTrunkGeometry = new THREE.InstancedBufferGeometry();
 
@@ -429,10 +467,13 @@ var offsets_3 = [];
 var branchBase = new THREE.PlaneBufferGeometry(6,12,2,4);
 branchBase.lookAt(new THREE.Vector3(0,1,0));
 branchBase.translate(0,0,6);
-
+function backIn(t) {
+    let s = 0.5;
+    return t * t * ((s + 1) * t - s);
+  }
 for(v = 3; v < 45; v+=9){
   t = branchBase.getAttribute("position").array[v+2]/12;
-  branchBase.getAttribute("position").array[v+1] += bend + bend* (Math.pow(2, 10 * t - 10));	
+  branchBase.getAttribute("position").array[v+1] += bend + bend * backIn(t);//(Math.pow(2, 10 * t - 10));	
 }
 branchBase.verticesNeedUpdate = true;
 branchBase.computeVertexNormals();
@@ -455,6 +496,14 @@ function getInstancedBranches(branchCount, angle, rotations){
   }
 
   var branchesGeometry = THREE.BufferGeometryUtils.mergeBufferGeometries(branchGeoms, true);
+  for(v = 0; v < branchesGeometry.getAttribute("position").array.length; v++){
+    var yPos = branchesGeometry.getAttribute("position").array[3*v+1];
+    branchesGeometry.getAttribute("position").array[3*v] += Math.sin((treeHeight-yPos)/6)*treeBend;
+    branchesGeometry.getAttribute("position").array[3*v+2] += Math.sin((treeHeight-yPos)/6)*treeBend;
+  }
+  branchesGeometry.verticesNeedUpdate = true;
+  branchesGeometry.computeVertexNormals();
+
   var instancedBranchGeometry = new THREE.InstancedBufferGeometry();
 
   instancedBranchGeometry.index = branchesGeometry.index;
@@ -578,7 +627,7 @@ branch_3.receiveShadow = true; //default
 var wispGeometry = new THREE.SphereGeometry(0.5,32,32);
 var wispMaterial = new THREE.MeshBasicMaterial();
 var wisp = new THREE.Mesh(wispGeometry, wispMaterial);
-wisp.translateY(4);
+wisp.translateY(8);
 //wisp.castShadow = true; //default is false
 //wisp.receiveShadow = true; //default
 scene.add(wisp);
@@ -621,11 +670,22 @@ function update(pos){
 
 }
 
+//Adjust the shadow camera frustum according to the camera's distance from the scene to create more accurate shadows when zoomed in.
+function setShadowCamera(){
+  var distance = Math.max(40, Math.sqrt(camera.position.x * camera.position.x + camera.position.y * camera.position.y + camera.position.z * camera.position.z));
+  directionalLight.shadow.camera.top = distance;
+  directionalLight.shadow.camera.bottom = -distance;
+  directionalLight.shadow.camera.left = 1.5*-distance;
+  directionalLight.shadow.camera.right = 1.5*distance;
+  directionalLight.shadow.camera.updateProjectionMatrix();
+}
+
 //************** Draw **************
 var vector = new THREE.Vector3();
 var length;
 function draw(){
   stats.begin();
+  setShadowCamera();
   camera.getWorldDirection(vector);
   length = Math.sqrt(vector.x*vector.x + vector.z*vector.z);
   vector.x /= length;
