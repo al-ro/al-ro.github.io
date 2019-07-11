@@ -325,7 +325,7 @@ instanced_geometry.addAttribute( 'halfRootAngleCos', halfRootAngleCosAttribute);
 //Get alpha map and blade texture
 //These have been taken from "Realistic real-time grass rendering" by Eddie Lee, 2010
 var loader = new THREE.TextureLoader();
-THREE.ImageUtils.crossOrigin = '';
+loader.crossOrigin = '';
 var texture =  loader.load( 'https://al-ro.github.io/images/grass/blade_diffuse.jpg' );
 var alphaMap =  loader.load( 'https://al-ro.github.io/images/grass/blade_alpha.jpg' );
 
