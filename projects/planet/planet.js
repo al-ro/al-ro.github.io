@@ -20,13 +20,13 @@ var radius = 160;
 var repeat = 5;
 var dPos = 0.1;
 var treeHeight = 36;
-var treeCount = 200;
+var treeCount = 400;
 var trees = [];
 var positions = [];
-var bend = 2.0;
+var bend = 3.0;
 var branchCount = 40;
 var speed = 0.1;
-var treeBend = 0.5;
+var treeBend = 0.3;
 
 //The global coordinates
 //The geometry never leaves a box of width*width around (0, 0)
@@ -71,11 +71,10 @@ var skyBox = skyBoxLoader.load([
 ]);
 scene.background = skyBox;
 
-
 //Lights
 var ambientLight = new THREE.AmbientLight(0xffffff, 1.2); 
 scene.add(ambientLight);
-var shadowStrength = 0.8;
+var shadowStrength = 0.85;
 directionalLight = new THREE.DirectionalLight(0xffffff, shadowStrength);
 directionalLight.position.set(40, 40, 40);
 directionalLight.lookAt(0,0,0);
@@ -627,7 +626,7 @@ branch_3.receiveShadow = true; //default
 var wispGeometry = new THREE.SphereGeometry(0.5,32,32);
 var wispMaterial = new THREE.MeshBasicMaterial();
 var wisp = new THREE.Mesh(wispGeometry, wispMaterial);
-wisp.translateY(8);
+wisp.translateY(28);
 //wisp.castShadow = true; //default is false
 //wisp.receiveShadow = true; //default
 scene.add(wisp);
@@ -665,7 +664,7 @@ function update(pos){
   }
 
   time += 1;
-  wisp.position.y = (6 + Math.sin(time*0.1));
+  wisp.position.y = (12 + Math.sin(time*0.1));
   wispLight.position.y = wisp.position.y;
 
 }

@@ -130,7 +130,7 @@
       <p>Mach 2.0 shock reflected from the DrivAer geometry. The produced software can robustly handle high pressure at various surface features such as concavities and thin solid area</p>
 
       <h5>Performance</h5>
-      <p>The software aims to minimise the proportion of time spent on communication. In a multi-card simulation, halo exchange is required to find the information propagation across local subdomain boundaries. CUDA allows for communication and compute to occur simultaneously between a device and host. Additional parallelism can be achieved by overlapping kernel execution with MPI communication between nodes. To achieve this, every local subdomain is divided into three regions: the core cells and the communication cells. The core cells can be solved independently from MPI communication of the ghost region data and we mask most message latency.</p>
+      <p>The software aims to minimise the proportion of time spent on communication. In a multi-card simulation, halo exchange is required to find the information propagation across local subdomain boundaries. CUDA allows for communication and computation to occur simultaneously between a device and host. Additional parallelism can be achieved by overlapping kernel execution with MPI communication between nodes. To achieve this, every local subdomain is divided into three regions: the core cells and the communication cells. The core cells can be solved independently from MPI communication of the ghost region data and we mask most message latency.</p>
       <div class="row">
         <div class="six columns ">
           <img class="img u-max-full-width" src="../../images/euler/regions.jpg">
