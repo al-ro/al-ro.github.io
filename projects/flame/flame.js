@@ -35,15 +35,15 @@ if(!gl){
 var dt = 0.025;
 //Time
 var time = 0.0;
-var bloom = 20;
-var blurFactor = 6;
+var bloom = 50;
+var blurFactor = 3;
 var blurCount = 5;
 //For colour modes
 var type = 0;
 var toggle_render = true;
 if(mobile){
   bloom = 50;
-  blurFactor= 3;
+  blurFactor= 1;
 }
 
 //-----------GUI-----------//
