@@ -24,7 +24,7 @@ if(mobile){
   ctx.font="50px Arial";
   ctx.fillStyle = "black";
   ctx.textAlign = "center";
-  ctx.fillText("This project is not avilable on mobile :(", canvas.width/2, canvas.height/2);
+  ctx.fillText("This project is not available on mobile :(", canvas.width/2, canvas.height/2);
 
 }else{
 
