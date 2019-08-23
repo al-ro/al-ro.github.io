@@ -33,7 +33,7 @@ var step = 2000;
 //Camera rotate
 var rotate = true;
 //Offset to counteract noise flattening when sampling on three planes
-var offset = 0.1;
+var offset = 0.0;
 
 var ratio =  canvas.width / canvas.height;
 var w = cont.offsetWidth;
@@ -250,7 +250,6 @@ function move(){
   }
 }
 
-offset = 0;
 //----------DRAW----------//
 function draw(){
   if(rotate){

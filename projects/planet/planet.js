@@ -79,8 +79,8 @@ directionalLight = new THREE.DirectionalLight(0xffffff, shadowStrength);
 directionalLight.position.set(40, 40, 40);
 directionalLight.lookAt(0,0,0);
 directionalLight.castShadow = true;
-directionalLight.shadow.mapSize.width = 1024;  // default
-directionalLight.shadow.mapSize.height = 1024; // default
+directionalLight.shadow.mapSize.width = 2048;  // default
+directionalLight.shadow.mapSize.height = 2048; // default
 directionalLight.shadow.camera.near = -10.0;       // default
 directionalLight.shadow.camera.far = 150      // default
 
@@ -418,7 +418,7 @@ trunkMaterial.onBeforeCompile = function ( shader ) {
 //Foliage texture is an edited version of work by Kuko Cai
 var foliageTexture =  loader.load( 'https://al-ro.github.io/images/planet/foliage_diffuse.jpg' );
 var foliageAlpha =  loader.load( 'https://al-ro.github.io/images/planet/foliage_alpha.jpg' );
-var foliageMaterial = new THREE.MeshPhongMaterial( {color: 0xdddddd, map: foliageTexture, alphaMap: foliageAlpha, alphaTest: 0.5, side: THREE.DoubleSide, reflectivity: 0, shininess: 0});
+var foliageMaterial = new THREE.MeshLambertMaterial( {color: 0xdddddd, map: foliageTexture, alphaMap: foliageAlpha, alphaTest: 0.5, side: THREE.DoubleSide, reflectivity: 0, shininess: 0});
 
 var foliageShader;
 foliageMaterial.onBeforeCompile = function(shader){
