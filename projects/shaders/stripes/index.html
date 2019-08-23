@@ -8,7 +8,7 @@
     <!-- Basic Page Needs
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
     <meta charset="utf-8">
-    <title></title>
+    <title>Wavy Stripes</title>
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -22,67 +22,41 @@
 
     <!-- CSS
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <link rel="stylesheet" href="../../css/normalize.css">
-    <link rel="stylesheet" href="../../css/skeleton.css">
-    <link rel="stylesheet" href="../../css/custom.css">
-    <link rel="stylesheet" href="../../font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../../../css/normalize.css">
+    <link rel="stylesheet" href="../../../css/skeleton.css">
+    <link rel="stylesheet" href="../../../css/custom.css">
+    <link rel="stylesheet" href="../../../font-awesome-4.7.0/css/font-awesome.min.css">
 
     <!-- Favicon
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <link rel="icon" type="image/png" href="../../images/favicon_2.png">
+    <link rel="icon" type="image/png" href="../../../images/favicon_2.png">
   </head>
   <body>
 
     <!-- Primary Page Layout
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <div class="container" id="main-container">
+    <div class="container" id ="main-container">
       <section class="post_header" id="header">
       <div class="row">
         <div class="twelve columns">
-          <h4 class="title" id="title">Planet</h4>
+          <h4 class="title" id="title">Wavy Stripes</h4>
         </div>
       </div>
       <div class="canvas_container u-max-full-width" id="cc_1">
 	<div class='fullscreen-button' id='fullscreen-button'><i class="fa fa-2x fa-expand"></i></div>
-        <canvas class="canvas" width=2880 height=1800 id="canvas_1"></canvas> 
+        <canvas class="canvas" width=1440 height=900 style="background-color: #000" id="canvas_1"></canvas>
         <div class='gui_c' id="gui_container"> </div>
       </div>
       <ul class="navbar-list c_navbar">
-        <li class="navbar-item"><a class="navbar-link" href="planet.js">Source</a></li>
-        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+        <li class="navbar-item"><a class="navbar-link" href="stripes.js">Source</a></li>
+        <li class="navbar-item"><a class="navbar-link" href="../../../index.html">Home</a></li>
       </ul>
       </section>
-      <section class="post">
-      <h5>Instructions</h5>
-      <p>Drag to move camera, scroll to zoom.</p>
-      <h5>Overview</h5>
-      </section>
+
     </div>
     <!-- End Document
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <script type="text/javascript" src="https://threejs.org/build/three.js"></script>
-    <script type="text/javascript" src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
-    <script type="text/javascript" src="https://threejs.org/examples/js/utils/BufferGeometryUtils.js"></script>
-    <script type="text/javascript" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/896175/perlin.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
-    <script type="text/javascript" src="../../utility/fullscreen.js"></script>
-    <script type="text/javascript" src="../../utility/STLLoader.js"></script>
-    <script type="text/javascript" src="noise.js"></script>
-    <script type="text/javascript" src="planet.js"></script>
+    <script type="text/javascript" src="../../../utility/fullscreen.js"></script>
+    <script type="text/javascript" src="stripes.js"></script>
   </body>
-  <footer>
-  <div class="container">
-    <section class="footer" id="links">
-    <div class="navbar-spacer"></div>
-    <nav class="navbar footer-navbar">
-    <div class="container">
-      <ul class="navbar-list">
-        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
-      </ul>
-    </div>
-    </nav>
-  </div>
-  </section>
-  </footer>
 </html>

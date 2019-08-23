@@ -89,7 +89,7 @@ directionalLight.shadow.camera.bottom = -60;
 directionalLight.shadow.camera.right = 60;
 directionalLight.shadow.camera.left = -60;
 
-directionalLight.shadow.bias = -0.003;
+directionalLight.shadow.bias = -0.005;
 directionalLight.shadow.radius = 1.0;
 var helper = new THREE.CameraHelper(directionalLight.shadow.camera);
 //scene.add(helper);
@@ -181,7 +181,8 @@ float placeOnSphere(vec3 v){
   float theta = acos(v.z/radius);
   float phi = acos(v.x/(radius * sin(theta)));
   float sV = radius * sin(theta) * sin(phi);
-  if (sV != sV){
+  //If undefined, set to default value
+  if(sV != sV){
     sV = v.y;
   }
   return sV;
@@ -235,8 +236,8 @@ mat4 getWorldMatrix(vec4 quaternion, vec3 position, vec3 scale){
 
 //Three.js src/math/Quaternion.js
 vec4 setQuaternionFromUnitVectors(vec3 vFrom, vec3 vTo){
-  // assumes direction vectors vFrom and vTo are normalized
 
+  //Assumes direction vectors vFrom and vTo are normalized
   vec4 quaternion;
   float r = dot(vFrom, vTo) + 1.0;
 
@@ -516,11 +517,15 @@ var instancedBranchGeometry_1 = getInstancedBranches(30, 0.3, 6.5);
 var instancedBranchGeometry_2 = getInstancedBranches(20, 0.0, 6.0);
 var instancedBranchGeometry_3 = getInstancedBranches(40, 0.4, 7.5);
 
-for(i = 0; i < treeCount; i++){
-  var scale = 1.0 - Math.random() * 0.8;
+var scale;
+var treeX;
+var treeZ;
 
-  var treeX = width/2-Math.random() * width;
-  var treeZ = width/2-Math.random() * width;
+for(i = 0; i < treeCount; i++){
+  scale = 1.0 - Math.random() * 0.8;
+
+  treeX = width/2-Math.random() * width;
+  treeZ = width/2-Math.random() * width;
   offsets.push(treeX, 0, treeZ);
   scales.push(scale);
 
@@ -563,7 +568,7 @@ scene.add(branch_2);
 var branch_3 = new THREE.Mesh(instancedBranchGeometry_3, foliageMaterial);
 scene.add(branch_3);
 
- var depthMaterial= new THREE.MeshDepthMaterial({depthPacking: THREE.RGBADepthPacking, alphaMap: foliageAlpha, alphaTest: 0.5});
+var depthMaterial= new THREE.MeshDepthMaterial({depthPacking: THREE.RGBADepthPacking, alphaMap: foliageAlpha, alphaTest: 0.5});
  //var depthMaterial= new THREE.MeshDepthMaterial({shadowSide: THREE.DoubleSide, depthPacking: THREE.RGBADepthPacking, alphaMap: foliageAlpha, alphaTest: 0.5});
 var depthShader;
 depthMaterial.onBeforeCompile = function ( shader ) {
@@ -669,7 +674,7 @@ function update(pos){
 
 }
 
-//Adjust the shadow camera frustum according to the camera's distance from the scene to create more accurate shadows when zoomed in.
+//Adjust the shadow camera frustum according to the camera's distance from the scene to create more detailed shadows when zoomed in.
 function setShadowCamera(){
   var distance = Math.max(40, Math.sqrt(camera.position.x * camera.position.x + camera.position.y * camera.position.y + camera.position.z * camera.position.z));
   directionalLight.shadow.camera.top = distance;
