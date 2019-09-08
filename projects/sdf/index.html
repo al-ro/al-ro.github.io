@@ -108,18 +108,99 @@
       <h5>CUDA implementation</h5>
 
       <p>The CUDA implementation quickly builds an internal geometry representation from unordered surface features and generated an SDF around a boundary to a user defined maximum distance. Based on a testing set of STL files ranging from ~52,000 to ~2,800,000 faces, the resulting pipeline from reading in the file to handing over to a CFD solver takes on the order of seconds for low distance bands (tables 1 and 2).</p>
-
       <div class="row">
-        <div class="twelve columns">
-          <img class="img u-max-full-width" src="../../images/sdf/table_1.jpg">
-        </div>
+      <table class="six columns offset-by-three columns">
+        <thead>
+          <tr>
+            <th>Geometry</th>
+            <th>Faces</th>
+            <th>Time(s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Orion</td>
+            <td>51,770</td>
+            <td>0.095</td>
+          </tr>
+          <tr>
+            <td>Stanford Rabbit</td>
+            <td>69,664</td>
+            <td>0.114</td>
+          </tr>
+          <tr>
+            <td>Stanford Dragon</td>
+            <td>100,000</td>
+            <td>0.154</td>
+          </tr>
+          <tr>
+            <td>XYZ RGB Dragon</td>
+            <td>721,788</td>
+            <td>0.951</td>
+          </tr>
+          <tr>
+            <td>Stanford Lucy</td>
+            <td>2,529,647</td>
+            <td>3.105</td>
+          </tr>
+          <tr>
+            <td>DrivAer</td>
+            <td>2,854,762</td>
+            <td>3.601</td>
+          </tr>
+        </tbody>
+      </table>
       </div>
       <p>Table 1: Feature construction on Nvidia Tesla K20 GPU. The highly parallel implementation sorts and matches face, edge and vertex data quickly to combine them into usable surface features. The processing time depends on both the configuration of the geometry and the number and size variation of the triangles.</p>
-
       <div class="row">
-        <div class="twelve columns">
-          <img class="img u-max-full-width" src="../../images/sdf/table_2.jpg">
-        </div>
+      <table class="six columns offset-by-three columns">
+        <thead>
+          <tr>
+            <th>Geometry</th>
+            <th>Cell Size</th>
+            <th>Distance</th>
+            <th>Time(s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Orion</td>
+            <td>0.08</td>
+            <td>0.4</td>
+            <td>0.234</td>
+          </tr>
+          <tr>
+            <td>Stanford Rabbit</td>
+            <td>0.25</td>
+            <td>2.0</td>
+            <td>0.072</td>
+          </tr>
+          <tr>
+            <td>Stanford Dragon</td>
+            <td>0.16</td>
+            <td>2.0</td>
+            <td>0.123</td>
+          </tr>
+          <tr>
+            <td>XYZ RGB Dragon</td>
+            <td>0.53</td>
+            <td>5.0</td>
+            <td>0.143</td>
+          </tr>
+          <tr>
+            <td>Stanford Lucy</td>
+            <td>4.0</td>
+            <td>20.0</td>
+            <td>0.071</td>
+          </tr>
+          <tr>
+            <td>DrivAer</td>
+            <td>11.4e-3</td>
+            <td>0.06</td>
+            <td>0.078</td>
+          </tr>
+        </tbody>
+      </table>
       </div>
       <p>Table 2: SDF generation on Nvidia Tesla K20 GPU. The runtime mostly depends on the computational mesh cell size and the distance of the SDF band. A distance of 5 cells is sufficient to generate a field with no gaps. The workload is also dependent on the orientation of the geometry and triangle sizes.</p>
 

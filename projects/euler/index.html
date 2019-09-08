@@ -146,8 +146,85 @@
           </div>
         </div>  
         <p>The pie chart shows the proportion of different function types across the whole simulation on four Nvidia Tesla P100 cards. The Kernels portion is the solver code which dominates the runtime. The CUDA section is for memory copies to and from cards and the MPI portion is communication and synchronisation.</p>
-  
-        <p>The scaling of the code was tested with fixed resolution bubble collapse and Brittle simulations on a cluster with four Nvidia Tesla P100 cards per node. The clear solver scales excellently for all card counts, demonstrating the efficiency of masking communication time with domain splitting and overlapped solvers. The cut cell simulation scales worse due to a larger message size, but is comparable to the clear solver for up to eight cards.</p>
+
+	<p>The scaling of the software on a single card is shown in table 1. We list the number of steps and the time taken to simulate a Mach 2.0 shock wave travelling around a cone to a fixed final time using different resolutions. We also show the number of cut cells in the domain.</p>
+	<div class="row">
+  	<div class="eight columns offset-by-two columns ">
+      	<table class="u-full-width">
+      	  <thead>
+      	    <tr>
+      	      <th>Resolution</th>
+      	      <th>Cut cells</th>
+      	      <th>Steps</th>
+      	      <th>Time(s)</th>
+      	    </tr>
+      	  </thead>
+      	  <tbody>
+      	    <tr>
+      	      <td>85 x 85 x 85</td>
+      	      <td>2,890</td>
+      	      <td>396</td>
+      	      <td>6.6</td>
+      	    </tr>
+      	    <tr>
+      	      <td>170 x 170 x 170</td>
+      	      <td>12,124</td>
+      	      <td>815</td>
+      	      <td>91.9</td>
+      	    </tr>
+      	    <tr>
+      	      <td>340 x 340 x 340</td>
+      	      <td>48,200</td>
+      	      <td>1,688</td>
+      	      <td>1,404.1</td>
+      	    </tr>
+      	  </tbody>
+      	</table>
+	<p align="center">Table 1: 3D shock over a cone on an Nvidia Tesla K20 card at increasing resolutions.</p>
+      	</div>
+      	</div>
+
+        <p>The scaling of the code over multiple cards and compute nodes was tested with fixed resolution bubble collapse (425 × 425 × 850) and Brittle (640 × 640 × 320) simulations on a cluster with four Nvidia Tesla P100 cards per node. The timings are listed in table 2 with the scaling illustrated below. The clear solver scales excellently for all card counts, demonstrating the efficiency of masking communication time with domain splitting and overlapped solvers. The cut cell simulation scales worse due to a larger message size, but is comparable to the clear solver for up to eight cards.</p>
+	
+	<div class="row">
+  	<div class="ten columns offset-by-one columns ">
+      	<table class="u-full-width">
+      	  <thead>
+      	    <tr>
+      	      <th></br>Simulation</th>
+      	      <th></br>1</th>
+      	      <th></br>2</th>
+      	      <th>Cards</br>4</th>
+      	      <th></br>8</th>
+      	      <th></br>16</th>
+      	      <th></br>32</th>
+      	    </tr>
+      	  </thead>
+      	  <tbody>
+      	    <tr>
+      	      <td>Collapse</td>
+      	      <td>2,056</td>
+      	      <td>1,050</td>
+      	      <td>534</td>
+      	      <td>277</td>
+      	      <td>146</td>
+      	      <td>83</td>
+      	    </tr>
+      	    <tr>
+      	      <td>Brittle</td>
+      	      <td>1,463</td>
+      	      <td>750</td>
+      	      <td>390</td>
+      	      <td>210</td>
+      	      <td>125</td>
+      	      <td>91</td>
+      	    </tr>
+      	  </tbody>
+      	</table>
+	<p align="center">Table 2: Runtimes for static resolution bubble collapse and Brittle simulations on a different number of Nvidia Tesla P100 cards.</p>
+      	</div>
+      	</div>
+
         <div class="row">
   	<div class="eight columns offset-by-two columns ">
   	  <img class="img u-max-full-width" src="../../images/euler/scaling.jpg">
