@@ -184,46 +184,7 @@
       	</div>
       	</div>
 
-        <p>The scaling of the code over multiple cards and compute nodes was tested with fixed resolution bubble collapse (425 × 425 × 850) and Brittle (640 × 640 × 320) simulations on a cluster with four Nvidia Tesla P100 cards per node. The timings are listed in table 2 with the scaling illustrated below. The clear solver scales excellently for all card counts, demonstrating the efficiency of masking communication time with domain splitting and overlapped solvers. The cut cell simulation scales worse due to a larger message size, but is comparable to the clear solver for up to eight cards.</p>
-	
-	<div class="row">
-  	<div class="eight columns offset-by-two columns ">
-      	<table class="u-full-width">
-      	  <thead>
-      	    <tr>
-      	      <th>Simulation</th>
-      	      <th>1</th>
-      	      <th>2</th>
-      	      <th>4</th>
-      	      <th>8</th>
-      	      <th>16</th>
-      	      <th>32</th>
-      	    </tr>
-      	  </thead>
-      	  <tbody>
-      	    <tr>
-      	      <td>Collapse</td>
-      	      <td>2,056</td>
-      	      <td>1,050</td>
-      	      <td>534</td>
-      	      <td>277</td>
-      	      <td>146</td>
-      	      <td>83</td>
-      	    </tr>
-      	    <tr>
-      	      <td>Brittle</td>
-      	      <td>1,463</td>
-      	      <td>750</td>
-      	      <td>390</td>
-      	      <td>210</td>
-      	      <td>125</td>
-      	      <td>91</td>
-      	    </tr>
-      	  </tbody>
-      	</table>
-	<p align="center">Table 2: Runtimes for static resolution bubble collapse and Brittle simulations on a different number of Nvidia Tesla P100 cards.</p>
-      	</div>
-      	</div>
+        <p>The scaling of the code over multiple cards and compute nodes was tested with fixed resolution bubble collapse (425 × 425 × 850) and Brittle (640 × 640 × 320) simulations on a cluster with four Nvidia Tesla P100 cards per node. The clear solver scales excellently for all card counts, demonstrating the efficiency of masking communication time with domain splitting and overlapped solvers. The cut cell simulation scales worse due to a larger message size, but is comparable to the clear solver for up to eight cards.</p>
 
         <div class="row">
   	<div class="eight columns offset-by-two columns ">
