@@ -49,13 +49,13 @@ void main(){
   //The ratio of the width and height of the screen
   float widthHeightRatio = resolution.x/resolution.y;
 
-  float t = time * 0.1;
+  float t = time * 0.01;
   float dist = 0.0;
   const float layers = 16.0;
   float scale = 32.0;
   float depth;
-  float size;
-  float rotationAngle = time * 0.2;
+  float phase;
+  float rotationAngle = time * -0.01;
 
   vec2 offset;
   vec2 local_uv;
@@ -64,7 +64,8 @@ void main(){
   vec2 seed;
   vec2 centre = vec2(0.5, 0.5);
 
-  mat2 rotation = mat2(cos(rotationAngle), -sin(rotationAngle), sin(rotationAngle),  cos(rotationAngle));
+  mat2 rotation = mat2(cos(rotationAngle), -sin(rotationAngle), 
+      sin(rotationAngle),  cos(rotationAngle));
 
   for(float i = 0.0; i < layers; i++){
     depth = fract(i/layers + t);
@@ -91,12 +92,12 @@ void main(){
     //Get a random position for the local cell
     pos = 0.8 * (random2(seed) - 0.5);
 
-    //Get a random size
-    size = 0.01 + 0.02*random(seed);
+    //Get a random phase
+    phase = 128.0 * random(seed);
 
     //Get distance to the generated point, add fading to distant points
     //Add the distance to the sum
-    dist += smoothstep(size, 0.0, length(local_uv-pos)) * min(1.0, depth*2.0);
+    dist += pow(1.0-length(local_uv-pos), 50.0 + 20.0 * sin(phase + 3.0 * time)) * min(1.0, depth*2.0);
   }
 
   gl_FragColor = vec4(vec3(dist),1.0);
