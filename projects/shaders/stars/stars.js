@@ -97,7 +97,7 @@ void main(){
 
     //Get distance to the generated point, add fading to distant points
     //Add the distance to the sum
-    dist += pow(1.0-length(local_uv-pos), 50.0 + 20.0 * sin(phase + 3.0 * time)) * min(1.0, depth*2.0);
+    dist += pow(abs(1.0-length(local_uv-pos)), 50.0 + 20.0 * sin(phase + 3.0 * time)) * min(1.0, depth*2.0);
   }
 
   gl_FragColor = vec4(vec3(dist),1.0);
