@@ -9,26 +9,10 @@ if(!gl){
   console.error("Unable to initialize WebGL.");
 }
 
-const mobile = ( navigator.userAgent.match(/Android/i)
-  || navigator.userAgent.match(/webOS/i)
-  || navigator.userAgent.match(/iPhone/i)
-  || navigator.userAgent.match(/iPod/i)
-  || navigator.userAgent.match(/BlackBerry/i)
-  || navigator.userAgent.match(/Windows Phone/i)
-);
-
 //Time step
 var dt = 0.02;
 //Time
 var time = 0.0;
-
-var layers = 16;
-var scale = 32;
-
-if(mobile){
-  layers = 8;
-  scale = 16;
-}
 
 //************** Shader sources **************
 
@@ -66,8 +50,8 @@ void main(){
 
   float t = time * 0.01;
   float dist = 0.0;
-  const float layers = float(`+layers+`);
-  float scale = float(`+scale+`);
+  const float layers = 32.0;
+  float scale = 16.0;
   float depth;
   float phase;
   float rotationAngle = time * -0.01;
@@ -80,7 +64,7 @@ void main(){
   vec2 centre = vec2(0.5, 0.5);
 
   mat2 rotation = mat2(cos(rotationAngle), -sin(rotationAngle), 
-      sin(rotationAngle),  cos(rotationAngle));
+		  sin(rotationAngle),  cos(rotationAngle));
 
   for(float i = 0.0; i < layers; i++){
     depth = fract(i/layers + t);
