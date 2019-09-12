@@ -23,7 +23,6 @@ void main() {
 }
 `;
 
-//Replace with GLSL fragment shader code
 var fragmentSource = `
 precision highp float;
 
