@@ -32,7 +32,7 @@ uniform float time;
 //See https://www.shadertoy.com/view/3s3GDn for comments on the glow
 float getWaveGlow(vec2 pos, float radius, float intensity, float speed, float amplitude, float frequency, float shift){
 
-  float dist = (pos.y + amplitude * sin(shift + speed * time + pos.x * frequency));
+  float dist = abs((pos.y + amplitude * sin(shift + speed * time + pos.x * frequency)));
   dist = 1.0/dist;
   dist *= radius;
   dist = pow(dist, intensity);
