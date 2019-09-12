@@ -40,7 +40,7 @@ void main() {
 `;
 
 var fragmentSource = `
-precision mediump float;
+precision highp float;
 
 uniform float width;
 uniform float height;
