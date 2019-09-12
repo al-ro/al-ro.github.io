@@ -1,6 +1,3 @@
-//Based on:
-//https://andreashackel.de/tech-art/stripes-shader-1/
-
 var canvas = document.getElementById("canvas_1");
 
 // Initialize the GL context
@@ -9,26 +6,10 @@ if(!gl){
   console.error("Unable to initialize WebGL.");
 }
 
-const mobile = ( navigator.userAgent.match(/Android/i)
-  || navigator.userAgent.match(/webOS/i)
-  || navigator.userAgent.match(/iPhone/i)
-  || navigator.userAgent.match(/iPod/i)
-  || navigator.userAgent.match(/BlackBerry/i)
-  || navigator.userAgent.match(/Windows Phone/i)
-);
-
 //Time step
-var dt = 0.02;
+var dt = 0.01;
 //Time
 var time = 0.0;
-
-var layers = 16;
-var scale = 32;
-
-if(mobile){
-  layers = 8;
-  scale = 16;
-}
 
 //************** Shader sources **************
 
@@ -40,7 +21,7 @@ void main() {
 `;
 
 var fragmentSource = `
-precision mediump float;
+precision highp float;
 
 uniform float width;
 uniform float height;
@@ -48,74 +29,41 @@ vec2 resolution = vec2(width, height);
 
 uniform float time;
 
-float random(vec2 par){
-  return fract(sin(dot(par.xy,vec2(12.9898,78.233))) * 43758.5453);
-}
+//See https://www.shadertoy.com/view/3s3GDn for comments on the glow
+float getWaveGlow(vec2 pos, float radius, float intensity, float speed, float amplitude, float frequency, float shift){
 
-vec2 random2(vec2 par){
-  float rand = random(par);
-  return vec2(rand, random(par+rand));
+  float dist = (pos.y + amplitude * sin(shift + speed * time + pos.x * frequency));
+  dist = 1.0/dist;
+  dist *= radius;
+  dist = pow(dist, intensity);
+  return dist;
 }
 
 void main(){
-  // Normalized pixel coordinates (from 0 to 1)
+
   vec2 uv = gl_FragCoord.xy/resolution.xy;
-
-  //The ratio of the width and height of the screen
   float widthHeightRatio = resolution.x/resolution.y;
-
-  float t = time * 0.01;
-  float dist = 0.0;
-  const float layers = float(`+layers+`);
-  float scale = float(`+scale+`);
-  float depth;
-  float phase;
-  float rotationAngle = time * -0.01;
-
-  vec2 offset;
-  vec2 local_uv;
-  vec2 index;
-  vec2 pos;
-  vec2 seed;
   vec2 centre = vec2(0.5, 0.5);
+  vec2 pos = centre - uv;
+  pos.y /= widthHeightRatio;
 
-  mat2 rotation = mat2(cos(rotationAngle), -sin(rotationAngle), 
-      sin(rotationAngle),  cos(rotationAngle));
+  float intensity = 0.7;
+  float radius = 0.012;
 
-  for(float i = 0.0; i < layers; i++){
-    depth = fract(i/layers + t);
+  vec3 col = vec3(0.0);
+  float dist = 0.0;
 
-    //Move centre in a circle depending on the depth of the layer
-    centre.x = 0.5 + 0.1 * cos(t) * depth;
-    centre.y = 0.5 + 0.1 * sin(t) * depth;
+  dist = getWaveGlow(pos, radius,intensity, 3.0, 0.01, 2.0, 0.0);
+  col += dist * vec3(1.0,0.5,0.1);
+  dist = getWaveGlow(pos, radius, intensity, 5.0, 0.01, 2.0, 2.0);
+  col += dist * vec3(0.5,0.2,0.2);
+  dist = getWaveGlow(pos, radius, intensity, 8.0, 0.01, 5.0, 1.0);
+  //Use time varying colours from the basic template
+  //Add it to vec3(0.1) to always have a bright core
+  col += dist * (vec3(0.1) + 0.5 + 0.5*cos(time+vec3(0,2,4)));
 
-    //Get uv from the fragment coordinates, rotation and depth
-    uv = centre-gl_FragCoord.xy/resolution.xy;
-    uv.y /= widthHeightRatio;
-    uv *= rotation;
-    uv *= mix(scale, 0.0, depth);
-
-    //The local cell
-    index = floor(uv);
-
-    //Local cell seed;
-    seed = 20.0 * i + index;
-
-    //The local cell coordinates
-    local_uv = fract(i + uv) - 0.5;
-
-    //Get a random position for the local cell
-    pos = 0.8 * (random2(seed) - 0.5);
-
-    //Get a random phase
-    phase = 128.0 * random(seed);
-
-    //Get distance to the generated point, add fading to distant points
-    //Add the distance to the sum
-    dist += pow(abs(1.0-length(local_uv-pos)), 50.0 + 20.0 * sin(phase + 3.0 * time)) * min(1.0, depth*2.0);
-  }
-
-  gl_FragColor = vec4(vec3(dist),1.0);
+  // Output to screen
+  gl_FragColor = vec4(col, 1.0);
 }
 `;
 
