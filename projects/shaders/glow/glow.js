@@ -47,8 +47,8 @@ void main(){
   vec2 pos = centre - uv;
   pos.y /= widthHeightRatio;
 
-  float intensity = 0.7;
-  float radius = 0.012;
+  float intensity = 1.0;
+  float radius = 0.02;
 
   vec3 col = vec3(0.0);
   float dist = 0.0;
@@ -61,6 +61,9 @@ void main(){
   //Use time varying colours from the basic template
   //Add it to vec3(0.1) to always have a bright core
   col += dist * (vec3(0.1) + 0.5 + 0.5*cos(time+vec3(0,2,4)));
+
+  //Tone map function discussed in the comments of https://www.shadertoy.com/view/3s3GDn
+  col = 1.0 - exp(-col);
 
   // Output to screen
   gl_FragColor = vec4(col, 1.0);
