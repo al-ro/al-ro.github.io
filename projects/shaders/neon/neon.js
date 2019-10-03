@@ -181,6 +181,11 @@ void main(){
 
 //************** Utility functions **************
 
+function onWindowResize(){
+  gl.uniform1f(widthHandle, window.innerWidth);
+  gl.uniform1f(heightHandle, window.innerHeight);
+}
+
 //Compile shader and combine with source
 function compileShader(shaderSource, shaderType){
   var shader = gl.createShader(shaderType);
