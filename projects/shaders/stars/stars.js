@@ -1,7 +1,20 @@
 //Based on:
 //https://andreashackel.de/tech-art/stripes-shader-1/
 
+const mobile = ( navigator.userAgent.match(/Android/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+);
+
 var canvas = document.getElementById("canvas_1");
+
+if(mobile){
+  canvas.width = 360;
+  canvas.height = 225;
+}
 
 // Initialize the GL context
 var gl = canvas.getContext('webgl');
