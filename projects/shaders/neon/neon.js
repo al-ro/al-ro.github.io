@@ -20,7 +20,7 @@ if(!gl){
 }
 
 //Time step
-var dt = 0.012;
+var dt = 0.015;
 //Time
 var time = 0.0;
 
