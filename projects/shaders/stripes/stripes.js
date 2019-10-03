@@ -1,5 +1,5 @@
 //Based on:
-//https://www.youtube.com/watch?v=3CycKKJiwis
+//https://andreashackel.de/tech-art/stripes-shader-1/
 
 var canvas = document.getElementById("canvas_1");
 

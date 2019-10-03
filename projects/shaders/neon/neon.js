@@ -254,14 +254,15 @@ var timeHandle = getUniformLocation(program, 'time');
 var widthHandle = getUniformLocation(program, 'width');
 var heightHandle = getUniformLocation(program, 'height');
 
+gl.uniform1f(widthHandle, canvas.width);
+gl.uniform1f(heightHandle, canvas.height);
+
 function draw(){
   //Update time
   time += dt;
 
   //Send uniforms to program
   gl.uniform1f(timeHandle, time);
-  gl.uniform1f(widthHandle, canvas.width);
-  gl.uniform1f(heightHandle, canvas.height);
 
   //Draw a triangle strip connecting vertices 0-4
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
