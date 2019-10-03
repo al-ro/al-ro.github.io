@@ -41,7 +41,6 @@ document.addEventListener('mozfullscreenchange', exitHandler);
 document.addEventListener('MSFullscreenChange', exitHandler);
 
 function exitHandler() {
-  console.log("change");
   gui_.classList.toggle("gui_c");
   gui_.classList.toggle("fullscreen_gui_c");
   fullscreenButton.classList.toggle("fullscreen-button");

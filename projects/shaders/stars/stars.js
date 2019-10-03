@@ -1,5 +1,5 @@
 //Based on:
-//https://andreashackel.de/tech-art/stripes-shader-1/
+//https://www.youtube.com/watch?v=3CycKKJiwis
 
 const mobile = ( navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/webOS/i)
