@@ -40,9 +40,8 @@ stats.showPanel(0);
 stats.domElement.style.position = 'relative';
 stats.domElement.style.bottom = '48px';
 
-if(!mobile){
-  document.getElementById('cc_1').appendChild(stats.domElement);
-}
+document.getElementById('cc_1').appendChild(stats.domElement);
+
 
 //****************** GUI *********************
 var armillary_button = { solid_surface:function(){
@@ -56,9 +55,8 @@ var blob_button = { smooth_union:function(){
 
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
-if(!mobile){
-  customContainer.appendChild(gui.domElement);
-}
+customContainer.appendChild(gui.domElement);
+
 gui.add(armillary_button, 'solid_surface');
 gui.add(blob_button, 'smooth_union');
 gui.add(this, 'smoothness').min(0.0).max(1.0).step(0.05).onChange(function(value){gl.uniform1f(smoothnessHandle, smoothness)});
@@ -542,55 +540,54 @@ function getUniformLocation(program, name) {
 
 //************** Create shaders **************
 
-if(!mobile){
-  //Create vertex and fragment shaders
-  var vertexShader = compileShader(vertexSource, gl.VERTEX_SHADER);
-  var fragmentShader = compileShader(fragmentSource, gl.FRAGMENT_SHADER);
+//Create vertex and fragment shaders
+var vertexShader = compileShader(vertexSource, gl.VERTEX_SHADER);
+var fragmentShader = compileShader(fragmentSource, gl.FRAGMENT_SHADER);
 
-  //Create shader programs
-  var program = gl.createProgram();
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
-  gl.linkProgram(program);
+//Create shader programs
+var program = gl.createProgram();
+gl.attachShader(program, vertexShader);
+gl.attachShader(program, fragmentShader);
+gl.linkProgram(program);
 
-  gl.useProgram(program);
+gl.useProgram(program);
 
-  //Set up rectangle covering entire canvas 
-  var vertexData = new Float32Array([
-      -1.0,  1.0, 	// top left
-      -1.0, -1.0, 	// bottom left
-      1.0,  1.0, 	// top right
-      1.0, -1.0, 	// bottom right
-  ]);
+//Set up rectangle covering entire canvas 
+var vertexData = new Float32Array([
+    -1.0,  1.0, 	// top left
+    -1.0, -1.0, 	// bottom left
+    1.0,  1.0, 	// top right
+    1.0, -1.0, 	// bottom right
+]);
 
-  //Create vertex buffer
-  var vertexDataBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexDataBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
+//Create vertex buffer
+var vertexDataBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vertexDataBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
 
-  // Layout of our data in the vertex buffer
-  var positionHandle = getAttribLocation(program, 'position');
+// Layout of our data in the vertex buffer
+var positionHandle = getAttribLocation(program, 'position');
 
-  gl.enableVertexAttribArray(positionHandle);
-  gl.vertexAttribPointer(positionHandle,
-      2, 		// position is a vec2 (2 values per component)
-      gl.FLOAT, 	// each component is a float
-      false, 		// don't normalize values
-      2 * 4, 		// two 4 byte float components per vertex (32 bit float is 4 bytes)
-      0 		// how many bytes inside the buffer to start from
-      );
+gl.enableVertexAttribArray(positionHandle);
+gl.vertexAttribPointer(positionHandle,
+    2, 		// position is a vec2 (2 values per component)
+    gl.FLOAT, 	// each component is a float
+    false, 		// don't normalize values
+    2 * 4, 		// two 4 byte float components per vertex (32 bit float is 4 bytes)
+    0 		// how many bytes inside the buffer to start from
+    );
 
-  //Set uniform handle
-  var timeHandle = getUniformLocation(program, 'time');
-  var widthHandle = getUniformLocation(program, 'width');
-  var heightHandle = getUniformLocation(program, 'height');
-  var sceneHandle = getUniformLocation(program, 'scene');
-  var smoothnessHandle = getUniformLocation(program, 'k');
+//Set uniform handle
+var timeHandle = getUniformLocation(program, 'time');
+var widthHandle = getUniformLocation(program, 'width');
+var heightHandle = getUniformLocation(program, 'height');
+var sceneHandle = getUniformLocation(program, 'scene');
+var smoothnessHandle = getUniformLocation(program, 'k');
 
-  gl.uniform1f(widthHandle, canvas.width);
-  gl.uniform1f(heightHandle, canvas.height);
-  gl.uniform1f(smoothnessHandle, smoothness);
-}
+gl.uniform1f(widthHandle, canvas.width);
+gl.uniform1f(heightHandle, canvas.height);
+gl.uniform1f(smoothnessHandle, smoothness);
+
 //************** Draw **************
 function draw(){
   stats.begin();
