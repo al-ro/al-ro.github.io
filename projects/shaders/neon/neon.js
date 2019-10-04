@@ -48,8 +48,8 @@ vec2 points[POINT_COUNT];
 const float speed = -0.5;
 const float len = 0.25;
 const float scale = 0.012;
-float intensity = 0.99;
-float radius = 0.02;
+float intensity = 0.8;
+float radius = 0.03;
 
 //https://www.shadertoy.com/view/MlKcDD
 //Signed distance to a quadratic bezier
