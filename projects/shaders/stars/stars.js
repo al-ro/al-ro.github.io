@@ -11,9 +11,12 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 
 var canvas = document.getElementById("canvas_1");
 
+var layers = 10;
+
 if(mobile){
   canvas.width = 360;
   canvas.height = 225;
+  layers = 6;
 }
 
 // Initialize the GL context
@@ -60,7 +63,7 @@ float getGlow(float dist, float radius, float intensity){
 void main(){
 
   float t = time * 0.05;
-  const float layers = 10.0;
+  const float layers = float(`+layers+`);
   float scale = 32.0;
   float depth;
   float phase;
