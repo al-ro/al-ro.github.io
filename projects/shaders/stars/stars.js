@@ -16,7 +16,7 @@ var layers = 10;
 if(mobile){
   canvas.width = 360;
   canvas.height = 225;
-  layers = 6;
+  layers = 5;
 }
 
 // Initialize the GL context
