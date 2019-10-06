@@ -110,25 +110,25 @@ void main(){
     local_uv = uv - fl - 0.5;
 
 
-    //For a 3x3 group of cells around the fragment, find the 
-    //distance from the points of each to the current fragment 
-    //and draw an accumulative glow accordingly
+    //For a 3x3 group of cells around the fragment, find the distance from 
+    //the points of each to the current fragment and draw an accumulative glow accordingly.
+    //The local cell is (0,0)
     for(float j = -1.0; j <= 1.0; j++){
       for(float k = -1.0; k <= 1.0; k++){
 	cell = vec2(j,k);
 
+	//Index of the cell
 	index = fl + cell;
 
-	//Local cell seed
+	//Cell seed
 	seed = 128.0 * i + index;
 
-	//Get a random position for the local cell in relation 
-	//to the considered cell
+	//Get a random position in the considered cell
 	pos = cell + 0.9 * (random2(seed) - 0.5);
 
 	//Get a random phase
 	phase = 128.0 * random(seed);
-	//Get colour from local cell information
+	//Get colour from cell information
 	tone = vec3(random(seed), random(seed + 1.0), random(seed + 2.0));
 
 	//Get distance to the generated point, fade distant points
