@@ -83,7 +83,7 @@ void main(){
   vec2 seed;
   vec2 centre;    
   //The indices of 3x3 cells surrounding the fragment
-  vec2 neighbour;
+  vec2 cell;
   //To move the focus of the camera in a circle
   vec2 rot = vec2(cos(t), sin(t));
 
@@ -115,16 +115,16 @@ void main(){
     //and draw an accumulative glow accordingly
     for(float j = -1.0; j <= 1.0; j++){
       for(float k = -1.0; k <= 1.0; k++){
-	neighbour = vec2(j,k);
+	cell = vec2(j,k);
 
-	index = fl + neighbour;
+	index = fl + cell;
 
 	//Local cell seed
 	seed = 128.0 * i + index;
 
 	//Get a random position for the local cell in relation 
 	//to the considered cell
-	pos = neighbour + 0.9 * (random2(seed) - 0.5);
+	pos = cell + 0.9 * (random2(seed) - 0.5);
 
 	//Get a random phase
 	phase = 128.0 * random(seed);
