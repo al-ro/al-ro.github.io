@@ -89,7 +89,7 @@ void main(){
 
   //To rotate layers
   mat2 rotation = mat2(cos(rotationAngle), -sin(rotationAngle), 
-      sin(rotationAngle),  cos(rotationAngle));
+		       sin(rotationAngle),  cos(rotationAngle));
   vec3 col = vec3(0);
   vec3 tone;
 
