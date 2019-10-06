@@ -62,7 +62,7 @@ float getGlow(float dist, float radius, float intensity){
 
 void main(){
 
-  float t = time * 0.05;
+  float t = 1.0 + time * 0.05;
   const float layers = float(`+layers+`);
   float scale = 32.0;
   float depth;
