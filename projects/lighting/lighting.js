@@ -14,6 +14,7 @@ const mobile = ( navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/Windows Phone/i)
 );
 
+
 //Lighting variables
 var ambient_strength = 0.3;
 var diffuse_strength = 0.7;
@@ -70,6 +71,16 @@ controls.maxDistance = 500;
 controls.minDistance = 10;
 controls.maxPolarAngle = Math.PI/2;
 controls.update();
+
+var cc = document.getElementById("cc_1");
+
+window.addEventListener( 'resize', onWindowResize, false );
+
+function onWindowResize(){
+  console.log(canvas.width, canvas.height);
+  camera.aspect = canvas.offsetWidth / canvas.offsetHeight;
+  camera.updateProjectionMatrix();
+}
 
 //************** Shadows **************
 
