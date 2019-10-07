@@ -10,6 +10,7 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 );
 
 var canvas = document.getElementById("canvas_1");
+var cont = document.getElementById("cc_1");
 
 var layers = 10;
 
@@ -150,6 +151,23 @@ void main(){
 `;
 
 //************** Utility functions **************
+
+window.addEventListener('resize', onWindowResize, false);
+
+function onWindowResize(){
+  var ratio =  canvas.clientWidth / canvas.clientHeight;
+  var w = cont.offsetWidth;
+  var h = w/ratio;
+  canvas.width  = w;
+  if(isInFullscreen()){
+    canvas.height = h;
+  }else{
+    canvas.height = canvas.width/1.6;
+  }
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  gl.uniform1f(widthHandle, canvas.width);
+  gl.uniform1f(heightHandle, canvas.height);
+}
 
 //Compile shader and combine with source
 function compileShader(shaderSource, shaderType){
