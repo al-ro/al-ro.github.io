@@ -56,6 +56,7 @@ camera.up.set(0,0,1);
 camera.position.set(width/1.8, -height/1.8, depth/4);
 
 scene.add(camera);
+
 window.addEventListener('resize', onWindowResize, false);
 
 function onWindowResize(){

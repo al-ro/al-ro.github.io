@@ -77,9 +77,12 @@ var cc = document.getElementById("cc_1");
 window.addEventListener( 'resize', onWindowResize, false );
 
 function onWindowResize(){
-  console.log(canvas.width, canvas.height);
-  camera.aspect = canvas.offsetWidth / canvas.offsetHeight;
+  camera.aspect = cont.clientWidth / cont.clientHeight;
   camera.updateProjectionMatrix();
+  var ratio =  canvas.width / canvas.height;
+  var w = cont.offsetWidth;
+  var h = w/ratio;
+  renderer.setSize(w, h, false);
 }
 
 //************** Shadows **************
