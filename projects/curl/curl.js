@@ -17,6 +17,19 @@ if(mobile){
   canvas_1.height = 450;
 }
 
+window.addEventListener('resize', onWindowResize, false);
+
+function onWindowResize(){
+  canvas_1.width  = window.innerWidth;
+  if(isInFullscreen()){
+    canvas_1.height = window.innerHeight;
+  }else{
+    canvas_1.height = canvas_1.width/1.6;
+  }
+  ctx.fillStyle = "rgb(17,27,68)";
+  ctx.fillRect(0,0,canvas_1.width, canvas_1.height);
+}
+
 //Flag for x direction flow
 var flow = false;
 //Number of elements
@@ -156,7 +169,6 @@ var variables = {
   step: initial_step,
   particle_size: 1.5, 
   rainbow: true,
-  lighten: false,
   colour: '#ff9500'
 }
 var reset_button = { reset:function(){ 
@@ -164,7 +176,6 @@ var reset_button = { reset:function(){
   variables.step = initial_step;
   variables.particle_size = 1.5;
   variables.rainbow = true;
-  variables.lighten = false;
   variables.fade = 0.0;
   ctx.fillStyle = "rgb(17,27,68)";
   ctx.fillRect(0,0,canvas_1.width, canvas_1.height);
@@ -196,33 +207,28 @@ var random_button = { random:function(){
   variables.rainbow = false;
   var c = Math.round(Math.random() * discCount);
   variables.colour = 'rgb('+red[c]+','+grn[c]+','+blu[c]+')';
-      variables.lighten = false;
 
-      if(variables.particle_size >= 2){
-        variables.fade = Math.random() * 0.1;
-      }else{
-        variables.fade = Math.random() * 0.01; 
-      }
-  }};
+  if(variables.particle_size >= 2){
+    variables.fade = Math.random() * 0.1;
+  }else{
+    variables.fade = Math.random() * 0.01; 
+  }
+}};
 
   //dat.gui library controls
-  var gui = new dat.GUI({ autoPlace: false });
+var gui = new dat.GUI({ autoPlace: false });
 
-  var customContainer = document.getElementById('gui_container');
-  customContainer.appendChild(gui.domElement);
-  if(!mobile){
-    gui.add(variables, 'step').min(10).max(3000).step(10).listen().onChange(function(value) { clear_button.clear();});
-  }else{ 
-    gui.add(variables, 'step').min(10).max(600).step(5).listen().onChange(function(value) { clear_button.clear();});
-  }
-  gui.add(variables, 'speed').min(0.0).max(1.0).step(0.01).listen();
-  gui.add(variables, 'particle_size').min(0.1).max(5).step(0.1).listen();
-  gui.add(variables, 'fade').min(0.0).max(1.0).step(0.01).listen();
-  gui.addColor(variables, 'colour').listen().onChange(function(value) { variables.rainbow = false;} );
-  if(!mobile){
-    gui.add(variables, 'lighten');
-  }
-
+var customContainer = document.getElementById('gui_container');
+customContainer.appendChild(gui.domElement);
+if(!mobile){
+  gui.add(variables, 'step').min(10).max(3000).step(10).listen().onChange(function(value) { clear_button.clear();});
+}else{ 
+  gui.add(variables, 'step').min(10).max(600).step(5).listen().onChange(function(value) { clear_button.clear();});
+}
+gui.add(variables, 'speed').min(0.0).max(1.0).step(0.01).listen();
+gui.add(variables, 'particle_size').min(0.1).max(5).step(0.1).listen();
+gui.add(variables, 'fade').min(0.0).max(1.0).step(0.01).listen();
+gui.addColor(variables, 'colour').listen().onChange(function(value) { variables.rainbow = false;} );
 gui.add(this, 'flow');
 gui.add(random_button,'random');
 gui.add(reset_button,'reset');
@@ -241,12 +247,6 @@ function draw() {
   ctx.fillRect(0,0,canvas_1.width, canvas_1.height);
 
   move();
-
-  if(variables.lighten && !mobile){ 
-    //Lighten mixes colours for interesting effect with initial rainbow setting
-    ctx.save();
-    ctx.globalCompositeOperation = "lighten";
-  }
 
   //For all discs
   for(i = 0; i < discs.length; i++){
@@ -272,10 +272,7 @@ function draw() {
     ctx.arc(discs[i].x, discs[i].y, variables.particle_size, 0, TWO_PI);
     ctx.fill();
   }
-  if(variables.lighten && !mobile){ 
-    //For lighten regime
-    ctx.restore();
-  }
+
   window.requestAnimationFrame(draw);
 }
 draw();
