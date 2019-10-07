@@ -75,6 +75,16 @@ stats.domElement.style.position = 'relative';
 stats.domElement.style.bottom = '48px';
 document.getElementById('cc_1').appendChild(stats.domElement);
 
+window.addEventListener( 'resize', onWindowResize, false );
+
+function onWindowResize(){
+  camera.aspect = cont.clientWidth / cont.clientHeight;
+  camera.updateProjectionMatrix();
+  var ratio =  canvas.width / canvas.height;
+  var w = cont.offsetWidth;
+  var h = w/ratio;
+}
+
 //http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm
 function multiplyQuaternions(q1, q2){
   x =  q1.x * q2.w + q1.y * q2.z - q1.z * q2.y + q1.w * q2.x;

@@ -72,8 +72,6 @@ controls.minDistance = 10;
 controls.maxPolarAngle = Math.PI/2;
 controls.update();
 
-var cc = document.getElementById("cc_1");
-
 window.addEventListener( 'resize', onWindowResize, false );
 
 function onWindowResize(){
