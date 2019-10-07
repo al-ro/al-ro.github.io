@@ -61,7 +61,6 @@ function toggle_fullscreen(e) {
   } 
 }
 
-
 fullscreenButton.addEventListener('click', toggle_fullscreen);
 document.addEventListener("keypress", function(e) {
     //ESC key
