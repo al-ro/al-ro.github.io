@@ -149,20 +149,20 @@
     right: 0px;
     top: 0;
     z-index: 1;
-}
+  }
 }
 @media (min-width: 550px) {
   .gui_c{
     position: absolute; 
     right: 0px;
     top: 4em;
-}
+  }
 }
 
 @media (max-width: 550px) {
   .fullscreen-button{
-    display: none;
-}
+    /*display: none;*/
+  }
 }
 .hidden_canvas {
   display: none;
