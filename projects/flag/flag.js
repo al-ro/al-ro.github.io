@@ -15,23 +15,6 @@ if(mobile){
   canvas_1.height = 450;
 }
 
-window.addEventListener('resize', onWindowResize, false);
-
-function onWindowResize(){
-  canvas_1.width  = window.innerWidth;
-  if(isInFullscreen()){
-    canvas_1.height = window.innerHeight;
-  }else{
-    canvas_1.height = canvas_1.width/1.6;
-    if(mobile){
-      canvas_1.width = 720;
-      canvas_1.height = 450;
-    }
-  }
-  ctx.fillStyle = "rgb(17,27,68)";
-  ctx.fillRect(0,0,canvas_1.width, canvas_1.height);
-}
-
 var scale = canvas_1.width/canvas_1.scrollWidth;
 //Fabric nodes
 var nodes = [];

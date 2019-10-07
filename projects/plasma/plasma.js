@@ -1,4 +1,5 @@
 var ctx = canvas_1.getContext("2d");
+
 var discs = [];
 var TWO_PI = 2 * Math.PI;
 
