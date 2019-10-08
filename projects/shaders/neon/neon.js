@@ -1,3 +1,11 @@
+const mobile = ( navigator.userAgent.match(/Android/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+);
+
 var canvas = document.getElementById("canvas_1");
 
 canvas.width = canvas.clientWidth;
@@ -178,6 +186,12 @@ function onWindowResize(){
   var h = canvas.clientHeight;
   if(!isInFullscreen()){
     h = w / 1.6;
+  }else{
+    //Reduce resolution if mobile full screen for performance
+    if(mobile){
+      w *= 0.8;
+      h *= 0.8;
+    }
   }
   canvas.width = w;
   canvas.height = h;
