@@ -79,9 +79,10 @@ var particles = new THREE.Geometry();
 var colour = 0xff6800;
 
 //Add texture to particles
+var loader = new THREE.TextureLoader();
 //https://stackoverflow.com/questions/24087757/three-js-and-loading-a-cross-domain-image
 THREE.ImageUtils.crossOrigin = '';
-var texture = THREE.ImageUtils.loadTexture("http://res.cloudinary.com/al-ro/image/upload/c_scale,h_512/v1518264821/ember_ihk6rp.png");
+var texture =  loader.load('https://al-ro.github.io/images/embers/embertexture.png');
 
 //Variable size for particle material
 var size = 50;

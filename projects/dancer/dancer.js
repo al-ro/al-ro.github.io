@@ -145,7 +145,7 @@ geom.scale(7,7,7);
 
 var colour = 0x939393;
 
-var material = new THREE.MeshPhongMaterial( {color: colour, specular: 0xffffff, shininess: 100, side: THREE.DoubleSide, shading: THREE.FlatShading} );
+var material = new THREE.MeshPhongMaterial( {color: colour, specular: 0xffffff, shininess: 100, side: THREE.DoubleSide, flatShading: true} );
 
 
 //Generate random flakes
