@@ -3,8 +3,6 @@
 //Normal map and edited texture from https://www.sharetextures.com/
 //Skybox image taken from https://hdrihaven.com/
 
-var canvas = document.getElementById("canvas_1");
-
 const mobile = ( navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/webOS/i)
     || navigator.userAgent.match(/iPhone/i)
@@ -13,6 +11,10 @@ const mobile = ( navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/Windows Phone/i)
 );
 
+var canvas = document.getElementById("canvas_1");
+
+canvas.width = canvas.clientWidth;
+canvas.height = canvas.width/1.6;
 
 //Lighting variables
 var ambient_strength = 0.3;
@@ -78,6 +80,12 @@ function onWindowResize(){
   var h = canvas.clientHeight;
   if(!isInFullscreen()){
     h = w/1.6;
+  }
+
+  if(mobile){
+    //Reduce resolution if mobile for performance
+    w *= 0.7;
+    h *= 0.7;
   }
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
