@@ -186,9 +186,8 @@ function onWindowResize(){
   var h = canvas.clientHeight;
   if(!isInFullscreen()){
     h = w / 1.6;
-  }else{
+  }else if(mobile){
     //Reduce resolution if mobile full screen for performance
-    if(mobile){
       w *= 0.7;
       h *= 0.7;
     }
