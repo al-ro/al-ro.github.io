@@ -1,17 +1,17 @@
-@media (min-width: 550px) {
+@media (min-width: 549px) {
   .in-threes {
     margin-left: 2%; 
     margin-right: 2%;  
-}
-.in-threes:first-child {
-  margin-left: 0; 
-}
-.in-threes:nth-of-type(3n+0) {
-  margin-right: 0px; 
-} 
-.in-threes:nth-of-type(3n+1) {
-  margin-left: 0px; 
-} 
+  }
+  .in-threes:first-child {
+    margin-left: 0; 
+  }
+  .in-threes:nth-of-type(3n+0) {
+    margin-right: 0px; 
+  } 
+  .in-threes:nth-of-type(3n+1) {
+    margin-left: 0px; 
+  } 
 }
 
 
@@ -19,74 +19,72 @@
   .project {
     margin-left: 0.5%; 
     margin-right: 0.5%;  
-}
-.project:first-child {
-  margin-left: 0; 
-}
-.project:nth-of-type(3n+0) {
-  margin-right: 0px; 
-} 
-.project:nth-of-type(3n+1) {
-  margin-left: 0px; 
-} 
+  }
+  .project:first-child {
+    margin-left: 0; 
+  }
+  .project:nth-of-type(3n+0) {
+    margin-right: 0px; 
+  } 
+  .project:nth-of-type(3n+1) {
+    margin-left: 0px; 
+  } 
   .two.columns	{ width: 32.55555555%; }
 }
 
-@media (min-width: 550px) and (max-width: 1080px){
-  .project {
-    margin-left: 0.5%; 
-    margin-right: 0.5%;  
+.project {
+  margin-left: 0.5%; 
+  margin-right: 0.5%;  
 }
-.project:first-child {
-  margin-left: 0; 
-}
-.project:nth-of-type(4n+0) {
-  margin-right: 0px; 
-} 
-.project:nth-of-type(4n+1) {
-  margin-left: 0px; 
-} 
+
+@media (min-width: 550px) and (max-width: 1079px){
+  .project:first-child {
+    margin-left: 0; 
+  }
+  .project:nth-of-type(4n+0) {
+    margin-right: 0px; 
+  } 
+  .project:nth-of-type(4n+1) {
+    margin-left: 0px; 
+  } 
   .two.columns	{ width: 24%; }
 }
 
 @media (min-width: 1080px) {
-  .project {
-    margin-left: 0.5%; 
-    margin-right: 0.5%;  
-}
-.project:first-child {
-  margin-left: 0; 
-}
-.project:nth-of-type(5n+0) {
-  margin-right: 0px; 
-} 
-.project:nth-of-type(5n+1) {
-  margin-left: 0px; 
-} 
+
+  .project:first-child {
+    margin-left: 0; 
+  }
+  .project:nth-of-type(5n+0) {
+    margin-right: 0px; 
+  } 
+  .project:nth-of-type(5n+1) {
+    margin-left: 0px; 
+  } 
 }
 
 
 .fullscreen-button {
-  padding: 9px 12px;
-  top: 4em;
-  left: 0;
-  text-align: center;
-  display: inline-block;
-  position: absolute;
+padding: 9px 12px;
+top: 4em;
+left: 0;
+      text-align: center;
+display: inline-block;
+position: absolute;
 }
 .fullscreen-fullscreen-button {
-  padding: 9px 12px;
-  top: 0;
-  left: 0;
-  text-align: center;
-  display: inline-block;
-  position: absolute;
+padding: 9px 12px;
+top: 0;
+left: 0;
+      text-align: center;
+display: inline-block;
+position: absolute;
 }
 
 .fa-compress, .fa-expand{
-  color: #fff;
-  -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: black;
+color: #fff;
+       -webkit-text-stroke-width: 1px;
+       -webkit-text-stroke-color: black;
 }
 
 
@@ -96,6 +94,7 @@
   line-height: 1.0;
   font-family: "Roboto", "Palanquin", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
+
 .title-box {
   border: 6px solid #222;
   display: inline-block;
@@ -115,7 +114,7 @@
   .header {
     margin-top: 4rem;
     margin-bottom: 2rem; 
-}
+  }
 }
 
 .post_header {
@@ -133,14 +132,17 @@
 }
 
 @media (max-width: 550px) {
-  .gui_c{
+  .dg.main{
     position: absolute; 
-    text-align: center;
-    left: 15%;
-}
-.c_navbar{
-  margin-top: 2em;
-}
+    left: 50%;
+    -moz-transform: translateX(-50%);
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+    z-index: 1;
+  }
+  .c_navbar{
+    margin-top: 2em;
+  }
 }
 
 @media (min-width: 550px) {
@@ -163,6 +165,7 @@
   .fullscreen-button{
     top: 3.5em;
   }
+
 }@media (max-width: 400px) {
   .fullscreen-button{
     left: 1.25em;
@@ -198,71 +201,79 @@ p.p_pre {
 .math{
   font-family: Symbol, serif; 
 }
-.supsub {position: inherit;
+.supsub {
+  position: inherit;
   font-size: 1.0em;
 }
+
 .subscript {display: inline-block; position:relative; left:3px; top: 4px}
 .superscript {display: inline-block; position:relative; left:-4px; top: -6px}
+
 .math-box .frac-line {
   width: 100%;
   display: inline-block;
 }
+
 @media(max-width: 400px) { 
   .equation{
     font-size: 0.8em;
-}
-.subscript {display: inline-block; position:relative; left:3px; top: 3px;
-  font-size: 0.5em;}
-.superscript {display: inline-block; position:relative; left:-2px; top: -5px;
-  font-size: 0.5em;}
-pre{
-  font-size: 0.8em;
-}
+  }
+  .subscript {display: inline-block; position:relative; left:3px; top: 3px;
+    font-size: 0.5em;}
+  .superscript {display: inline-block; position:relative; left:-2px; top: -5px;
+    font-size: 0.5em;}
+  pre{
+    font-size: 0.8em;
+  }
 }
 .math-box {
   display: inline-block;
   margin-top: 3%;
   margin-bottom: 3%;
 }
+
 .math-box .vstack {
   display: inline-block;
   position: relative;
   margin-top: 3%;
   margin-bottom: 3%;
- }
- .math-box .vstack > div {
-   position: relative;
-   text-align: center;
-   height: 0;
 }
+
+.math-box .vstack > div {
+  position: relative;
+  text-align: center;
+  height: 0;
+}
+
 .math-box .baseline-fix {
   display: inline-table;
   table-layout: fixed;
- }
- .math-box .frac-line {
-   width: 100%;
-   display: inline-block;
+}
+.math-box .frac-line {
+  width: 100%;
+  display: inline-block;
 }
 .math-box .frac-line:before {
   display: block;
   border-bottom-style: solid;
   border-bottom-width: 1px;
   content: "";
- }
- .math-box .frac-line:after {
-   display: block;
-   margin-top: -1px;
-   border-bottom-style: solid;
-   border-bottom-width: 0.04em;
-   content: "";
- }
+}
 
- .projects h5 {
-    text-align: left; 
+.math-box .frac-line:after {
+  display: block;
+  margin-top: -1px;
+  border-bottom-style: solid;
+  border-bottom-width: 0.04em;
+  content: "";
+}
+
+.projects h5 {
+  text-align: left; 
 }
 
 .row_of_projects {
-    margin-bottom: 1em;
+  margin-bottom: 1em;
 }
 
 .project:hover  span{
@@ -272,11 +283,11 @@ pre{
   -o-animation: fadein 0.25s; /* Opera < 12.1 */
   animation: fadein 0.25s;
   animation-fill-mode: forwards;
- }
+}
 
- @keyframes fadein {
-   from { opacity: 0; }
-   to   { opacity: 1; }
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 /* Firefox < 16 */
 @-moz-keyframes fadein {
@@ -317,6 +328,7 @@ pre{
   -webkit-backface-visibility: hidden;
   -webkit-perspective: 1000;
 }
+
 .project span{
   /*A hack to stop safari flicker on fadein. If you know the real problem/solution write in.*/
   -webkit-backface-visibility: hidden;
@@ -337,35 +349,35 @@ pre{
   position: absolute;
   top: 50%;
   left: 50%;
-  -moz-transform: translateX(-50%) translateY(-50%);
-  -webkit-transform: translateX(-50%) translateY(-50%);
-  transform: translateX(-50%) translateY(-50%);
+  -moz-transform: translateX(-50%) translateY(-60%);
+  -webkit-transform: translateX(-50%) translateY(-60%);
+  transform: translateX(-50%) translateY(-60%);
   font-weight: 100;
   width: 95%;
 }
 
 @media (max-width: 860px){
-.project span p{
-  font-size: 0.8em;
-}
+  .project span p{
+    font-size: 0.8em;
+  }
 }
 @media (max-width: 600px){
-.project span p{
-  font-size: 0.6em;
-}
+  .project span p{
+    font-size: 0.6em;
+  }
 }
 @media (max-width: 400px){
-.project span p{
-  font-size: 0.4em;
-}
+  .project span p{
+    font-size: 0.4em;
+  }
 }
 .code a{ 
   text-decoration: none;
-  color: #222; 
+color: #222; 
 }
 .footer a{ 
   text-decoration: none;
-  color: #222; 
+color: #222; 
 }
 
 /* Navbar */
