@@ -3,7 +3,6 @@
 //http://petewerner.blogspot.co.uk/2015/02/intro-to-curl-noise.html
 
 var canvas = document.getElementById("canvas_1");
-var cont = document.getElementById("cc_1");
 
 var TWO_PI = Math.PI*2;
   const mobile = ( navigator.userAgent.match(/Android/i)
@@ -35,9 +34,9 @@ var rotate = true;
 //Offset to counteract noise flattening when sampling on three planes
 var offset = 0.0;
 
-var ratio =  canvas.width / canvas.height;
-var w = cont.offsetWidth;
-var h = w/ratio;
+var w = canvas.clientWidth;
+var h = canvas.clientHeight;
+var ratio = w/h;
 
 //Initialise three.js
 var scene = new THREE.Scene();
@@ -56,14 +55,17 @@ var camera = new THREE.PerspectiveCamera(FOV, ratio, 1, 200000);
 camera.position.set(-2*width, -2*height, -2*width);
 
 scene.add(camera);
+
 window.addEventListener('resize', onWindowResize, false);
 
 function onWindowResize(){
-  camera.aspect = cont.clientWidth / cont.clientHeight;
+  var w = canvas.clientWidth;
+  var h = canvas.clientHeight;
+  if(!isInFullscreen()){
+    h = w/1.6;
+  }
+  camera.aspect = w / h;
   camera.updateProjectionMatrix();
-  var ratio =  canvas.width / canvas.height;
-  var w = cont.offsetWidth;
-  var h = w/ratio;
   renderer.setSize(w, h, false);
 }
 

@@ -4,7 +4,6 @@
 //Skybox image taken from https://hdrihaven.com/
 
 var canvas = document.getElementById("canvas_1");
-var cont = document.getElementById("cc_1");
 
 const mobile = ( navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/webOS/i)
@@ -40,9 +39,9 @@ if(mobile){
 var grey = new THREE.Color(0xaaaaaa);
 var centre = new THREE.Vector3(0,0,0);
 
-var ratio =  canvas.width / canvas.height;
-var w = cont.offsetWidth;
-var h = w/ratio;
+var w = canvas.width;
+var h = canvas.height;
+var ratio = w/h;
 
 //Initialise three.js
 var scene = new THREE.Scene();
@@ -72,14 +71,16 @@ controls.minDistance = 10;
 controls.maxPolarAngle = Math.PI/2;
 controls.update();
 
-window.addEventListener( 'resize', onWindowResize, false );
+window.addEventListener('resize', onWindowResize, false);
 
 function onWindowResize(){
-  camera.aspect = cont.clientWidth / cont.clientHeight;
+  var w = canvas.clientWidth;
+  var h = canvas.clientHeight;
+  if(!isInFullscreen()){
+    h = w/1.6;
+  }
+  camera.aspect = w / h;
   camera.updateProjectionMatrix();
-  var ratio =  canvas.width / canvas.height;
-  var w = cont.offsetWidth;
-  var h = w/ratio;
   renderer.setSize(w, h, false);
 }
 
