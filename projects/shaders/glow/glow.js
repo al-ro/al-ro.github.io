@@ -1,5 +1,8 @@
 var canvas = document.getElementById("canvas_1");
 
+canvas.width = canvas.clientWidth;
+canvas.height = canvas.width/1.6;
+
 // Initialize the GL context
 var gl = canvas.getContext('webgl');
 if(!gl){
@@ -83,7 +86,6 @@ function onWindowResize(){
   if(!isInFullscreen()){
     h = w / 1.6;
   }
-
   canvas.width = w;
   canvas.height = h;
 
