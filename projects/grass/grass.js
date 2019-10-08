@@ -336,8 +336,8 @@ instanced_geometry.addAttribute( 'halfRootAngleCos', halfRootAngleCosAttribute);
 //These have been taken from "Realistic real-time grass rendering" by Eddie Lee, 2010
 var loader = new THREE.TextureLoader();
 loader.crossOrigin = '';
-var texture =  loader.load( 'https://al-ro.github.io/images/grass/blade_diffuse.jpg' );
-var alphaMap =  loader.load( 'https://al-ro.github.io/images/grass/blade_alpha.jpg' );
+var texture =  loader.load('https://al-ro.github.io/images/grass/blade_diffuse.jpg');
+var alphaMap =  loader.load('https://al-ro.github.io/images/grass/blade_alpha.jpg');
 
 //Define the material, specifying attributes, uniforms, shaders etc.
 var material = new THREE.RawShaderMaterial( {

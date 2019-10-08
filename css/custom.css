@@ -161,14 +161,12 @@
 
 @media (max-width: 550px) {
   .fullscreen-button{
-    display: none;
-    /*top: 3.5em;*/
+    top: 3.5em;
   }
 }@media (max-width: 400px) {
   .fullscreen-button{
-    display: none;
-    /*left: 1.25em;
-    font-size: 1em;*//
+    left: 1.25em;
+    font-size: 1em;
   }
 }
 .hidden_canvas {
