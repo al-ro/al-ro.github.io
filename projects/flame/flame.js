@@ -68,10 +68,9 @@ var gradient_button = { gradient:function(){
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
-gui.add(toggle_render_button, 'toggle_render');
 gui.add(this, 'dt').min(0.0).max(0.05).step(0.005).listen();
-gui.add(this, 'bloom').min(0.0).max(100.0).step(10).listen();
-gui.add(this, 'blurFactor').min(0.0).max(6.0).step(1).listen();
+gui.add(this, 'bloom').min(0.0).max(100.0).step(1).listen();
+gui.add(this, 'blurFactor').min(0.0).max(6.0).step(0.1).listen();
 gui.add(red_button, 'red');
 gui.add(green_button, 'green');
 gui.add(blue_button, 'blue');
