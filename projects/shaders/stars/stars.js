@@ -9,6 +9,14 @@ const mobile = ( navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/Windows Phone/i)
 );
 
+const mobile = ( navigator.userAgent.match(/Android/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+);
+
 var canvas = document.getElementById("canvas_1");
 
 canvas.width = canvas.clientWidth;
@@ -18,6 +26,8 @@ var layers = 10;
 
 if(mobile){
   layers = 5;
+  canvas.width *= 0.7;
+  canvas.height *= 0.7;
 }
 
 // Initialize the GL context
@@ -153,11 +163,17 @@ void main(){
 //************** Utility functions **************
 
 window.addEventListener('resize', onWindowResize, false);
+
 function onWindowResize(){
   var w = canvas.clientWidth;
   var h = canvas.clientHeight;
   if(!isInFullscreen()){
     h = w / 1.6;
+  }
+  //Reduce resolution if mobile for performance
+  if(mobile){
+    w *= 0.7;
+    h *= 0.7;
   }
   canvas.width = w;
   canvas.height = h;

@@ -189,8 +189,8 @@ function onWindowResize(){
   }else{
     //Reduce resolution if mobile full screen for performance
     if(mobile){
-      w *= 0.75;
-      h *= 0.75;
+      w *= 0.7;
+      h *= 0.7;
     }
   }
   canvas.width = w;
