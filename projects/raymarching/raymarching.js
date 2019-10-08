@@ -17,7 +17,6 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 );
 
 var canvas = document.getElementById("canvas_1");
-var cont = document.getElementById("cc_1");
 
 if(mobile){
 
@@ -521,20 +520,18 @@ if(mobile){
   window.addEventListener('resize', onWindowResize, false);
 
   function onWindowResize(){
-    var ratio =  canvas.clientWidth / canvas.clientHeight;
-    var w = cont.offsetWidth;
-    var h = w/ratio;
-    canvas.width = w;
-    if(isInFullscreen()){
-      //Reduce resolution at fullscreen for better performance
-      w = cont.offsetWidth/1.25;
-      canvas.width = w;
-      h = w/ratio;
-      canvas.height = h;
+    var w = canvas.clientWidth;
+    var h = canvas.clientHeight;
+    if(!isInFullscreen()){
+      h = w / 1.6;
     }else{
-      canvas.height = canvas.width/1.6;
+      //Reduce resolution at full screen for better performance
+      w *= 0.8;
+      h *= 0.8;
     }
-    console.log("set w, h", w, h); 
+    canvas.width = w;
+    canvas.height = h;
+
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.uniform1f(widthHandle, canvas.width);
     gl.uniform1f(heightHandle, canvas.height);

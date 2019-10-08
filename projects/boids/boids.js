@@ -3,7 +3,6 @@
 //http://www.kfish.org/boids/pseudocode.html
 
 var canvas = document.getElementById("canvas_1");
-var cont = document.getElementById("cc_1");
 
 var TWO_PI = Math.PI*2;
 
@@ -52,9 +51,9 @@ var minProx = width/100;
 var maxProx = 4*proximity;
 var speed = 3;
 
-var ratio =  canvas.width / canvas.height;
-var w = cont.offsetWidth;
-var h = w/ratio;
+var w = canvas.clientWidth;
+var h = canvas.clientHeight;
+var ratio = w/h;
 
 //Initialise three.js
 var scene = new THREE.Scene();
@@ -76,11 +75,13 @@ scene.add(camera);
 window.addEventListener('resize', onWindowResize, false);
 
 function onWindowResize(){
-  camera.aspect = cont.clientWidth / cont.clientHeight;
+  var w = canvas.clientWidth;
+  var h = canvas.clientHeight;
+  if(!isInFullscreen()){
+    h = w/1.6;
+  }
+  camera.aspect = w / h;
   camera.updateProjectionMatrix();
-  var ratio =  canvas.width / canvas.height;
-  var w = cont.offsetWidth;
-  var h = w/ratio;
   renderer.setSize(w, h, false);
 }
 

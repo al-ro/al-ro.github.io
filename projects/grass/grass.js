@@ -6,7 +6,6 @@
 //https://github.com/mrdoob/three.js/blob/master/examples/webgl_buffergeometry_instancing_dynamic.html
 
 var canvas = document.getElementById("canvas_1");
-var cont = document.getElementById("cc_1");
 
 var TWO_PI = Math.PI*2;
 
@@ -37,9 +36,9 @@ if(mobile){
 //Camera rotate
 var rotate = false;
 
-var ratio =  canvas.width / canvas.height;
-var w = cont.offsetWidth;
-var h = w/ratio;
+var w = canvas.clientWidth;
+var h = canvas.clientHeight;
+var ratio = w/h;
 
 //Initialise three.js
 var scene = new THREE.Scene();
@@ -78,11 +77,18 @@ document.getElementById('cc_1').appendChild(stats.domElement);
 window.addEventListener( 'resize', onWindowResize, false );
 
 function onWindowResize(){
-  camera.aspect = cont.clientWidth / cont.clientHeight;
+  var w = canvas.clientWidth;
+  var h = canvas.clientHeight;
+  if(!isInFullscreen()){
+    h = w/1.6;
+  }else{
+    //Reduce resolution at full screen for better performance
+    w *= 0.5;
+    h *= 0.5;
+  }
+  camera.aspect = w / h;
   camera.updateProjectionMatrix();
-  var ratio =  canvas.width / canvas.height;
-  var w = cont.offsetWidth;
-  var h = w/ratio;
+  renderer.setSize(w, h, false);
 }
 
 //http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm

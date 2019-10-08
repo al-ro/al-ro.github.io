@@ -1,5 +1,4 @@
 var canvas = document.getElementById("canvas_1");
-var cont = document.getElementById("cc_1");
 
 // Initialize the GL context
 var gl = canvas.getContext('webgl');
@@ -78,19 +77,21 @@ void main(){
 window.addEventListener('resize', onWindowResize, false);
 
 function onWindowResize(){
-  var ratio =  canvas.clientWidth / canvas.clientHeight;
-  var w = cont.offsetWidth;
-  var h = w/ratio;
-  canvas.width  = w;
-  if(isInFullscreen()){
-    canvas.height = h;
-  }else{
-    canvas.height = canvas.width/1.6;
+  var w = canvas.clientWidth;
+  var h = canvas.clientHeight;
+
+  if(!isInFullscreen()){
+    h = w / 1.6;
   }
+
+  canvas.width = w;
+  canvas.height = h;
+
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   gl.uniform1f(widthHandle, canvas.width);
   gl.uniform1f(heightHandle, canvas.height);
 }
+
 
 //Compile shader and combine with source
 function compileShader(shaderSource, shaderType){
