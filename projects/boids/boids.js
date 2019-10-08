@@ -131,8 +131,8 @@ geom.rotateX( Math.PI / 2 );
 
 var colour = 0xffffff;
 
-var material = new THREE.MeshStandardMaterial( {color: colour, side: THREE.DoubleSide, shading: THREE.FlatShading} );
-var p_material = new THREE.MeshStandardMaterial( {color: 0xff0000, side: THREE.DoubleSide, shading: THREE.FlatShading} );
+var material = new THREE.MeshStandardMaterial( {color: colour, side: THREE.DoubleSide, flatShading: true} );
+var p_material = new THREE.MeshStandardMaterial( {color: 0xff0000, side: THREE.DoubleSide, flatShading: true} );
 
 //Generate random boids
 for(i = 0; i < boidCount; i++){
