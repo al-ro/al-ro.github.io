@@ -16,6 +16,11 @@ var canvas = document.getElementById("canvas_1");
 canvas.width = canvas.clientWidth;
 canvas.height = canvas.width/1.6;
 
+if(mobile){
+  canvas.width *= 0.7;
+  canvas.height *= 0.7;
+}
+
 //Lighting variables
 var ambient_strength = 0.3;
 var diffuse_strength = 0.7;
