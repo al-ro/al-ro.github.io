@@ -21,6 +21,7 @@ var cont = document.getElementById("cc_1");
 
 if(mobile){
 
+  document.getElementById('fullscreen-button').style.display = 'none';
   var ctx=canvas.getContext("2d");
   ctx.font="50px Arial";
   ctx.fillStyle = "black";
