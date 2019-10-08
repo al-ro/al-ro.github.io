@@ -18,8 +18,6 @@ var layers = 10;
 
 if(mobile){
   layers = 5;
-  canvas.width *= 0.7;
-  canvas.height *= 0.7;
 }
 
 // Initialize the GL context
@@ -161,11 +159,11 @@ function onWindowResize(){
   var h = canvas.clientHeight;
   if(!isInFullscreen()){
     h = w / 1.6;
-  }
-  //Reduce resolution if mobile for performance
-  if(mobile){
-    w *= 0.7;
-    h *= 0.7;
+    //Reduce resolution if mobile for performance
+    if(mobile){
+      w *= 0.7;
+      h *= 0.7;
+    }
   }
   canvas.width = w;
   canvas.height = h;
