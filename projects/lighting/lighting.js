@@ -102,7 +102,6 @@ function onWindowResize(){
 //https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping
 //Used to display the depth map
 var shadowVertexSource = `
-varying vec3 vPosition;
 varying vec2 texCoord;
 void main() {
   texCoord = uv;

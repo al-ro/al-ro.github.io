@@ -1,4 +1,6 @@
 var canvas = document.getElementById("canvas_1");
+canvas.width = canvas.clientWidth;
+canvas.height = canvas.width/1.6;
 
 var TWO_PI = Math.PI*2;
 const mobile = ( navigator.userAgent.match(/Android/i)
