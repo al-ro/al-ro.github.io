@@ -188,10 +188,10 @@ function onWindowResize(){
     h = w / 1.6;
   }else if(mobile){
     //Reduce resolution if mobile full screen for performance
-      w *= 0.7;
-      h *= 0.7;
-    }
+    w *= 0.7;
+    h *= 0.7;
   }
+
   canvas.width = w;
   canvas.height = h;
 
