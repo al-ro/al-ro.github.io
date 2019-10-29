@@ -65,26 +65,26 @@
 
 
 .fullscreen-button {
-padding: 9px 12px;
-top: 4em;
-left: 0;
-      text-align: center;
-display: inline-block;
-position: absolute;
+  padding: 9px 12px;
+  top: 4em;
+  left: 0;
+  text-align: center;
+  display: inline-block;
+  position: absolute;
 }
 .fullscreen-fullscreen-button {
-padding: 9px 12px;
-top: 0;
-left: 0;
-      text-align: center;
-display: inline-block;
-position: absolute;
+  padding: 9px 12px;
+  top: 0;
+  left: 0;
+  text-align: center;
+  display: inline-block;
+  position: absolute;
 }
 
 .fa-compress, .fa-expand{
-color: #fff;
-       -webkit-text-stroke-width: 1px;
-       -webkit-text-stroke-color: black;
+  color: #fff;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: black;
 }
 
 
