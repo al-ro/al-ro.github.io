@@ -515,10 +515,15 @@ function updateShadow(mat){
 }
 
 //************** Draw **************
+var lastFrame = Date.now();
+var thisFrame;
+
 function draw(){
+  thisFrame = Date.now();
 
   if(rotate_light){
-    time += 1/160;
+    time += (thisFrame - lastFrame)/2400;	
+    
     light_mesh.position.x=(205*Math.cos(time));
     light_mesh.position.z=(205*Math.sin(time));
   }
@@ -558,6 +563,7 @@ function draw(){
     scene.remove(shadowCameraHelper);
   }
 
+  lastFrame = thisFrame;
   requestAnimationFrame(draw);
 }
 
