@@ -365,9 +365,18 @@ scene.add(mesh);
 
 //************** Draw **************
 var time = 0;
+
+var lastFrame = Date.now();
+var thisFrame;
+
 function draw(){
   stats.begin();
-  time += 1/100;
+
+  //Update time
+  thisFrame = Date.now();
+  time += (thisFrame - lastFrame)/1500;	
+  lastFrame = thisFrame;
+
   material.uniforms.time.value = time;
   renderer.render(scene, camera);
   if(rotate){

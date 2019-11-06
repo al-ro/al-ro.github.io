@@ -445,10 +445,17 @@ function touch_move(event) {
 prep_colours();
 clear();
 
+var lastFrame = Date.now();
+var thisFrame;
+
 //********************** DRAW **********************
 function draw() {
+  thisFrame = Date.now();
+
   if(animate && circle){
-    t = (t+0.1)%(TWO_PI);
+    t += (thisFrame - lastFrame)/300;	
+    t = t%(TWO_PI);
+
     x_new = Math.round(width/2 + width/4* Math.cos(t));
     y_new = Math.round(height/2 + height/4* Math.sin(t));
     disturbLine(x_new, y_new);
@@ -460,7 +467,7 @@ function draw() {
     canvas_1.width = 300;
     canvas_1.height = 300; 
   }else{
-  if((window.innerWidth === screen.width && window.innerHeight === screen.height) || (window.fullScreen)) {
+    if((window.innerWidth === screen.width && window.innerHeight === screen.height) || (window.fullScreen)) {
       canvas_1.width = maxDim;
       canvas_1.height = maxDim;
     }else{
@@ -478,6 +485,8 @@ function draw() {
   draw_texture();
   ctx_2.putImageData(plot_rgba, 0, 0);
   ctx.drawImage(canvas_2,3,3,width-3,height-3,0,0,canvas_1.width,canvas_1.height);
+
+  lastFrame = thisFrame;
   window.requestAnimationFrame(draw);
 }
 draw();

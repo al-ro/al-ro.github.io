@@ -192,9 +192,15 @@ var heightHandle = getUniformLocation(program, 'height');
 gl.uniform1f(widthHandle, canvas.width);
 gl.uniform1f(heightHandle, canvas.height);
 
+var lastFrame = Date.now();
+var thisFrame;
+
 function draw(){
+	
   //Update time
-  time += dt;
+  thisFrame = Date.now();
+  time += (thisFrame - lastFrame)/770;	
+  lastFrame = thisFrame;
 
   //Send uniforms to program
   gl.uniform1f(timeHandle, time);

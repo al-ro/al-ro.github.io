@@ -379,7 +379,7 @@ function selectPrey(p){
 function move(){
   for(i = 0; i < boidCount; i++){
 
-    //Boudnary conditions
+    //Boundary conditions
     //A periodic cube
     if(periodic){
       if(boids[i].geo.position.x > width/2){

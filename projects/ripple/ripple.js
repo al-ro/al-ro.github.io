@@ -244,12 +244,16 @@ var TWO_PI = 2 * Math.PI;
 
 
 //********************** DRAW **********************
+var lastFrame = Date.now();
+var thisFrame;
+
 function draw() {
+  thisFrame = Date.now();
   if(mobile){
     canvas_1.width = 300;
     canvas_1.height = 300;
   }else{
-  if((window.innerWidth === screen.width && window.innerHeight === screen.height) || (window.fullScreen)) {
+    if((window.innerWidth === screen.width && window.innerHeight === screen.height) || (window.fullScreen)) {
       canvas_1.width = maxDim;
       canvas_1.height = maxDim;
     }else{
@@ -261,7 +265,10 @@ function draw() {
   if(!mobile){
     //Animate lemiscate when mouse is not on window
     if(animate){
-      t = (t+0.025)%(TWO_PI);
+
+      t += (thisFrame - lastFrame)/600
+      t = t%(TWO_PI);
+
       //Parametric equation for lemnsicate taken from:
       //http://mathworld.wolfram.com/Lemniscate.html
       //Some terms are left out
@@ -360,6 +367,7 @@ function draw() {
     ctx.drawImage(canvas_2,width+10,0,width,height,0, 0, canvas_1.width, canvas_1.height);
   }
 
+  lastFrame = thisFrame;
   window.requestAnimationFrame(draw);
 }
 draw();

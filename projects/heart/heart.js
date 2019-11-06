@@ -117,6 +117,9 @@ for (i = 0; i < bodyLength; i++) {
 }
 
 //********************** DRAW **********************
+var lastFrame = Date.now();
+var thisFrame;
+
 function draw() {
 
   ctx.fillStyle = "rgb(29,32,32)";
@@ -124,7 +127,10 @@ function draw() {
 
   scale = canvas_1.width/canvas_1.scrollWidth;
 
-  t += 0.08;
+  thisFrame = Date.now();
+  t += (thisFrame - lastFrame)/200;	
+  lastFrame = thisFrame;
+
   t = t % TWO_PI;
 
   if(line <= lineMin){

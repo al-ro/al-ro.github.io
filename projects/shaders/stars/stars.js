@@ -26,8 +26,6 @@ if(!gl){
   console.error("Unable to initialize WebGL.");
 }
 
-//Time step
-var dt = 0.015;
 //Time
 var time = 0.0;
 
@@ -250,9 +248,16 @@ var heightHandle = getUniformLocation(program, 'height');
 gl.uniform1f(widthHandle, canvas.width);
 gl.uniform1f(heightHandle, canvas.height);
 
+var lastFrame = Date.now();
+var thisFrame;
+
 function draw(){
+	
   //Update time
-  time += dt;
+  thisFrame = Date.now();
+  time += (thisFrame - lastFrame)/1000;	
+  lastFrame = thisFrame;
+
 
   //Send uniforms to program
   gl.uniform1f(timeHandle, time);
