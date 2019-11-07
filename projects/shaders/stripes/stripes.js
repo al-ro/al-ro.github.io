@@ -9,8 +9,6 @@ if(!gl){
   console.error("Unable to initialize WebGL.");
 }
 
-//Time step
-var dt = 0.02;
 //Time
 var time = 0.0;
 
