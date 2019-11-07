@@ -168,6 +168,7 @@ var heightHandle = getUniformLocation(program, 'height');
 
 gl.uniform1f(widthHandle, canvas.width);
 gl.uniform1f(heightHandle, canvas.height);
+
 var lastFrame = Date.now();
 var thisFrame;
 
