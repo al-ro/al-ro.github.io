@@ -75,7 +75,7 @@ void main(){
   //The spacing between shapes
   float scale = 500.0;
   //Number of shapes
-  const float layers = 15.0;
+  const int layers = 15;
 
   float depth;
   vec2 bend;
@@ -100,10 +100,10 @@ void main(){
   glow = getGlow(dist, 0.35, 1.9);
   col += glow * vec3(0.7,0.6,1.0);
 
-  for(float i = 0.0; i < layers; i++){
+  for(int i = 0; i < layers; i++){
 
     //Time varying depth information depending on layer
-    depth = fract(i/layers + t);
+    depth = fract(float(i)/float(layers) + t);
 
     //Move the focus of the camera in a circle
     centre = vec2(0.5 + 0.2 * sin(t), 0.5 + 0.2 * cos(t));
@@ -115,16 +115,16 @@ void main(){
     pos.y /= widthHeightRatio;
 
     //Rotate shapes
-    rotationAngle = 3.14 * sin(depth + fract(t) * 6.28) + i;
+    rotationAngle = 3.14 * sin(depth + fract(t) * 6.28) + float(i);
     rotation = mat2(cos(rotationAngle), -sin(rotationAngle), 
-	sin(rotationAngle),  cos(rotationAngle));
+		    sin(rotationAngle),  cos(rotationAngle));
 
     pos *= rotation;
 
     //Position shapes according to depth
     pos *= mix(scale, 0.0, depth);
 
-    float m = mod(i, 3.0);
+    float m = mod(float(i), 3.0);
     if(m == 0.0){
       dist = abs(boxDist(pos));
     }else if(m == 1.0){
@@ -139,7 +139,7 @@ void main(){
     //Find angle along shape and map from [-PI; PI] to [0; 1]
     angle = (atan(pos.y, pos.x)+3.14)/6.28;
     //Shift angle depending on layer and map to [1...0...1]
-    angle = abs((2.0*fract(angle + i/layers)) - 1.0);
+    angle = abs((2.0*fract(angle + float(i)/float(layers))) - 1.0);
 
     //White core
     //col += 10.0*vec3(smoothstep(0.03, 0.02, dist));
@@ -147,9 +147,8 @@ void main(){
     //Glow according to angle value
     col += glow * mix(green, purple, angle);
   }
-
-  //Tone mapping
-  col = 1.0 - exp(-col);
+    //Tone mapping
+    col = 1.0 - exp(-col);
 
   //Output to screen
   gl_FragColor = vec4(col,1.0);
