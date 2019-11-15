@@ -147,8 +147,8 @@ void main(){
     //Glow according to angle value
     col += glow * mix(green, purple, angle);
   }
-    //Tone mapping
-    col = 1.0 - exp(-col);
+  //Tone mapping
+  col = 1.0 - exp(-col);
 
   //Output to screen
   gl_FragColor = vec4(col,1.0);
