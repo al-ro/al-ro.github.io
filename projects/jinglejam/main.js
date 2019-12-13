@@ -54,10 +54,10 @@ var canvas = document.getElementById("canvas");
    */
 
   const stats = new Stats();
-  stats.showPanel(0);
-  stats.domElement.style.position = 'relative';
-  stats.domElement.style.bottom = '48px';
-  //document.getElementById('canvas').appendChild(stats.domElement);
+stats.showPanel(0);
+stats.domElement.style.position = 'absolute';
+stats.domElement.style.right = '0px';
+stats.domElement.style.bottom = '0px';
   document.body.appendChild(stats.domElement);
   window.addEventListener( 'resize', onWindowResize, false );
   function onWindowResize(){
