@@ -138,8 +138,8 @@ uniforms: {
 baseTexture: { value: null },
 bloomTexture: { value: bloomComposer.renderTarget2.texture }
 },
-vertexShader: document.getElementById( 'vertexshader' ).textContent,
-fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+vertexShader: vertexSource,
+fragmentShader: fragmentSource,
 defines: {}
 } ), "baseTexture"
     );
