@@ -8,7 +8,7 @@ import { RenderPass } from 'https://threejs.org/examples/jsm/postprocessing/Rend
 import { ShaderPass } from 'https://threejs.org/examples/jsm/postprocessing/ShaderPass.js';
 import { UnrealBloomPass } from 'https://threejs.org/examples/jsm/postprocessing/UnrealBloomPass.js';
 
-import * from 'https://al-ro.github.io/projects/jinglejam/Postprocessing.js';
+import { GlitchPass2 } from 'https://al-ro.github.io/projects/jinglejam/Postprocessing.js';
 
 var canvas = document.getElementById("canvas");
 
