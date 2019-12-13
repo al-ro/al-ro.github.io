@@ -52,6 +52,12 @@ var canvas = document.getElementById("canvas");
      controls.minDistance = 1;
      controls.maxDistance = 100;
    */
+
+  const stats = new Stats();
+  stats.showPanel(0);
+  stats.domElement.style.position = 'relative';
+  stats.domElement.style.bottom = '48px';
+  document.getElementById('canvas').appendChild(stats.domElement);
   window.addEventListener( 'resize', onWindowResize, false );
   function onWindowResize(){
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -268,6 +274,7 @@ var lastFrame = Date.now();
 var thisFrame;
 function draw(){
 
+  stats.begin();
   // update the picking ray with the camera and mouse position
   raycaster.setFromCamera( mouse, camera );
 
@@ -297,6 +304,7 @@ function draw(){
   // render the entire scene, then render bloom scene on top
   finalComposer.render();
   //glitchPass.randX = 5.0;
+  stats.end();
   requestAnimationFrame(draw);
 }
 
