@@ -57,7 +57,8 @@ var canvas = document.getElementById("canvas");
   stats.showPanel(0);
   stats.domElement.style.position = 'relative';
   stats.domElement.style.bottom = '48px';
-  document.getElementById('canvas').appendChild(stats.domElement);
+  //document.getElementById('canvas').appendChild(stats.domElement);
+  document.body.appendChild(stats.domElement);
   window.addEventListener( 'resize', onWindowResize, false );
   function onWindowResize(){
     camera.aspect = window.innerWidth / window.innerHeight;
