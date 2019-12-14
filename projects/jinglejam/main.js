@@ -428,7 +428,12 @@ function move(t, dt){
 
     oldPos.copy(camera.position);
     newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
-    camera.position.copy(newPos);
+    camera.position.copy(newPos); 
+
+    oldPos.copy(plane.position);
+    newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
+    plane.position.copy(newPos);
+
   }
 }
 
