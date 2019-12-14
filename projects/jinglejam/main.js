@@ -563,6 +563,8 @@ function checkBounds(){
 var direction = new THREE.Vector2(0,0);
 var anchor = new THREE.Vector2(0,0);
 var rotation = new THREE.Vector3(0,0,0);
+var testMesh = new THREE.Mesh( giftGeometry, giftMaterial );
+scene.add(testMesh);
 function checkCollision(){
   //Position Y will be invalid and will not be used
   playerLocation.copy(player.position);
@@ -577,6 +579,7 @@ function checkCollision(){
       anchor.set(obstacles[_obstacles[i]].position.x, obstacles[_obstacles[i]].position.z);
       rotation.copy(obstacles[_obstacles[i]].rotation);
       direction.rotateAround(anchor, rotation.y);
+      testMesh.position.set(direction.x, 0, direction.y);
       console.log(direction);
     } 
   }
