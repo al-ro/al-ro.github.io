@@ -372,7 +372,7 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   }
   var movement = new Movement(translation, rotation);
   //constructor (type, pos, meshCore, meshGlow, color, movement)
-  var rotation = new THREE.Vector(0,0,0);
+  var rotation = new THREE.Vector3(0,0,0);
   var obstacle = new Obstacle(ObstacleType.LASER, pos, obstacleMesh, glowMesh, glowMaterial, movement, rotation);
   obstacles.push(obstacle);
 }
