@@ -297,9 +297,9 @@ class Obstacle {
     return this._movement;
   }
   move(speed){
-    this._meshCore.rotateX(this_.movement.rX);
-    this._meshCore.rotateY(this_.movement.rY);
-    this._meshCore.rotateZ(this_.movement.rZ);
+    this._meshCore.rotateX(this._movement.rX);
+    this._meshCore.rotateY(this._movement.rY);
+    this._meshCore.rotateZ(this._movement.rZ);
   }
 }
 
