@@ -453,7 +453,8 @@ function move(t, dt){
 var playerLocation = new THREE.Vector3(0,0,0);
 function checkBounds(){
   //Position Y will be invalid and will not be used
-  playerLocation.copy(player.position.subScalar(posDelta*0.5));
+  playerLocation.copy(player.position);
+  playerLocation.subScalar(posDelta*0.5);
   var iX = Math.floor(playerLocation.x / posDelta);
   var iZ = Math.floor(playerLocation.z / posDelta);
   var index = iZ * globalWidth + iX;
