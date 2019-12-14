@@ -78,7 +78,7 @@ var hemisphereLight = new THREE.HemisphereLight(0x0000bb, 0xff0000, 0.2);
 scene.add(hemisphereLight);
 
 var directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-directionalLight.position.set(10,10,-10);
+directionalLight.position.set(-10,10,10);
 directionalLight.lookAt(0,0,0);
 directionalLight.castShadow = true;
 scene.add(directionalLight);
