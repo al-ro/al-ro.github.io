@@ -573,7 +573,7 @@ function checkCollision(){
   if(obstacleMap.has(index)){
     var _obstacles = obstacleMap.get(index);
     for(var i = 0; i < _obstacles.length; i++){
-      direction.set(cylinderLength/2.0 + obstacles[_obstacles[i]].position.x, 0, obstacles[_obstacles[i]].position.z);
+      direction.set(cylinderLength/2.0 + obstacles[_obstacles[i]].position.x, obstacles[_obstacles[i]].position.z);
       console.log(direction);
       anchor.set(obstacles[_obstacles[i]].position.x, obstacles[_obstacles[i]].position.z);
       rotation.copy(obstacles[_obstacles[i]].rotation);
