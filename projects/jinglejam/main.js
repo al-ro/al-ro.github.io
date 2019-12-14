@@ -304,7 +304,7 @@ var cylinderLength = 20;
 var cylinderGeometry = new THREE.CylinderGeometry( 0.5, 0.5, cylinderLength, 7 );
 cylinderGeometry.rotateZ(Math.PI/2.0);
 
-var sphereRadius = 2.0;
+var sphereRadius = 1.5;
 var sphereGeometry = new THREE.SphereGeometry(sphereRadius, 16, 16);
 var whiteMaterial = new THREE.MeshBasicMaterial( {color: 0xffffff} );
 
@@ -376,7 +376,7 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
       var obstacleMesh = new THREE.Mesh( cylinderGeometry, whiteMaterial );
       break;
     case ObstacleType.TRAVELLER:
-      var obstacleMesh = new THREE.Mesh( sphereGeometry, glowMaterial );
+      var obstacleMesh = new THREE.Mesh( sphereGeometry, whiteMaterial );
       break;
   }
   obstacleMesh.scale.set(1.01, 1.01, 1.01);
