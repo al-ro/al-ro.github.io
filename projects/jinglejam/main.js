@@ -168,6 +168,26 @@ finalComposer.addPass( glitchPass);
 
 //*************** Entities ***************
 
+const Obstacle = {
+  LASER: 1,
+  SPHERE: 2,
+  BLOCK: 3 
+};
+
+//Floor
+var tiles = [];
+//Targets to deliver gifts to
+var npcs = [];
+//Gifts to pick up and deliver
+var gifts = [];
+//Damaging or blocking geometries
+var obstacles = [];
+
+var level1 = [];
+
+var lvl1 = {
+};
+
 class Tile {
   constructor (pos, mesh){
     this._pos = pos;
@@ -200,27 +220,6 @@ for(var i = 0; i < 3; i++){
 //tile.layers.enable( BLOOM);
 scene.add(tiles[0].mesh);
 
-
-const Obstacle = {
-  LASER: 1,
-  SPHERE: 2,
-  BLOCK: 3 
-};
-
-//Floor
-var tiles = [];
-//Targets to deliver gifts to
-var npcs = [];
-//Gifts to pick up and deliver
-var gifts = [];
-//Damaging or blocking geometries
-var obstacles = [];
-
-var level1 = [];
-
-var lvl1 = {
-  tile
-};
 
 //Clear all arrays and populate them according to level
 function initialiseLevel(lvl){
