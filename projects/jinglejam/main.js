@@ -416,14 +416,9 @@ function move(t, dt){
 
     var newPos = new THREE.Vector3(oldPos.x + dir.x, 0, oldPos.z + dir.z);
     player.lookAt(newPos);
-
-    var x = newPos.x;
-    var z = newPos.z;
-    deltaMove.set(x,0,z);
-    oldPos.sub(deltaMove);
-    player.position.copy(oldPos);
+    player.position.copy(newPos);
     // camera.position.set(20 + x, 20, 20 + z);
-    tempOldPos.copy(directionalLight.position);
+    /*tempOldPos.copy(directionalLight.position);
     tempOldPos.sub(oldPos);
     directionalLight.position.copy(tempOldPos);
     directionalLight.target = player;
@@ -434,6 +429,7 @@ function move(t, dt){
     c_oldPos.y -= oldPos.y;
     c_oldPos.z -= oldPos.z;
     camera.position.set(c_oldPos.x, c_oldPos.y, c_oldPos.z);
+*/
   }
 }
 
