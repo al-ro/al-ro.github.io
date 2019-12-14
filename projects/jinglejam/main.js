@@ -513,7 +513,7 @@ function move(t, dt){
 
 //Move obstacles
   for(var i = 0; i < obstacles.length; i++){
-    //obstacles[i].move(dt);
+    obstacles[i].move(dt);
   }
 
   //Move player, light and camera
