@@ -206,9 +206,9 @@ tileGeometry.translate(0,-1,0);
 var tileMaterial = new THREE.MeshStandardMaterial({color: 0xaaaaaa, metalness: 0.,  roughness: 1});
 var posDelta = 21;
 for(var i = 0; i < 3; i++){
-  let posX = 0;
+  let posX = i;
   let posY = 0;
-  let posZ = 0;
+  let posZ = i;
   var pos = new THREE.Vector3(posX, posY, posZ);
   pos.multiplyScalar(posDelta);
   var tileMesh = new THREE.Mesh( tileGeometry, tileMaterial );
@@ -219,7 +219,9 @@ for(var i = 0; i < 3; i++){
 }
 
 //tile.layers.enable( BLOOM);
-scene.add(tiles[0].mesh);
+for(var i = 0; i < tiles.length; i++){
+  scene.add(tiles[i].mesh);
+}
 
 
 //Clear all arrays and populate them according to level
