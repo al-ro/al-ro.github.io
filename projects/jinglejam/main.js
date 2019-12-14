@@ -178,7 +178,16 @@ function setGlobalMap(tileMap){
   globalMap.clear();
   for(var i = 0; i < tileMap.length; i++){
     var index = tileMap[i][1] * globalWidth + tileMap[i][0];
-    globalMap.set(index, [true, false, true]);
+    globalMap.set(index, i);
+  }
+//console.log(globalMap);
+}
+var obstacleMap = new Map();
+function setObstacleMap(obsMap){
+  obstacleMap.clear();
+  for(var i = 0; i < obsMap.length; i++){
+    var index = obsMap[i][1] * globalWidth + obsMap[i][0];
+    globalMap.set(index, i);
   }
 //console.log(globalMap);
 }
@@ -440,6 +449,42 @@ var plane = new THREE.Mesh( planeGeometry, planeMaterial );
 plane.position.copy(playerStartPosition);
 scene.add( plane );
 
+//************** Collision **************
+//https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
+//x, y is your target point and x1, y1 to x2, y2 is your line segment
+function distanceToLine(x, y, x1, y1, x2, y2) {
+
+  var A = x - x1;
+  var B = y - y1;
+  var C = x2 - x1;
+  var D = y2 - y1;
+
+  var dot = A * C + B * D;
+  var len_sq = C * C + D * D;
+  var param = -1;
+  if (len_sq != 0) //in case of 0 length line
+      param = dot / len_sq;
+
+  var xx, yy;
+
+  if (param < 0) {
+    xx = x1;
+    yy = y1;
+  }
+  else if (param > 1) {
+    xx = x2;
+    yy = y2;
+  }
+  else {
+    xx = x1 + param * C;
+    yy = y1 + param * D;
+  }
+
+  var dx = x - xx;
+  var dy = y - yy;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
 //************** Functions **************
 
 function setShadowCamera(light){
@@ -505,6 +550,27 @@ function checkBounds(){
   return globalMap.has(index); 
 }
 
+var direction = new THREE.Vector2(0,0);
+var anchor = new THREE.Vector2(0,0);
+function checkCollision(){
+  //Position Y will be invalid and will not be used
+  playerLocation.copy(player.position);
+  playerLocation.addScalar(posDelta*0.5);
+  var iX = Math.floor(playerLocation.x / posDelta);
+  var iZ = Math.floor(playerLocation.z / posDelta);
+  var index = iZ * globalWidth + iX;
+  if(obstacleMap.has(index)){
+    var _obstacles = obstacleMap.get(index);
+    for(int i = 0; i < _obstacles.length; i++){
+      direction.set(1,0);
+      var rotation = obstacles[_obstacles[i]].rotation.y;
+      console.log(
+      direction.rotateAround(anchor, rotation);
+      )
+    } 
+  }
+}
+
 //Actually the exact opposite of falling
 function fall(dt){
   player.position.set(player.position.x, player.position.y + dt, player.position.z);
@@ -516,6 +582,7 @@ var targetDir = new THREE.Vector3(0,0,0);
 var lastFrame = Date.now();
 var thisFrame;
 var bounds = true;
+var collision = false;
 var deathFrames = 0;
 
 function draw(){
@@ -541,7 +608,8 @@ function draw(){
   time += dt;	
   lastFrame = thisFrame;
   bounds = checkBounds();
-  if(!bounds){
+  collision = checkCollision();
+  if(!bounds || collision){
     fall(dt);
     alive = false;
   }else{
