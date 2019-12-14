@@ -357,7 +357,7 @@ function initialiseLevel(lvl){
 //************** Objects **************
 
 var planeGeometry = new THREE.PlaneGeometry( 100, 100 );
-var planeMaterial = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.SingleSide} );
+var planeMaterial = new THREE.MeshBasicMaterial( {color: 0xff0000} );
 var plane = new THREE.Mesh( planeGeometry, planeMaterial );
 scene.add( plane );
 
