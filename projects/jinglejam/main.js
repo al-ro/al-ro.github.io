@@ -178,7 +178,7 @@ function setGlobalMap(tileMap){
   globalMap.clear();
   for(var i = 0; i < tileMap.length; i++){
     var index = tileMap[i][1] * globalWidth + tileMap[i][0];
-    globalMap.set(index, true);
+    globalMap.set(index, [true, false, true]);
   }
 //console.log(globalMap);
 }
