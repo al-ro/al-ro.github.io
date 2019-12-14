@@ -394,14 +394,13 @@ function setShadowCamera(light){
 }
 
 var oldPos = new THREE.Vector3(0,0,0);
-var tempOldPos = new THREE.Vector3(0,0,0);
+var newPos = new THREE.Vector3(0,0,0);
 var dir = new THREE.Vector3(0,0,0);
 var deltaMove = new THREE.Vector3(0,0,0);
 function move(t, dt){
   for(var i = 0; i < obstacles.length; i++){
     obstacles[i].move(dt);
   }
-  oldPos.copy(player.position);
   dir.set(t.x - oldPos.x, 0, t.z - oldPos.z);
 
   if(dir.length() > 0.2){
@@ -414,22 +413,19 @@ function move(t, dt){
     }
     dir.multiplyScalar(dt * speed);
 
-    var newPos = new THREE.Vector3(oldPos.x + dir.x, 0, oldPos.z + dir.z);
+    oldPos.copy(player.position);
+    newPos.set(oldPois.x + dir.x, 0, oldPos.z + dir.z);
     player.lookAt(newPos);
     player.position.copy(newPos);
-    // camera.position.set(20 + x, 20, 20 + z);
-    /*tempOldPos.copy(directionalLight.position);
-    tempOldPos.sub(oldPos);
-    directionalLight.position.copy(tempOldPos);
+
+    oldPos.copy(directionalLight.position);
+    newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
+    directionalLight.position.copy(newPos);
     directionalLight.target = player;
-    var c_oldPos = new THREE.Vector3(camera.position.x,
-	camera.position.y, 
-	camera.position.z);
-    c_oldPos.x -= oldPos.x;
-    c_oldPos.y -= oldPos.y;
-    c_oldPos.z -= oldPos.z;
-    camera.position.set(c_oldPos.x, c_oldPos.y, c_oldPos.z);
-*/
+
+    oldPos.copy(camera.position);
+    newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
+    camera.position.copy(newPos);
   }
 }
 
