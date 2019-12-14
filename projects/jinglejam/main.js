@@ -304,13 +304,14 @@ cylinderGeometry.rotateZ(Math.PI/2.0);
 var whiteMaterial = new THREE.MeshBasicMaterial( {color: 0xffffff} );
 
 class Obstacle {
-  constructor (type, pos, meshCore, meshGlow, color, movement){
+  constructor (type, pos, meshCore, meshGlow, color, movement, axis){
     this._type = type;
     this._pos = pos;
     this._meshCore = meshCore;
     this._meshGlow = meshGlow;
     this._colour;
     this._movement = movement;
+    this._axis = axis;
   }
   get type(){
     return this._type;
@@ -329,6 +330,9 @@ class Obstacle {
   }
   get movement(){
     return this._movement;
+  }
+  get axis(){
+    return this._axis;
   }
   move(speed){
     this._meshCore.rotateX(this._movement.rX);
@@ -564,8 +568,8 @@ function checkCollision(){
     var _obstacles = obstacleMap.get(index);
     for(var i = 0; i < _obstacles.length; i++){
       direction.set(1,0);
-      var rotation = obstacles[_obstacles[i]].meshCore.rotation;
-      console.log(rotation);
+      var vertices = obstacles[_obstacles[i]].meshCore.vertices;
+      console.log(vertices);
     } 
   }
 }
