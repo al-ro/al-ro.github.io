@@ -560,13 +560,16 @@ function checkBounds(){
   return globalMap.has(index); 
 }
 
-var direction = new THREE.Vector2(0,0);
+var endPoint1 = new THREE.Vector2(0,0);
+var endPoint2 = new THREE.Vector2(0,0);
 var anchor = new THREE.Vector2(0,0);
 var rotation = new THREE.Vector3(0,0,0);
+/*
 var testMesh = new THREE.Mesh( giftGeometry, giftMaterial );
 var testMesh2 = new THREE.Mesh( giftGeometry, giftMaterial );
 scene.add(testMesh);
 scene.add(testMesh2);
+*/
 function checkCollision(){
   //Position Y will be invalid and will not be used
   playerLocation.copy(player.position);
@@ -577,13 +580,17 @@ function checkCollision(){
   if(obstacleMap.has(index)){
     var _obstacles = obstacleMap.get(index);
     for(var i = 0; i < _obstacles.length; i++){
-      direction.set(obstacles[_obstacles[i]].position.x - cylinderLength/2.0, obstacles[_obstacles[i]].position.z);
+      endPoint1.set(obstacles[_obstacles[i]].position.x - cylinderLength/2.0, obstacles[_obstacles[i]].position.z);
       anchor.set(obstacles[_obstacles[i]].position.x, obstacles[_obstacles[i]].position.z);
       rotation.copy(obstacles[_obstacles[i]].rotation);
-      direction.rotateAround(anchor, -rotation.y);
-      testMesh.position.set(direction.x, 0, direction.y);
-      direction.rotateAround(anchor, -Math.PI);
-      testMesh2.position.set(direction.x, 0, direction.y);
+      endPoint1.rotateAround(anchor, -rotation.y);
+      //testMesh.position.set(direction.x, 0, direction.y);
+      endPoint2.copy(endPoint1);
+      endPoint2.rotateAround(anchor, -Math.PI);
+      //testMesh2.position.set(direction.x, 0, direction.y);
+      if(distanceToLine(player.position.x, player.position.z, enrPoint1.x, endPoint1.z, endPoint2.x, endPoint2.z) < 1){
+	console.log("HIT");
+      }
     } 
   }
 }
