@@ -212,7 +212,7 @@ for(var i = 0; i < 3; i++){
   pos.multiplyScalar(posDelta);
   var tileMesh = new THREE.Mesh( tileGeometry, tileMaterial );
   tileMesh.receiveShadow = true;
-  tileMesh.translate(pos.x, 0, pos.z);
+  tileMesh.position.set(pos.x, 0, pos.z);
   var tile = new Tile(pos, tileMesh);
   tiles.push(tile);
 }
