@@ -317,7 +317,7 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   var movement = new Movement(translation, rotation);
   //constructor (type, pos, meshCore, meshGlow, color, movement){
   var obstacle = new Obstacle(ObstacleType.LASER, pos, obstacleMesh, glowMesh, glowMaterial, movement);
-  obstacles.push(obsacle);
+  obstacles.push(obstacle);
 }
 
 var material = new THREE.MeshBasicMaterial( {color: 0xff5522} );
