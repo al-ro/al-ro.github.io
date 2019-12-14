@@ -48,7 +48,8 @@ var songs = [];
 
   //Camera
   var camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 1, 20000);
-  camera.position.set(-20, 20, -20);
+  var cameraStartPosition = new THREE.Vector3(-20, 20, -20);
+  camera.position.copy(cameraStartPosition);
   camera.lookAt(0,0,0);
   scene.add(camera);
   /*
@@ -80,7 +81,8 @@ var hemisphereLight = new THREE.HemisphereLight(0x0000bb, 0xff0000, 0.2);
 scene.add(hemisphereLight);
 
 var directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-directionalLight.position.set(-10,10,10);
+var directionalLightStartPosition = new THREE.Vector3(-10, 10, 10);
+directionalLight.position.copy(directionalLightStartPosition);
 directionalLight.lookAt(0,0,0);
 directionalLight.castShadow = true;
 scene.add(directionalLight);
@@ -401,6 +403,8 @@ playerGeometry.translate(0,0.5,0);
 var playerMaterial = new THREE.MeshStandardMaterial({color: 0xffffff, metalness: 0.,  roughness: 1});
 
 var player = new THREE.Mesh( playerGeometry, playerMaterial );
+var playerStartPosition = new THREE.Vector3(0,0,0);
+player.position.copy(playerStartPosition);
 player.castShadow = true;
 player.receiveShadow = true;
 //player.layers.enable( BLOOM);
@@ -494,7 +498,10 @@ function draw(){
   stats.begin();
   if(deathFrame == 100){
     alive = true;
-    player.position.set(0,0,0);
+    player.position.copy(playerStartPosition);
+    camera.position.copy(cameraStartPosition);
+    directionalLight.position.copy(directionalLightStartPosition);
+    directionalLight.target = player;
   }
   // update the picking ray with the camera and mouse position
   raycaster.setFromCamera( mouse, camera );
