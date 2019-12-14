@@ -392,6 +392,7 @@ const GiftType = {
   ONE: 1
 };
 var giftMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
+var giftGeometry = new THREE.SphereGeometry( 5, 6, 2 );
 for(var i = 0; i < lvl1.giftMap.length; i++){
   let posX = lvl1.giftMap[i][0];
   let posY = 0;
