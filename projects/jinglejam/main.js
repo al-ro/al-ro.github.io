@@ -196,6 +196,9 @@ var gifts = [];
 //Damaging or blocking geometries
 var obstacles = [];
 
+//Currently held gifts
+var inventory = [];
+
 var level1 = [];
 
 var lvl1 = {
@@ -336,8 +339,12 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   var glowMesh = new THREE.Mesh( cylinderGeometry, glowMaterial );
   glowMesh.layers.enable(BLOOM);
   glowMesh.position.set(pos.x, 1.0, pos.z);
-
-  var translation = new THREE.Vector3(0.1, 0, 0);
+  
+  if(i % 2 == 0){
+    var translation = new THREE.Vector3(0.1, 0, 0);
+  }else{
+    var translation = new THREE.Vector3(-0.1, 0, 0);
+  }
   var rotation = new THREE.Vector3(0.0, 0.05, 0);
   var movement = new Movement(translation, rotation);
   //constructor (type, pos, meshCore, meshGlow, color, movement)
