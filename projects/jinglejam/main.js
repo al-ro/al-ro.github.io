@@ -367,9 +367,10 @@ for(var i = 0; i < obstacles.length; i++){
 
 
 class Gift {
-  constructor(type, pos, material) {
+  constructor(type, pos, mesh, material) {
     this._type = type;
     this._pos = pos;
+    this._mesh = mesh;
     this._material = material;
   }
   get type(){
@@ -381,8 +382,32 @@ class Gift {
   get material(){
     return this._material;
   }
+  get mesh(){
+    return this._mesh;
+  }
+
 }
 
+const GiftType = {
+  ONE: 1
+};
+var giftMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
+for(var i = 0; i < lvl1.gifteMap.length; i++){
+  let posX = lvl1.giftMap[i][0];
+  let posY = 0;
+  let posZ = lvl1.giftMap[i][1];
+  var pos = new THREE.Vector3(posX, posY, posZ);
+  pos.multiplyScalar(posDelta);
+
+  var giftMesh = new THREE.Mesh( giftGeometry, giftMaterial );
+  giftMesh.position.copy(pos);
+  var gift = new Gift(GiftType.ONE, pos, giftMesh, giftMaterial);
+  giftMesh.layers.enable(BLOOM);
+  gifts.push(gift);
+}
+for(var i = 0; i < gifts.length; i++){
+  scene.add(gifts[i].mesh);
+}
 
 function initialiseLevel(lvl){
   
@@ -390,8 +415,6 @@ function initialiseLevel(lvl){
 }
 
 //************** Objects **************
-
-
 
 var playerGeometry = new THREE.BoxGeometry(1,1,1);
 playerGeometry.translate(0,0.5,0);
@@ -412,15 +435,6 @@ var planeMaterial = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.D
 var plane = new THREE.Mesh( planeGeometry, planeMaterial );
 plane.position.copy(playerStartPosition);
 scene.add( plane );
-
-var pickUpMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
-
-var pickUp = new THREE.Mesh( playerGeometry, pickUpMaterial );
-//player2.castShadow = true;
-//player2.receiveShadow = true;
-pickUp.position.set(5, 0, 5);
-pickUp.layers.enable( BLOOM);
-scene.add(pickUp);
 
 //************** Functions **************
 
@@ -486,6 +500,8 @@ function checkBounds(){
   var index = iZ * globalWidth + iX;
   return globalMap.has(index); 
 }
+
+//Actually the exact opposite of falling
 function fall(dt){
   player.position.set(player.position.x, player.position.y + dt, player.position.z);
 }
@@ -497,6 +513,7 @@ var lastFrame = Date.now();
 var thisFrame;
 var bounds = true;
 var deathFrames = 0;
+
 function draw(){
   stats.begin();
   if(deathFrames == 100){
@@ -524,11 +541,8 @@ function draw(){
     fall(dt);
     alive = false;
   }else{
-    alive = bounds;
     if(intersect[0] && mouse_down){
-      //if(intersects[0].object == tile){
       targetDir = intersect[0].point;
-      // }
     }else{
       targetDir = player.position;
     }
@@ -546,7 +560,6 @@ function draw(){
 
   // render the entire scene, then render bloom scene on top
   finalComposer.render();
-  //glitchPass.randX = 5.0;
   stats.end();
   requestAnimationFrame(draw);
 }
