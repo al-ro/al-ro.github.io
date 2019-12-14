@@ -400,32 +400,31 @@ function move(t, dt){
   for(var i = 0; i < obstacles.length; i++){
     obstacles[i].move(dt);
   }
+//************ Move player, light and camera
+  oldPos.copy(player.position);
   dir.set(t.x - oldPos.x, 0, t.z - oldPos.z);
 
-  if(dir.length() > 0.2){
-    dir.normalize();
-    var speed;
-    if(slow){
-      speed = 1.0;
-    }else{
-      speed = 10.0;
-    }
-    dir.multiplyScalar(dt * speed);
-
-    oldPos.copy(player.position);
-    newPos.set(oldPos.x + dir.x, 0, oldPos.z + dir.z);
-    player.lookAt(newPos);
-    player.position.copy(newPos);
-
-    oldPos.copy(directionalLight.position);
-    newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
-    directionalLight.position.copy(newPos);
-    directionalLight.target = player;
-
-    oldPos.copy(camera.position);
-    newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
-    camera.position.copy(newPos);
+  dir.normalize();
+  var speed;
+  if(slow){
+    speed = 1.0;
+  }else{
+    speed = 10.0;
   }
+  dir.multiplyScalar(dt * speed);
+
+  newPos.set(oldPos.x + dir.x, 0, oldPos.z + dir.z);
+  player.lookAt(newPos);
+  player.position.copy(newPos);
+
+  oldPos.copy(directionalLight.position);
+  newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
+  directionalLight.position.copy(newPos);
+  directionalLight.target = player;
+
+  oldPos.copy(camera.position);
+  newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
+  camera.position.copy(newPos);
 }
 
 //************** Draw **************
