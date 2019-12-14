@@ -447,10 +447,7 @@ function draw(){
   // update the picking ray with the camera and mouse position
   raycaster.setFromCamera( mouse, camera );
 
-  vec.set(
-    ( event.clientX / window.innerWidth ) * 2 - 1,
-    - ( event.clientY / window.innerHeight ) * 2 + 1,
-    0.5 );
+  vec.set(mouse.x, 0.0, mouse.y);
 
   vec.unproject( camera );
 
