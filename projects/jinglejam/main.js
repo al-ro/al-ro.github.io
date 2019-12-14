@@ -578,7 +578,7 @@ function checkCollision(){
       direction.set(cylinderLength/2.0 + obstacles[_obstacles[i]].position.x, obstacles[_obstacles[i]].position.z);
       anchor.set(obstacles[_obstacles[i]].position.x, obstacles[_obstacles[i]].position.z);
       rotation.copy(obstacles[_obstacles[i]].rotation);
-      direction.rotateAround(anchor, rotation.y);
+      direction.rotateAround(anchor, -rotation.y);
       testMesh.position.set(direction.x, 0, direction.y);
       console.log(direction);
     } 
