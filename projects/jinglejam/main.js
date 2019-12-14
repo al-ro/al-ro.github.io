@@ -185,9 +185,9 @@ var tileGeometry = new THREE.BoxGeometry(20,2,20);
 tileGeometry.translate(0,-1,0);
 var tileMaterial = new THREE.MeshStandardMaterial({color: 0xaaaaaa, metalness: 0.,  roughness: 1});
 var posDelta = 21;
-for(i = 0; i < 3; i++){
-  var posX = 0;
-  var posY = 0;
+for(var i = 0; i < 3; i++){
+  let posX = 0;
+  let posY = 0;
   var pos = new THREE.Vector2(posX, posY);
   pos.multiplyScalar(posDelta);
   var tileMesh = new THREE.Mesh( tileGeometry, tileMaterial );
