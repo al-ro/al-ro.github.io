@@ -314,6 +314,7 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   pos.multiplyScalar(posDelta);
 
   var obstacleMesh = new THREE.Mesh( cylinderGeometry, whiteMaterial );
+  obstacleMesh.scale(1.1, 1.1, 1.1);
   obstacleMesh.position.set(pos.x, 1.0, pos.z);
 
   var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff5522} );
