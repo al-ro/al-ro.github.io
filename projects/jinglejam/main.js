@@ -458,7 +458,7 @@ function checkBounds(){
   var iX = Math.floor(playerLocation.x / posDelta);
   var iZ = Math.floor(playerLocation.z / posDelta);
   var index = iZ * globalWidth + iX;
-  console.log(iX, iY, index);
+  console.log(iX, iZ, index);
   return globalMap.has(index); 
 }
 
