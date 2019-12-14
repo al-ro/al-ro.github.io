@@ -479,11 +479,17 @@ function draw(){
 draw();
 
 function renderBloom() {
+  for(var i = 0; i < obstacles.length; i++){
+    obstacles[i].meshCore.visible = false;
+  }
   scene.traverse( darkenNonBloomed );
   renderer.setClearColor( 0x000000, 1);
   bloomComposer.render();
   renderer.setClearColor( 0x272738, 1);
   scene.traverse( restoreMaterial );
+  for(var i = 0; i < obstacles.length; i++){
+    obstacles[i].meshCore.visible = true;
+  }
 }
 
 function darkenNonBloomed( obj ) {
@@ -492,6 +498,7 @@ function darkenNonBloomed( obj ) {
     materials[ obj.uuid ] = obj.material;
     obj.material = darkMaterial;
   }
+
 }
 
 function restoreMaterial( obj ) {
