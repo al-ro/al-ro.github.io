@@ -396,7 +396,6 @@ function setShadowCamera(light){
 var oldPos = new THREE.Vector3(0,0,0);
 var newPos = new THREE.Vector3(0,0,0);
 var dir = new THREE.Vector3(0,0,0);
-var deltaMove = new THREE.Vector3(0,0,0);
 function move(t, dt){
   for(var i = 0; i < obstacles.length; i++){
     obstacles[i].move(dt);
@@ -414,7 +413,7 @@ function move(t, dt){
     dir.multiplyScalar(dt * speed);
 
     oldPos.copy(player.position);
-    newPos.set(oldPois.x + dir.x, 0, oldPos.z + dir.z);
+    newPos.set(oldPos.x + dir.x, 0, oldPos.z + dir.z);
     player.lookAt(newPos);
     player.position.copy(newPos);
 
