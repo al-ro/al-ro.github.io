@@ -224,11 +224,11 @@ map: [
        [3, 3]
 ],
 obstacleMap: [
-       [1, 0, SPINNER],
-       [1, 1, SPINNER],
-       [1, 2, SPINNER],
-       [2, 2, SPINNER],
-       [3, 2, SPINNER]
+       [1, 0, ObstacleType.SPINNER],
+       [1, 1, ObstacleType.SPINNER],
+       [1, 2, ObstacleType.SPINNER],
+       [2, 2, ObstacleType.SPINNER],
+       [3, 2, ObstacleType.SPINNER]
 ],
 giftMap: [
        [0, 0],
