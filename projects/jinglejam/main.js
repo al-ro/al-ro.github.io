@@ -462,7 +462,7 @@ function draw(){
   var dt = (thisFrame - lastFrame)/500;
   time += dt;	
   lastFrame = thisFrame;
-  if(intersects[0] && mouse_down){
+  if(intersect[0] && mouse_down){
     //if(intersects[0].object == tile){
     targetDir = intersect[0].point;
    // }
