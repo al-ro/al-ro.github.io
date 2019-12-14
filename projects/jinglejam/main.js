@@ -172,7 +172,7 @@ var globalHeight = 8;
 var globalMap = new Map();
 function setGlobalMap(tileMap){
   globalMap.clear();
-  for(var i = 0; i < tileMap.length(); i++){
+  for(var i = 0; i < tileMap.length; i++){
     var index = tileMap[1] * globalWidth + tileMap[0];
     globalMap.set(index, true);
   }
