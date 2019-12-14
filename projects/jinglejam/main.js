@@ -392,7 +392,7 @@ const GiftType = {
   ONE: 1
 };
 var giftMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
-var giftGeometry = new THREE.SphereGeometry( 0.5, 6, 2 );
+var giftGeometry = new THREE.SphereGeometry( 1.0, 6, 2 );
 giftGeometry.translate(0, 0.7, 0);
 
 for(var i = 0; i < lvl1.giftMap.length; i++){
