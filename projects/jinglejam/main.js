@@ -186,6 +186,15 @@ var obstacles = [];
 var level1 = [];
 
 var lvl1 = {
+map: [
+       [0, 0],
+       [1, 0],
+       [1, 1],
+       [1, 2],
+       [2, 2],
+       [3, 2],
+       [3, 3]
+];
 };
 
 class Tile {
@@ -205,10 +214,10 @@ var tileGeometry = new THREE.BoxGeometry(20,2,20);
 tileGeometry.translate(0,-1,0);
 var tileMaterial = new THREE.MeshStandardMaterial({color: 0xaaaaaa, metalness: 0.,  roughness: 1});
 var posDelta = 20.5;
-for(var i = 0; i < 3; i++){
-  let posX = i;
+for(var i = 0; i < lvl1.map.length; i++){
+  let posX = lvl1.map[i][0];
   let posY = 0;
-  let posZ = 0;
+  let posZ = lvl1.map[i][1];
   var pos = new THREE.Vector3(posX, posY, posZ);
   pos.multiplyScalar(posDelta);
   var tileMesh = new THREE.Mesh( tileGeometry, tileMaterial );
