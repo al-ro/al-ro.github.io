@@ -565,7 +565,7 @@ function checkCollision(){
     for(var i = 0; i < _obstacles.length; i++){
       direction.set(1,0);
       var rotation = obstacles[_obstacles[i]].meshCore.rotation.y;
-      console.log(direction.rotateAround(anchor, rotation));
+      console.log(rotation);
     } 
   }
 }
