@@ -489,9 +489,13 @@ var targetDir = new THREE.Vector3(0,0,0);
 var lastFrame = Date.now();
 var thisFrame;
 var bounds = true;
+var deathFrames = 0;
 function draw(){
-
   stats.begin();
+  if(deathFrame == 100){
+    alive = true;
+    player.position.set(0,0,0);
+  }
   // update the picking ray with the camera and mouse position
   raycaster.setFromCamera( mouse, camera );
 
@@ -519,6 +523,7 @@ function draw(){
     move(targetDir, dt);
   }
   if(!alive){
+    deathFrames++;
     glitchPass.goWild = true;
 
   }else{
