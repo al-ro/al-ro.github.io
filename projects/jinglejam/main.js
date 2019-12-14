@@ -448,7 +448,7 @@ function move(t, dt){
   }
 }
 
-fucntion checkBounds(){
+function checkBounds(){
 
 }
 
