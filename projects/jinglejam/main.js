@@ -340,7 +340,7 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   glowMesh.layers.enable(BLOOM);
   glowMesh.position.set(pos.x, 1.0, pos.z);
   
-  if(i % 2 == 0){
+  if((i % 2) == 0){
     var translation = new THREE.Vector3(0.1, 0, 0);
   }else{
     var translation = new THREE.Vector3(-0.1, 0, 0);
@@ -356,21 +356,15 @@ for(var i = 0; i < obstacles.length; i++){
   scene.add(obstacles[i].meshGlow);
   scene.add(obstacles[i].meshCore);
 }
-/*
-var material = new THREE.MeshBasicMaterial( {color: 0xff5522} );
-var cylinder = new THREE.Mesh( cylinderGeometry, material );
 
-cylinder.position.set(0,1,-5);
-cylinder.layers.enable(BLOOM);
-scene.add( cylinder );
 
-var cylinder2 = new THREE.Mesh( cylinderGeometry, whiteMaterial );
-//cylinder2.layers.enable(BLOOM);
+class Gift {
+  constructor(type, pos, ) {
 
-cylinder2.position.set(0,1,-5);
-scene.add( cylinder2 );
-*/
-//Clear all arrays and populate them according to level
+  }
+
+}
+
 function initialiseLevel(lvl){
   
   //Set NPCc, gifts and obstacles for this level.
