@@ -217,6 +217,11 @@ obstacleMap: [
        [1, 2],
        [2, 2],
        [3, 3]
+],
+giftMap: [
+       [0, 0],
+       [3, 2],
+       [3, 3]
 ]
 };
 
@@ -376,8 +381,6 @@ class Gift {
   }
 }
 
-
-}
 
 function initialiseLevel(lvl){
   
