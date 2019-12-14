@@ -212,7 +212,7 @@ class Tile {
 
 var tileGeometry = new THREE.BoxGeometry(20,2,20);
 tileGeometry.translate(0,-1,0);
-var tileMaterial = new THREE.MeshStandardMaterial({color: 0xcccccc, metalness: 0.,  roughness: 1});
+var tileMaterial = new THREE.MeshStandardMaterial({color: 0xbbbbbb, metalness: 0.,  roughness: 1});
 var posDelta = 20.5;
 for(var i = 0; i < lvl1.map.length; i++){
   let posX = lvl1.map[i][0];
@@ -232,6 +232,62 @@ for(var i = 0; i < tiles.length; i++){
   scene.add(tiles[i].mesh);
 }
 
+class Movement {
+  constructor (translate, rotate){
+    this._translate = translate;
+    this._rotate = rotate;
+  }
+  get dX(){
+    return this._translate.x;
+  }
+  get dY(){
+    return this._translate.y;
+  }
+  get dZ(){
+    return this._translate.z;
+  }
+  get rX(){
+    return this._rotate.x;
+  }
+  get rY(){
+    return this._rotate.y;
+  }
+  get rZ(){
+    return this._rotate.z;
+  }
+}
+
+class Obstacle {
+  constructor (type, pos, meshCore, meshGlow, color, movement){
+    this._type = type;
+    this._pos = pos;
+    this._meshCore = meshCore;
+    this._meshGlow = meshGlow;
+    this._colour;
+    this._movement = movement;
+  }
+  get type(){
+    return this._type;
+  }
+  get position(){
+    return this._pos;
+  }
+  get meshCore(){
+    return this._meshCore;
+  }
+  get meshGlow(){
+    return this._meshGlow;
+  }
+  get color(){
+    return this._color;
+  }
+  get movement(){
+    return this._movement;
+  }
+  move(dt){
+
+  }
+}
 
 //Clear all arrays and populate them according to level
 function initialiseLevel(lvl){
@@ -259,7 +315,7 @@ pickUp.position.set(5, 0, 5);
 pickUp.layers.enable( BLOOM);
 scene.add(pickUp);
 
-var geometry = new THREE.CylinderGeometry( 0.5, 0.5, 25, 7 );
+var geometry = new THREE.CylinderGeometry( 0.5, 0.5, 20, 7 );
 geometry.rotateZ(Math.PI/2.0);
 var material = new THREE.MeshBasicMaterial( {color: 0xff5522} );
 var cylinder = new THREE.Mesh( geometry, material );
