@@ -394,7 +394,9 @@ function setShadowCamera(light){
 }
 
 var oldPos = new THREE.Vector3(0,0,0);
+var tempOldPos = new THREE.Vector3(0,0,0);
 var dir = new THREE.Vector3(0,0,0);
+var deltaMove = new THREE.Vector3(0,0,0);
 function move(t, dt){
   for(var i = 0; i < obstacles.length; i++){
     obstacles[i].move(dt);
@@ -417,19 +419,13 @@ function move(t, dt){
 
     var x = newPos.x;
     var z = newPos.z;
-    var dx = new THREE.Vector3(x,0,z);
-    oldPos.x -= dx.x;
-    oldPos.y -= dx.y;
-    oldPos.z -= dx.z;
+    deltaMove.set(x,0,z);
+    oldPos.sub(deltaMove);
     player.position.set(dx.x, dx.y, dx.z);
     // camera.position.set(20 + x, 20, 20 + z);
-    var _oldPos = new THREE.Vector3(directionalLight.position.x,
-	directionalLight.position.y, 
-	directionalLight.position.z);
-    _oldPos.x -= oldPos.x;
-    _oldPos.y -= oldPos.y;
-    _oldPos.z -= oldPos.z;
-    directionalLight.position.set(_oldPos.x, _oldPos.y, _oldPos.z);
+    tempOldPos.copy(directionalLight.position);
+    tempOldPos.sub(oldPos);
+    directionalLight.position.copy(tempOldPos);
     directionalLight.target = player;
     var c_oldPos = new THREE.Vector3(camera.position.x,
 	camera.position.y, 
