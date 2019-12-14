@@ -392,17 +392,16 @@ function setShadowCamera(light){
   light.shadow.camera.right = width;
   light.shadow.camera.updateProjectionMatrix();
 }
+
+var oldPos = new THREE.Vector3(0,0,0);
+var dir = new THREE.Vector3(0,0,0);
 function move(t, dt){
-  //cylinder.rotateY(0.05);
-  //cylinder2.rotateY(0.05);
   for(var i = 0; i < obstacles.length; i++){
     obstacles[i].move(dt);
   }
-  var oldPos = new THREE.Vector3(player.position.x,
-      player.position.y, 
-      player.position.z);
+  oldPos.set(player.position.x);
+  dir.set(t.x - oldPos.x, 0, t.z - oldPos.z);
 
-  var dir = new THREE.Vector3(t.x - oldPos.x, 0, t.z - oldPos.z);
   if(dir.length() > 0.2){
     dir.normalize();
     var speed;
