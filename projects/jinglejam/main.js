@@ -496,7 +496,8 @@ var bounds = true;
 var deathFrames = 0;
 function draw(){
   stats.begin();
-  if(deathFrame == 100){
+  if(deathFrames == 100){
+    deathFrames = 0;
     alive = true;
     player.position.copy(playerStartPosition);
     camera.position.copy(cameraStartPosition);
