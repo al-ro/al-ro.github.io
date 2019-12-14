@@ -35,7 +35,7 @@ var canvas = document.getElementById("canvas");
   renderer.setSize( window.innerWidth, window.innerHeight );
   renderer.setClearColor( 0x443344, 1);
   //renderer.setClearColor( 0x000000, 1);
-  renderer.shadowMap.enabled = true;
+  //renderer.shadowMap.enabled = true;
 
   var distance = 400;
 
@@ -54,10 +54,10 @@ var canvas = document.getElementById("canvas");
    */
 
   const stats = new Stats();
-stats.showPanel(0);
-stats.domElement.style.position = 'absolute';
-stats.domElement.style.right = '0px';
-stats.domElement.style.bottom = '0px';
+  stats.showPanel(0);
+  stats.domElement.style.position = 'absolute';
+  stats.domElement.style.right = '0px';
+  stats.domElement.style.bottom = '0px';
   document.body.appendChild(stats.domElement);
   window.addEventListener( 'resize', onWindowResize, false );
   function onWindowResize(){
