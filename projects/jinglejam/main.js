@@ -46,7 +46,7 @@ var songs = [];
 
   //Camera
   var camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 1, 20000);
-  camera.position.set(20, 20, 20);
+  camera.position.set(-20, 20, -20);
   camera.lookAt(0,0,0);
   scene.add(camera);
   /*
@@ -204,7 +204,7 @@ class Tile {
 var tileGeometry = new THREE.BoxGeometry(20,2,20);
 tileGeometry.translate(0,-1,0);
 var tileMaterial = new THREE.MeshStandardMaterial({color: 0xaaaaaa, metalness: 0.,  roughness: 1});
-var posDelta = 21;
+var posDelta = 20.5;
 for(var i = 0; i < 3; i++){
   let posX = i;
   let posY = 0;
@@ -344,9 +344,9 @@ function draw(){
   time += dt;	
   lastFrame = thisFrame;
   if(intersects[0] && mouse_down){
-    if(intersects[0].object == tile){
+    //if(intersects[0].object == tile){
       target = intersects[0].point;
-    }
+   // }
   }
   move(target, dt);
   if(player.position.z < -4.5){
