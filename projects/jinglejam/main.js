@@ -568,7 +568,7 @@ function checkCollision(){
     var _obstacles = obstacleMap.get(index);
     for(var i = 0; i < _obstacles.length; i++){
       direction.set(1,0);
-      var vertices = obstacles[_obstacles[i]].meshCore.vertices;
+      var vertices = obstacles[_obstacles[i]].meshCore.geometry.vertices;
       console.log(vertices);
     } 
   }
