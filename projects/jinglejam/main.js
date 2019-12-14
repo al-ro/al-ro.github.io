@@ -561,7 +561,7 @@ function checkBounds(){
 
 var direction = new THREE.Vector2(0,0);
 var anchor = new THREE.Vector2(0,0);
-var vertex = new THREE.Vector3(0,0,0);
+var rotation = new THREE.Vector3(0,0,0);
 function checkCollision(){
   //Position Y will be invalid and will not be used
   playerLocation.copy(player.position);
@@ -573,7 +573,7 @@ function checkCollision(){
     var _obstacles = obstacleMap.get(index);
     for(var i = 0; i < _obstacles.length; i++){
       direction.set(1,0);
-      var rotation.copy(obstacles[_obstacles[i]].rotation);
+      rotation.copy(obstacles[_obstacles[i]].rotation);
       console.log(rotation.y);
     } 
   }
