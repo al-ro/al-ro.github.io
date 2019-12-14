@@ -236,6 +236,7 @@ giftMap: [
 };
 
 setGlobalMap(lvl1.map);
+setObstacleMap(lvl1.obstacleMap);
 
 class Tile {
   constructor (pos, mesh){
