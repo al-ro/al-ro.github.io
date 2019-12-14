@@ -440,11 +440,19 @@ var time = 0;
 var target = new THREE.Vector3(0,0,0);
 var lastFrame = Date.now();
 var thisFrame;
+var vec = new THREE.Vector3(0,0,0);
 function draw(){
 
   stats.begin();
   // update the picking ray with the camera and mouse position
   raycaster.setFromCamera( mouse, camera );
+
+  vec.set(
+    ( event.clientX / window.innerWidth ) * 2 - 1,
+    - ( event.clientY / window.innerHeight ) * 2 + 1,
+    0.5 );
+
+  vec.unproject( camera );
 
   // calculate objects intersecting the picking ray
   var intersects = raycaster.intersectObjects( scene.children );
@@ -456,7 +464,7 @@ function draw(){
   lastFrame = thisFrame;
   if(intersects[0] && mouse_down){
     //if(intersects[0].object == tile){
-      target = intersects[0].point;
+      target = vec;
    // }
   }
   move(target, dt);
