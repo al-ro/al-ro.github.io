@@ -330,8 +330,8 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
 }
 
 for(var i = 0; i < obstacles.length; i++){
-  scene.add(obstacles[i].meshCore);
   scene.add(obstacles[i].meshGlow);
+  scene.add(obstacles[i].meshCore);
 }
 /*
 var material = new THREE.MeshBasicMaterial( {color: 0xff5522} );
