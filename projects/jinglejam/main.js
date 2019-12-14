@@ -589,11 +589,11 @@ function checkCollision(){
       endPoint2.rotateAround(anchor, -Math.PI);
       //testMesh2.position.set(direction.x, 0, direction.y);
       if(distanceToLine(player.position.x, player.position.z, endPoint1.x, endPoint1.y, endPoint2.x, endPoint2.y) < 1){
-	alive = false;
-	return;
+	return true;
       }
     } 
   }
+  return false;
 }
 
 //Actually the exact opposite of falling
@@ -633,10 +633,11 @@ function draw(){
   time += dt;	
   lastFrame = thisFrame;
   bounds = checkBounds();
-  if(!bounds || collision){
+  if(!bounds){
     fall(dt);
     alive = false;
-  }else{
+  }
+  if(alive){
     if(intersect[0] && mouse_down){
       targetDir = intersect[0].point;
     }else{
@@ -644,7 +645,9 @@ function draw(){
     }
     move(targetDir, dt);
     collision = checkCollision();
+    alive = !collision;
   }
+  
   if(!alive){
     deathFrames++;
     glitchPass.goWild = true;
