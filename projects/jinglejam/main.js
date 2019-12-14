@@ -359,9 +359,22 @@ for(var i = 0; i < obstacles.length; i++){
 
 
 class Gift {
-  constructor(type, pos, ) {
-
+  constructor(type, pos, material) {
+    this._type = type;
+    this._pos = pos;
+    this._material = material;
   }
+  get type(){
+    return this._type;
+  }
+  get position(){
+    return this._pos;
+  }  
+  get material(){
+    return this._material;
+  }
+}
+
 
 }
 
