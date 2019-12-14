@@ -187,7 +187,7 @@ function setObstacleMap(obsMap){
   obstacleMap.clear();
   for(var i = 0; i < obsMap.length; i++){
     var index = obsMap[i][1] * globalWidth + obsMap[i][0];
-    obstacleMap.set(index, [i]);
+    obstacleMap.set(index, [[i, obsMap[i][2]]]);
   }
 //console.log(obstacleMap);
 }
@@ -586,13 +586,14 @@ function checkCollision(){
     var _obstacles = obstacleMap.get(index);
 
     for(var i = 0; i < _obstacles.length; i++){
-      var type = _obstacles[i][2];
+      var index = _obstacle[i][0];
+      var type = _obstacles[i][1];
       console.log(_obstacles[i]);
       switch(type) {
 	case ObstacleType.SPINNER:
-	  endPoint1.set(obstacles[_obstacles[i]].position.x - cylinderLength/2.0, obstacles[_obstacles[i]].position.z);
-	  anchor.set(obstacles[_obstacles[i]].position.x, obstacles[_obstacles[i]].position.z);
-	  rotation.copy(obstacles[_obstacles[i]].rotation);
+	  endPoint1.set(obstacles[index].position.x - cylinderLength/2.0, obstacles[index].position.z);
+	  anchor.set(obstacles[index].position.x, obstacles[index].position.z);
+	  rotation.copy(obstacles[index].rotation);
 	  endPoint1.rotateAround(anchor, -rotation.y);
 	  endPoint2.copy(endPoint1);
 	  endPoint2.rotateAround(anchor, -Math.PI);
