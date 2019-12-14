@@ -308,18 +308,26 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   var pos = new THREE.Vector3(posX, posY, posZ);
   pos.multiplyScalar(posDelta);
   var obstacleMesh = new THREE.Mesh( cylinderGeometry, whiteMaterial );
+  obstacleMesh.position.set(pos.x, pos.y, pos.z);
+
   var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff5522} );
   var glowMesh = new THREE.Mesh( cylinderGeometry, glowMaterial );
-  obstacleMesh.position.set(pos.x, pos.y, pos.z);
+  glowMesh.layers.enabel(BLOOM);
+  glowMesh.position.set(pos.x, pos.y, pos.z);
 
   var translation = new THREE.Vector3(0.1, 0, 0);
   var rotation = new THREE.Vector3(0.05, 0.05, 0);
   var movement = new Movement(translation, rotation);
-  //constructor (type, pos, meshCore, meshGlow, color, movement){
+  //constructor (type, pos, meshCore, meshGlow, color, movement)
   var obstacle = new Obstacle(ObstacleType.LASER, pos, obstacleMesh, glowMesh, glowMaterial, movement);
   obstacles.push(obstacle);
 }
 
+for(var i = 0; i < obstacles.length; i++){
+  scene.add(obstacles[i].meshCore);
+  scene.add(obstacles[i].meshGlow);
+}
+/*
 var material = new THREE.MeshBasicMaterial( {color: 0xff5522} );
 var cylinder = new THREE.Mesh( cylinderGeometry, material );
 
@@ -332,6 +340,7 @@ var cylinder2 = new THREE.Mesh( cylinderGeometry, whiteMaterial );
 
 cylinder2.position.set(0,1,-5);
 scene.add( cylinder2 );
+*/
 //Clear all arrays and populate them according to level
 function initialiseLevel(lvl){
   
