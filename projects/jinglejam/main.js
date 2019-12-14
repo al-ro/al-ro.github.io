@@ -168,7 +168,7 @@ finalComposer.addPass( glitchPass);
 
 //*************** Entities ***************
 
-Class Tile {
+class Tile {
   constructor (pos){
     this.pos = pos;
   }
