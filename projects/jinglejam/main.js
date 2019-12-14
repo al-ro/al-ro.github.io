@@ -224,11 +224,11 @@ map: [
        [3, 3]
 ],
 obstacleMap: [
-       [1, 0],
-       [1, 1],
-       [1, 2],
-       [2, 2],
-       [3, 2]
+       [1, 0, SPINNER],
+       [1, 1, SPINNER],
+       [1, 2, SPINNER],
+       [2, 2, SPINNER],
+       [3, 2, SPINNER]
 ],
 giftMap: [
        [0, 0],
@@ -353,6 +353,7 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   let posX = lvl1.obstacleMap[i][0];
   let posY = 0;
   let posZ = lvl1.obstacleMap[i][1];
+  var type = lvl1.obstacleMap[i][2];
   var pos = new THREE.Vector3(posX, posY, posZ);
   pos.multiplyScalar(posDelta);
 
@@ -375,7 +376,7 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   var movement = new Movement(translation, rotation);
   //constructor (type, pos, meshCore, meshGlow, color, movement)
   var rotation = new THREE.Vector3(0,0,0);
-  var obstacle = new Obstacle(ObstacleType.SPINNER, pos, obstacleMesh, glowMesh, glowMaterial, movement, rotation);
+  var obstacle = new Obstacle(type, pos, obstacleMesh, glowMesh, glowMaterial, movement, rotation);
   obstacles.push(obstacle);
 }
 
