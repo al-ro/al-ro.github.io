@@ -577,7 +577,7 @@ function checkCollision(){
       anchor.set(obstacles[_obstacles[i]].position.x, obstacles[_obstacles[i]].position.z);
       rotation.copy(obstacles[_obstacles[i]].rotation);
       direction.rotateAround(anchor, rotation.y);
-      console.log(direction);
+      console.log(anchor);
     } 
   }
 }
