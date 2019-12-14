@@ -312,11 +312,13 @@ class Obstacle {
   constructor (type, pos, meshCore, meshGlow, color, movement, rotation){
     this._type = type;
     this._pos = pos;
+    this._originalPos = pos;
     this._meshCore = meshCore;
     this._meshGlow = meshGlow;
     this._colour;
     this._movement = movement;
     this._rotation = rotation;
+    this._time = Math.random();
   }
   get type(){
     return this._type;
@@ -340,15 +342,26 @@ class Obstacle {
     return this._rotation;
   }
   move(speed){
-    this._rotation.x = (this._rotation.x + this._movement.rX) % 6.283;
-    this._rotation.y = (this._rotation.y + this._movement.rY) % 6.283;
-    this._rotation.z = (this._rotation.z + this._movement.rZ) % 6.283;
-    this._meshCore.rotateX(this._movement.rX);
-    this._meshCore.rotateY(this._movement.rY);
-    this._meshCore.rotateZ(this._movement.rZ);
-    this._meshGlow.rotateX(this._movement.rX);
-    this._meshGlow.rotateY(this._movement.rY);
-    this._meshGlow.rotateZ(this._movement.rZ);
+
+    switch(type) {
+      case ObstacleType.SPINNER:
+	this._rotation.x = (this._rotation.x + this._movement.rX) % 6.283;
+	this._rotation.y = (this._rotation.y + this._movement.rY) % 6.283;
+	this._rotation.z = (this._rotation.z + this._movement.rZ) % 6.283;
+	this._meshCore.rotateX(this._movement.rX);
+	this._meshCore.rotateY(this._movement.rY);
+	this._meshCore.rotateZ(this._movement.rZ);
+	this._meshGlow.rotateX(this._movement.rX);
+	this._meshGlow.rotateY(this._movement.rY);
+	this._meshGlow.rotateZ(this._movement.rZ);
+	break;
+      case ObstacleType.TRAVELLER:
+	this._pos.x = this._originalPos.x + sin(time);
+	this._pos.z = this._originalPos.z + cos(time);
+	this._meshCore.position.set(this._pos.x, 0, this._pos.z);
+	this._glowCore.position.set(this._pos.x, 0, this._pos.z);
+	break;
+    }
   }
 }
 
@@ -385,14 +398,10 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
 
   glowMesh.layers.enable(BLOOM);
   glowMesh.position.set(pos.x, 1.0, pos.z);
-  
-  if((i % 2) == 0){
-    var translation = new THREE.Vector3(0.1, 0, 0);
-    var rotation = new THREE.Vector3(0.0, 0.05, 0);
-  }else{
-    var translation = new THREE.Vector3(-0.1, 0, 0);
-    var rotation = new THREE.Vector3(0.0, -0.05, 0);
-  }
+
+  var translation = new THREE.Vector3(0.1, 0, 0);
+  var rotation = new THREE.Vector3(0.0, 0.05, 0);
+
   var movement = new Movement(translation, rotation);
   //constructor (type, pos, meshCore, meshGlow, color, movement)
   var rotation = new THREE.Vector3(0,0,0);
