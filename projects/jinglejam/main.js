@@ -361,6 +361,7 @@ planeGeometry.rotateX(-Math.PI*0.5);
 planeGeometry.translate(0, 0.0,0);
 var planeMaterial = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
 var plane = new THREE.Mesh( planeGeometry, planeMaterial );
+plane.visible = false;
 scene.add( plane );
 
 var playerGeometry = new THREE.BoxGeometry(1,1,1);
