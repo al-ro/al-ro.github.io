@@ -178,7 +178,7 @@ function setGlobalMap(tileMap){
     var index = tileMap[i][1] * globalWidth + tileMap[i][0];
     globalMap.set(index, true);
   }
-console.log(globalMap);
+//console.log(globalMap);
 }
 
 const ObstacleType = {
@@ -459,7 +459,6 @@ function checkBounds(){
   var iX = Math.floor(playerLocation.x / posDelta);
   var iZ = Math.floor(playerLocation.z / posDelta);
   var index = iZ * globalWidth + iX;
-  console.log(iX, iZ, index);
   return globalMap.has(index); 
 }
 
@@ -490,8 +489,8 @@ function draw(){
     targetDir = player.position;
   }
   move(targetDir, dt);
-  checkBounds();
-  if(player.position.z < -4.5){
+  alive = checkBounds();
+  if(!alive){
     glitchPass.goWild = true;
 
   }else{
