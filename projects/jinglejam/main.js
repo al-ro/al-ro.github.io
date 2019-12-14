@@ -356,7 +356,7 @@ function initialiseLevel(lvl){
 
 //************** Objects **************
 
-var planeGeometry = new THREE.PlaneGeometry( 200, 200 );
+var planeGeometry = new THREE.PlaneGeometry( 100, 100 );
 planeGeometry.rotateX(-Math.PI*0.5);
 planeGeometry.translate(0, 0.0,0);
 var planeMaterial = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide, visible: false} );
@@ -445,7 +445,7 @@ function move(t, dt){
 var old = new THREE.Vector3(0,0,0);
 //************** Draw **************
 var time = 0;
-var target = new THREE.Vector3(0,0,0);
+var targetDir = new THREE.Vector3(0,0,0);
 var lastFrame = Date.now();
 var thisFrame;
 function draw(){
@@ -455,7 +455,7 @@ function draw(){
   raycaster.setFromCamera( mouse, camera );
 
   // calculate objects intersecting the picking ray
-  var intersects = raycaster.intersectObject( plane );
+  var intersect = raycaster.intersectObject( plane );
 
   //Update time
   thisFrame = Date.now();
@@ -464,10 +464,12 @@ function draw(){
   lastFrame = thisFrame;
   if(intersects[0] && mouse_down){
     //if(intersects[0].object == tile){
-      target = intersects[0].point;
+    targetDir = intersect[0].point;
    // }
+  }else{
+    targetDir = player.position;
   }
-  move(target, dt);
+  move(targetDir, dt);
   if(player.position.z < -4.5){
     glitchPass.goWild = true;
 
