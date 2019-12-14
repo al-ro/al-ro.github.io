@@ -462,7 +462,7 @@ function checkBounds(){
   return globalMap.has(index); 
 }
 function fall(dt){
-  player.position.set(player.position.x, player.position.y + dt * 100, player.position.z);
+  player.position.set(player.position.x, player.position.y + dt, player.position.z);
 }
 
 //************** Draw **************
