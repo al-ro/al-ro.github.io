@@ -394,7 +394,7 @@ function move(t, dt){
       player.position.y, 
       player.position.z);
 
-  var dir = new THREE.Vector3(t.x - oldPos.x, 0, t.z - oldPos.z);
+  var dir = new THREE.Vector3(t.x, 0, t.z);
   if(dir.length() > 0.2){
     dir.normalize();
     var speed;
