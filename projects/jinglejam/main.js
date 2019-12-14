@@ -378,7 +378,7 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
       var glowMesh = new THREE.Mesh( cylinderGeometry, glowMaterial );
       break;
     case ObstacleType.TRAVELLER:
-      var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff3300} );
+      var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff0000} );
       var glowMesh = new THREE.Mesh( sphereGeometry, glowMaterial );
       break;
   }
