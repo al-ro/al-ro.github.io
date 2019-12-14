@@ -634,7 +634,6 @@ function draw(){
   lastFrame = thisFrame;
   bounds = checkBounds();
   if(!bounds){
-    fall(dt);
     alive = false;
   }
   if(alive){
@@ -645,10 +644,13 @@ function draw(){
     }
     move(targetDir, dt);
     collision = checkCollision();
-    alive = !collision;
+    if(collision){
+      alive = false;
+    }
   }
   
   if(!alive){
+    fall(dt);
     deathFrames++;
     glitchPass.goWild = true;
 
