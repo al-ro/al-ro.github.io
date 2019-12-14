@@ -392,14 +392,17 @@ const GiftType = {
   ONE: 1
 };
 var giftMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
-var giftGeometry = new THREE.SphereGeometry( 1, 6, 2 );
+var giftGeometry = new THREE.SphereGeometry( 0.5, 6, 2 );
 giftGeometry.translate(0, 0.7, 0);
+
 for(var i = 0; i < lvl1.giftMap.length; i++){
   let posX = lvl1.giftMap[i][0];
   let posY = 0;
   let posZ = lvl1.giftMap[i][1];
   var pos = new THREE.Vector3(posX, posY, posZ);
   pos.multiplyScalar(posDelta);
+
+  pos.addScalar(posDelta * 0.8 * (Math.Random() - 0.5));  
 
   var giftMesh = new THREE.Mesh( giftGeometry, giftMaterial );
   giftMesh.position.copy(pos);
