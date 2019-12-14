@@ -410,7 +410,7 @@ const GiftType = {
   ONE: 1
 };
 var giftMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
-var giftGeometry = new THREE.SphereGeometry( 1.0, 32, 32 );
+var giftGeometry = new THREE.SphereGeometry( 1.0, 6, 2 );
 giftGeometry.translate(0, 0.7, 0);
 
 for(var i = 0; i < lvl1.giftMap.length; i++){
@@ -513,7 +513,7 @@ function move(t, dt){
 
 //Move obstacles
   for(var i = 0; i < obstacles.length; i++){
-    //obstacles[i].move(dt);
+    obstacles[i].move(dt);
   }
 
   //Move player, light and camera
