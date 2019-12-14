@@ -168,7 +168,7 @@ finalComposer.addPass( glitchPass);
 
 //*************** Entities ***************
 
-const Obstacle = {
+const ObstacleType = {
   LASER: 1,
   SPHERE: 2,
   BLOCK: 3 
