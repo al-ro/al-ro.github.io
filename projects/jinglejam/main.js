@@ -392,7 +392,7 @@ const GiftType = {
   ONE: 1
 };
 var giftMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
-for(var i = 0; i < lvl1.gifteMap.length; i++){
+for(var i = 0; i < lvl1.giftMap.length; i++){
   let posX = lvl1.giftMap[i][0];
   let posY = 0;
   let posZ = lvl1.giftMap[i][1];
