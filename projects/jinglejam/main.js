@@ -169,11 +169,15 @@ finalComposer.addPass( glitchPass);
 //*************** Entities ***************
 
 class Tile {
-  constructor (pos){
+  constructor (pos, mesh){
     this.pos = pos;
+    this.mesh = mesh;
   }
   get position(){
     return this.pos;
+  }
+  get mesh(){
+    return this.mesh;
   }
 }
 
@@ -182,10 +186,11 @@ tileGeometry.translate(0,-1,0);
 var tileMaterial = new THREE.MeshStandardMaterial({color: 0xaaaaaa, metalness: 0.,  roughness: 1});
 
 var tile = new THREE.Mesh( tileGeometry, tileMaterial );
+var tile0 = new Tile(THREE.Vector2(0,0), tile);
 
 //tile.layers.enable( BLOOM);
 tile.receiveShadow = true;
-scene.add(tile);
+scene.add(tile0.mesh);
 
 
 const Obstacle = {
