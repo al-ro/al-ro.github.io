@@ -304,14 +304,14 @@ cylinderGeometry.rotateZ(Math.PI/2.0);
 var whiteMaterial = new THREE.MeshBasicMaterial( {color: 0xffffff} );
 
 class Obstacle {
-  constructor (type, pos, meshCore, meshGlow, color, movement, axis){
+  constructor (type, pos, meshCore, meshGlow, color, movement, rotation){
     this._type = type;
     this._pos = pos;
     this._meshCore = meshCore;
     this._meshGlow = meshGlow;
     this._colour;
     this._movement = movement;
-    this._axis = axis;
+    this._rotation = rotation;
   }
   get type(){
     return this._type;
@@ -331,10 +331,13 @@ class Obstacle {
   get movement(){
     return this._movement;
   }
-  get axis(){
-    return this._axis;
+  get rotation(){
+    return this._rotation;
   }
   move(speed){
+    this._rotation.x = (this._rotation.x + this._movement.rX) % 6.283;
+    this._rotation.y = (this._rotation.y + this._movement.rY) % 6.283;
+    this._rotation.z = (this._rotation.z + this._movement.rZ) % 6.283;
     this._meshCore.rotateX(this._movement.rX);
     this._meshCore.rotateY(this._movement.rY);
     this._meshCore.rotateZ(this._movement.rZ);
@@ -369,7 +372,8 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   }
   var movement = new Movement(translation, rotation);
   //constructor (type, pos, meshCore, meshGlow, color, movement)
-  var obstacle = new Obstacle(ObstacleType.LASER, pos, obstacleMesh, glowMesh, glowMaterial, movement);
+  var rotation = new THREE.Vector(0,0,0);
+  var obstacle = new Obstacle(ObstacleType.LASER, pos, obstacleMesh, glowMesh, glowMaterial, movement, rotation);
   obstacles.push(obstacle);
 }
 
@@ -569,11 +573,8 @@ function checkCollision(){
     var _obstacles = obstacleMap.get(index);
     for(var i = 0; i < _obstacles.length; i++){
       direction.set(1,0);
-      var vertices = obstacles[_obstacles[i]].meshCore.geometry.vertices;
-      var v1 = vertices[0];
-      var v2 = vertices[1];
-      vertex.copy(v1);
-      console.log(vertex.applyMatrix(obstacles[_obstacles[i]].meshCore.matrix));
+      var rotation.copy(obstacles[_obstacles[i]].rotation);
+      console.log(rotation.y);
     } 
   }
 }
