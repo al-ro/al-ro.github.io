@@ -299,7 +299,8 @@ class Movement {
   }
 }
 
-var cylinderGeometry = new THREE.CylinderGeometry( 0.5, 0.5, 20, 7 );
+var cylinderLength = 20;
+var cylinderGeometry = new THREE.CylinderGeometry( 0.5, 0.5, cylinderLength, 7 );
 cylinderGeometry.rotateZ(Math.PI/2.0);
 var whiteMaterial = new THREE.MeshBasicMaterial( {color: 0xffffff} );
 
@@ -572,7 +573,8 @@ function checkCollision(){
   if(obstacleMap.has(index)){
     var _obstacles = obstacleMap.get(index);
     for(var i = 0; i < _obstacles.length; i++){
-      direction.set(1,0);
+      direction.set(cylinderLength/2.0 + obstacles[_obstacles[i]].position.x, 0, obstacles[_obstacles[i]].position.z);
+      anchor.set(obstacles[_obstacles[i]].position.x, obstacles[_obstacles[i]].position.z);
       rotation.copy(obstacles[_obstacles[i]].rotation);
       direction.rotateAround(anchor, rotation.y);
       console.log(direction);
