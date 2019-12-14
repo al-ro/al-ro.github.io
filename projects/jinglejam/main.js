@@ -372,12 +372,13 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   obstacleMesh.scale.set(1.01, 1.01, 1.01);
   obstacleMesh.position.set(pos.x, 1.0, pos.z);
 
-  var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff5522} );
   switch(type) {
     case ObstacleType.SPINNER:
+      var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff5522} );
       var glowMesh = new THREE.Mesh( cylinderGeometry, glowMaterial );
       break;
     case ObstacleType.TRAVELLER:
+      var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff3300} );
       var glowMesh = new THREE.Mesh( sphereGeometry, glowMaterial );
       break;
   }
