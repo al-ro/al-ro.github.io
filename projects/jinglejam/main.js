@@ -391,12 +391,7 @@ function initialiseLevel(lvl){
 
 //************** Objects **************
 
-var planeGeometry = new THREE.PlaneGeometry( 100, 100 );
-planeGeometry.rotateX(-Math.PI*0.5);
-planeGeometry.translate(0, 0.0,0);
-var planeMaterial = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide, visible: false} );
-var plane = new THREE.Mesh( planeGeometry, planeMaterial );
-scene.add( plane );
+
 
 var playerGeometry = new THREE.BoxGeometry(1,1,1);
 playerGeometry.translate(0,0.5,0);
@@ -409,6 +404,14 @@ player.castShadow = true;
 player.receiveShadow = true;
 //player.layers.enable( BLOOM);
 scene.add(player);
+
+var planeGeometry = new THREE.PlaneGeometry( 100, 100 );
+planeGeometry.rotateX(-Math.PI*0.5);
+planeGeometry.translate(0,0,0);
+var planeMaterial = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide, visible: false} );
+var plane = new THREE.Mesh( planeGeometry, planeMaterial );
+plane.position.copy(playerStartPosition);
+scene.add( plane );
 
 var pickUpMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
 
@@ -500,6 +503,7 @@ function draw(){
     deathFrames = 0;
     alive = true;
     player.position.copy(playerStartPosition);
+    plane.position.copy(playerStartPosition);
     camera.position.copy(cameraStartPosition);
     directionalLight.position.copy(directionalLightStartPosition);
     directionalLight.target = player;
