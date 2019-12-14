@@ -455,7 +455,7 @@ function draw(){
   raycaster.setFromCamera( mouse, camera );
 
   // calculate objects intersecting the picking ray
-  var intersects = raycaster.intersectObjects( scene.children );
+  var intersects = raycaster.intersectObject( plane );
 
   //Update time
   thisFrame = Date.now();
