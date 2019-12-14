@@ -358,7 +358,7 @@ function initialiseLevel(lvl){
 
 var planeGeometry = new THREE.PlaneGeometry( 100, 100 );
 planeGeometry.rotateX(-Math.PI*0.5);
-planeGeometry.translate(0,-1.01,0);
+planeGeometry.translate(0, 0.01,0);
 var planeMaterial = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
 var plane = new THREE.Mesh( planeGeometry, planeMaterial );
 scene.add( plane );
