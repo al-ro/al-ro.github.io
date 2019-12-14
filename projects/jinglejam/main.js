@@ -225,9 +225,9 @@ map: [
 ],
 obstacleMap: [
        [1, 0, ObstacleType.SPINNER],
-       [1, 1, ObstacleType.SPINNER],
+       [1, 1, ObstacleType.TRAVELLER],
        [1, 2, ObstacleType.SPINNER],
-       [2, 2, ObstacleType.SPINNER],
+       [2, 2, ObstacleType.TRAVELLER],
        [3, 2, ObstacleType.SPINNER]
 ],
 giftMap: [
@@ -375,10 +375,10 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff5522} );
   switch(type) {
     case ObstacleType.SPINNER:
-      var glowMesh = new THREE.Mesh( cylinderGeometry, whiteMaterial );
+      var glowMesh = new THREE.Mesh( cylinderGeometry, glowMaterial );
       break;
     case ObstacleType.TRAVELLER:
-      var glowMesh = new THREE.Mesh( sphereGeometry, whiteMaterial );
+      var glowMesh = new THREE.Mesh( sphereGeometry, glowMaterial );
       break;
   }
 
