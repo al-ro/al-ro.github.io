@@ -421,7 +421,7 @@ function move(t, dt){
     var z = newPos.z;
     deltaMove.set(x,0,z);
     oldPos.sub(deltaMove);
-    player.position.set(dx.x, dx.y, dx.z);
+    player.position.copy(oldPos);
     // camera.position.set(20 + x, 20, 20 + z);
     tempOldPos.copy(directionalLight.position);
     tempOldPos.sub(oldPos);
@@ -437,7 +437,6 @@ function move(t, dt){
   }
 }
 
-var old = new THREE.Vector3(0,0,0);
 //************** Draw **************
 var time = 0;
 var targetDir = new THREE.Vector3(0,0,0);
