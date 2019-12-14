@@ -410,8 +410,8 @@ const GiftType = {
   ONE: 1
 };
 var giftMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
-var giftGeometry = new THREE.SphereGeometry( 1.0, 6, 2 );
-giftGeometry.translate(0, 0, 0);
+var giftGeometry = new THREE.SphereGeometry( 1.0, 32, 32 );
+giftGeometry.translate(0, 0.7, 0);
 
 for(var i = 0; i < lvl1.giftMap.length; i++){
   let posX = lvl1.giftMap[i][0];
@@ -513,7 +513,7 @@ function move(t, dt){
 
 //Move obstacles
   for(var i = 0; i < obstacles.length; i++){
-    obstacles[i].move(dt);
+    //obstacles[i].move(dt);
   }
 
   //Move player, light and camera
@@ -575,7 +575,7 @@ function checkCollision(){
   if(obstacleMap.has(index)){
     var _obstacles = obstacleMap.get(index);
     for(var i = 0; i < _obstacles.length; i++){
-      direction.set(cylinderLength/2.0 + obstacles[_obstacles[i]].position.x, obstacles[_obstacles[i]].position.z);
+      direction.set(obstacles[_obstacles[i]].position.x - cylinderLength/2.0, obstacles[_obstacles[i]].position.z);
       anchor.set(obstacles[_obstacles[i]].position.x, obstacles[_obstacles[i]].position.z);
       rotation.copy(obstacles[_obstacles[i]].rotation);
       direction.rotateAround(anchor, -rotation.y);
