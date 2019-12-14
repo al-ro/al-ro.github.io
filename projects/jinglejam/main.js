@@ -461,12 +461,16 @@ function checkBounds(){
   var index = iZ * globalWidth + iX;
   return globalMap.has(index); 
 }
+function fall(dt){
+  player.position.set(player.position.x, player.position.y + dt * 100, player.position.z);
+}
 
 //************** Draw **************
 var time = 0;
 var targetDir = new THREE.Vector3(0,0,0);
 var lastFrame = Date.now();
 var thisFrame;
+var bounds = true;
 function draw(){
 
   stats.begin();
@@ -481,15 +485,21 @@ function draw(){
   var dt = (thisFrame - lastFrame)/500;
   time += dt;	
   lastFrame = thisFrame;
-  if(intersect[0] && mouse_down){
-    //if(intersects[0].object == tile){
-    targetDir = intersect[0].point;
-   // }
+  bounds = checkBounds();
+  if(!bounds){
+    fall(dt);
+    alive = false;
   }else{
-    targetDir = player.position;
+    alive = bounds;
+    if(intersect[0] && mouse_down){
+      //if(intersects[0].object == tile){
+      targetDir = intersect[0].point;
+      // }
+    }else{
+      targetDir = player.position;
+    }
+    move(targetDir, dt);
   }
-  move(targetDir, dt);
-  alive = checkBounds();
   if(!alive){
     glitchPass.goWild = true;
 
