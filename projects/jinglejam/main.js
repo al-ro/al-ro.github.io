@@ -342,7 +342,7 @@ class Obstacle {
     return this._rotation;
   }
   move(speed){
-    consol.log(type);
+    console.log(type);
     switch(type) {
       case ObstacleType.SPINNER:
 	this._rotation.x = (this._rotation.x + this._movement.rX) % 6.283;
