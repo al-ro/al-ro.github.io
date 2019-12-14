@@ -312,7 +312,7 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
 
   var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff5522} );
   var glowMesh = new THREE.Mesh( cylinderGeometry, glowMaterial );
-  glowMesh.layers.enabel(BLOOM);
+  glowMesh.layers.enable(BLOOM);
   glowMesh.position.set(pos.x, pos.y, pos.z);
 
   var translation = new THREE.Vector3(0.1, 0, 0);
