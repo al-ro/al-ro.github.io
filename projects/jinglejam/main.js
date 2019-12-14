@@ -569,7 +569,9 @@ function checkCollision(){
     for(var i = 0; i < _obstacles.length; i++){
       direction.set(1,0);
       var vertices = obstacles[_obstacles[i]].meshCore.geometry.vertices;
-      console.log(vertices);
+      var v1 = vertices[0];
+      var v2 = vertices[1];
+      console.log(v1.applyMatrix(obstacles[_obstacles[i]].meshCore.matrix));
     } 
   }
 }
