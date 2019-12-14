@@ -359,19 +359,6 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   var type = lvl1.obstacleMap[i][2];
   var pos = new THREE.Vector3(posX, posY, posZ);
   pos.multiplyScalar(posDelta);
-
-
-  switch(type) {
-    case ObstacleType.SPINNER:
-      var obstacleMesh = new THREE.Mesh( cylinderGeometry, whiteMaterial );
-      break;
-    case ObstacleType.TRAVELLER:
-      var obstacleMesh = new THREE.Mesh( sphereGeometry, whiteMaterial );
-      break;
-  }
-  obstacleMesh.scale.set(1.01, 1.01, 1.01);
-  obstacleMesh.position.set(pos.x, 1.0, pos.z);
-
   switch(type) {
     case ObstacleType.SPINNER:
       var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff5522} );
@@ -382,6 +369,19 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
       var glowMesh = new THREE.Mesh( sphereGeometry, glowMaterial );
       break;
   }
+
+  switch(type) {
+    case ObstacleType.SPINNER:
+      var obstacleMesh = new THREE.Mesh( cylinderGeometry, whiteMaterial );
+      break;
+    case ObstacleType.TRAVELLER:
+      var obstacleMesh = new THREE.Mesh( sphereGeometry, glowMaterial );
+      break;
+  }
+  obstacleMesh.scale.set(1.01, 1.01, 1.01);
+  obstacleMesh.position.set(pos.x, 1.0, pos.z);
+
+
 
   glowMesh.layers.enable(BLOOM);
   glowMesh.position.set(pos.x, 1.0, pos.z);
