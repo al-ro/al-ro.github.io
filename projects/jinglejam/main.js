@@ -170,14 +170,14 @@ finalComposer.addPass( glitchPass);
 
 class Tile {
   constructor (pos, mesh){
-    this.pos = pos;
-    this.mesh = mesh;
+    this._pos = pos;
+    this._mesh = mesh;
   }
   get position(){
-    return this.pos;
+    return this._pos;
   }
   get mesh(){
-    return this.mesh;
+    return this._mesh;
   }
 }
 
