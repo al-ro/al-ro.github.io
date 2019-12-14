@@ -194,6 +194,13 @@ map: [
        [2, 2],
        [3, 2],
        [3, 3]
+],
+obstacleMap: [
+       [1, 0],
+       [1, 1],
+       [1, 2],
+       [2, 2],
+       [3, 3]
 ]
 };
 
@@ -213,6 +220,7 @@ class Tile {
 var tileGeometry = new THREE.BoxGeometry(20,2,20);
 tileGeometry.translate(0,-1,0);
 var tileMaterial = new THREE.MeshStandardMaterial({color: 0xbbbbbb, metalness: 0.,  roughness: 1});
+
 var posDelta = 20.5;
 for(var i = 0; i < lvl1.map.length; i++){
   let posX = lvl1.map[i][0];
@@ -257,6 +265,10 @@ class Movement {
   }
 }
 
+var cylinderGeometry = new THREE.CylinderGeometry( 0.5, 0.5, 20, 7 );
+cylinderGeometry.rotateZ(Math.PI/2.0);
+var whiteMaterial = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+
 class Obstacle {
   constructor (type, pos, meshCore, meshGlow, color, movement){
     this._type = type;
@@ -289,6 +301,37 @@ class Obstacle {
   }
 }
 
+for(var i = 0; i < lvl1.obstacleMap.length; i++){
+  let posX = lvl1.obstacleMap[i][0];
+  let posY = 0;
+  let posZ = lvl1.obstacleMap[i][1];
+  var pos = new THREE.Vector3(posX, posY, posZ);
+  pos.multiplyScalar(posDelta);
+  var obstacleMesh = new THREE.Mesh( cylinderGeometry, whiteMaterial );
+  var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff5522} );
+  var glowMesh = new THREE.Mesh( cylinderGeometry, glowMaterial );
+  obstacleMesh.position.set(pos.x, pos.y, pos.z);
+
+  var translation = new THREE.Vector3(0.1, 0, 0);
+  var rotation = new THREE.Vector3(0.05, 0.05, 0);
+  var movement = new Movement(translation, rotation);
+  //constructor (type, pos, meshCore, meshGlow, color, movement){
+  var obstacle = new Obstacle(ObstacleType.LASER, pos, obstacleMesh, glowMesh, glowMaterial, movement);
+  obstacles.push(obsacle);
+}
+
+var material = new THREE.MeshBasicMaterial( {color: 0xff5522} );
+var cylinder = new THREE.Mesh( cylinderGeometry, material );
+
+cylinder.position.set(0,1,-5);
+cylinder.layers.enable(BLOOM);
+scene.add( cylinder );
+
+var cylinder2 = new THREE.Mesh( cylinderGeometry, whiteMaterial );
+//cylinder2.layers.enable(BLOOM);
+
+cylinder2.position.set(0,1,-5);
+scene.add( cylinder2 );
 //Clear all arrays and populate them according to level
 function initialiseLevel(lvl){
   
@@ -314,22 +357,6 @@ var pickUp = new THREE.Mesh( playerGeometry, pickUpMaterial );
 pickUp.position.set(5, 0, 5);
 pickUp.layers.enable( BLOOM);
 scene.add(pickUp);
-
-var geometry = new THREE.CylinderGeometry( 0.5, 0.5, 20, 7 );
-geometry.rotateZ(Math.PI/2.0);
-var material = new THREE.MeshBasicMaterial( {color: 0xff5522} );
-var cylinder = new THREE.Mesh( geometry, material );
-
-cylinder.position.set(0,1,-5);
-cylinder.layers.enable(BLOOM);
-scene.add( cylinder );
-
-var material2 = new THREE.MeshBasicMaterial( {color: 0xffffff} );
-var cylinder2 = new THREE.Mesh( geometry, material2 );
-//cylinder2.layers.enable(BLOOM);
-
-cylinder2.position.set(0,1,-5);
-scene.add( cylinder2 );
 
 //************** Functions **************
 
