@@ -588,7 +588,7 @@ function checkCollision(){
       endPoint2.copy(endPoint1);
       endPoint2.rotateAround(anchor, -Math.PI);
       //testMesh2.position.set(direction.x, 0, direction.y);
-      if(distanceToLine(player.position.x, player.position.z, endPoint1.x, endPoint1.z, endPoint2.x, endPoint2.z) < 1){
+      if(distanceToLine(player.position.x, player.position.z, endPoint1.x, endPoint1.y, endPoint2.x, endPoint2.y) < 1){
 	console.log("HIT");
       }
     } 
