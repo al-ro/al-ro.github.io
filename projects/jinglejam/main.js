@@ -399,7 +399,7 @@ function move(t, dt){
   for(var i = 0; i < obstacles.length; i++){
     obstacles[i].move(dt);
   }
-  oldPos.clone(player.position);
+  oldPos.copy(player.position);
   dir.set(t.x - oldPos.x, 0, t.z - oldPos.z);
 
   if(dir.length() > 0.2){
