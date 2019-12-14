@@ -557,6 +557,7 @@ function checkBounds(){
 
 var direction = new THREE.Vector2(0,0);
 var anchor = new THREE.Vector2(0,0);
+var vertex = new THREE.Vector3(0,0,0);
 function checkCollision(){
   //Position Y will be invalid and will not be used
   playerLocation.copy(player.position);
@@ -571,7 +572,8 @@ function checkCollision(){
       var vertices = obstacles[_obstacles[i]].meshCore.geometry.vertices;
       var v1 = vertices[0];
       var v2 = vertices[1];
-      console.log(v1.applyMatrix(obstacles[_obstacles[i]].meshCore.matrix));
+      vertex.copy(v1);
+      console.log(vertex.applyMatrix(obstacles[_obstacles[i]].meshCore.matrix));
     } 
   }
 }
