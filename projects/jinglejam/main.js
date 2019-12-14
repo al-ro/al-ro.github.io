@@ -458,6 +458,7 @@ function checkBounds(){
   var iX = Math.floor(playerLocation.x / posDelta);
   var iZ = Math.floor(playerLocation.z / posDelta);
   var index = iZ * globalWidth + iX;
+  console.log(iX, iY, index);
   return globalMap.has(index); 
 }
 
@@ -488,7 +489,7 @@ function draw(){
     targetDir = player.position;
   }
   move(targetDir, dt);
-  console.log(checkBounds());
+  checkBounds();
   if(player.position.z < -4.5){
     glitchPass.goWild = true;
 
