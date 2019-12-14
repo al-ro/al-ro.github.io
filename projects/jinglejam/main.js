@@ -402,7 +402,7 @@ for(var i = 0; i < lvl1.giftMap.length; i++){
   var pos = new THREE.Vector3(posX, posY, posZ);
   pos.multiplyScalar(posDelta);
 
-  pos.addScalar(posDelta * 0.8 * (Math.Random() - 0.5));  
+  pos.addScalar(posDelta * 0.8 * (Math.random() - 0.5));  
 
   var giftMesh = new THREE.Mesh( giftGeometry, giftMaterial );
   giftMesh.position.copy(pos);
