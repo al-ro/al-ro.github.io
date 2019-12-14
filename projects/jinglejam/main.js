@@ -187,9 +187,9 @@ function setObstacleMap(obsMap){
   obstacleMap.clear();
   for(var i = 0; i < obsMap.length; i++){
     var index = obsMap[i][1] * globalWidth + obsMap[i][0];
-    globalMap.set(index, i);
+    globalMap.set(index, [i]);
   }
-//console.log(globalMap);
+console.log(obstacleMap);
 }
 
 const ObstacleType = {
