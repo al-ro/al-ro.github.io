@@ -178,6 +178,7 @@ function setGlobalMap(tileMap){
     var index = tileMap[1] * globalWidth + tileMap[0];
     globalMap.set(index, true);
   }
+console.log(globalMap);
 }
 
 const ObstacleType = {
