@@ -323,7 +323,7 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   glowMesh.position.set(pos.x, 1.0, pos.z);
 
   var translation = new THREE.Vector3(0.1, 0, 0);
-  var rotation = new THREE.Vector3(0.0, 0.05, 0);
+  var rotation = new THREE.Vector3(0.0, 0.0/, 0);
   var movement = new Movement(translation, rotation);
   //constructor (type, pos, meshCore, meshGlow, color, movement)
   var obstacle = new Obstacle(ObstacleType.LASER, pos, obstacleMesh, glowMesh, glowMaterial, movement);
@@ -355,6 +355,12 @@ function initialiseLevel(lvl){
 }
 
 //************** Objects **************
+
+var planeGeometry = new THREE.PlaneGeometry( 100, 100 );
+var planeMaterial = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.SingleSide} );
+var plane = new THREE.Mesh( planeGeometry, planeMaterial );
+scene.add( plane );
+
 var playerGeometry = new THREE.BoxGeometry(1,1,1);
 playerGeometry.translate(0,0.5,0);
 var playerMaterial = new THREE.MeshStandardMaterial({color: 0xffffff, metalness: 0.,  roughness: 1});
