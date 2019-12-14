@@ -323,7 +323,7 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   glowMesh.position.set(pos.x, 1.0, pos.z);
 
   var translation = new THREE.Vector3(0.1, 0, 0);
-  var rotation = new THREE.Vector3(0.0, 0.0/, 0);
+  var rotation = new THREE.Vector3(0.0, 0.05, 0);
   var movement = new Movement(translation, rotation);
   //constructor (type, pos, meshCore, meshGlow, color, movement)
   var obstacle = new Obstacle(ObstacleType.LASER, pos, obstacleMesh, glowMesh, glowMaterial, movement);
