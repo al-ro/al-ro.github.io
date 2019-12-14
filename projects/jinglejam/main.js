@@ -189,13 +189,14 @@ function setObstacleMap(obsMap){
     var index = obsMap[i][1] * globalWidth + obsMap[i][0];
     obstacleMap.set(index, [i]);
   }
-console.log(obstacleMap);
+//console.log(obstacleMap);
 }
 
 const ObstacleType = {
-  LASER: 1,
-  SPHERE: 2,
-  BLOCK: 3 
+  SPINNER: 1,
+  TIMER: 2,
+  RUNNER: 3,
+  TRAVELLER: 4 
 };
 
 //Floor
@@ -374,7 +375,7 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   var movement = new Movement(translation, rotation);
   //constructor (type, pos, meshCore, meshGlow, color, movement)
   var rotation = new THREE.Vector3(0,0,0);
-  var obstacle = new Obstacle(ObstacleType.LASER, pos, obstacleMesh, glowMesh, glowMaterial, movement, rotation);
+  var obstacle = new Obstacle(ObstacleType.SPINNER, pos, obstacleMesh, glowMesh, glowMaterial, movement, rotation);
   obstacles.push(obstacle);
 }
 
@@ -569,6 +570,8 @@ var testMesh = new THREE.Mesh( giftGeometry, giftMaterial );
 var testMesh2 = new THREE.Mesh( giftGeometry, giftMaterial );
 scene.add(testMesh);
 scene.add(testMesh2);
+      //testMesh.position.set(direction.x, 0, direction.y);
+      //testMesh2.position.set(direction.x, 0, direction.y);
 */
 function checkCollision(){
   //Position Y will be invalid and will not be used
@@ -577,17 +580,18 @@ function checkCollision(){
   var iX = Math.floor(playerLocation.x / posDelta);
   var iZ = Math.floor(playerLocation.z / posDelta);
   var index = iZ * globalWidth + iX;
+
   if(obstacleMap.has(index)){
     var _obstacles = obstacleMap.get(index);
+
     for(var i = 0; i < _obstacles.length; i++){
       endPoint1.set(obstacles[_obstacles[i]].position.x - cylinderLength/2.0, obstacles[_obstacles[i]].position.z);
       anchor.set(obstacles[_obstacles[i]].position.x, obstacles[_obstacles[i]].position.z);
       rotation.copy(obstacles[_obstacles[i]].rotation);
       endPoint1.rotateAround(anchor, -rotation.y);
-      //testMesh.position.set(direction.x, 0, direction.y);
       endPoint2.copy(endPoint1);
       endPoint2.rotateAround(anchor, -Math.PI);
-      //testMesh2.position.set(direction.x, 0, direction.y);
+
       if(distanceToLine(player.position.x, player.position.z, endPoint1.x, endPoint1.y, endPoint2.x, endPoint2.y) < 1){
 	return true;
       }
