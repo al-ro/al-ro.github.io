@@ -19,6 +19,8 @@ var canvas = document.getElementById("canvas");
       || navigator.userAgent.match(/Windows Phone/i)
       );
 
+var alive = true;
+
 //**************** Audio *****************
 var songs = [];
 
@@ -448,8 +450,14 @@ function move(t, dt){
   }
 }
 
+var playerLocation = new THREE.Vector3(0,0,0);
 function checkBounds(){
-
+  //Position Y will be invalid and will not be used
+  playerLocation.copy(player.position.subScalar(posDelta*0.5));
+  var iX = Math.floor(playerLocation.x / posDelta);
+  var iZ = Math.floor(playerLocation.z / posDelta);
+  var index = iZ * globalWidth + iX;
+  return globalMap.has(index); 
 }
 
 //************** Draw **************
@@ -479,7 +487,7 @@ function draw(){
     targetDir = player.position;
   }
   move(targetDir, dt);
-  checkBounds();
+  console.log(checkBounds());
   if(player.position.z < -4.5){
     glitchPass.goWild = true;
 
