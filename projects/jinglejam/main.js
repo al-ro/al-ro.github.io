@@ -195,7 +195,7 @@ function setObstacleMap(obsMap){
 const ObstacleType = {
   SPINNER: 1,
   TIMER: 2,
-  RUNNER: 3,
+  SLIDER: 3,
   TRAVELLER: 4 
 };
 
@@ -586,15 +586,32 @@ function checkCollision(){
     var _obstacles = obstacleMap.get(index);
 
     for(var i = 0; i < _obstacles.length; i++){
-      endPoint1.set(obstacles[_obstacles[i]].position.x - cylinderLength/2.0, obstacles[_obstacles[i]].position.z);
-      anchor.set(obstacles[_obstacles[i]].position.x, obstacles[_obstacles[i]].position.z);
-      rotation.copy(obstacles[_obstacles[i]].rotation);
-      endPoint1.rotateAround(anchor, -rotation.y);
-      endPoint2.copy(endPoint1);
-      endPoint2.rotateAround(anchor, -Math.PI);
+      var type = _obstacles[i][2];
+      switch(type) {
+	case ObstacleType.SPINNER:
+	  endPoint1.set(obstacles[_obstacles[i]].position.x - cylinderLength/2.0, obstacles[_obstacles[i]].position.z);
+	  anchor.set(obstacles[_obstacles[i]].position.x, obstacles[_obstacles[i]].position.z);
+	  rotation.copy(obstacles[_obstacles[i]].rotation);
+	  endPoint1.rotateAround(anchor, -rotation.y);
+	  endPoint2.copy(endPoint1);
+	  endPoint2.rotateAround(anchor, -Math.PI);
 
-      if(distanceToLine(player.position.x, player.position.z, endPoint1.x, endPoint1.y, endPoint2.x, endPoint2.y) < 1){
-	return true;
+	  if(distanceToLine(player.position.x, player.position.z, endPoint1.x, endPoint1.y, endPoint2.x, endPoint2.y) < 1){
+	    return true;
+	  }
+	  break;
+	case ObstacleType.TIMER:
+	  // code block
+	  break;
+	case ObstacleType.SLIDER:
+	  // code block
+	  break;
+	case ObstacleType.TRAVELLER:
+	  // code block
+	  break;
+	default:
+	  console.log("ERROR: Unknown obstacle type at collision");
+	  // code block
       }
     } 
   }
