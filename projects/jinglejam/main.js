@@ -300,6 +300,9 @@ class Obstacle {
     this._meshCore.rotateX(this._movement.rX);
     this._meshCore.rotateY(this._movement.rY);
     this._meshCore.rotateZ(this._movement.rZ);
+    this._meshGlow.rotateX(this._movement.rX);
+    this._meshGlow.rotateY(this._movement.rY);
+    this._meshGlow.rotateZ(this._movement.rZ);
   }
 }
 
@@ -319,7 +322,7 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   glowMesh.position.set(pos.x, 1.0, pos.z);
 
   var translation = new THREE.Vector3(0.1, 0, 0);
-  var rotation = new THREE.Vector3(0.05, 0.05, 0);
+  var rotation = new THREE.Vector3(0.0, 0.05, 0);
   var movement = new Movement(translation, rotation);
   //constructor (type, pos, meshCore, meshGlow, color, movement)
   var obstacle = new Obstacle(ObstacleType.LASER, pos, obstacleMesh, glowMesh, glowMaterial, movement);
