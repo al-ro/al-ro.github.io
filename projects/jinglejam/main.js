@@ -243,7 +243,7 @@ function setShadowCamera(light){
   light.shadow.camera.updateProjectionMatrix();
 }
 function move(t, dt){
-  cylinder.rotateX(0.05);
+  cylinder.rotateY(0.05);
   cylinder2.rotateY(0.05);
   var oldPos = new THREE.Vector3(player.position.x,
       player.position.y, 
