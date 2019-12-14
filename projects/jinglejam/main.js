@@ -622,7 +622,6 @@ function draw(){
   time += dt;	
   lastFrame = thisFrame;
   bounds = checkBounds();
-  collision = checkCollision();
   if(!bounds || collision){
     fall(dt);
     alive = false;
@@ -633,6 +632,7 @@ function draw(){
       targetDir = player.position;
     }
     move(targetDir, dt);
+    collision = checkCollision();
   }
   if(!alive){
     deathFrames++;
