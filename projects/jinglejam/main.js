@@ -561,7 +561,7 @@ function checkCollision(){
   var index = iZ * globalWidth + iX;
   if(obstacleMap.has(index)){
     var _obstacles = obstacleMap.get(index);
-    for(int i = 0; i < _obstacles.length; i++){
+    for(var i = 0; i < _obstacles.length; i++){
       direction.set(1,0);
       var rotation = obstacles[_obstacles[i]].rotation.y;
       console.log(
