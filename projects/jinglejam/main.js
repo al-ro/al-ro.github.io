@@ -207,12 +207,13 @@ var tileMaterial = new THREE.MeshStandardMaterial({color: 0xaaaaaa, metalness: 0
 var posDelta = 21;
 for(var i = 0; i < 3; i++){
   let posX = 0;
+  let posY = 0;
   let posZ = 0;
-  var pos = new THREE.Vector2(posX, posY);
+  var pos = new THREE.Vector3(posX, posY, posZ);
   pos.multiplyScalar(posDelta);
   var tileMesh = new THREE.Mesh( tileGeometry, tileMaterial );
   tileMesh.receiveShadow = true;
-  tileMesh.position.set(posX, 0, posZ);
+  tileMesh.position.set(pos.x, pos.y, pos.z);
   var tile = new Tile(pos, tileMesh);
   tiles.push(tile);
 }
