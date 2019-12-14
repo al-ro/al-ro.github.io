@@ -19,26 +19,7 @@ var canvas = document.getElementById("canvas");
       || navigator.userAgent.match(/Windows Phone/i)
       );
 
-//*************** Entities ***************
-
-const Obstacle = {
-  LASER: 1,
-  SPHERE: 2,
-  BLOCK: 3 
-};
-
-var tiles = [];
-var npcs = [];
-var gifts = [];
-var obstacles = [];
-
-function initialiseLevel(lvl){
-  
-  //Set NPCc, gifts and obstacles for this level.
-}
-
 //**************** Audio *****************
-
 var songs = [];
 
 //**************** Scene *****************
@@ -150,6 +131,9 @@ document.body.onkeyup = function(e){
 }
 
 //*************** Post ****************
+var darkMaterial = new THREE.MeshBasicMaterial( { color: "black" } );
+var materials = {};
+
 var renderScene = new RenderPass( scene, camera );
 //resolution, strength, radius, threshold
 var bloomPass = new UnrealBloomPass( new THREE.Vector2( canvas.width, canvas.height ), 1.5, 0.01, 0.1 );
@@ -182,12 +166,18 @@ finalComposer.addPass( renderScene );
 finalComposer.addPass( finalPass );
 finalComposer.addPass( glitchPass);
 
-//************** Objects **************
+//*************** Entities ***************
 
-var darkMaterial = new THREE.MeshBasicMaterial( { color: "black" } );
-var materials = {};
+Class Tile {
+  constructor (pos){
+    this.pos = pos;
+  }
+  get position(){
+    return this.pos;
+  }
+}
 
-var tileGeometry = new THREE.BoxGeometry(20,2,100);
+var tileGeometry = new THREE.BoxGeometry(20,2,20);
 tileGeometry.translate(0,-1,0);
 var tileMaterial = new THREE.MeshStandardMaterial({color: 0xaaaaaa, metalness: 0.,  roughness: 1});
 
@@ -197,6 +187,35 @@ var tile = new THREE.Mesh( tileGeometry, tileMaterial );
 tile.receiveShadow = true;
 scene.add(tile);
 
+
+const Obstacle = {
+  LASER: 1,
+  SPHERE: 2,
+  BLOCK: 3 
+};
+
+//Floor
+var tiles = [];
+//Targets to deliver gifts to
+var npcs = [];
+//Gifts to pick up and deliver
+var gifts = [];
+//Damaging or blocking geometries
+var obstacles = [];
+
+var level1 = [];
+
+var lvl1 = {
+  tile
+};
+
+//Clear all arrays and populate them according to level
+function initialiseLevel(lvl){
+  
+  //Set NPCc, gifts and obstacles for this level.
+}
+
+//************** Objects **************
 var playerGeometry = new THREE.BoxGeometry(1,1,1);
 playerGeometry.translate(0,0.5,0);
 var playerMaterial = new THREE.MeshStandardMaterial({color: 0xffffff, metalness: 0.,  roughness: 1});
