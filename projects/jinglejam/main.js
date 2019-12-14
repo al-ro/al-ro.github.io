@@ -208,7 +208,7 @@ var posDelta = 20.5;
 for(var i = 0; i < 3; i++){
   let posX = i;
   let posY = 0;
-  let posZ = i;
+  let posZ = 0;
   var pos = new THREE.Vector3(posX, posY, posZ);
   pos.multiplyScalar(posDelta);
   var tileMesh = new THREE.Mesh( tileGeometry, tileMaterial );
