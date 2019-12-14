@@ -296,8 +296,10 @@ class Obstacle {
   get movement(){
     return this._movement;
   }
-  move(dt){
-
+  move(speed){
+    this._meshCore.rotateX(this_.movement.rX);
+    this._meshCore.rotateY(this_.movement.rY);
+    this._meshCore.rotateZ(this_.movement.rZ);
   }
 }
 
@@ -381,6 +383,9 @@ function setShadowCamera(light){
 function move(t, dt){
   //cylinder.rotateY(0.05);
   //cylinder2.rotateY(0.05);
+  for(var i = 0; i < obstacles.length; i++){
+    obstacles[i].move(dt);
+  }
   var oldPos = new THREE.Vector3(player.position.x,
       player.position.y, 
       player.position.z);
