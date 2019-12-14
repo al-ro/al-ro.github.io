@@ -587,6 +587,7 @@ function checkCollision(){
 
     for(var i = 0; i < _obstacles.length; i++){
       var type = _obstacles[i][2];
+      console.log(_obstacles[i]);
       switch(type) {
 	case ObstacleType.SPINNER:
 	  endPoint1.set(obstacles[_obstacles[i]].position.x - cylinderLength/2.0, obstacles[_obstacles[i]].position.z);
