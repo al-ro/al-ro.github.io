@@ -167,6 +167,16 @@ finalComposer.addPass( finalPass );
 finalComposer.addPass( glitchPass);
 
 //*************** Entities ***************
+var globalWidth = 8;
+var globalHeight = 8;
+var globalMap = new Map();
+function setGlobalMap(tileMap){
+  globalMap.clear();
+  for(var i = 0; i < tileMap.length(); i++){
+    var index = tileMap[1] * globalWidth + tileMap[0];
+    globalMap.set(index, true);
+  }
+}
 
 const ObstacleType = {
   LASER: 1,
@@ -203,6 +213,8 @@ obstacleMap: [
        [3, 3]
 ]
 };
+
+setGlobalMap(lvl1.map);
 
 class Tile {
   constructor (pos, mesh){
@@ -433,8 +445,11 @@ function move(t, dt){
     oldPos.copy(plane.position);
     newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
     plane.position.copy(newPos);
-
   }
+}
+
+fucntion checkBounds(){
+
 }
 
 //************** Draw **************
@@ -464,6 +479,7 @@ function draw(){
     targetDir = player.position;
   }
   move(targetDir, dt);
+  checkBounds();
   if(player.position.z < -4.5){
     glitchPass.goWild = true;
 
