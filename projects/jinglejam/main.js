@@ -586,7 +586,7 @@ function checkCollision(){
     var _obstacles = obstacleMap.get(index);
 
     for(var i = 0; i < _obstacles.length; i++){
-      var index = _obstacle[i][0];
+      var index = _obstacles[i][0];
       var type = _obstacles[i][1];
       console.log(_obstacles[i]);
       switch(type) {
