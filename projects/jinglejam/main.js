@@ -356,6 +356,7 @@ class Obstacle {
 	this._meshGlow.rotateZ(this._movement.rZ);
 	break;
       case ObstacleType.TRAVELLER:
+	this._time += speed;
 	this._pos.x = this._originalPos.x + sin(time);
 	this._pos.z = this._originalPos.z + cos(time);
 	this._meshCore.position.set(this._pos.x, 0, this._pos.z);
