@@ -187,7 +187,7 @@ finalComposer.addPass( glitchPass);
 var darkMaterial = new THREE.MeshBasicMaterial( { color: "black" } );
 var materials = {};
 
-var tileGeometry = new THREE.BoxGeometry(20,2,20);
+var tileGeometry = new THREE.BoxGeometry(20,2,100);
 tileGeometry.translate(0,-1,0);
 var tileMaterial = new THREE.MeshStandardMaterial({color: 0xaaaaaa, metalness: 0.,  roughness: 1});
 
