@@ -19,7 +19,29 @@ var canvas = document.getElementById("canvas");
       || navigator.userAgent.match(/Windows Phone/i)
       );
 
+//*************** Entities ***************
 
+const Obstacle = {
+  LASER: 1,
+  SPHERE: 2,
+  BLOCK: 3 
+};
+
+var tiles = [];
+var npcs = [];
+var gifts = [];
+var obstacles = [];
+
+function initialiseLevel(lvl){
+  
+  //Set NPCc, gifts and obstacles for this level.
+}
+
+//**************** Audio *****************
+
+var songs = [];
+
+//**************** Scene *****************
   //Initialise three.js
   var scene = new THREE.Scene();
   var BLOOM = 1;
@@ -35,7 +57,7 @@ var canvas = document.getElementById("canvas");
   renderer.setSize( window.innerWidth, window.innerHeight );
   renderer.setClearColor( 0x443344, 1);
   //renderer.setClearColor( 0x000000, 1);
-  //renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = true;
 
   var distance = 400;
 
@@ -222,7 +244,7 @@ function setShadowCamera(light){
 }
 function move(t, dt){
   cylinder.rotateX(0.05);
-  cylinder2.rotateX(0.05);
+  cylinder2.rotateY(0.05);
   var oldPos = new THREE.Vector3(player.position.x,
       player.position.y, 
       player.position.z);
