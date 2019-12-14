@@ -307,13 +307,14 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
   let posZ = lvl1.obstacleMap[i][1];
   var pos = new THREE.Vector3(posX, posY, posZ);
   pos.multiplyScalar(posDelta);
+
   var obstacleMesh = new THREE.Mesh( cylinderGeometry, whiteMaterial );
-  obstacleMesh.position.set(pos.x, pos.y, pos.z);
+  obstacleMesh.position.set(pos.x, 1.0, pos.z);
 
   var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff5522} );
   var glowMesh = new THREE.Mesh( cylinderGeometry, glowMaterial );
   glowMesh.layers.enable(BLOOM);
-  glowMesh.position.set(pos.x, pos.y, pos.z);
+  glowMesh.position.set(pos.x, 1.0, pos.z);
 
   var translation = new THREE.Vector3(0.1, 0, 0);
   var rotation = new THREE.Vector3(0.05, 0.05, 0);
