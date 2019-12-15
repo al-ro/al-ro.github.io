@@ -319,8 +319,8 @@ npcMap: [
 
 function generateRandomMap(){
   lvl1 = {map: [], obstacleMap: [], giftMap: [], npcMap: [] };
-  var worldLength = 7 + Math.floor(Math.random() * 10);
-  var gifts = 3 + Math.floor(Math.random() * 3);
+  var worldLength = 10 + Math.floor(Math.random() * 10);
+  var numberOfGifts = 3 + Math.floor(Math.random() * 3);
   var posX = 0;
   var posY = 0;
   lvl1.map.push([posX, posY]);
@@ -332,19 +332,70 @@ function generateRandomMap(){
     }
     lvl1.map.push([posX, posY]);
   }
+
+  var giftIndicesMap = new Map();
+  for(var i = 0; i < numberOfGifts; i++){
+    var randomIndex = Math.floor(Math.random() * (worldLength - 1));
+    while(giftIndicesMap.has(randomIndex)){
+      randomIndex = Math.floor(Math.random() * (worldLength - 1));
+    } 
+    
+    var x = lvl1.map[randomIndex][0];
+    var z = lvl1.map[randomIndex][1];
+
+    var type = GiftType.ALPHA;
+
+    if((i % 3) == 1){
+      type = GiftType.BETA;
+    }
+    if((i % 3) == 2){
+      type = GiftType.GAMMA;
+    }
+
+    lvl1.giftMap.push([x,z,type]);    
+    giftIndicesMap.set(randomIndex, type);
+    
+  }
+
+  var npcIndicesMap = new Map();
+  for(var i = 0; i < numberOfGifts; i++){
+    var randomIndex = Math.floor(Math.random() * (worldLength - 1));
+    while(npcIndicesMap.has(randomIndex)){
+      randomIndex = Math.floor(Math.random() * (worldLength - 1));
+    } 
+    
+    var x = lvl1.map[randomIndex][0];
+    var z = lvl1.map[randomIndex][1];
+
+    var type = GiftType.ALPHA;
+
+    if((i % 3) == 1){
+      type = GiftType.BETA;
+    }
+    if((i % 3) == 2){
+      type = GiftType.GAMMA;
+    }
+
+    lvl1.giftMap.push([x,z,type]);    
+    npcIndicesMap.set(randomIndex, type);
+    
+  }
+  
   
   for(var i = 0; i < worldLength; i++){
-    if(Math.random > 0.5){
-      //create obstacle
-      var x = lvl.map[i][0];
-      var z = lvl.map[i][0];
+    if(!giftIndicesMap.has(i) && !npcIndicesMap.has(i)){
       if(Math.random > 0.5){
-	var type = ObstacleType.SPINNER;
-      }else{
-	var type = ObstacleType.TRAVELLER;
-      }
-      lvl1.obstacleMap.push([x,y,type]);
-    }     
+	//create obstacle
+	var x = lvl.map[i][0];
+	var z = lvl.map[i][0];
+	if(Math.random > 0.5){
+	  var type = ObstacleType.SPINNER;
+	}else{
+	  var type = ObstacleType.TRAVELLER;
+	}
+	lvl1.obstacleMap.push([x,y,type]);
+      }     
+    }
   }
 
 }
