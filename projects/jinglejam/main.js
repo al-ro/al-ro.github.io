@@ -91,6 +91,15 @@ function hideGameOver() {
   document.getElementById('menu_button').style.visibility = 'hidden';
 }
 
+function showMenu() {
+  document.getElementById('reset_button').style.visibility = 'visible';
+  document.getElementById('menu_button').style.visibility = 'hidden';
+}
+
+function hideMenu() {
+  document.getElementById('reset_button').style.visibility = 'hidden';
+}
+
 
 var ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
