@@ -166,7 +166,7 @@ finalPass.needsSwap = true;
 
 var finalComposer = new EffectComposer( renderer );
 var glitchPass = new GlitchPass2();
-//finalComposer.addPass( renderScene );
+finalComposer.addPass( renderScene );
 finalComposer.addPass( finalPass );
 finalComposer.addPass( glitchPass);
 
