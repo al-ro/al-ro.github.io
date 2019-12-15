@@ -360,7 +360,7 @@ class Obstacle {
 	this._pos.x = this._originalPos.x + Math.sin(time) * 10;
 	this._pos.z = this._originalPos.z + Math.cos(time) * 10;
 	this._meshCore.position.set(this._pos.x, 0, this._pos.z);
-	this._glowCore.position.set(this._pos.x, 0, this._pos.z);
+	this._meshGlow.position.set(this._pos.x, 0, this._pos.z);
 	break;
     }
   }
