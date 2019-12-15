@@ -655,7 +655,7 @@ function checkCollision(){
 	case ObstacleType.TRAVELLER:
 	  var dx = player.position.x - obstacles[index].meshCore.position.x;
 	  var dz = player.position.z - obstacles[index].meshCore.position.z;
-	  if(Math.sqrt((dx*dx)+(dz*dz)) < (sphereRadius + 0.1)){
+	  if(Math.sqrt((dx*dx)+(dz*dz)) < (sphereRadius + 0.5)){
 	    return true;
 	  }
 	  // code block
