@@ -197,7 +197,6 @@ function setGlobalMap(tileMap){
 var obstacleMap = new Map();
 function setObstacleMap(obsMap){
   obstacleMap.clear();
-  console.log(tiles.length);
   for(var i = 0; i < obsMap.length; i++){
     var index = obsMap[i][1] * globalWidth + obsMap[i][0];
     obstacleMap.set(index, [[i, obsMap[i][2]]]);
@@ -206,6 +205,26 @@ function setObstacleMap(obsMap){
     }
   }
 //console.log(obstacleMap);
+}
+
+var giftMap = new Map();
+function setGiftMap(objMap){
+  giftMap.clear();
+  for(var i = 0; i < objMap.length; i++){
+    var index = objMap[i][1] * globalWidth + objMap[i][0];
+    giftMap.set(index, [[i, objMap[i][2]]]);
+  }
+//console.log(giftMap);
+}
+
+var npcMap = new Map();
+function setNPCMap(objMap){
+  npcMap.clear();
+  for(var i = 0; i < objMap.length; i++){
+    var index = objMap[i][1] * globalWidth + objMap[i][0];
+    npcMap.set(index, [[i, objMap[i][2]]]);
+  }
+//console.log(npcMap);
 }
 
 const ObstacleType = {
@@ -601,6 +620,8 @@ for(var i = 0; i < lvl1.npcMap.length; i++){
 for(var i = 0; i < npcs.length; i++){
   scene.add(npcs[i].mesh);
 }
+setGiftMap(lvl1.giftMap);
+setNPCMap(lvl1.npcMap);
 
 //************** Objects **************
 
@@ -750,6 +771,25 @@ function checkCollision(){
   }
   return false;
 }
+
+function checkPickUp(){
+  //Position Y will be invalid and will not be used
+  playerLocation.copy(player.position);
+  playerLocation.addScalar(posDelta*0.5);
+  var iX = Math.floor(playerLocation.x / posDelta);
+  var iZ = Math.floor(playerLocation.z / posDelta);
+  var index = iZ * globalWidth + iX;
+
+  if(giftMap.has(index)){
+    var _gifts = giftMap.get(index);
+
+    for(var i = 0; i < _gifts.length; i++){
+
+    }
+  }
+  return false;
+}
+
 //************** Move ******************
 var oldPos = new THREE.Vector3(0,0,0);
 var newPos = new THREE.Vector3(0,0,0);
