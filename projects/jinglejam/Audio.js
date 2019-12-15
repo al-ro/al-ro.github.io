@@ -35,6 +35,10 @@ function initAudio(){
   songs.push(delivery);
   songs.push(damage);
 
+  menu.loop = true;
+  theme3.loop = true;
+  end.loop = true;
+
   for(var i = 0; i < songs.length; i++){
     songs[i].crossOrigin = "anonymous";
     songs[i].currentTime = 0;;
