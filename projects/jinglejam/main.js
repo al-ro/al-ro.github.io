@@ -444,6 +444,9 @@ class Gift {
   get mesh(){
     return this._mesh;
   }
+  move(dt){
+    this._mesh.rotateY(dt);
+  }
 
 }
 
@@ -585,6 +588,9 @@ function move(t, dt){
 
 //Move obstacles
   for(var i = 0; i < obstacles.length; i++){
+    obstacles[i].move(dt);
+  }
+  for(var i = 0; i < gifts.length; i++){
     obstacles[i].move(dt);
   }
 
