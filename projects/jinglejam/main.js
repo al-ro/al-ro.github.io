@@ -376,7 +376,7 @@ function generateRandomMap(){
       type = GiftType.GAMMA;
     }
 
-    lvl1.giftMap.push([x,z,type]);    
+    lvl1.npcMap.push([x,z,type]);    
     npcIndicesMap.set(randomIndex, type);
     
   }
@@ -387,7 +387,7 @@ function generateRandomMap(){
       //create obstacle
       var x = lvl1.map[i][0];
       var z = lvl1.map[i][0];
-      if(Math.random > 0.5){
+      if(Math.random > 0.3){
 	var type = ObstacleType.SPINNER;
       }else{
 	var type = ObstacleType.TRAVELLER;
@@ -399,7 +399,6 @@ function generateRandomMap(){
 }
 
 generateRandomMap();
-
 
 class Tile {
   constructor (pos, mesh){
@@ -1056,6 +1055,7 @@ function toggleAudio(){
 }
 
 function resetWorld(){
+  generateRandomMap();
   document.getElementById('score').style.visibility = 'visible';
   document.getElementById('lives').style.visibility = 'visible';
   deathFrames = 0;
