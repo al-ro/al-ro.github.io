@@ -306,7 +306,7 @@ var cylinderLength = 20;
 var cylinderGeometry = new THREE.CylinderGeometry( 0.5, 0.5, cylinderLength, 7 );
 cylinderGeometry.rotateZ(Math.PI/2.0);
 
-var sphereRadius = 1.5;
+var sphereRadius = 1.2;
 var sphereGeometry = new THREE.SphereGeometry(sphereRadius, 16, 16);
 var whiteMaterial = new THREE.MeshBasicMaterial( {color: 0xffffff} );
 
