@@ -1073,6 +1073,7 @@ function draw(){
       if(!bounds){
 	if(!deducted){
 	  lives = Math.max(0, lives-1);
+	  updateLives();
 	  deducted = true;
 	}
 	alive = false;
@@ -1098,6 +1099,7 @@ function draw(){
 	  alive = false;
 	  if(!deducted){
 	    lives = Math.max(0, lives-1);
+	    updateLives();
 	    deducted = true;
 	  }
 	  if(lives == 0){
