@@ -131,14 +131,8 @@ var helper = new THREE.CameraHelper(directionalLight.shadow.camera);
 var raycaster = new THREE.Raycaster();
 var mouse = new THREE.Vector2(-100, -100);
 
-var mouse_down = false;
 
 function onMouseDown( event ) {
-  if(!userInteraction){
-    initAudio();
-    playMenuTheme();
-    userInteraction = true;
-  }
   mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
   mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
   mouse_down = true;
