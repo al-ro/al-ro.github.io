@@ -477,6 +477,9 @@ class Gift {
   get mesh(){
     return this._mesh;
   }
+  get active(){
+    return this._active;
+  }
   move(dt){
     this._mesh.rotateY(dt);
   }
