@@ -1062,6 +1062,7 @@ function resetWorld(){
   generateRandomMap();
   document.getElementById('score').style.visibility = 'visible';
   document.getElementById('lives').style.visibility = 'visible';
+  document.getElementById('reset_button').style.visibility = 'hidden';
   deathFrames = 0;
   deducted = false;
   lives = 3;
