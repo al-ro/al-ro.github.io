@@ -41,6 +41,10 @@
     user-select: none;
 }
 
+.button {
+  z-index: 1;
+}
+
 #gameover {
   visibility: hidden;
 }
