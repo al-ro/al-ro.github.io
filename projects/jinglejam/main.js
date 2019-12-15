@@ -254,7 +254,7 @@ class Tile {
 
 var tileGeometry = new THREE.BoxGeometry(20,2,20);
 tileGeometry.translate(0,-1,0);
-var tileMaterial = new THREE.MeshStandardMaterial({color: 0x555555, metalness: 0.,  roughness: 1});
+var tileMaterial = new THREE.MeshStandardMaterial({color: 0xbbbbbb, metalness: 0.,  roughness: 1});
 
 var posDelta = 20.5;
 for(var i = 0; i < lvl1.map.length; i++){
@@ -732,7 +732,7 @@ function renderBloom() {
   scene.traverse( darkenNonBloomed );
   renderer.setClearColor( 0x000000, 1);
   bloomComposer.render();
-  renderer.setClearColor( 0xffeeee, 1);
+  renderer.setClearColor( 0x272738, 1);
   scene.traverse( restoreMaterial );
   for(var i = 0; i < obstacles.length; i++){
     obstacles[i].meshCore.visible = true;
