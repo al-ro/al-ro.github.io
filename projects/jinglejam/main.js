@@ -1226,7 +1226,9 @@ function renderBloom() {
   scene.traverse( darkenNonBloomed );
   renderer.setClearColor( 0x000000, 1);
   bloomComposer.render();
-  renderer.setClearColor( 0x272738, 1);
+  if(!menu){
+    renderer.setClearColor( 0x272738, 1);
+  }
   scene.traverse( restoreMaterial );
 }
 
