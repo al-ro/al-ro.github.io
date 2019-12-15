@@ -216,17 +216,17 @@ const ObstacleType = {
 };
 
 const GiftType = {
-  NONE = 1,
-  ALPHA = 2,
-  BETA = 3,
-  GAMMA = 4
+  NONE: 1,
+  ALPHA: 2,
+  BETA: 3,
+  GAMMA: 4
 };
 
-const NPCType = {
-  NONE = 1,
-  ALPHA = 2,
-  BETA = 3,
-  GAMMA = 4
+const NPCType: {
+  NONE: 1,
+  ALPHA: 2,
+  BETA: 3,
+  GAMMA: 4
 };
 
 //Currently held gift
@@ -543,7 +543,7 @@ class NPC {
     return this._happy;
   }
   move(dt){
-    this._mesh.rotateY(dt);
+    this._mesh.rotateY(-dt);
   }
 
 }
