@@ -140,7 +140,7 @@ var materials = {};
 
 var renderScene = new RenderPass( scene, camera );
 //resolution, strength, radius, threshold
-var bloomPass = new UnrealBloomPass( new THREE.Vector2( 0.5*canvas.width, 0.5*canvas.height ), 1.5, 0.01, 0.1 );
+var bloomPass = new UnrealBloomPass( new THREE.Vector2( 0.5*canvas.width, 0.5*canvas.height ), 1.0, 0.01, 0.1 );
 /*
    bloomPass.threshold = params.bloomThreshold;
    bloomPass.strength = params.bloomStrength;
