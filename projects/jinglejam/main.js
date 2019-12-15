@@ -549,9 +549,9 @@ class NPC {
 
 }
 
-var npcAlphaMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa, side: THREE.DoubleSide } );
-var npcBetaMaterial = new THREE.MeshBasicMaterial( {color: 0xaa44ff, side: THREE.DoubleSide } );
-var npcGammaMaterial = new THREE.MeshBasicMaterial( {color: 0xffaa44, side: THREE.DoubleSide } );
+var npcAlphaMaterial = new THREE.MeshBasicMaterial( {color: 0x22dd88, side: THREE.DoubleSide } );
+var npcBetaMaterial = new THREE.MeshBasicMaterial( {color: 0x8822dd, side: THREE.DoubleSide } );
+var npcGammaMaterial = new THREE.MeshBasicMaterial( {color: 0xdd8822, side: THREE.DoubleSide } );
 var npcAlphaGeometry = new THREE.RingGeometry( 1.5, 2, 6, 2);
 var npcBetaGeometry = new THREE.RingGeometry( 1.5, 2, 3, 2);
 var npcGammaGeometry = new THREE.RingGeometry( 1.5, 2, 4, 2);
