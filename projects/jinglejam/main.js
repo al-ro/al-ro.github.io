@@ -222,7 +222,7 @@ const GiftType = {
   GAMMA: 4
 };
 
-const NPCType: {
+const NPCType = {
   NONE: 1,
   ALPHA: 2,
   BETA: 3,
