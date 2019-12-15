@@ -1089,10 +1089,10 @@ function draw(){
 
       if(!alive){
 	fall(dt);
-	deathFrames++;
 	if(deathFrames == 0){
 	  playDamage();
 	}
+	deathFrames++;
 	glitchPass.goWild = true;
 
       }else{
