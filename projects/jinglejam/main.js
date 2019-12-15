@@ -85,6 +85,7 @@ function toggleGameOver() {
   }
 }
 
+document.getElementById('success').style.visibility = 'visible';
 function toggleSuccess() {
   var x = document.getElementById('success');
 document.getElementById('success').style.visibility = 'visible';
@@ -93,7 +94,7 @@ document.getElementById('success').style.visibility = 'visible';
   } else {
     x.style.visibility = 'hidden';
   }
-  console.log('TOGGLE: ', x.style);
+  console.log('TOGGLE: ', x.style.visibility);
 }
 
 var ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
