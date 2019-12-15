@@ -986,6 +986,14 @@ function resetWorld(){
   directionalLight.target = player;
 }
 
+function start(){
+  initAudio();
+  showMenu();
+};
+
+var startButton = document.getElementById("start_button");
+startButton.addEventListener('click', start());
+
 var audioButton = document.getElementById("audio_button");
 audioButton.addEventListener('click', toggleAudio);
 audioButton.addEventListener( 'mouseenter', onMouseEnter, false );
