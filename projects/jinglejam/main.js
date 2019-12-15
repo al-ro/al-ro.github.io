@@ -547,18 +547,18 @@ class NPC {
 
 }
 
-var giftAlphaMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
-var giftBetaMaterial = new THREE.MeshBasicMaterial( {color: 0xaa44ff} );
-var giftGammaMaterial = new THREE.MeshBasicMaterial( {color: 0xffaa44} );
-var giftAlphaGeometry = new THREE.RingGeometry( 1.25, 2.5, 6, 1);
-var giftBetaGeometry = new THREE.RingGeometry( 1.25, 2.5, 3, 1);
-var giftGammaGeometry = new THREE.RingGeometry( 1.25, 2.5, 4, 1);
-giftAlphaGeometry.rotateZ(Math.PI/2.0);
-giftAlphaGeometry.translate(0, 3.0, 0);
-giftBetaGeometry.rotateZ(Math.PI/2.0);
-giftBetaGeometry.translate(0, 3.0, 0);
-giftGammaGeometry.rotateZ(Math.PI/2.0);
-giftGammaGeometry.translate(0, 3.0, 0);
+var npcAlphaMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
+var npcBetaMaterial = new THREE.MeshBasicMaterial( {color: 0xaa44ff} );
+var npcGammaMaterial = new THREE.MeshBasicMaterial( {color: 0xffaa44} );
+var npcAlphaGeometry = new THREE.RingGeometry( 1.25, 2.5, 6, 1);
+var npcBetaGeometry = new THREE.RingGeometry( 1.25, 2.5, 3, 1);
+var npcGammaGeometry = new THREE.RingGeometry( 1.25, 2.5, 4, 1);
+npcAlphaGeometry.rotateZ(Math.PI/2.0);
+npcAlphaGeometry.translate(0, 3.0, 0);
+npcBetaGeometry.rotateZ(Math.PI/2.0);
+npcBetaGeometry.translate(0, 3.0, 0);
+npcGammaGeometry.rotateZ(Math.PI/2.0);
+npcGammaGeometry.translate(0, 3.0, 0);
 
 var npcGeometry;
 var npcMaterial;
