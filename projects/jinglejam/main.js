@@ -215,9 +215,15 @@ const ObstacleType = {
   TRAVELLER: 4 
 };
 
+const GiftType = {
+  NONE = 1,
+  ALPHA = 2,
+  BETA = 3,
+  GAMMA = 4
+};
 
-//Currently held gifts
-var inventory = [];
+//Currently held gift
+var inventory = {holding: false, type: GiftType.NONE};
 
 var level1 = [];
 
@@ -239,8 +245,8 @@ obstacleMap: [
        [3, 2, ObstacleType.SPINNER]
 ],
 giftMap: [
-       [0, 0],
-       [3, 3]
+       [0, 0, GiftType.ALPHA],
+       [3, 3, GiftType.BETA]
 ]
 };
 
@@ -453,10 +459,21 @@ class Gift {
 const GiftType = {
   ONE: 1
 };
-var giftMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
-var giftGeometry = new THREE.CylinderGeometry( 1, 1, 0.2, 6 );
-giftGeometry.rotateZ(Math.PI/2.0);
-giftGeometry.translate(0, 1.0, 0);
+var giftAlphaMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
+var giftBetaMaterial = new THREE.MeshBasicMaterial( {color: 0xaa44ff} );
+var giftGammaMaterial = new THREE.MeshBasicMaterial( {color: 0xffaa44} );
+var giftAlphaGeometry = new THREE.CylinderGeometry( 1, 1, 0.2, 6 );
+var giftBetaGeometry = new THREE.CylinderGeometry( 1, 1, 0.2, 3 );
+var giftGammaGeometry = new THREE.CylinderGeometry( 1, 1, 0.2, 4 );
+giftAlphaGeometry.rotateZ(Math.PI/2.0);
+giftAlphaGeometry.translate(0, 1.0, 0);
+giftBetaGeometry.rotateZ(Math.PI/2.0);
+giftBetaGeometry.translate(0, 1.0, 0);
+giftGammaGeometry.rotateZ(Math.PI/2.0);
+giftGammaGeometry.translate(0, 1.0, 0);
+
+var giftGeometry;
+var giftMaterial;
 
 for(var i = 0; i < lvl1.giftMap.length; i++){
   let posX = lvl1.giftMap[i][0];
@@ -466,6 +483,23 @@ for(var i = 0; i < lvl1.giftMap.length; i++){
   pos.multiplyScalar(posDelta);
 
   pos.set(pos.x + posDelta * 0.8 * (Math.random() - 0.5), 0.0 , pos.z + posDelta * 0.8 * (Math.random() - 0.5));  
+
+  let type = lvl1.giftMap[i][2];
+
+  switch(type){
+    case GiftType.ALPHA:
+      giftGeometry = giftAlphaGeometry;
+      giftMaterial = giftAlphaMaterial;
+    break;
+    case GiftType.BETA:
+      giftGeometry = giftBetaGeometry;
+      giftMaterial = giftBetaMaterial;
+    break;
+    case GiftType.GAMMA:
+      giftGeometry = giftGammaGeometry;
+      giftMaterial = giftGammaMaterial;
+    break;
+  }
 
   var giftMesh = new THREE.Mesh( giftGeometry, giftMaterial );
   giftMesh.position.copy(pos);
