@@ -675,55 +675,6 @@ function setShadowCamera(light){
   light.shadow.camera.updateProjectionMatrix();
 }
 
-var oldPos = new THREE.Vector3(0,0,0);
-var newPos = new THREE.Vector3(0,0,0);
-var dir = new THREE.Vector3(0,0,0);
-function move(t, dt){
-
-//Move obstacles
-  for(var i = 0; i < obstacles.length; i++){
-    obstacles[i].move(dt);
-  }
-  for(var i = 0; i < gifts.length; i++){
-    gifts[i].move(dt);
-  }
-
-  for(var i = 0; i < npcs.length; i++){
-    npcs[i].move(dt);
-  }
-
-  //Move player, light and camera
-  oldPos.copy(player.position);
-  dir.set(t.x - oldPos.x, 0, t.z - oldPos.z);
-
-  if(dir.length() > 0.02){
-    dir.normalize();
-    var speed;
-    if(slow){
-      speed = 1.0;
-    }else{
-      speed = 10.0;
-    }
-    dir.multiplyScalar(dt * speed);
-
-    newPos.set(oldPos.x + dir.x, 0, oldPos.z + dir.z);
-    player.lookAt(newPos);
-    player.position.copy(newPos);
-
-    oldPos.copy(directionalLight.position);
-    newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
-    directionalLight.position.copy(newPos);
-    directionalLight.target = player;
-
-    oldPos.copy(camera.position);
-    newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
-    camera.position.copy(newPos); 
-
-    oldPos.copy(plane.position);
-    newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
-    plane.position.copy(newPos);
-  }
-}
 
 var playerLocation = new THREE.Vector3(0,0,0);
 function checkBounds(){
@@ -803,6 +754,57 @@ function checkCollision(){
   }
   return false;
 }
+//************** Move ******************
+var oldPos = new THREE.Vector3(0,0,0);
+var newPos = new THREE.Vector3(0,0,0);
+var dir = new THREE.Vector3(0,0,0);
+function move(t, dt){
+
+//Move obstacles
+  for(var i = 0; i < obstacles.length; i++){
+    obstacles[i].move(dt);
+  }
+  for(var i = 0; i < gifts.length; i++){
+    gifts[i].move(dt);
+  }
+
+  for(var i = 0; i < npcs.length; i++){
+    npcs[i].move(dt);
+  }
+
+  //Move player, light and camera
+  oldPos.copy(player.position);
+  dir.set(t.x - oldPos.x, 0, t.z - oldPos.z);
+
+  if(dir.length() > 0.02){
+    dir.normalize();
+    var speed;
+    if(slow){
+      speed = 1.0;
+    }else{
+      speed = 10.0;
+    }
+    dir.multiplyScalar(dt * speed);
+
+    newPos.set(oldPos.x + dir.x, 0, oldPos.z + dir.z);
+    player.lookAt(newPos);
+    player.position.copy(newPos);
+
+    oldPos.copy(directionalLight.position);
+    newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
+    directionalLight.position.copy(newPos);
+    directionalLight.target = player;
+
+    oldPos.copy(camera.position);
+    newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
+    camera.position.copy(newPos); 
+
+    oldPos.copy(plane.position);
+    newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
+    plane.position.copy(newPos);
+  }
+}
+
 
 //Actually the exact opposite of falling
 function fall(dt){
