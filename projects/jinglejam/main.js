@@ -125,10 +125,10 @@ var raycaster = new THREE.Raycaster();
 var mouse = new THREE.Vector2(-100, -100);
 
 var mouse_down = false;
+initAudio();
 
 function onMouseDown( event ) {
   if(!userInteraction){
-    initAudio();
     playTheme();
     userInteraction = true;
   }
