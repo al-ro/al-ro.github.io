@@ -392,7 +392,7 @@ function generateRandomMap(){
       }else{
 	var type = ObstacleType.TRAVELLER;
       }
-      lvl1.obstacleMap.push([x,y,type]);
+      lvl1.obstacleMap.push([x,z,type]);
     }    
   }
 
