@@ -1063,6 +1063,7 @@ function draw(){
 	}
       }
       if(alive){
+	  playDamage();
 	if(intersect[0] && mouse_down){
 	  targetDir = intersect[0].point;
 	}else{
