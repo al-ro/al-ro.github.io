@@ -9,6 +9,7 @@ import { ShaderPass } from 'https://threejs.org/examples/jsm/postprocessing/Shad
 import { UnrealBloomPass } from 'https://threejs.org/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 import { GlitchPass2 } from 'https://al-ro.github.io/projects/jinglejam/Postprocessing.js';
+import { populateWorld } from 'https://al-ro.github.io/projects/jinglejam/Initialiser.js';
 
 var canvas = document.getElementById("canvas");
 
