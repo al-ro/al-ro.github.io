@@ -963,6 +963,7 @@ function toggleAudio(){
 }
 
 function resetWorld(){
+  console.log("R E S E T   W O R L D");
   menu = false;
   objectives = 1;
   score = 0;
