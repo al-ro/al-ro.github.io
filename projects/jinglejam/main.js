@@ -574,6 +574,7 @@ class NPC {
     objectives--;
     if(objectives == 0){
       victory = true;
+      toggleSuccess();
     }
   }
   move(dt){
@@ -904,6 +905,24 @@ function move(t, dt){
   }
 }
 
+function toggleGameOver() {
+  var x = document.getElementById("gameover");
+  if (x.style.visibility === "hidden") {
+    x.style.display = "visible";
+  } else {
+    x.style.display = "hidden";
+  }
+}
+
+function toggleSuccess() {
+  var x = document.getElementById("success");
+  console.log("TOGGLE: ", x);
+  if (x.style.visibility === "hidden") {
+    x.style.display = "visible";
+  } else {
+    x.style.display = "hidden";
+  }
+}
 
 //Actually the exact opposite of falling
 function fall(dt){
