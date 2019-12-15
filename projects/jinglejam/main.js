@@ -71,7 +71,7 @@ var songs = [];
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
     bloomComposer.setSize( 0.5*window.innerWidth, 0.5*window.innerHeight );
-    finalComposer.setSize( window.innerWidth, window.innerHeight );
+    finalComposer.setSize( 0.75*window.innerWidth, 0.75*window.innerHeight );
   }
 
 var ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -166,7 +166,7 @@ var finalPass = new ShaderPass(
 finalPass.needsSwap = true;
 
 var finalComposer = new EffectComposer( renderer );
-finalComposer.setSize( window.innerWidth, window.innerHeight );
+finalComposer.setSize( 0.75*window.innerWidth, 0.75*window.innerHeight );
 var glitchPass = new GlitchPass2();
 finalComposer.addPass( renderScene );
 finalComposer.addPass( finalPass );
