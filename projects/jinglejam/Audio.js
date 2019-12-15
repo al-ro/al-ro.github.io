@@ -102,6 +102,9 @@ function playTheme(){
 }
 
 function playLaserHit(){
+  for(var i = 0; i < songs.length; i++){
+    songs[i].pause();
+  }
   laser.currentTime = 0;
   laser.play();
 }
