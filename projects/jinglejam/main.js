@@ -589,6 +589,8 @@ for(var i = 0; i < lvl1.npcMap.length; i++){
     break;
   }
 
+  npcGeometry = new THREE.RingGeometry( 1, 5, 32 );
+  npcGeometry.translate(0,2,0);
   var npcMesh = new THREE.Mesh( npcGeometry, npcMaterial );
   npcMesh.position.copy(pos);
   var npc = new NPC( type, pos, npcMesh, npcMaterial );
