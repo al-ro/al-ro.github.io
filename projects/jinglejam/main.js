@@ -37,7 +37,7 @@ var lives = 3;
   var renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
   renderer.toneMapping = THREE.Uncharted2ToneMapping;
   //renderer.toneMapping = THREE.ReinhardToneMapping;
-  //renderer.toneMappingExposure = 2.0;
+  renderer.toneMappingExposure = 0.5;
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize( window.innerWidth, window.innerHeight );
   renderer.setClearColor( 0x443344, 1);
@@ -1057,6 +1057,7 @@ function toggleAudio(){
 }
 
 function resetWorld(){
+  renderer.toneMappingExposure = 1.0;
   validMovement = true;
   generateRandomMap();
   document.getElementById('score').style.visibility = 'visible';
