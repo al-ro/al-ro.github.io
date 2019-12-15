@@ -451,7 +451,7 @@ const GiftType = {
   ONE: 1
 };
 var giftMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
-var giftGeometry = new THREE.CylinderGeometry( 1, 1, 0.2, 8 );
+var giftGeometry = new THREE.CylinderGeometry( 1, 1, 0.2, 6 );
 giftGeometry.translate(0, 0.2, 0);
 
 for(var i = 0; i < lvl1.giftMap.length; i++){
