@@ -144,9 +144,11 @@ function onMouseUp( event ) {
 var validMovement = true;
 function onMouseEnter( event ) {
   validMovement = false;
+  console.log(validMovement);
 }
 function onMouseLeave( event ) {
   validMovement = true;
+  console.log(validMovement);
 }
 
 window.addEventListener( 'mousedown', onMouseDown, false );
