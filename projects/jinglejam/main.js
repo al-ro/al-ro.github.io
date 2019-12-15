@@ -736,7 +736,7 @@ function renderBloom() {
   renderer.setClearColor( 0x272738, 1);
   scene.traverse( restoreMaterial );
   for(var i = 0; i < obstacles.length; i++){
-    obstacles[i].meshCore.visible = true;
+    //obstacles[i].meshCore.visible = true;
   }
 }
 
