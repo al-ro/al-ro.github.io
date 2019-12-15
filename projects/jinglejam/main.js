@@ -190,6 +190,9 @@ function setObstacleMap(obsMap){
   for(var i = 0; i < obsMap.length; i++){
     var index = obsMap[i][1] * globalWidth + obsMap[i][0];
     obstacleMap.set(index, [[i, obsMap[i][2]]]);
+    if(obsMap[i][2] == ObstacleType.SPINNER){
+      tiles[globalMap[index]].mesh.geometry = roundTileGemetry;
+    }
   }
 //console.log(obstacleMap);
 }
@@ -255,6 +258,7 @@ class Tile {
 }
 
 var tileGeometry = new THREE.BoxGeometry(20,2,20);
+var roundTileGeometry = new THREE.BoxGeometry(10,2,10);
 tileGeometry.translate(0,-1,0);
 var tileMaterial = new THREE.MeshStandardMaterial({color: 0x999999, metalness: 0.5,  roughness: 0.5});
 
