@@ -74,6 +74,7 @@ function playMenuTheme(){
   for(var i = 0; i < songs.length; i++){
     songs[i].pause();
   }
+  menu.currentTime = 0;
   menu.play();
   current = menu;
   sound = true;
@@ -83,6 +84,7 @@ function playEnd(){
   for(var i = 0; i < songs.length; i++){
     songs[i].pause();
   }
+  end.currentTime = 0;
   end.play();
   current = end;
 }
