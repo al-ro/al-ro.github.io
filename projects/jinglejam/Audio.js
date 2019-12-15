@@ -102,9 +102,6 @@ function playTheme(){
 }
 
 function playLaserHit(){
-  for(var i = 0; i < songs.length; i++){
-    songs[i].pause();
-  }
   laser.currentTime = 0;
   laser.play();
 }
@@ -115,7 +112,9 @@ function stopDamage(){
 
 function playDamage(){
   for(var i = 0; i < songs.length; i++){
-    songs[i].pause();
+    if(songs[i] != laser){
+      songs[i].pause();
+    }
   }
   damage.currentTime = 0;
   damage.play();
