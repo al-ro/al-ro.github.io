@@ -385,8 +385,8 @@ function generateRandomMap(){
   for(var i = 1; i < worldLength; i++){
     if(!giftIndicesMap.has(i) && !npcIndicesMap.has(i)){
       //create obstacle
-      var x = lvl.map[i][0];
-      var z = lvl.map[i][0];
+      var x = lvl1.map[i][0];
+      var z = lvl1.map[i][0];
       if(Math.random > 0.5){
 	var type = ObstacleType.SPINNER;
       }else{
