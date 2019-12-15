@@ -930,6 +930,12 @@ function fall(dt){
   player.position.set(player.position.x, player.position.y + dt, player.position.z);
 }
 
+function generateNewWorld(){
+  document.getElementById("id01").innerHTML = "GIFTS GIVEN " + 0 + "/" + npcs.length;
+}
+
+generateNewWorld();
+
 //************** Draw **************
 var time = 0;
 var targetDir = new THREE.Vector3(0,0,0);
