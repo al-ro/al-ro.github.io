@@ -123,7 +123,12 @@ function onMouseDown( event ) {
   mouse_down = true;
 }
 
+var userInteraction = false;
 function onMouseMove( event ) {
+  if(!userInteraction){
+    playTheme();
+    userInteraction = true;
+  }
   if(mouse_down){
     mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
