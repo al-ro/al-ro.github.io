@@ -141,6 +141,7 @@ function onMouseUp( event ) {
   mouse_down = false;
 }
 
+var validMovement = true;
 function onMouseEnter( event ) {
   validMovement = false;
 }
