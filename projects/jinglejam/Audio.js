@@ -65,7 +65,7 @@ function playMainTheme(){
   for(var i = 0; i < songs.length; i++){
     songs[i].pause();
   }
-  menu.currentTime = 0;
+  theme.currentTime = 0;
   theme.play();
   sound = true;
   current = theme;

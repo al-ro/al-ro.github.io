@@ -1077,6 +1077,7 @@ function draw(){
 	}  
 	collision = checkCollision();
 	if(collision){
+	  playLaserHit();
 	  alive = false;
 	  if(!deducted){
 	    lives = Math.max(0, lives-1);
