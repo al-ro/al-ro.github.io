@@ -98,7 +98,10 @@ function showMenu() {
   playMenuTheme();
   document.getElementById('gameover').style.visibility = 'hidden';
   document.getElementById('success').style.visibility = 'hidden';
+
+  setTimeout(function(){
   document.getElementById('reset_button').style.visibility = 'visible';
+  ,2000);
   document.getElementById('menu').style.visibility = 'visible';
   document.getElementById('menu_button').style.visibility = 'hidden';
 }
@@ -991,10 +994,10 @@ function resetWorld(){
 
 function startGame(){
   document.getElementById('start_button').style.visibility = 'hidden';
-  document.getElementById('audio_button').style.visibility = 'visible';
   initAudio();
+  showMenu()
   setTimeout(function(){
-      showMenu();
+  document.getElementById('audio_button').style.visibility = 'visible';
       }, 2000);
 };
 
