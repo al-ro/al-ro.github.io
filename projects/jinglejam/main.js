@@ -986,6 +986,7 @@ function resetWorld(){
 
 function startGame(){
   document.getElementById('start_button').style.visibility = 'hidden';
+  document.getElementById('audio_button').style.visibility = 'visible';
   initAudio();
   showMenu();
 };

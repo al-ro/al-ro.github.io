@@ -95,6 +95,7 @@
   transform: translate(-50%, -50%);
 }
 #audio_button {
+  visibility: hidden;
   height: 60px;
   width: 100px;
 }
