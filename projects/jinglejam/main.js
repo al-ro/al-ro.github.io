@@ -71,7 +71,7 @@ var songs = [];
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
     bloomComposer.setSize( 0.5*window.innerWidth, 0.5*window.innerHeight );
-    finalComposer.setSize( window.innerWidth, window.innerHeight );
+    finalComposer.setSize( 0.5*window.innerWidth, 0.5*window.innerHeight );
   }
 
 var ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -140,7 +140,7 @@ var materials = {};
 
 var renderScene = new RenderPass( scene, camera );
 //resolution, strength, radius, threshold
-var bloomPass = new UnrealBloomPass( new THREE.Vector2( canvas.width, canvas.height ), 1.5, 0.01, 0.1 );
+var bloomPass = new UnrealBloomPass( new THREE.Vector2( 0.5*canvas.width, 0.5*canvas.height ), 1.5, 0.01, 0.1 );
 /*
    bloomPass.threshold = params.bloomThreshold;
    bloomPass.strength = params.bloomStrength;
