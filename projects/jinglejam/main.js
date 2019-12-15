@@ -260,8 +260,8 @@ class Tile {
 
 var tileGeometry = new THREE.BoxGeometry(20,100,20);
 var roundTileGeometry = new THREE.CylinderGeometry(10, 10, 100, 32);
-tileGeometry.translate(0,-99,0);
-roundTileGeometry.translate(0,-99,0);
+tileGeometry.translate(0,-50,0);
+roundTileGeometry.translate(0,-50,0);
 var tileMaterial = new THREE.MeshStandardMaterial({color: 0x999999, metalness: 0.5,  roughness: 0.5});
 
 var posDelta = 20.5;
