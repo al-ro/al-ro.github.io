@@ -1,6 +1,6 @@
 import * as THREE from 'https://threejs.org/build/three.js';
 
-function populateWorld(level){
+export function populateWorld(level){
 
 //Floor
 tiles = [];
