@@ -673,6 +673,7 @@ obstacles = [];
 }
 
 populateWorld(lvl1);
+objectives = npcs.length;
 
 //************** Objects **************
 
@@ -957,6 +958,7 @@ function resetWorld(){
   score = 0;
   populateWorld(lvl1);
   objectives = npcs.length;
+  updateScore();
   alive = true;
   victory = false;
   inventory.holding = false;
