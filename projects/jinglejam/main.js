@@ -141,6 +141,13 @@ function onMouseUp( event ) {
   mouse_down = false;
 }
 
+function mouseEnter( event ) {
+  validMovement = false;
+}
+function mouseLeave( event ) {
+  validMovement = true;
+}
+
 window.addEventListener( 'mousedown', onMouseDown, false );
 window.addEventListener( 'mouseup', onMouseUp, false );
 window.addEventListener( 'mousemove', onMouseMove, false );
