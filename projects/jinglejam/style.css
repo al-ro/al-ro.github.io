@@ -66,6 +66,10 @@
   user-select: none;
 }
 
+.menu {
+  background-color: rgba(0, 0, 0, .15); 
+}
+
 #gameover {
   visibility: hidden;
 }
@@ -73,7 +77,7 @@
   visibility: hidden;
 }
 #reset_button {
-  visibility: hidden;
+  visibility: visible;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
