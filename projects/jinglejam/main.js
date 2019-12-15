@@ -229,7 +229,6 @@ function setObstacleMap(obsMap){
 var giftMap = new Map();
 function setGiftMap(objMap){
   giftMap.clear();
-  console.log("Input: ", objMap);
   for(var i = 0; i < objMap.length; i++){
     var index = objMap[i][1] * globalWidth + objMap[i][0];
     giftMap.set(index, [[i, objMap[i][2]]]);
@@ -854,7 +853,6 @@ function checkDropOff(){
       if(!npcs[index].happy){
 	if(type == inventory.gift.type){
 	  if(Math.sqrt((dx*dx)+(dz*dz)) < (2.0)){
-	    console.log(type);
 	    inventory.holding = false;
 	    npcs[index].giveGift(inventory.gift);
 	    return true;
