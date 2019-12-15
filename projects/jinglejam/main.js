@@ -141,10 +141,10 @@ function onMouseUp( event ) {
   mouse_down = false;
 }
 
-function mouseEnter( event ) {
+function onMouseEnter( event ) {
   validMovement = false;
 }
-function mouseLeave( event ) {
+function onMouseLeave( event ) {
   validMovement = true;
 }
 
@@ -897,41 +897,42 @@ function move(t, dt){
   for(var i = 0; i < npcs.length; i++){
     npcs[i].move(dt);
   }
+  if(validMovement){
+    //Move player, light and camera
+    oldPos.copy(player.position);
+    dir.set(t.x - oldPos.x, 0, t.z - oldPos.z);
 
-  //Move player, light and camera
-  oldPos.copy(player.position);
-  dir.set(t.x - oldPos.x, 0, t.z - oldPos.z);
+    if(dir.length() > 0.02){
+      dir.normalize();
+      var speed;
+      if(slow){
+	speed = 1.0;
+      }else{
+	speed = 10.0;
+      }
+      dir.multiplyScalar(dt * speed);
 
-  if(dir.length() > 0.02){
-    dir.normalize();
-    var speed;
-    if(slow){
-      speed = 1.0;
-    }else{
-      speed = 10.0;
+      newPos.set(oldPos.x + dir.x, 0, oldPos.z + dir.z);
+      player.lookAt(newPos);
+      player.position.copy(newPos);
+      if(inventory.holding){
+	inventory.gift.mesh.position.copy(newPos);
+	inventory.gift.mesh.position.y = 1.5;
+      }
+
+      oldPos.copy(directionalLight.position);
+      newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
+      directionalLight.position.copy(newPos);
+      directionalLight.target = player;
+
+      oldPos.copy(camera.position);
+      newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
+      camera.position.copy(newPos); 
+
+      oldPos.copy(plane.position);
+      newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
+      plane.position.copy(newPos);
     }
-    dir.multiplyScalar(dt * speed);
-
-    newPos.set(oldPos.x + dir.x, 0, oldPos.z + dir.z);
-    player.lookAt(newPos);
-    player.position.copy(newPos);
-    if(inventory.holding){
-      inventory.gift.mesh.position.copy(newPos);
-      inventory.gift.mesh.position.y = 1.5;
-    }
-
-    oldPos.copy(directionalLight.position);
-    newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
-    directionalLight.position.copy(newPos);
-    directionalLight.target = player;
-
-    oldPos.copy(camera.position);
-    newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
-    camera.position.copy(newPos); 
-
-    oldPos.copy(plane.position);
-    newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
-    plane.position.copy(newPos);
   }
 }
 
@@ -954,8 +955,10 @@ function toggleAudio(){
   }
 }
 
-var audio_button = document.getElementById("audio_button");
-audio_button.addEventListener('click', toggleAudio);
+var audioButton = document.getElementById("audio_button");
+audioButton.addEventListener('click', toggleAudio);
+audioButton.addEventListener( 'mouseneter', onMouseEnter, false );
+audioButton.addEventListener( 'mouseleave', onMouseLeave, false );
 
 //************** Draw **************
 var time = 0;
