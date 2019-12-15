@@ -28,7 +28,7 @@ function initAudio(){
   //audio.crossOrigin = "anonymous";
   theme = theme1;
 
-  var source = audio_ctx.createMediaElementSource(audio);
+  var source = audio_ctx.createMediaElementSource(theme3);
   analyser = audio_ctx.createAnalyser();
 
   source.connect(analyser);
