@@ -7,6 +7,7 @@ var laser;
 var end;
 var pickup;
 var delivery;
+var damage;
 
 var analyser;
 var frequencyCount;
@@ -27,6 +28,7 @@ function initAudio(){
   end = new Audio('https://al-ro.github.io/projects/jinglejam/music/CompletionMusic.wav');
   pickup = new Audio('https://al-ro.github.io/projects/jinglejam/music/powerUp.wav');
   delivery = new Audio('https://al-ro.github.io/projects/jinglejam/music/item_delivery_short.wav');
+  damage = new Audio('https://al-ro.github.io/projects/jinglejam/music/Damage_Sound.wav');
   theme = theme1;
   
   songs.push(theme1);
@@ -37,6 +39,7 @@ function initAudio(){
   songs.push(end);
   songs.push(pickup);
   songs.push(delivery);
+  songs.push(damage);
 
   for(var i = 0; i < songs.length; i++){
     songs[i].crossOrigin = "anonymous";
@@ -59,7 +62,9 @@ function initAudio(){
 var sound = false;
 
 function playMainTheme(){
-  menu.pause();
+  for(var i = 0; i < songs.length; i++){
+    songs[i].pause();
+  }
   theme.play();
   sound = true;
   current = theme;
@@ -87,8 +92,20 @@ function playEnd(){
   end.currentTime = 0;
   end.play();
   current = end;
+  sound = true;
 }
 
 function playTheme(){
   current.play();
+  sound = true;
+}
+
+function playDamage(){
+  for(var i = 0; i < songs.length; i++){
+    songs[i].pause();
+  }
+  damage.currentTime = 0;
+  damage.play();
+  current = damage;
+  sound = true;
 }
