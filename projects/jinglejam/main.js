@@ -1213,9 +1213,8 @@ function draw(){
 
   // render the entire scene, then render bloom scene on top
   finalComposer.render();
-}
-stats.end();
-requestAnimationFrame(draw);
+  stats.end();
+  requestAnimationFrame(draw);
 }
 
 draw();
