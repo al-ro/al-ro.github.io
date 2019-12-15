@@ -101,6 +101,11 @@ function playTheme(){
   sound = true;
 }
 
+function playLaserHit(){
+  laser.currentTime = 0;
+  laser.play();
+}
+
 function playDamage(){
   for(var i = 0; i < songs.length; i++){
     songs[i].pause();
