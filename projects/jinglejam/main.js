@@ -367,7 +367,7 @@ class Obstacle {
   }
 }
 
-var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff5522} );
+var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff3322} );
 for(var i = 0; i < lvl1.obstacleMap.length; i++){
   let posX = lvl1.obstacleMap[i][0];
   let posY = 0;
