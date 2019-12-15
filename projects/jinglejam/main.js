@@ -100,8 +100,8 @@ function showMenu() {
   document.getElementById('success').style.visibility = 'hidden';
 
   setTimeout(function(){
-  document.getElementById('reset_button').style.visibility = 'visible';
-  ,2000);
+      document.getElementById('reset_button').style.visibility = 'visible';
+      },2000);
   document.getElementById('menu').style.visibility = 'visible';
   document.getElementById('menu_button').style.visibility = 'hidden';
 }
