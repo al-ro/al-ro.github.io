@@ -984,12 +984,12 @@ function resetWorld(){
 function start(){
   console.log("START HERE");
   document.getElementById('start_button').style.visibility = 'hidden';
-  //initAudio();
+  initAudio();
   showMenu();
 };
 
 var startButton = document.getElementById("start_button");
-startButton.addEventListener('click', start());
+//startButton.addEventListener('click', start());
 
 var audioButton = document.getElementById("audio_button");
 audioButton.addEventListener('click', toggleAudio);
