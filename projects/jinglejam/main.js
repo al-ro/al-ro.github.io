@@ -960,10 +960,20 @@ function toggleAudio(){
   }
 }
 
+function resetWorld(){
+  objectives = 1;
+  populateWorld(lvl1);
+  alive = true;
+  success = false;
+}
+
 var audioButton = document.getElementById("audio_button");
 audioButton.addEventListener('click', toggleAudio);
 audioButton.addEventListener( 'mouseenter', onMouseEnter, false );
 audioButton.addEventListener( 'mouseleave', onMouseLeave, false );
+
+var resetButton = document.getElementById("reset_button");
+resetButton.addEventListener('click', resetWorld);
 
 //************** Draw **************
 var time = 0;
