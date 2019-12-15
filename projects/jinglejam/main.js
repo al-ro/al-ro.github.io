@@ -931,7 +931,7 @@ function fall(dt){
 }
 
 function generateNewWorld(){
-  document.getElementById("id01").innerHTML = "GIFTS GIVEN " + 0 + "/" + npcs.length;
+  document.getElementById("score").innerHTML = "GIFTS GIVEN " + 0 + "/" + npcs.length;
 }
 
 generateNewWorld();
