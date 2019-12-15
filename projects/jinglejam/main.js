@@ -242,13 +242,6 @@ const GiftType = {
   GAMMA: 4
 };
 
-const NPCType = {
-  NONE: 1,
-  ALPHA: 2,
-  BETA: 3,
-  GAMMA: 4
-};
-
 //Currently held gift
 var inventory = {holding: false, type: GiftType.NONE};
 
@@ -277,9 +270,9 @@ giftMap: [
        [1, 1, GiftType.GAMMA]
 ],
 npcMap: [
-       [0, 0, NPCType.ALPHA],
-       [1, 0, NPCType.BETA],
-       [1, 1, NPCType.GAMMA]
+       [0, 0, GiftType.ALPHA],
+       [1, 0, GiftType.BETA],
+       [1, 1, GiftType.GAMMA]
 ]
 };
 
@@ -470,6 +463,7 @@ class Gift {
     this._pos = pos;
     this._mesh = mesh;
     this._material = material;
+    this._active = true;
   }
   get type(){
     return this._type;
@@ -486,7 +480,6 @@ class Gift {
   move(dt){
     this._mesh.rotateY(dt);
   }
-
 }
 
 var giftAlphaMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
@@ -563,6 +556,10 @@ class NPC {
   get happy(){
     return this._happy;
   }
+  giveGift(gift){
+    this._happy = true;
+    gift.mesh.position.copy(this._pos);
+  }
   move(dt){
     this._mesh.rotateY(-dt);
   }
@@ -597,15 +594,15 @@ for(var i = 0; i < lvl1.npcMap.length; i++){
   let type = lvl1.npcMap[i][2];
 
   switch(type){
-    case NPCType.ALPHA:
+    case GiftType.ALPHA:
       npcGeometry = npcAlphaGeometry;
       npcMaterial = npcAlphaMaterial;
     break;
-    case NPCType.BETA:
+    case GiftType.BETA:
       npcGeometry = npcBetaGeometry;
       npcMaterial = npcBetaMaterial;
     break;
-    case NPCType.GAMMA:
+    case GiftType.GAMMA:
       npcGeometry = npcGammaGeometry;
       npcMaterial = npcGammaMaterial;
     break;
@@ -789,9 +786,45 @@ function checkPickUp(){
 
       var dx = player.position.x - gifts[index].mesh.position.x;
       var dz = player.position.z - gifts[index].mesh.position.z;
-      if(Math.sqrt((dx*dx)+(dz*dz)) < (2.0)){
-	console.log(type);
-	//return true;
+      if(gifts[index].active){
+	if(Math.sqrt((dx*dx)+(dz*dz)) < (2.0)){
+	  inventory.holding = true;
+	  inventory.gift = gifts[index];
+	  inventory.gift.active = false;
+	  return true;
+	}
+      }
+    }
+  }
+  return false;
+}
+
+function checkDropOff(){
+  //Position Y will be invalid and will not be used
+  playerLocation.copy(player.position);
+  playerLocation.addScalar(posDelta*0.5);
+  var iX = Math.floor(playerLocation.x / posDelta);
+  var iZ = Math.floor(playerLocation.z / posDelta);
+  var index = iZ * globalWidth + iX;
+
+  if(npcMap.has(index)){
+    var _npcs = npcMap.get(index);
+
+    for(var i = 0; i < _npcs.length; i++){
+      var index = _npcs[i][0];
+      var type = _npcs[i][1];
+
+      var dx = player.position.x - npcs[index].mesh.position.x;
+      var dz = player.position.z - npcs[index].mesh.position.z;
+      if(!npcs[index].happy){
+	if(type == inventory.gift.type){
+	  if(Math.sqrt((dx*dx)+(dz*dz)) < (2.0)){
+	    console.log(type);
+	    inventory.holding = false;
+	    npcs[index].giveGift(inventory.gift);
+	    return true;
+	  }
+	}
       }
     }
   }
@@ -897,7 +930,11 @@ function draw(){
       targetDir = player.position;
     }
     move(targetDir, dt);
-    checkPickUp();
+    if(!inventory.holding){
+      checkPickUp();
+    }else{
+      checkDropOff();
+    }  
     collision = checkCollision();
     if(collision){
       //alive = false;
