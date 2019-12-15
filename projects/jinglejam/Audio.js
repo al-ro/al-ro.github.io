@@ -38,7 +38,7 @@ function initAudio(){
   songs.push(pickup);
   songs.push(delivery);
 
-  for(car i = 0; i < songs.length; i++){
+  for(var i = 0; i < songs.length; i++){
     songs[i].crossOrigin = "anonymous";
   }
 
