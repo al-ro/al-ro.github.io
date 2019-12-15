@@ -943,6 +943,11 @@ function draw(){
   if(!victory){
     if(deathFrames == 100){
       deathFrames = 0;
+      if(inventory.holding){
+	inventory.gift.active = true;
+	inventory.gift.mesh.position.copy(inventory.gift.position);
+	inventroy.holding = false;
+      }
       alive = true;
       hideGameOver();
       player.position.copy(playerStartPosition);
