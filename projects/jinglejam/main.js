@@ -980,14 +980,14 @@ function resetWorld(){
   directionalLight.target = player;
 }
 
-function start(){
+function startGame(){
   document.getElementById('start_button').style.visibility = 'hidden';
   initAudio();
   showMenu();
 };
 
 var startButton = document.getElementById("start_button");
-startButton.addEventListener('click', start());
+startButton.addEventListener('click', startGame());
 
 var audioButton = document.getElementById("audio_button");
 audioButton.addEventListener('click', toggleAudio);
