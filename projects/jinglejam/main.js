@@ -76,23 +76,21 @@ var songs = [];
     finalComposer.setSize( 0.75*window.innerWidth, 0.75*window.innerHeight );
   }
 
-function toggleGameOver() {
-  var x = document.getElementById('gameover');
-  if (x.style.visibility == 'hidden') {
-    x.style.visibility = 'visible';
-  } else {
-    x.style.visibility = 'hidden';
-  }
+//document.getElementById('success').style.visibility = 'visible';
+function showSuccess() {
+  document.getElementById('success').style.visibility = 'visible';
+}
+function hideSuccess() {
+  document.getElementById('success').style.visibility = 'hidden';
 }
 
-//document.getElementById('success').style.visibility = 'visible';
-function toggleSuccess() {
-  if (document.getElementById('success').style.visibility == 'hidden') {
-    document.getElementById('success').style.visibility = 'visible';
-  } else {
-    document.getElementById('success').style.visibility = 'hidden';
-  }
+function showGameOver() {
+  document.getElementById('gameover').style.visibility = 'visible';
 }
+function hideGameOver() {
+  document.getElementById('gameover').style.visibility = 'hidden';
+}
+
 
 var ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
@@ -592,7 +590,7 @@ class NPC {
     objectives--;
     if(objectives == 0){
       victory = true;
-      toggleSuccess();
+      showSuccess();
     }
   }
   move(dt){
@@ -943,6 +941,7 @@ function draw(){
     if(deathFrames == 100){
       deathFrames = 0;
       alive = true;
+      hideGameOver();
       player.position.copy(playerStartPosition);
       plane.position.copy(playerStartPosition);
       camera.position.copy(cameraStartPosition);
@@ -962,7 +961,8 @@ function draw(){
     lastFrame = thisFrame;
     bounds = checkBounds();
     if(!bounds){
-      //alive = false;
+      alive = false;
+      showGameOver();
     }
     if(alive){
       if(intersect[0] && mouse_down){
@@ -978,7 +978,8 @@ function draw(){
       }  
       collision = checkCollision();
       if(collision){
-	//alive = false;
+	alive = false;
+	showGameOver();
       }
     }
 
