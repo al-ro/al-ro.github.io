@@ -1057,8 +1057,8 @@ function toggleAudio(){
 }
 
 function resetWorld(){
-  renderer.toneMappingExposure = 1.0;
   validMovement = true;
+  renderer.toneMappingExposure = 1.0;
   generateRandomMap();
   document.getElementById('score').style.visibility = 'visible';
   document.getElementById('lives').style.visibility = 'visible';
@@ -1096,7 +1096,7 @@ function startGame(){
   setTimeout(function(){
   document.getElementById('audio_button').style.visibility = 'visible';
       document.getElementById('reset_button').style.visibility = 'visible';
-      }, 2000);
+      }, 3000);
 };
 
 var startButton = document.getElementById("start_button");
@@ -1110,8 +1110,8 @@ audioButton.addEventListener( 'mouseleave', onMouseLeave, false );
 var resetButton = document.getElementById("reset_button");
 resetButton.addEventListener('click', resetWorld);
 
-//var menuButton = document.getElementById("menu_button");
-//menuButton.addEventListener('click', showMenu);
+var menuButton = document.getElementById("menu_button");
+menuButton.addEventListener('click', showMenu);
 
 //************** Draw **************
 var time = 0;
