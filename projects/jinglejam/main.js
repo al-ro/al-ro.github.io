@@ -147,6 +147,7 @@ var bloomPass = new UnrealBloomPass( new THREE.Vector2( 0.5*canvas.width, 0.5*ca
    bloomPass.radius = params.bloomRadius;
  */
 var bloomComposer = new EffectComposer( renderer );
+bloomComposer.setSize( 0.5*window.innerWidth, 0.5*window.innerHeight );
 bloomComposer.renderToScreen = false;
 bloomComposer.addPass( renderScene );
 bloomComposer.addPass( bloomPass );
@@ -165,6 +166,7 @@ var finalPass = new ShaderPass(
 finalPass.needsSwap = true;
 
 var finalComposer = new EffectComposer( renderer );
+finalComposer.setSize( 0.5*window.innerWidth, 0.5*window.innerHeight );
 var glitchPass = new GlitchPass2();
 finalComposer.addPass( renderScene );
 finalComposer.addPass( finalPass );
