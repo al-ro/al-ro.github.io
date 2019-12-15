@@ -367,6 +367,7 @@ class Obstacle {
   }
 }
 
+var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff5522} );
 for(var i = 0; i < lvl1.obstacleMap.length; i++){
   let posX = lvl1.obstacleMap[i][0];
   let posY = 0;
@@ -377,11 +378,9 @@ for(var i = 0; i < lvl1.obstacleMap.length; i++){
 
   switch(type) {
     case ObstacleType.SPINNER:
-      var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff5522} );
       var glowMesh = new THREE.Mesh( cylinderGeometry, glowMaterial );
       break;
     case ObstacleType.TRAVELLER:
-      var glowMaterial = new THREE.MeshBasicMaterial( {color: 0x33ff22} );
       var glowMesh = new THREE.Mesh( sphereGeometry, glowMaterial );
       break;
   }
