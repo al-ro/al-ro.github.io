@@ -579,7 +579,7 @@ var npcAlphaMaterial = new THREE.MeshBasicMaterial( {color: 0x22dd88, side: THRE
 var npcBetaMaterial = new THREE.MeshBasicMaterial( {color: 0x8822dd, side: THREE.DoubleSide } );
 var npcGammaMaterial = new THREE.MeshBasicMaterial( {color: 0xdd8822, side: THREE.DoubleSide } );
 var npcAlphaGeometry = new THREE.RingGeometry( 1.5, 2, 6, 2);
-var npcBetaGeometry = new THREE.RingGeometry( 1.5, 2, 3, 2);
+var npcBetaGeometry = new THREE.RingGeometry( 1.5, 2.2, 3, 2);
 var npcGammaGeometry = new THREE.RingGeometry( 1.5, 2, 4, 2);
 npcAlphaGeometry.rotateZ(Math.PI/2.0);
 npcAlphaGeometry.translate(0, 3.0, 0);
