@@ -6,6 +6,7 @@ var end;
 var pickup;
 var delivery;
 var damage;
+var credits;
 
 var analyser;
 var frequencyCount;
@@ -25,6 +26,7 @@ function initAudio(){
   pickup = new Audio('https://al-ro.github.io/projects/jinglejam/music/powerUp.wav');
   delivery = new Audio('https://al-ro.github.io/projects/jinglejam/music/item_delivery_short.wav');
   damage = new Audio('https://al-ro.github.io/projects/jinglejam/music/Damage_Sound.wav');
+  credits = new Audio('https://al-ro.github.io/projects/jinglejam/music/End_Music_Melody.wav');
   theme = theme3;
   
   songs.push(theme3);
@@ -34,10 +36,15 @@ function initAudio(){
   songs.push(pickup);
   songs.push(delivery);
   songs.push(damage);
+  songs.push(credits);
 
   menu.loop = true;
   theme3.loop = true;
-  end.loop = true;
+  credits.loop = true;
+  //end.loop = true;
+  end.addEventListener('ended', function() {
+      credits.play();
+      }, false);
 
   for(var i = 0; i < songs.length; i++){
     songs[i].crossOrigin = "anonymous";
@@ -110,8 +117,8 @@ function playPickUp(){
 }
 
 function playDelivery(){
-  delivery.currentTime = 0;
-  delivery.play();
+  pickup.currentTime = 0;
+  pickup.play();
 }
 
 function stopDamage(){
