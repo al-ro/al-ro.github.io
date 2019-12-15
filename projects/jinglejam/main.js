@@ -550,9 +550,9 @@ class NPC {
 var npcAlphaMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa, side: THREE.DoubleSide } );
 var npcBetaMaterial = new THREE.MeshBasicMaterial( {color: 0xaa44ff, side: THREE.DoubleSide } );
 var npcGammaMaterial = new THREE.MeshBasicMaterial( {color: 0xffaa44, side: THREE.DoubleSide } );
-var npcAlphaGeometry = new THREE.RingGeometry( 1.25, 2.5, 6, 2);
-var npcBetaGeometry = new THREE.RingGeometry( 1.25, 2.5, 3, 2);
-var npcGammaGeometry = new THREE.RingGeometry( 1.25, 2.5, 4, 2);
+var npcAlphaGeometry = new THREE.RingGeometry( 1.5, 2, 6, 2);
+var npcBetaGeometry = new THREE.RingGeometry( 1.5, 2, 3, 2);
+var npcGammaGeometry = new THREE.RingGeometry( 1.5, 2, 4, 2);
 npcAlphaGeometry.rotateZ(Math.PI/2.0);
 npcAlphaGeometry.translate(0, 3.0, 0);
 npcBetaGeometry.rotateZ(Math.PI/2.0);
@@ -592,7 +592,7 @@ for(var i = 0; i < lvl1.npcMap.length; i++){
   var npcMesh = new THREE.Mesh( npcGeometry, npcMaterial );
   npcMesh.position.copy(pos);
   var npc = new NPC( type, pos, npcMesh, npcMaterial );
-  npcMesh.layers.enable(BLOOM);
+  //npcMesh.layers.enable(BLOOM);
   console.log("Push NPC", npc);
   npcs.push(npc);
 }
