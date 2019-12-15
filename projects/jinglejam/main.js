@@ -939,6 +939,17 @@ function updateScore(){
 
 updateScore();
 
+function toggleAudio(){
+  if(sound){
+    pauseAudio();
+  }else{
+    playTheme();
+  }
+}
+
+var audio_button = document.getElementById("audio_button");
+audio_button.addEventListener('click', toggleAudio);
+
 //************** Draw **************
 var time = 0;
 var targetDir = new THREE.Vector3(0,0,0);

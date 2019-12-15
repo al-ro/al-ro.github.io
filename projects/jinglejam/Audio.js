@@ -22,6 +22,13 @@ function initAudio(){
   analyser.getByteFrequencyData(frequencyData);
 };
 
+var sound = false;
+
 function playTheme(){
   audio.play();
+  sound = true;
+}
+function pauseAudio(){
+  audio.pause();
+  sound = false;
 }
