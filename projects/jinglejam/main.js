@@ -866,6 +866,9 @@ function move(t, dt){
     newPos.set(oldPos.x + dir.x, 0, oldPos.z + dir.z);
     player.lookAt(newPos);
     player.position.copy(newPos);
+    if(inventory.holding){
+      inventory.gift.mesh.position.copy(newPos);
+    }
 
     oldPos.copy(directionalLight.position);
     newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
