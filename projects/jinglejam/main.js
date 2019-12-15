@@ -480,6 +480,9 @@ class Gift {
   get active(){
     return this._active;
   }
+  set active(value){
+    this._active = value;
+  }
   move(dt){
     this._mesh.rotateY(dt);
   }
