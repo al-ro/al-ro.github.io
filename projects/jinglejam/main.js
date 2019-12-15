@@ -360,12 +360,11 @@ var sphereGeometry = new THREE.SphereGeometry(sphereRadius, 16, 16);
 var whiteMaterial = new THREE.MeshBasicMaterial( {color: 0xffffff} );
 
 class Obstacle {
-  constructor (type, pos, meshCore, meshGlow, color, movement, rotation){
+  constructor (type, pos, mesh, color, movement, rotation){
     this._type = type;
     this._pos = pos;
     this._originalPos = pos;
-    this._meshCore = meshCore;
-    this._meshGlow = meshGlow;
+    this._mesh = mesh;
     this._colour;
     this._movement = movement;
     this._rotation = rotation;
@@ -377,11 +376,8 @@ class Obstacle {
   get position(){
     return this._pos;
   }
-  get meshCore(){
-    return this._meshCore;
-  }
-  get meshGlow(){
-    return this._meshGlow;
+  get mesh(){
+    return this._mesh;
   }
   get color(){
     return this._color;
@@ -398,19 +394,15 @@ class Obstacle {
 	this._rotation.x = (this._rotation.x + this._movement.rX) % 6.283;
 	this._rotation.y = (this._rotation.y + this._movement.rY) % 6.283;
 	this._rotation.z = (this._rotation.z + this._movement.rZ) % 6.283;
-	this._meshCore.rotateX(this._movement.rX);
-	this._meshCore.rotateY(this._movement.rY);
-	this._meshCore.rotateZ(this._movement.rZ);
-	this._meshGlow.rotateX(this._movement.rX);
-	this._meshGlow.rotateY(this._movement.rY);
-	this._meshGlow.rotateZ(this._movement.rZ);
+	this._mesh.rotateX(this._movement.rX);
+	this._mesh.rotateY(this._movement.rY);
+	this._mesh.rotateZ(this._movement.rZ);
 	break;
       case ObstacleType.TRAVELLER:
 	this._time = (this._time + speed * 0.5) % 6.283;
 	var x = this._originalPos.x + Math.sin(4*this._time) * 8;
 	var z = this._originalPos.z + Math.cos(3*this._time) * 8;
-	this._meshCore.position.set(x, 0, z);
-	this._meshGlow.position.set(x, 0, z);
+	this._mesh.position.set(x, 0, z);
 	break;
     }
   }
@@ -525,6 +517,19 @@ var npcMaterial;
 
 function populateWorld(level){
 
+for(var i = 0; i < tiles.length; i++){
+  scene.remove(tiles[i].mesh);
+}
+for(var i = 0; i < obstacles.length; i++){
+  scene.remove(obstacles[i].mesh);
+}
+for(var i = 0; i < gifts.length; i++){
+  scene.remove(gifts[i].mesh);
+}
+for(var i = 0; i < npcs.length; i++){
+  scene.remove(npcs[i].mesh);
+}
+
 //Floor
 tiles = [];
 //Targets to deliver gifts to
@@ -571,16 +576,6 @@ obstacles = [];
 	break;
     }
 
-    switch(type) {
-      case ObstacleType.SPINNER:
-	var obstacleMesh = new THREE.Mesh( cylinderGeometry, whiteMaterial );
-	break;
-      case ObstacleType.TRAVELLER:
-	var obstacleMesh = new THREE.Mesh( sphereGeometry, whiteMaterial );
-	break;
-    }
-    obstacleMesh.scale.set(1.01, 1.01, 1.01);
-    obstacleMesh.position.set(pos.x, 1.0, pos.z);
 
 
     glowMesh.layers.enable(BLOOM);
@@ -590,15 +585,14 @@ obstacles = [];
     var rotation = new THREE.Vector3(0.0, 0.05, 0);
 
     var movement = new Movement(translation, rotation);
-    //constructor (type, pos, meshCore, meshGlow, color, movement)
+    //constructor (type, pos, mesh, color, movement)
     var rotation = new THREE.Vector3(0,0,0);
-    var obstacle = new Obstacle(type, pos, obstacleMesh, glowMesh, glowMaterial, movement, rotation);
+    var obstacle = new Obstacle(type, pos, glowMesh, glowMaterial, movement, rotation);
     obstacles.push(obstacle);
   }
 
   for(var i = 0; i < obstacles.length; i++){
-    scene.add(obstacles[i].meshGlow);
-    scene.add(obstacles[i].meshCore);
+    scene.add(obstacles[i].mesh);
   }
 
   for(var i = 0; i < level.giftMap.length; i++){
@@ -795,8 +789,8 @@ function checkCollision(){
 	    return true;
 	  }
 	  
-	  var dx = player.position.x - obstacles[index].meshCore.position.x;
-	  var dz = player.position.z - obstacles[index].meshCore.position.z;
+	  var dx = player.position.x - obstacles[index].mesh.position.x;
+	  var dz = player.position.z - obstacles[index].mesh.position.z;
 	  if(Math.sqrt((dx*dx)+(dz*dz)) > 11){
 	    return true;
 	  }
@@ -808,8 +802,8 @@ function checkCollision(){
 	  // code block
 	  break;
 	case ObstacleType.TRAVELLER:
-	  var dx = player.position.x - obstacles[index].meshCore.position.x;
-	  var dz = player.position.z - obstacles[index].meshCore.position.z;
+	  var dx = player.position.x - obstacles[index].mesh.position.x;
+	  var dz = player.position.z - obstacles[index].mesh.position.z;
 	  if(Math.sqrt((dx*dx)+(dz*dz)) < (sphereRadius + 0.5)){
 	    return true;
 	  }
@@ -1066,17 +1060,11 @@ function draw(){
 draw();
 
 function renderBloom() {
-  for(var i = 0; i < obstacles.length; i++){
-    obstacles[i].meshCore.visible = false;
-  }
   scene.traverse( darkenNonBloomed );
   renderer.setClearColor( 0x000000, 1);
   bloomComposer.render();
   renderer.setClearColor( 0x272738, 1);
   scene.traverse( restoreMaterial );
-  for(var i = 0; i < obstacles.length; i++){
-    //obstacles[i].meshCore.visible = true;
-  }
 }
 
 function darkenNonBloomed( obj ) {
