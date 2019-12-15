@@ -57,11 +57,22 @@ function initAudio(){
 
 var sound = false;
 
-function playTheme(){
+function playMainTheme(){
+  menu.pause();
   theme.play();
   sound = true;
 }
 function pauseAudio(){
+  for(var i = 0; i < songs.length; i++){
+    songs[i].pause();
+  }
   theme.pause();
   sound = false;
+}
+function playMenuTheme(){
+  for(var i = 0; i < songs.length; i++){
+    songs[i].stop();
+  }
+  menu.play();
+  sound = true;
 }
