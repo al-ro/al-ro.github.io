@@ -275,9 +275,7 @@ function setNPCMap(objMap){
 
 const ObstacleType = {
   SPINNER: 1,
-  TIMER: 2,
-  SLIDER: 3,
-  TRAVELLER: 4 
+  TRAVELLER: 2 
 };
 
 const GiftType = {
@@ -318,6 +316,40 @@ npcMap: [
        [1, 1, GiftType.GAMMA]
 ]
 };
+
+function generateRandomMap(){
+  lvl1 = [map: [], obstacleMap: [], giftMap: [], npcMap: []];
+  var worldLength = 7 + Math.floor(Math.random() * 10);
+  var gifts = 3 + Math.floor(Math.random() * 3);
+  var posX = 0;
+  var posY = 0;
+  lvl1.map.push([posX, posY]);
+  for(var i = 0; i < worldLength(); i++){
+    if(Math.random > 0.5){
+      posX++;
+    }else{
+      posZ++;
+    }
+    lvl1.map.push([posX, posY]);
+  }
+  
+  for(var i = 0; i < worldLength(); i++){
+    if(Math.random > 0.5){
+      //create obstacle
+      var x = lvl.map[i][0];
+      var z = lvl.map[i][0];
+      if(Math.random > 0.5){
+	var type = ObstacleType.SPINNER;
+      }else{
+	var type = ObstacleType.TRAVELLER;
+      }
+      lvl1.obstacleMap.push([x,y,type]);
+    }     
+  }
+
+}
+
+generateRandomMap();
 
 
 class Tile {
