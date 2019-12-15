@@ -565,6 +565,8 @@ class NPC {
   giveGift(gift){
     this._happy = true;
     gift.mesh.position.copy(this._pos);
+    gift.mesh.position.y = 3;
+    this._mesh.layers.enable(BLOOM);
   }
   move(dt){
     this._mesh.rotateY(-dt);
@@ -792,7 +794,6 @@ function checkPickUp(){
 
       var dx = player.position.x - gifts[index].mesh.position.x;
       var dz = player.position.z - gifts[index].mesh.position.z;
-      console.log("Pick up: ", gifts[index]);
       if(gifts[index].active){
 	if(Math.sqrt((dx*dx)+(dz*dz)) < (2.0)){
 	  inventory.holding = true;
