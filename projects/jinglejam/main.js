@@ -387,7 +387,7 @@ function generateRandomMap(){
       //create obstacle
       var x = lvl1.map[i][0];
       var z = lvl1.map[i][1];
-      if(Math.random > 0.3){
+      if(Math.random() > 0.3){
 	var type = ObstacleType.SPINNER;
       }else{
 	var type = ObstacleType.TRAVELLER;
@@ -678,7 +678,11 @@ obstacles = [];
     glowMesh.position.set(pos.x, 1.0, pos.z);
 
     var translation = new THREE.Vector3(0.1, 0, 0);
-    var rotation = new THREE.Vector3(0.0, 0.05, 0);
+    var multiplyer = 1.0
+    if(Math.random() > 0.5){
+      multiplyer = -1;
+    }
+    var rotation = new THREE.Vector3(0.0, multiplyer * 0.05, 0);
 
     var movement = new Movement(translation, rotation);
     //constructor (type, pos, mesh, color, movement)
