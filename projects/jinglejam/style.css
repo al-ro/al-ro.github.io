@@ -45,7 +45,7 @@
   z-index: 1;
   background-color: #459; 
   bottom: 0;
-  left: 50%;
+  left: 0%;
   position: absolute;
   border: none;
   color: white;
@@ -67,6 +67,11 @@
 }
 #reset_button {
   top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+#menu_button {
+  top: 75%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
