@@ -76,6 +76,25 @@ var songs = [];
     finalComposer.setSize( 0.75*window.innerWidth, 0.75*window.innerHeight );
   }
 
+function toggleGameOver() {
+  var x = document.getElementById('gameover');
+  if (x.style.visibility === 'hidden') {
+    x.style.visibility = 'visible';
+  } else {
+    x.style.visibility = 'hidden';
+  }
+}
+
+function toggleSuccess() {
+  var x = document.getElementById('success');
+  console.log('TOGGLE: ', x);
+  if (x.style.visibility === 'hidden') {
+    x.style.visibility = 'visible';
+  } else {
+    x.style.visibility = 'hidden';
+  }
+}
+
 var ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
 
@@ -902,25 +921,6 @@ function move(t, dt){
     oldPos.copy(plane.position);
     newPos.set(oldPos.x + dir.x, oldPos.y, oldPos.z + dir.z);
     plane.position.copy(newPos);
-  }
-}
-
-function toggleGameOver() {
-  var x = document.getElementById("gameover");
-  if (x.style.visibility === "hidden") {
-    x.style.display = "visible";
-  } else {
-    x.style.display = "hidden";
-  }
-}
-
-function toggleSuccess() {
-  var x = document.getElementById("success");
-  console.log("TOGGLE: ", x);
-  if (x.style.visibility === "hidden") {
-    x.style.display = "visible";
-  } else {
-    x.style.display = "hidden";
   }
 }
 
