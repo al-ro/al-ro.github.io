@@ -152,16 +152,16 @@ bloomComposer.addPass( renderScene );
 bloomComposer.addPass( bloomPass );
 
 var finalPass = new ShaderPass(
-    new THREE.ShaderMaterial( {
-uniforms: {
-baseTexture: { value: null },
-bloomTexture: { value: bloomComposer.renderTarget2.texture }
-},
-vertexShader: vertexSource,
-fragmentShader: fragmentSource,
-defines: {}
-} ), "baseTexture"
-    );
+  new THREE.ShaderMaterial( {
+    uniforms: {
+      baseTexture: { value: null },
+      bloomTexture: { value: bloomComposer.renderTarget2.texture }
+    },
+    vertexShader: vertexSource,
+    fragmentShader: fragmentSource,
+    defines: {}
+} ), "baseTexture");
+
 finalPass.needsSwap = true;
 
 var finalComposer = new EffectComposer( renderer );
