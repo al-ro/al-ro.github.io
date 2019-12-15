@@ -173,6 +173,16 @@ finalComposer.addPass( finalPass );
 finalComposer.addPass( glitchPass);
 
 //*************** Entities ***************
+
+//Floor
+var tiles = [];
+//Targets to deliver gifts to
+var npcs = [];
+//Gifts to pick up and deliver
+var gifts = [];
+//Damaging or blocking geometries
+var obstacles = [];
+
 var globalWidth = 8;
 var globalHeight = 8;
 var globalMap = new Map();
@@ -205,14 +215,6 @@ const ObstacleType = {
   TRAVELLER: 4 
 };
 
-//Floor
-var tiles = [];
-//Targets to deliver gifts to
-var npcs = [];
-//Gifts to pick up and deliver
-var gifts = [];
-//Damaging or blocking geometries
-var obstacles = [];
 
 //Currently held gifts
 var inventory = [];
