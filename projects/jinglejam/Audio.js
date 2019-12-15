@@ -15,6 +15,8 @@ var timeData;
 
 var theme;
 
+var songs = [];
+
 function initAudio(){
   audio_ctx = new (window.AudioContext || window.webkitAudioContext)();
   theme1 = new Audio('https://al-ro.github.io/projects/jinglejam/music/LVL1-cut.wav');
@@ -25,8 +27,20 @@ function initAudio(){
   end = new Audio('https://al-ro.github.io/projects/jinglejam/music/CompletionMusic.wav');
   pickup = new Audio('https://al-ro.github.io/projects/jinglejam/music/powerUp.wav');
   delivery = new Audio('https://al-ro.github.io/projects/jinglejam/music/item_delivery_short.wav');
-  //audio.crossOrigin = "anonymous";
   theme = theme1;
+  
+  songs.push(theme1);
+  songs.push(theme2);
+  songs.push(theme3);
+  songs.push(menu);
+  songs.push(laser);
+  songs.push(end);
+  songs.push(pickup);
+  songs.push(delivery);
+
+  for(car i = 0; i < songs.length; i++){
+    songs[i].crossOrigin = "anonymous";
+  }
 
   var source = audio_ctx.createMediaElementSource(theme);
   analyser = audio_ctx.createAnalyser();
