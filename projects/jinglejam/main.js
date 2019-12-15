@@ -593,6 +593,7 @@ for(var i = 0; i < lvl1.npcMap.length; i++){
   npcMesh.position.copy(pos);
   var npc = new NPC( type, pos, npcMesh, npcMaterial );
   npcMesh.layers.enable(BLOOM);
+  console.log("Push NPC", npc);
   npcs.push(npc);
 }
 for(var i = 0; i < npcs.length; i++){
