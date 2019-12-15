@@ -787,8 +787,8 @@ function checkPickUp(){
       var index = _gifts[i][0];
       var type = _gifts[i][1];
 
-      var dx = player.position.x - gifts[index].meshCore.position.x;
-      var dz = player.position.z - gifts[index].meshCore.position.z;
+      var dx = player.position.x - gifts[index].mesh.position.x;
+      var dz = player.position.z - gifts[index].mesh.position.z;
       if(Math.sqrt((dx*dx)+(dz*dz)) < (1.0)){
 	console.log(type);
 	return true;
