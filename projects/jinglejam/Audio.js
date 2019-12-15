@@ -38,6 +38,7 @@ function initAudio(){
   songs.push(pickup);
   songs.push(delivery);
 
+  console.log("INIT CALLED");
   for(var i = 0; i < songs.length; i++){
     songs[i].crossOrigin = "anonymous";
     songs[i].play();
@@ -63,6 +64,7 @@ var sound = false;
 function playMainTheme(){
   menu.pause();
   theme.play();
+  console.log("THEME CALLED");
   sound = true;
 }
 function pauseAudio(){
@@ -76,6 +78,7 @@ function playMenuTheme(){
   for(var i = 0; i < songs.length; i++){
     songs[i].pause();
   }
+  console.log("MENU CALLED");
   menu.play();
   sound = true;
 }
