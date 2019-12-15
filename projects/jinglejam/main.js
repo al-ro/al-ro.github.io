@@ -979,6 +979,7 @@ function resetWorld(){
   camera.position.copy(cameraStartPosition);
   directionalLight.position.copy(directionalLightStartPosition);
   directionalLight.target = player;
+  hideMenu();
 }
 
 function startGame(){
