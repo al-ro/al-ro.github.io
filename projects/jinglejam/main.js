@@ -20,6 +20,8 @@ var canvas = document.getElementById("canvas");
       );
 
 var alive = true;
+var victory = false;
+var objectives = 1;
 
 //**************** Audio *****************
 var songs = [];
@@ -192,8 +194,9 @@ function setGlobalMap(tileMap){
     var index = tileMap[i][1] * globalWidth + tileMap[i][0];
     globalMap.set(index, i);
   }
-//console.log(globalMap);
+  //console.log(globalMap);
 }
+
 var obstacleMap = new Map();
 function setObstacleMap(obsMap){
   obstacleMap.clear();
@@ -204,7 +207,7 @@ function setObstacleMap(obsMap){
       tiles[globalMap.get(index)].mesh.geometry = roundTileGeometry;
     }
   }
-//console.log(obstacleMap);
+  //console.log(obstacleMap);
 }
 
 var giftMap = new Map();
@@ -215,7 +218,7 @@ function setGiftMap(objMap){
     var index = objMap[i][1] * globalWidth + objMap[i][0];
     giftMap.set(index, [[i, objMap[i][2]]]);
   }
-  console.log(giftMap);
+  //console.log(giftMap);
 }
 
 var npcMap = new Map();
@@ -225,7 +228,7 @@ function setNPCMap(objMap){
     var index = objMap[i][1] * globalWidth + objMap[i][0];
     npcMap.set(index, [[i, objMap[i][2]]]);
   }
-  console.log(npcMap);
+  //console.log(npcMap);
 }
 
 const ObstacleType = {
@@ -568,6 +571,10 @@ class NPC {
     gift.mesh.position.y = 2.0;
     this._mesh.material = gift.material;
     this._mesh.layers.enable(BLOOM);
+    objectives--;
+    if(objectives == 0){
+      victory = true;
+    }
   }
   move(dt){
     this._mesh.rotateY(-dt);
@@ -628,6 +635,8 @@ for(var i = 0; i < npcs.length; i++){
 }
 setGiftMap(lvl1.giftMap);
 setNPCMap(lvl1.npcMap);
+
+objectives = npcs.length;
 
 //************** Objects **************
 
@@ -912,61 +921,63 @@ var deathFrames = 0;
 
 function draw(){
   stats.begin();
-  if(deathFrames == 100){
-    deathFrames = 0;
-    alive = true;
-    player.position.copy(playerStartPosition);
-    plane.position.copy(playerStartPosition);
-    camera.position.copy(cameraStartPosition);
-    directionalLight.position.copy(directionalLightStartPosition);
-    directionalLight.target = player;
-  }
-  // update the picking ray with the camera and mouse position
-  raycaster.setFromCamera( mouse, camera );
-
-  // calculate objects intersecting the picking ray
-  var intersect = raycaster.intersectObject( plane );
-
-  //Update time
-  thisFrame = Date.now();
-  var dt = (thisFrame - lastFrame)/500;
-  time += dt;	
-  lastFrame = thisFrame;
-  bounds = checkBounds();
-  if(!bounds){
-    //alive = false;
-  }
-  if(alive){
-    if(intersect[0] && mouse_down){
-      targetDir = intersect[0].point;
-    }else{
-      targetDir = player.position;
+  if(!victory){
+    if(deathFrames == 100){
+      deathFrames = 0;
+      alive = true;
+      player.position.copy(playerStartPosition);
+      plane.position.copy(playerStartPosition);
+      camera.position.copy(cameraStartPosition);
+      directionalLight.position.copy(directionalLightStartPosition);
+      directionalLight.target = player;
     }
-    move(targetDir, dt);
-    if(!inventory.holding){
-      checkPickUp();
-    }else{
-      checkDropOff();
-    }  
-    collision = checkCollision();
-    if(collision){
+    // update the picking ray with the camera and mouse position
+    raycaster.setFromCamera( mouse, camera );
+
+    // calculate objects intersecting the picking ray
+    var intersect = raycaster.intersectObject( plane );
+
+    //Update time
+    thisFrame = Date.now();
+    var dt = (thisFrame - lastFrame)/500;
+    time += dt;	
+    lastFrame = thisFrame;
+    bounds = checkBounds();
+    if(!bounds){
       //alive = false;
     }
-  }
-  
-  if(!alive){
-    fall(dt);
-    deathFrames++;
-    glitchPass.goWild = true;
+    if(alive){
+      if(intersect[0] && mouse_down){
+	targetDir = intersect[0].point;
+      }else{
+	targetDir = player.position;
+      }
+      move(targetDir, dt);
+      if(!inventory.holding){
+	checkPickUp();
+      }else{
+	checkDropOff();
+      }  
+      collision = checkCollision();
+      if(collision){
+	//alive = false;
+      }
+    }
 
-  }else{
-    glitchPass.goWild = false;
-  }
-  // render scene with bloom
-  renderBloom();
+    if(!alive){
+      fall(dt);
+      deathFrames++;
+      glitchPass.goWild = true;
 
-  // render the entire scene, then render bloom scene on top
-  finalComposer.render();
+    }else{
+      glitchPass.goWild = false;
+    }
+    // render scene with bloom
+    renderBloom();
+
+    // render the entire scene, then render bloom scene on top
+    finalComposer.render();
+  }
   stats.end();
   requestAnimationFrame(draw);
 }
