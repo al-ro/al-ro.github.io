@@ -967,6 +967,7 @@ function toggleAudio(){
 }
 
 function resetWorld(){
+  deathFrames = 0;
   deducted = false;
   lives = 3;
   menu = false;
