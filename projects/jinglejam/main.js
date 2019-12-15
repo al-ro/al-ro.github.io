@@ -452,6 +452,7 @@ const GiftType = {
 };
 var giftMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
 var giftGeometry = new THREE.CylinderGeometry( 1, 1, 0.2, 6 );
+giftGeometry.rotateZ(Math.PI/2.0);
 giftGeometry.translate(0, 0.2, 0);
 
 for(var i = 0; i < lvl1.giftMap.length; i++){
@@ -472,6 +473,36 @@ for(var i = 0; i < lvl1.giftMap.length; i++){
 for(var i = 0; i < gifts.length; i++){
   scene.add(gifts[i].mesh);
 }
+
+class NPC {
+  constructor( pos, mesh, material) {
+    this._pos = pos;
+    this._mesh = mesh;
+    this._material = material;
+    this._happy = false;
+  }
+  get type(){
+    return this._type;
+  }
+  get position(){
+    return this._pos;
+  }  
+  get material(){
+    return this._material;
+  }
+  get mesh(){
+    return this._mesh;
+  }
+  get happy(){
+    return this._happy;
+  }
+  move(dt){
+    this._mesh.rotateY(dt);
+  }
+
+}
+var npcGeometry = new THREE.RingGeometry( 1.25, 2.5, 6, 1);
+npcGeometry.rotateZ(Math.PI/2.0);
 
 function initialiseLevel(lvl){
   
