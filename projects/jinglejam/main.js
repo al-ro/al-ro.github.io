@@ -960,7 +960,7 @@ function toggleAudio(){
 
 var audioButton = document.getElementById("audio_button");
 audioButton.addEventListener('click', toggleAudio);
-audioButton.addEventListener( 'mouseneter', onMouseEnter, false );
+audioButton.addEventListener( 'mouseenter', onMouseEnter, false );
 audioButton.addEventListener( 'mouseleave', onMouseLeave, false );
 
 //************** Draw **************

@@ -54,7 +54,9 @@
   text-decoration: none;
   display: inline-block;
   font-size: 16px;
-  min-width: 195px
+  min-width: 195px;
+  height: 200px;
+  width: 500px;
 }
 
 #gameover {
