@@ -591,7 +591,7 @@ function move(t, dt){
     obstacles[i].move(dt);
   }
   for(var i = 0; i < gifts.length; i++){
-    obstacles[i].move(dt);
+    gifts[i].move(dt);
   }
 
   //Move player, light and camera
