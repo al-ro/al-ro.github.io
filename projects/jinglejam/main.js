@@ -78,7 +78,7 @@ var songs = [];
 
 function toggleGameOver() {
   var x = document.getElementById('gameover');
-  if (x.style.visibility === 'hidden') {
+  if (x.style.visibility == 'hidden') {
     x.style.visibility = 'visible';
   } else {
     x.style.visibility = 'hidden';
@@ -87,12 +87,13 @@ function toggleGameOver() {
 
 function toggleSuccess() {
   var x = document.getElementById('success');
-  console.log('TOGGLE: ', x);
-  if (x.style.visibility === 'hidden') {
+  if (x.style.visibility == 'hidden') {
     x.style.visibility = 'visible';
+    x.style.z-index = 1000;
   } else {
     x.style.visibility = 'hidden';
   }
+  console.log('TOGGLE: ', x.style);
 }
 
 var ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
