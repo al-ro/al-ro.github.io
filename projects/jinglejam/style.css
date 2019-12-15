@@ -9,12 +9,13 @@
 }
 
 .overlay {
+    background-color: rgba(0, 0, 0, .15);
     width: 100%;
     text-align: center;
     color: #ffffff;
     font-size: 80px;
     position: absolute;
-    top: 50%;
+    top: 30%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 1;
@@ -43,7 +44,7 @@
 
 .button {
   z-index: 1;
-  background-color: #459; 
+  background-color: rgba(0, 0, 0, .15);
   bottom: 0;
   left: 0%;
   position: absolute;
@@ -53,7 +54,7 @@
   text-align: center;
   text-decoration: none;
   display: inline-block;
-  font-size: 16px;
+  font-size: 28px;
   min-width: 195px;
   height: 100px;
   width: 300px;
@@ -66,13 +67,19 @@
   visibility: hidden;
 }
 #reset_button {
+  visibility: hidden;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
 #menu_button {
-  top: 60%;
+  visibility: hidden;
+  top: 62%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+#audio_button {
+  height: 60px;
+  width: 100px;
 }
 

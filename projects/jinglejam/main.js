@@ -80,16 +80,24 @@ var songs = [];
 //document.getElementById('success').style.visibility = 'visible';
 function showSuccess() {
   document.getElementById('success').style.visibility = 'visible';
+  document.getElementById('reset_button').style.visibility = 'visible';
+  document.getElementById('menu_button').style.visibility = 'visible';
 }
 function hideSuccess() {
   document.getElementById('success').style.visibility = 'hidden';
+  document.getElementById('reset_button').style.visibility = 'hidden';
+  document.getElementById('menu_button').style.visibility = 'hidden';
 }
 
 function showGameOver() {
   document.getElementById('gameover').style.visibility = 'visible';
+  document.getElementById('reset_button').style.visibility = 'visible';
+  document.getElementById('menu_button').style.visibility = 'visible';
 }
 function hideGameOver() {
   document.getElementById('gameover').style.visibility = 'hidden';
+  document.getElementById('reset_button').style.visibility = 'hidden';
+  document.getElementById('menu_button').style.visibility = 'hidden';
 }
 
 
