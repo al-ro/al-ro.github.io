@@ -43,6 +43,18 @@
 
 .button {
   z-index: 1;
+  background-color: #459; 
+  bottom: 0;
+  left: 50%;
+  position: absolute;
+  border: none;
+  color: white;
+  padding: 15px 30px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  min-width: 195px
 }
 
 #gameover {
