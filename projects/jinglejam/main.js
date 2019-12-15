@@ -253,11 +253,13 @@ obstacleMap: [
 ],
 giftMap: [
        [0, 0, GiftType.ALPHA],
-       [3, 3, GiftType.BETA]
+       [0, 0, GiftType.BETA],
+       [0, 0, GiftType.GAMMA]
 ],
 npcMap: [
        [0, 0, NPCType.ALPHA],
-       [3, 3, NPCType.BETA]
+       [0, 0, NPCType.BETA],
+       [0, 0, NPCType.GAMMA]
 ]
 };
 
