@@ -100,6 +100,16 @@ function playLaserHit(){
   laser.play();
 }
 
+function playPickUp(){
+  pickup.currentTime = 0;
+  pickup.play();
+}
+
+function playDelivery(){
+  delivery.currentTime = 0;
+  delivery.play();
+}
+
 function stopDamage(){
   damage.pause();
 }

@@ -939,6 +939,7 @@ function checkPickUp(){
 	  inventory.holding = true;
 	  inventory.gift = gifts[index];
 	  inventory.gift.active = false;
+	  playPickUp();
 	  return true;
 	}
       }
@@ -969,6 +970,7 @@ function checkDropOff(){
 	  if(Math.sqrt((dx*dx)+(dz*dz)) < (2.0)){
 	    inventory.holding = false;
 	    npcs[index].giveGift(inventory.gift);
+	    playDelivery();
 	    return true;
 	  }
 	}
