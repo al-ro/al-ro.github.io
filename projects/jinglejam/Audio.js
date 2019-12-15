@@ -68,7 +68,6 @@ function pauseAudio(){
   for(var i = 0; i < songs.length; i++){
     songs[i].pause();
   }
-  current.pause();
   sound = false;
 }
 function playMenuTheme(){
