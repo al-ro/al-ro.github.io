@@ -131,6 +131,7 @@ var helper = new THREE.CameraHelper(directionalLight.shadow.camera);
 var raycaster = new THREE.Raycaster();
 var mouse = new THREE.Vector2(-100, -100);
 
+var mouse_down = false;
 
 function onMouseDown( event ) {
   mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
@@ -980,14 +981,14 @@ function resetWorld(){
   directionalLight.target = player;
 }
 
-function startGame(){
+function start(){
   document.getElementById('start_button').style.visibility = 'hidden';
   initAudio();
   showMenu();
 };
 
 var startButton = document.getElementById("start_button");
-startButton.addEventListener('click', startGame());
+startButton.addEventListener('click', start());
 
 var audioButton = document.getElementById("audio_button");
 audioButton.addEventListener('click', toggleAudio);
