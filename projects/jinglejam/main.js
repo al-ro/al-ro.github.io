@@ -243,7 +243,7 @@ const GiftType = {
 };
 
 //Currently held gift
-var inventory = {holding: false, type: GiftType.NONE};
+var inventory = {holding: false, gift: null};
 
 var level1 = [];
 
