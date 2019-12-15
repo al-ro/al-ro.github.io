@@ -473,7 +473,7 @@ function initialiseLevel(lvl){
 
 var playerGeometry = new THREE.BoxGeometry(1,1,1);
 playerGeometry.translate(0,0.5,0);
-var playerMaterial = new THREE.MeshStandardMaterial({color: 0xffffff, metalness: 0.,  roughness: 1});
+var playerMaterial = new THREE.MeshStandardMaterial({color: 0xffffff, metalness: 0.5,  roughness: 0.5});
 
 var player = new THREE.Mesh( playerGeometry, playerMaterial );
 var playerStartPosition = new THREE.Vector3(0,0,0);
