@@ -20,6 +20,7 @@ var canvas = document.getElementById("canvas");
       );
 
 var alive = true;
+var menu = true;
 var victory = false;
 var score = 0;
 var objectives = 1;
@@ -92,12 +93,18 @@ function hideGameOver() {
 }
 
 function showMenu() {
+  menu = true;
+  playMenuTheme();
   document.getElementById('reset_button').style.visibility = 'visible';
+  document.getElementById('menu').style.visibility = 'visible';
   document.getElementById('menu_button').style.visibility = 'hidden';
 }
 
 function hideMenu() {
+  meny = false;
+  playMainTheme();
   document.getElementById('reset_button').style.visibility = 'hidden';
+  document.getElementById('menu').style.visibility = 'hidden';
 }
 
 
@@ -963,6 +970,7 @@ function toggleAudio(){
 }
 
 function resetWorld(){
+  menu = false;
   objectives = 1;
   score = 0;
   populateWorld(lvl1);
@@ -999,71 +1007,73 @@ var deathFrames = 0;
 
 function draw(){
   stats.begin();
-  if(!victory){
-    if(deathFrames == 100){
-      deathFrames = 0;
-      if(inventory.holding){
-	inventory.gift.active = true;
-	inventory.gift.mesh.position.copy(inventory.gift.position);
-	inventory.holding = false;
+  if(!menu){
+    if(!victory){
+      if(deathFrames == 100){
+	deathFrames = 0;
+	if(inventory.holding){
+	  inventory.gift.active = true;
+	  inventory.gift.mesh.position.copy(inventory.gift.position);
+	  inventory.holding = false;
+	}
+	alive = true;
+	hideGameOver();
+	player.position.copy(playerStartPosition);
+	plane.position.copy(playerStartPosition);
+	camera.position.copy(cameraStartPosition);
+	directionalLight.position.copy(directionalLightStartPosition);
+	directionalLight.target = player;
       }
-      alive = true;
-      hideGameOver();
-      player.position.copy(playerStartPosition);
-      plane.position.copy(playerStartPosition);
-      camera.position.copy(cameraStartPosition);
-      directionalLight.position.copy(directionalLightStartPosition);
-      directionalLight.target = player;
-    }
-    // update the picking ray with the camera and mouse position
-    raycaster.setFromCamera( mouse, camera );
+      // update the picking ray with the camera and mouse position
+      raycaster.setFromCamera( mouse, camera );
 
-    // calculate objects intersecting the picking ray
-    var intersect = raycaster.intersectObject( plane );
+      // calculate objects intersecting the picking ray
+      var intersect = raycaster.intersectObject( plane );
 
-    //Update time
-    thisFrame = Date.now();
-    var dt = (thisFrame - lastFrame)/500;
-    time += dt;	
-    lastFrame = thisFrame;
-    bounds = checkBounds();
-    if(!bounds){
-      alive = false;
-      showGameOver();
-    }
-    if(alive){
-      if(intersect[0] && mouse_down){
-	targetDir = intersect[0].point;
-      }else{
-	targetDir = player.position;
-      }
-      move(targetDir, dt);
-      if(!inventory.holding){
-	checkPickUp();
-      }else{
-	checkDropOff();
-      }  
-      collision = checkCollision();
-      if(collision){
+      //Update time
+      thisFrame = Date.now();
+      var dt = (thisFrame - lastFrame)/500;
+      time += dt;	
+      lastFrame = thisFrame;
+      bounds = checkBounds();
+      if(!bounds){
 	alive = false;
 	showGameOver();
       }
-    }
+      if(alive){
+	if(intersect[0] && mouse_down){
+	  targetDir = intersect[0].point;
+	}else{
+	  targetDir = player.position;
+	}
+	move(targetDir, dt);
+	if(!inventory.holding){
+	  checkPickUp();
+	}else{
+	  checkDropOff();
+	}  
+	collision = checkCollision();
+	if(collision){
+	  alive = false;
+	  showGameOver();
+	}
+      }
 
-    if(!alive){
-      fall(dt);
-      deathFrames++;
-      glitchPass.goWild = true;
+      if(!alive){
+	fall(dt);
+	deathFrames++;
+	glitchPass.goWild = true;
 
-    }else{
-      glitchPass.goWild = false;
+      }else{
+	glitchPass.goWild = false;
+      }
     }
+    // render scene with bloom
+    renderBloom();
+
+    // render the entire scene, then render bloom scene on top
+    finalComposer.render();
   }
-  // render scene with bloom
-  renderBloom();
-
-  // render the entire scene, then render bloom scene on top
-  finalComposer.render();
   stats.end();
   requestAnimationFrame(draw);
 }
