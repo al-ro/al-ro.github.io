@@ -999,7 +999,7 @@ var resetButton = document.getElementById("reset_button");
 resetButton.addEventListener('click', resetWorld);
 
 var menuButton = document.getElementById("menu_button");
-menuButton.addEventListener('click', showMenu());
+menuButton.addEventListener('click', showMenu);
 
 //************** Draw **************
 var time = 0;
