@@ -784,7 +784,15 @@ function checkPickUp(){
     var _gifts = giftMap.get(index);
 
     for(var i = 0; i < _gifts.length; i++){
+      var index = _gifts[i][0];
+      var type = _gifts[i][1];
 
+      var dx = player.position.x - gifts[index].meshCore.position.x;
+      var dz = player.position.z - gifts[index].meshCore.position.z;
+      if(Math.sqrt((dx*dx)+(dz*dz)) < (1.0)){
+	console.log(type);
+	return true;
+      }
     }
   }
   return false;
