@@ -565,7 +565,7 @@ class NPC {
   giveGift(gift){
     this._happy = true;
     gift.mesh.position.copy(this._pos);
-    gift.mesh.position.y = 1.5;
+    gift.mesh.position.y = 2.0;
     this._mesh.material = gift.material;
     this._mesh.layers.enable(BLOOM);
   }
