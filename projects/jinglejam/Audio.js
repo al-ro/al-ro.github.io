@@ -13,6 +13,8 @@ var frequencyCount;
 var frequencyData;
 var timeData;
 
+var theme;
+
 function initAudio(){
   audio_ctx = new (window.AudioContext || window.webkitAudioContext)();
   theme1 = new Audio('https://al-ro.github.io/projects/jinglejam/music/LVL1-cut.wav');
@@ -23,7 +25,9 @@ function initAudio(){
   end = new Audio('https://al-ro.github.io/projects/jinglejam/music/CompletionMusic.wav');
   pickup = new Audio('https://al-ro.github.io/projects/jinglejam/music/powerUp.wav');
   delivery = new Audio('https://al-ro.github.io/projects/jinglejam/music/item_delivery_short.wav');
-  audio.crossOrigin = "anonymous";
+  //audio.crossOrigin = "anonymous";
+  theme = theme1;
+
   var source = audio_ctx.createMediaElementSource(audio);
   analyser = audio_ctx.createAnalyser();
 
@@ -40,10 +44,10 @@ function initAudio(){
 var sound = false;
 
 function playTheme(){
-  audio.play();
+  theme.play();
   sound = true;
 }
 function pauseAudio(){
-  audio.pause();
+  theme.pause();
   sound = false;
 }
