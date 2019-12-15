@@ -159,11 +159,9 @@ function onMouseUp( event ) {
 var validMovement = true;
 function onMouseEnter( event ) {
   validMovement = false;
-  console.log(validMovement);
 }
 function onMouseLeave( event ) {
   validMovement = true;
-  console.log(validMovement);
 }
 
 window.addEventListener( 'mousedown', onMouseDown, false );
@@ -995,6 +993,9 @@ audioButton.addEventListener( 'mouseleave', onMouseLeave, false );
 
 var resetButton = document.getElementById("reset_button");
 resetButton.addEventListener('click', resetWorld);
+
+var menuButton = document.getElementById("menu_button");
+menuButton.addEventListener('click', showMenu());
 
 //************** Draw **************
 var time = 0;
