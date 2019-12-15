@@ -356,8 +356,8 @@ class Obstacle {
 	break;
       case ObstacleType.TRAVELLER:
 	this._time = (this._time + speed) % 6.283;
-	var x = this._originalPos.x + 1.0;
-	var z = this._originalPos.z;
+	var x = this._originalPos.x + Math.sin(time);
+	var z = this._originalPos.z + Math.cos(time);
 	this._meshCore.position.set(x, 0, z);
 	this._meshGlow.position.set(x, 0, z);
 	break;
