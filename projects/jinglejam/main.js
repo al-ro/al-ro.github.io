@@ -964,7 +964,15 @@ function resetWorld(){
   objectives = 1;
   populateWorld(lvl1);
   alive = true;
-  success = false;
+  victory = false;
+  inventory.holding = false;
+  hideGameOver();
+  hideSuccess();
+  player.position.copy(playerStartPosition);
+  plane.position.copy(playerStartPosition);
+  camera.position.copy(cameraStartPosition);
+  directionalLight.position.copy(directionalLightStartPosition);
+  directionalLight.target = player;
 }
 
 var audioButton = document.getElementById("audio_button");
