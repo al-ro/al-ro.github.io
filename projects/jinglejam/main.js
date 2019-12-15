@@ -786,12 +786,12 @@ function checkPickUp(){
 
       var dx = player.position.x - gifts[index].mesh.position.x;
       var dz = player.position.z - gifts[index].mesh.position.z;
+      console.log("Pick up: ", inventory);
       if(gifts[index].active){
 	if(Math.sqrt((dx*dx)+(dz*dz)) < (2.0)){
 	  inventory.holding = true;
 	  inventory.gift = gifts[index];
 	  inventory.gift.active = false;
-	  console.log("Pick up: ", inventory);
 	  return true;
 	}
       }
