@@ -956,6 +956,7 @@ function toggleAudio(){
 
 function resetWorld(){
   objectives = 1;
+  score = 0;
   populateWorld(lvl1);
   alive = true;
   victory = false;
