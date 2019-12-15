@@ -791,7 +791,7 @@ function checkPickUp(){
 	  inventory.holding = true;
 	  inventory.gift = gifts[index];
 	  inventory.gift.active = false;
-	  console.log("Pick up: "inventory);
+	  console.log("Pick up: ", inventory);
 	  return true;
 	}
       }
