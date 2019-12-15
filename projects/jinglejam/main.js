@@ -136,7 +136,7 @@ var mouse_down = false;
 function onMouseDown( event ) {
   if(!userInteraction){
     initAudio();
-    playTheme();
+    playMenuTheme();
     userInteraction = true;
   }
   mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
@@ -963,7 +963,7 @@ function toggleAudio(){
   if(sound){
     pauseAudio();
   }else{
-    playTheme();
+    playMainTheme();
   }
 }
 
