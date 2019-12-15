@@ -87,6 +87,7 @@ function toggleGameOver() {
 
 function toggleSuccess() {
   var x = document.getElementById('success');
+document.getElementById('success').style.visibility = 'visible';
   if (x.style.visibility == 'hidden') {
     x.style.visibility = 'visible';
     x.style.z-index = 1000;
