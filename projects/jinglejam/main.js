@@ -993,7 +993,9 @@ function startGame(){
   document.getElementById('start_button').style.visibility = 'hidden';
   document.getElementById('audio_button').style.visibility = 'visible';
   initAudio();
-  showMenu();
+  setTimeout(function(){
+      showMenu();
+      }, 2000);
 };
 
 var startButton = document.getElementById("start_button");
