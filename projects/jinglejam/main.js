@@ -547,8 +547,22 @@ class NPC {
   }
 
 }
-var npcGeometry = new THREE.RingGeometry( 1.25, 2.5, 6, 1);
-npcGeometry.rotateZ(Math.PI/2.0);
+
+var giftAlphaMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
+var giftBetaMaterial = new THREE.MeshBasicMaterial( {color: 0xaa44ff} );
+var giftGammaMaterial = new THREE.MeshBasicMaterial( {color: 0xffaa44} );
+var giftAlphaGeometry = new THREE.RingGeometry( 1.25, 2.5, 6, 1);
+var giftBetaGeometry = new THREE.RingGeometry( 1.25, 2.5, 3, 1);
+var giftGammaGeometry = new THREE.RingGeometry( 1.25, 2.5, 4, 1);
+giftAlphaGeometry.rotateZ(Math.PI/2.0);
+giftAlphaGeometry.translate(0, 3.0, 0);
+giftBetaGeometry.rotateZ(Math.PI/2.0);
+giftBetaGeometry.translate(0, 3.0, 0);
+giftGammaGeometry.rotateZ(Math.PI/2.0);
+giftGammaGeometry.translate(0, 3.0, 0);
+
+var npcGeometry;
+var npcMaterial;
 
 for(var i = 0; i < lvl1.npcMap.length; i++){
   let posX = lvl1.npcMap[i][0];
