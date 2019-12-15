@@ -118,6 +118,10 @@ var mouse = new THREE.Vector2(-100, -100);
 var mouse_down = false;
 
 function onMouseDown( event ) {
+  if(!userInteraction){
+    playTheme();
+    userInteraction = true;
+  }
   mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
   mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
   mouse_down = true;
@@ -125,10 +129,6 @@ function onMouseDown( event ) {
 
 var userInteraction = false;
 function onMouseMove( event ) {
-  if(!userInteraction){
-    playTheme();
-    userInteraction = true;
-  }
   if(mouse_down){
     mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
