@@ -959,6 +959,11 @@ function updateScore(){
   document.getElementById("score").innerHTML = "GIFTS GIVEN " + score + "/" + npcs.length;
 }
 
+function updateLives(){
+  document.getElementById("lives").innerHTML = "LIVES: " + lives;
+}
+
+updateLives();
 updateScore();
 
 function toggleAudio(){
@@ -970,6 +975,8 @@ function toggleAudio(){
 }
 
 function resetWorld(){
+  document.getElementById('score').style.visibility = 'visible';
+  document.getElementById('lives').style.visibility = 'visible';
   deathFrames = 0;
   deducted = false;
   lives = 3;
@@ -978,6 +985,7 @@ function resetWorld(){
   score = 0;
   populateWorld(lvl1);
   objectives = npcs.length;
+  updateLives();
   updateScore();
   alive = true;
   victory = false;
@@ -994,6 +1002,9 @@ function resetWorld(){
 
 function startGame(){
   document.getElementById('start_button').style.visibility = 'hidden';
+  document.getElementById('score').style.visibility = 'hidden';
+  document.getElementById('lives').style.visibility = 'hidden';
+
   initAudio();
   showMenu()
   setTimeout(function(){
