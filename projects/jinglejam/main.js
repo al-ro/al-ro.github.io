@@ -192,7 +192,7 @@ function setObstacleMap(obsMap){
     obstacleMap.set(index, [[i, obsMap[i][2]]]);
     if(obsMap[i][2] == ObstacleType.SPINNER){
       //tiles[globalMap.get(index)].mesh.geometry = roundTileGemetry;
-      console.log(tiles[globalMap.get(index)]);
+      console.log(tiles);
     }
   }
 //console.log(obstacleMap);
