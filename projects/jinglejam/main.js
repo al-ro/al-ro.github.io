@@ -21,6 +21,7 @@ var canvas = document.getElementById("canvas");
 
 var alive = true;
 var victory = false;
+var score = 0;
 var objectives = 1;
 
 //**************** Audio *****************
@@ -593,6 +594,8 @@ class NPC {
     this._mesh.material = gift.material;
     this._mesh.layers.enable(BLOOM);
     objectives--;
+    score++;
+    updateScore();
     if(objectives == 0){
       victory = true;
       showSuccess();
@@ -930,11 +933,11 @@ function fall(dt){
   player.position.set(player.position.x, player.position.y + dt, player.position.z);
 }
 
-function generateNewWorld(){
-  document.getElementById("score").innerHTML = "GIFTS GIVEN " + 0 + "/" + npcs.length;
+function updateScore(){
+  document.getElementById("score").innerHTML = "GIFTS GIVEN " + score + "/" + npcs.length;
 }
 
-generateNewWorld();
+updateScore();
 
 //************** Draw **************
 var time = 0;
