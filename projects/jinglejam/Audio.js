@@ -80,6 +80,14 @@ function playMenuTheme(){
   sound = true;
 }
 
+function playEnd(){
+  for(var i = 0; i < songs.length; i++){
+    songs[i].pause();
+  }
+  end.play();
+  current = end;
+}
+
 function playTheme(){
   current.play();
 }
