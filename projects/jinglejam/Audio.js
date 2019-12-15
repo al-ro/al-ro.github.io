@@ -40,8 +40,6 @@ function initAudio(){
 
   for(var i = 0; i < songs.length; i++){
     songs[i].crossOrigin = "anonymous";
-    songs[i].play();
-    songs[i].pause();
     songs[i].currentTime = 0;;
   }
 
