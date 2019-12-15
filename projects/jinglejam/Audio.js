@@ -41,7 +41,8 @@ function initAudio(){
   for(var i = 0; i < songs.length; i++){
     songs[i].crossOrigin = "anonymous";
     songs[i].play();
-    songs[i].stop();
+    songs[i].pause();
+    songs[i].currentTime = 0;;
   }
 
   var source = audio_ctx.createMediaElementSource(theme);
@@ -73,7 +74,7 @@ function pauseAudio(){
 }
 function playMenuTheme(){
   for(var i = 0; i < songs.length; i++){
-    songs[i].stop();
+    songs[i].pause();
   }
   menu.play();
   sound = true;
