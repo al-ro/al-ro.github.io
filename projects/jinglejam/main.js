@@ -888,7 +888,7 @@ function draw(){
   lastFrame = thisFrame;
   bounds = checkBounds();
   if(!bounds){
-    alive = false;
+    //alive = false;
   }
   if(alive){
     if(intersect[0] && mouse_down){
@@ -900,7 +900,7 @@ function draw(){
     checkPickUp();
     collision = checkCollision();
     if(collision){
-      alive = false;
+      //alive = false;
     }
   }
   
