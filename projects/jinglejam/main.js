@@ -210,11 +210,12 @@ function setObstacleMap(obsMap){
 var giftMap = new Map();
 function setGiftMap(objMap){
   giftMap.clear();
+  console.log("Input: ", objMap);
   for(var i = 0; i < objMap.length; i++){
     var index = objMap[i][1] * globalWidth + objMap[i][0];
     giftMap.set(index, [[i, objMap[i][2]]]);
   }
-console.log(giftMap);
+  console.log(giftMap);
 }
 
 var npcMap = new Map();
@@ -224,7 +225,7 @@ function setNPCMap(objMap){
     var index = objMap[i][1] * globalWidth + objMap[i][0];
     npcMap.set(index, [[i, objMap[i][2]]]);
   }
-console.log(npcMap);
+  console.log(npcMap);
 }
 
 const ObstacleType = {
