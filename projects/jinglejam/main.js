@@ -356,10 +356,10 @@ class Obstacle {
 	break;
       case ObstacleType.TRAVELLER:
 	this._time = (this._time + speed) % 6.283;
-	this._pos.x = this._originalPos.x;
-	this._pos.z = this._originalPos.z;
-	this._meshCore.position.set(this._pos.x, 0, this._pos.z);
-	this._meshGlow.position.set(this._pos.x, 0, this._pos.z);
+	var x = this._originalPos.x + 1.0;
+	var z = this._originalPos.z;
+	this._meshCore.position.set(x, 0, z);
+	this._meshGlow.position.set(x, 0, z);
 	break;
     }
   }
