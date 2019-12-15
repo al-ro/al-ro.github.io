@@ -67,11 +67,10 @@ var songs = [];
   document.body.appendChild(stats.domElement);
   window.addEventListener( 'resize', onWindowResize, false );
   function onWindowResize(){
-    alive = false;
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
-    bloomComposer.setSize( window.innerWidth, window.innerHeight );
+    bloomComposer.setSize( 0.5*window.innerWidth, 0.5*window.innerHeight );
     finalComposer.setSize( window.innerWidth, window.innerHeight );
   }
 
