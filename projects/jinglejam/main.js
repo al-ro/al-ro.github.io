@@ -24,6 +24,7 @@ var menu = true;
 var victory = false;
 var score = 0;
 var objectives = 1;
+var lives = 3;
 
 //**************** Scene *****************
   //Initialise three.js
@@ -966,6 +967,7 @@ function toggleAudio(){
 }
 
 function resetWorld(){
+  lives = 3;
   menu = false;
   objectives = 1;
   score = 0;
@@ -1019,7 +1021,7 @@ function draw(){
   stats.begin();
   if(!menu){
     if(!victory){
-      if(deathFrames == 100){
+      if(deathFrames == 100 && (lives > 0)){
 	deathFrames = 0;
 	if(inventory.holding){
 	  inventory.gift.active = true;
@@ -1047,8 +1049,11 @@ function draw(){
       lastFrame = thisFrame;
       bounds = checkBounds();
       if(!bounds){
+	lives = Math.max(0, lives-1);
 	alive = false;
-	showGameOver();
+	if(lives == 0){
+	  showGameOver();
+	}
       }
       if(alive){
 	if(intersect[0] && mouse_down){
@@ -1065,7 +1070,10 @@ function draw(){
 	collision = checkCollision();
 	if(collision){
 	  alive = false;
-	  showGameOver();
+	  lives = Math.max(0, lives-1);
+	  if(lives == 0){
+	    showGameOver();
+	  }
 	}
       }
 
