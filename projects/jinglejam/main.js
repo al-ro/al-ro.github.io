@@ -767,14 +767,7 @@ var endPoint1 = new THREE.Vector2(0,0);
 var endPoint2 = new THREE.Vector2(0,0);
 var anchor = new THREE.Vector2(0,0);
 var rotation = new THREE.Vector3(0,0,0);
-/*
-var testMesh = new THREE.Mesh( giftGeometry, giftMaterial );
-var testMesh2 = new THREE.Mesh( giftGeometry, giftMaterial );
-scene.add(testMesh);
-scene.add(testMesh2);
-      //testMesh.position.set(direction.x, 0, direction.y);
-      //testMesh2.position.set(direction.x, 0, direction.y);
-*/
+
 function checkCollision(){
   //Position Y will be invalid and will not be used
   playerLocation.copy(player.position);
