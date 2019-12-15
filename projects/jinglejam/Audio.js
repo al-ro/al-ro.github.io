@@ -29,7 +29,7 @@ function initAudio(){
   pickup = new Audio('https://al-ro.github.io/projects/jinglejam/music/powerUp.wav');
   delivery = new Audio('https://al-ro.github.io/projects/jinglejam/music/item_delivery_short.wav');
   damage = new Audio('https://al-ro.github.io/projects/jinglejam/music/Damage_Sound.wav');
-  theme = theme1;
+  theme = theme3;
   
   songs.push(theme1);
   songs.push(theme2);
