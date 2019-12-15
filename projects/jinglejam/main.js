@@ -897,6 +897,7 @@ function draw(){
       targetDir = player.position;
     }
     move(targetDir, dt);
+    checkPickUp();
     collision = checkCollision();
     if(collision){
       alive = false;
