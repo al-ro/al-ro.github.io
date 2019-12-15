@@ -322,15 +322,15 @@ function generateRandomMap(){
   var worldLength = 10 + Math.floor(Math.random() * 10);
   var numberOfGifts = 3 + Math.floor(Math.random() * 3);
   var posX = 0;
-  var posY = 0;
-  lvl1.map.push([posX, posY]);
+  var posZ = 0;
+  lvl1.map.push([posX, posZ]);
   for(var i = 0; i < worldLength; i++){
     if(Math.random > 0.5){
       posX++;
     }else{
       posZ++;
     }
-    lvl1.map.push([posX, posY]);
+    lvl1.map.push([posX, posZ]);
   }
 
   var giftIndicesMap = new Map();
