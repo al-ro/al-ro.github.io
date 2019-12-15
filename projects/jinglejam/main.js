@@ -488,9 +488,9 @@ class Gift {
   }
 }
 
-var giftAlphaMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
-var giftBetaMaterial = new THREE.MeshBasicMaterial( {color: 0xaa44ff} );
-var giftGammaMaterial = new THREE.MeshBasicMaterial( {color: 0xffaa44} );
+var giftAlphaMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa, side: THREE.DoubleSide} );
+var giftBetaMaterial = new THREE.MeshBasicMaterial( {color: 0xaa44ff, side: THREE.DoubleSide} );
+var giftGammaMaterial = new THREE.MeshBasicMaterial( {color: 0xffaa44, side: THREE.DoubleSide} );
 var giftAlphaGeometry = new THREE.CylinderGeometry( 1, 1, 0.2, 6 );
 var giftBetaGeometry = new THREE.CylinderGeometry( 1, 1, 0.2, 3 );
 var giftGammaGeometry = new THREE.CylinderGeometry( 1, 1, 0.2, 4 );
@@ -565,7 +565,8 @@ class NPC {
   giveGift(gift){
     this._happy = true;
     gift.mesh.position.copy(this._pos);
-    gift.mesh.position.y = 3;
+    gift.mesh.position.y = 1.5;
+    this._mesh.material = gift.material;
     this._mesh.layers.enable(BLOOM);
   }
   move(dt){
