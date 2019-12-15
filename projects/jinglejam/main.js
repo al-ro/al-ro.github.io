@@ -639,6 +639,12 @@ function checkCollision(){
 	  if(distanceToLine(player.position.x, player.position.z, endPoint1.x, endPoint1.y, endPoint2.x, endPoint2.y) < 1){
 	    return true;
 	  }
+	  
+	  var dx = player.position.x - obstacles[index].meshCore.position.x;
+	  var dz = player.position.z - obstacles[index].meshCore.position.z;
+	  if(Math.sqrt((dx*dx)+(dz*dz)) > 11){
+	    return true;
+	  }
 	  break;
 	case ObstacleType.TIMER:
 	  // code block
