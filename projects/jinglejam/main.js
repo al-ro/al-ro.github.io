@@ -1026,6 +1026,7 @@ function draw(){
     if(!victory){
       if(deathFrames == 100 && (lives > 0)){
 	deducted = false;
+	playMainTheme();
 	deathFrames = 0;
 	if(inventory.holding){
 	  inventory.gift.active = true;

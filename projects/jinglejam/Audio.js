@@ -106,6 +106,10 @@ function playLaserHit(){
   laser.play();
 }
 
+function stopDamage(){
+  damage.pause();
+}
+
 function playDamage(){
   for(var i = 0; i < songs.length; i++){
     songs[i].pause();
