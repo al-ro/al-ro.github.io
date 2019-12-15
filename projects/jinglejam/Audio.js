@@ -45,6 +45,9 @@ function initAudio(){
   end.addEventListener('ended', function() {
       credits.play();
       }, false);
+  damage.addEventListener('ended', function() {
+      credits.play();
+      }, false);
 
   for(var i = 0; i < songs.length; i++){
     songs[i].crossOrigin = "anonymous";
