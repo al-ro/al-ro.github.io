@@ -1208,6 +1208,9 @@ function draw(){
 
     // render the entire scene, then render bloom scene on top
     finalComposer.render();
+  }else{
+    renderer.setClearColor( 0xff00ff, 1);
+    renderer.render();
   }
   stats.end();
   requestAnimationFrame(draw);
