@@ -48,7 +48,7 @@ var songs = [];
 
   //Camera
   var camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 1, 20000);
-  var cameraStartPosition = new THREE.Vector3(-20, 20, -20);
+  var cameraStartPosition = new THREE.Vector3(-10, 30, -10);
   camera.position.copy(cameraStartPosition);
   camera.lookAt(0,0,0);
   scene.add(camera);
