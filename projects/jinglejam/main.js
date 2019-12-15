@@ -325,7 +325,7 @@ function generateRandomMap(){
   var posZ = 0;
   lvl1.map.push([posX, posZ]);
   for(var i = 0; i < worldLength; i++){
-    if(Math.random > 0.5){
+    if(Math.random() > 0.5){
       posX++;
     }else{
       posZ++;
@@ -380,22 +380,20 @@ function generateRandomMap(){
     npcIndicesMap.set(randomIndex, type);
     
   }
-  
-  
-  for(var i = 0; i < worldLength; i++){
+
+
+  for(var i = 1; i < worldLength; i++){
     if(!giftIndicesMap.has(i) && !npcIndicesMap.has(i)){
+      //create obstacle
+      var x = lvl.map[i][0];
+      var z = lvl.map[i][0];
       if(Math.random > 0.5){
-	//create obstacle
-	var x = lvl.map[i][0];
-	var z = lvl.map[i][0];
-	if(Math.random > 0.5){
-	  var type = ObstacleType.SPINNER;
-	}else{
-	  var type = ObstacleType.TRAVELLER;
-	}
-	lvl1.obstacleMap.push([x,y,type]);
-      }     
-    }
+	var type = ObstacleType.SPINNER;
+      }else{
+	var type = ObstacleType.TRAVELLER;
+      }
+      lvl1.obstacleMap.push([x,y,type]);
+    }    
   }
 
 }
