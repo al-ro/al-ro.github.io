@@ -95,6 +95,8 @@ function hideGameOver() {
 function showMenu() {
   menu = true;
   playMenuTheme();
+  document.getElementById('gameover').style.visibility = 'hidden';
+  document.getElementById('success').style.visibility = 'hidden';
   document.getElementById('reset_button').style.visibility = 'visible';
   document.getElementById('menu').style.visibility = 'visible';
   document.getElementById('menu_button').style.visibility = 'hidden';
