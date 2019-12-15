@@ -175,11 +175,7 @@ var materials = {};
 var renderScene = new RenderPass( scene, camera );
 //resolution, strength, radius, threshold
 var bloomPass = new UnrealBloomPass( new THREE.Vector2( 0.5*canvas.width, 0.5*canvas.height ), 1.0, 0.01, 0.1 );
-/*
-   bloomPass.threshold = params.bloomThreshold;
-   bloomPass.strength = params.bloomStrength;
-   bloomPass.radius = params.bloomRadius;
- */
+
 var bloomComposer = new EffectComposer( renderer );
 bloomComposer.setSize( 0.5*window.innerWidth, 0.5*window.innerHeight );
 bloomComposer.renderToScreen = false;
@@ -279,8 +275,6 @@ const GiftType = {
 //Currently held gift
 var inventory = {holding: false, gift: null};
 
-var level1 = [];
-
 var lvl1 = {
 map: [
        [0, 0],
@@ -331,8 +325,6 @@ roundTileGeometry.translate(0,-50,0);
 var tileMaterial = new THREE.MeshStandardMaterial({color: 0x999999, metalness: 0.5,  roughness: 0.5});
 
 var posDelta = 20.5;
-
-//tile.layers.enable( BLOOM);
 
 class Movement {
   constructor (translate, rotate){
@@ -530,6 +522,8 @@ npcGammaGeometry.translate(0, 3.0, 0);
 
 var npcGeometry;
 var npcMaterial;
+
+populateWorld(lvl1);
 
 objectives = npcs.length;
 

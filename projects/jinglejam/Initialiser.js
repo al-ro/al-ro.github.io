@@ -1,4 +1,14 @@
 function populateWorld(level){
+
+//Floor
+tiles = [];
+//Targets to deliver gifts to
+npcs = [];
+//Gifts to pick up and deliver
+gifts = [];
+//Damaging or blocking geometries
+obstacles = [];
+
   for(var i = 0; i < level.map.length; i++){
     let posX = level.map[i][0];
     let posY = 0;
