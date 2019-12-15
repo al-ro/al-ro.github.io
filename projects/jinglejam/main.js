@@ -244,8 +244,6 @@ giftMap: [
 ]
 };
 
-setGlobalMap(lvl1.map);
-setObstacleMap(lvl1.obstacleMap);
 
 class Tile {
   constructor (pos, mesh){
@@ -283,6 +281,9 @@ for(var i = 0; i < lvl1.map.length; i++){
 for(var i = 0; i < tiles.length; i++){
   scene.add(tiles[i].mesh);
 }
+
+setGlobalMap(lvl1.map);
+setObstacleMap(lvl1.obstacleMap);
 
 class Movement {
   constructor (translate, rotate){
