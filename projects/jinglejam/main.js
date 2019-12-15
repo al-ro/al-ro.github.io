@@ -187,12 +187,12 @@ function setGlobalMap(tileMap){
 var obstacleMap = new Map();
 function setObstacleMap(obsMap){
   obstacleMap.clear();
+  console.log(tiles[0]);
   for(var i = 0; i < obsMap.length; i++){
     var index = obsMap[i][1] * globalWidth + obsMap[i][0];
     obstacleMap.set(index, [[i, obsMap[i][2]]]);
     if(obsMap[i][2] == ObstacleType.SPINNER){
       //tiles[globalMap.get(index)].mesh.geometry = roundTileGemetry;
-      console.log(tiles[0]);
     }
   }
 //console.log(obstacleMap);
