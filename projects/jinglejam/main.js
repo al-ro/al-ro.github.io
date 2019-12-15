@@ -963,7 +963,6 @@ function toggleAudio(){
 }
 
 function resetWorld(){
-  console.log("R E S E T   W O R L D");
   menu = false;
   objectives = 1;
   score = 0;
@@ -983,14 +982,13 @@ function resetWorld(){
 }
 
 function startGame(){
-  console.log("START HERE");
   document.getElementById('start_button').style.visibility = 'hidden';
   initAudio();
   showMenu();
 };
 
 var startButton = document.getElementById("start_button");
-startButton.addEventListener('click', startGame());
+startButton.addEventListener('click', startGame);
 
 var audioButton = document.getElementById("audio_button");
 audioButton.addEventListener('click', toggleAudio);
