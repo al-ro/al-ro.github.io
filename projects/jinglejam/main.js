@@ -318,7 +318,7 @@ npcMap: [
 };
 
 function generateRandomMap(){
-  lvl1 = [map: [], obstacleMap: [], giftMap: [], npcMap: []];
+  lvl1 = {[map: [], obstacleMap: [], giftMap: [], npcMap: []]};
   var worldLength = 7 + Math.floor(Math.random() * 10);
   var gifts = 3 + Math.floor(Math.random() * 3);
   var posX = 0;
