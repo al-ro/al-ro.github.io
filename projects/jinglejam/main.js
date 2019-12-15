@@ -191,7 +191,8 @@ function setObstacleMap(obsMap){
     var index = obsMap[i][1] * globalWidth + obsMap[i][0];
     obstacleMap.set(index, [[i, obsMap[i][2]]]);
     if(obsMap[i][2] == ObstacleType.SPINNER){
-      tiles[globalMap.get(index)].mesh.geometry = roundTileGemetry;
+      //tiles[globalMap.get(index)].mesh.geometry = roundTileGemetry;
+      console.log(globalMap.get(index));
     }
   }
 //console.log(obstacleMap);
