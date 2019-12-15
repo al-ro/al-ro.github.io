@@ -222,6 +222,13 @@ const GiftType = {
   GAMMA = 4
 };
 
+const NPCType = {
+  NONE = 1,
+  ALPHA = 2,
+  BETA = 3,
+  GAMMA = 4
+};
+
 //Currently held gift
 var inventory = {holding: false, type: GiftType.NONE};
 
@@ -247,6 +254,11 @@ obstacleMap: [
 giftMap: [
        [0, 0, GiftType.ALPHA],
        [3, 3, GiftType.BETA]
+]
+
+npcMap: [
+       [0, 0, NPCType.ALPHA],
+       [3, 3, NPCType.BETA]
 ]
 };
 
@@ -538,9 +550,40 @@ class NPC {
 var npcGeometry = new THREE.RingGeometry( 1.25, 2.5, 6, 1);
 npcGeometry.rotateZ(Math.PI/2.0);
 
-function initialiseLevel(lvl){
-  
-  //Set NPCc, gifts and obstacles for this level.
+for(var i = 0; i < lvl1.npcMap.length; i++){
+  let posX = lvl1.npcMap[i][0];
+  let posY = 0;
+  let posZ = lvl1.npcMap[i][1];
+  var pos = new THREE.Vector3(posX, posY, posZ);
+  pos.multiplyScalar(posDelta);
+
+  pos.set(pos.x + posDelta * 0.8 * (Math.random() - 0.5), 0.0 , pos.z + posDelta * 0.8 * (Math.random() - 0.5));  
+
+  let type = lvl1.npcMap[i][2];
+
+  switch(type){
+    case NPCType.ALPHA:
+      npcGeometry = npcAlphaGeometry;
+      npcMaterial = npcAlphaMaterial;
+    break;
+    case NPCType.BETA:
+      npcGeometry = npcBetaGeometry;
+      npcMaterial = npcBetaMaterial;
+    break;
+    case NPCType.GAMMA:
+      npcGeometry = npcGammaGeometry;
+      npcMaterial = npcGammaMaterial;
+    break;
+  }
+
+  var npcMesh = new THREE.Mesh( npcGeometry, npcMaterial );
+  npcMesh.position.copy(pos);
+  var npc = new NPC( type, pos, npcMesh, npcMaterial );
+  npcMesh.layers.enable(BLOOM);
+  npcs.push(npc);
+}
+for(var i = 0; i < npcs.length; i++){
+  scene.add(npcs[i].mesh);
 }
 
 //************** Objects **************
