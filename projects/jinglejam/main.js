@@ -119,6 +119,7 @@ var mouse_down = false;
 
 function onMouseDown( event ) {
   if(!userInteraction){
+    initAudio();
     playTheme();
     userInteraction = true;
   }
