@@ -103,7 +103,7 @@ function showMenu() {
 }
 
 function hideMenu() {
-  meny = false;
+  menu = false;
   playMainTheme();
   document.getElementById('reset_button').style.visibility = 'hidden';
   document.getElementById('menu').style.visibility = 'hidden';
