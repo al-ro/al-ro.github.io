@@ -1063,7 +1063,6 @@ function draw(){
 	}
       }
       if(alive){
-	  playDamage();
 	if(intersect[0] && mouse_down){
 	  targetDir = intersect[0].point;
 	}else{
@@ -1091,6 +1090,9 @@ function draw(){
       if(!alive){
 	fall(dt);
 	deathFrames++;
+	if(deathFrames == 0){
+	  playDamage();
+	}
 	glitchPass.goWild = true;
 
       }else{
