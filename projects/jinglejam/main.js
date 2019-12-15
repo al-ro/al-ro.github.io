@@ -947,7 +947,7 @@ function draw(){
       if(inventory.holding){
 	inventory.gift.active = true;
 	inventory.gift.mesh.position.copy(inventory.gift.position);
-	inventroy.holding = false;
+	inventory.holding = false;
       }
       alive = true;
       hideGameOver();
