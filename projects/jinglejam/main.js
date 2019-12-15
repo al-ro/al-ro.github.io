@@ -547,9 +547,9 @@ class NPC {
 
 }
 
-var npcAlphaMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
-var npcBetaMaterial = new THREE.MeshBasicMaterial( {color: 0xaa44ff} );
-var npcGammaMaterial = new THREE.MeshBasicMaterial( {color: 0xffaa44} );
+var npcAlphaMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa, side: THREE.DoubleSide } );
+var npcBetaMaterial = new THREE.MeshBasicMaterial( {color: 0xaa44ff, side: THREE.DoubleSide } );
+var npcGammaMaterial = new THREE.MeshBasicMaterial( {color: 0xffaa44, side: THREE.DoubleSide } );
 var npcAlphaGeometry = new THREE.RingGeometry( 1.25, 2.5, 6, 2);
 var npcBetaGeometry = new THREE.RingGeometry( 1.25, 2.5, 3, 2);
 var npcGammaGeometry = new THREE.RingGeometry( 1.25, 2.5, 4, 2);
@@ -599,12 +599,6 @@ for(var i = 0; i < lvl1.npcMap.length; i++){
 for(var i = 0; i < npcs.length; i++){
   scene.add(npcs[i].mesh);
 }
-
-
-var testGeometry = new THREE.RingGeometry( 1, 5, 32 );
-var testMaterial = new THREE.MeshBasicMaterial({color: 0x44ffaa});
-var testMesh = new THREE.Mesh(testGeometry, testMaterial);
-scene.add(testMesh);
 
 //************** Objects **************
 
