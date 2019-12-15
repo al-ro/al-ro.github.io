@@ -214,7 +214,7 @@ function setGiftMap(objMap){
     var index = objMap[i][1] * globalWidth + objMap[i][0];
     giftMap.set(index, [[i, objMap[i][2]]]);
   }
-//console.log(giftMap);
+console.log(giftMap);
 }
 
 var npcMap = new Map();
@@ -224,7 +224,7 @@ function setNPCMap(objMap){
     var index = objMap[i][1] * globalWidth + objMap[i][0];
     npcMap.set(index, [[i, objMap[i][2]]]);
   }
-//console.log(npcMap);
+console.log(npcMap);
 }
 
 const ObstacleType = {
@@ -614,7 +614,6 @@ for(var i = 0; i < lvl1.npcMap.length; i++){
   npcMesh.position.copy(pos);
   var npc = new NPC( type, pos, npcMesh, npcMaterial );
   //npcMesh.layers.enable(BLOOM);
-  console.log("Push NPC", npc);
   npcs.push(npc);
 }
 for(var i = 0; i < npcs.length; i++){
@@ -789,9 +788,9 @@ function checkPickUp(){
 
       var dx = player.position.x - gifts[index].mesh.position.x;
       var dz = player.position.z - gifts[index].mesh.position.z;
-      if(Math.sqrt((dx*dx)+(dz*dz)) < (1.0)){
+      if(Math.sqrt((dx*dx)+(dz*dz)) < (2.0)){
 	console.log(type);
-	return true;
+	//return true;
       }
     }
   }
