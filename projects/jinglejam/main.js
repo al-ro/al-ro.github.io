@@ -589,8 +589,6 @@ for(var i = 0; i < lvl1.npcMap.length; i++){
     break;
   }
 
-  npcGeometry = new THREE.RingGeometry( 1, 5, 32 );
-  npcGeometry.translate(0,2,0);
   var npcMesh = new THREE.Mesh( npcGeometry, npcMaterial );
   npcMesh.position.copy(pos);
   var npc = new NPC( type, pos, npcMesh, npcMaterial );
@@ -601,6 +599,12 @@ for(var i = 0; i < lvl1.npcMap.length; i++){
 for(var i = 0; i < npcs.length; i++){
   scene.add(npcs[i].mesh);
 }
+
+
+var testGeometry = new THREE.RingGeometry( 1, 5, 32 );
+var testMaterial = new THREE.MeshBasicMaterial({color: 0x44ffaa});
+var testMesh = new THREE.Mesh(testGeometry, testMaterial);
+scene.add(testMesh);
 
 //************** Objects **************
 
