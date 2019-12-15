@@ -228,8 +228,8 @@ var gifts = [];
 //Damaging or blocking geometries
 var obstacles = [];
 
-var globalWidth = 8;
-var globalHeight = 8;
+var globalWidth = 100;
+var globalHeight = 100;
 var globalMap = new Map();
 function setGlobalMap(tileMap){
   globalMap.clear();
