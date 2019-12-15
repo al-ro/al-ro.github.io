@@ -24,9 +24,6 @@ var victory = false;
 var score = 0;
 var objectives = 1;
 
-//**************** Audio *****************
-var songs = [];
-
 //**************** Scene *****************
   //Initialise three.js
   var scene = new THREE.Scene();
@@ -55,12 +52,6 @@ var songs = [];
   camera.position.copy(cameraStartPosition);
   camera.lookAt(0,0,0);
   scene.add(camera);
-  /*
-     var controls = new OrbitControls( camera, renderer.domElement );
-     controls.maxPolarAngle = Math.PI * 0.5;
-     controls.minDistance = 1;
-     controls.maxDistance = 100;
-   */
 
   const stats = new Stats();
   stats.showPanel(0);
@@ -125,10 +116,10 @@ var raycaster = new THREE.Raycaster();
 var mouse = new THREE.Vector2(-100, -100);
 
 var mouse_down = false;
-initAudio();
 
 function onMouseDown( event ) {
   if(!userInteraction){
+    initAudio();
     playTheme();
     userInteraction = true;
   }
@@ -340,26 +331,8 @@ roundTileGeometry.translate(0,-50,0);
 var tileMaterial = new THREE.MeshStandardMaterial({color: 0x999999, metalness: 0.5,  roughness: 0.5});
 
 var posDelta = 20.5;
-for(var i = 0; i < lvl1.map.length; i++){
-  let posX = lvl1.map[i][0];
-  let posY = 0;
-  let posZ = lvl1.map[i][1];
-  var pos = new THREE.Vector3(posX, posY, posZ);
-  pos.multiplyScalar(posDelta);
-  var tileMesh = new THREE.Mesh( tileGeometry, tileMaterial );
-  tileMesh.receiveShadow = true;
-  tileMesh.position.set(pos.x, pos.y, pos.z);
-  var tile = new Tile(pos, tileMesh);
-  tiles.push(tile);
-}
 
 //tile.layers.enable( BLOOM);
-for(var i = 0; i < tiles.length; i++){
-  scene.add(tiles[i].mesh);
-}
-
-setGlobalMap(lvl1.map);
-setObstacleMap(lvl1.obstacleMap);
 
 class Movement {
   constructor (translate, rotate){
@@ -452,53 +425,6 @@ class Obstacle {
 }
 
 var glowMaterial = new THREE.MeshBasicMaterial( {color: 0xff3322} );
-for(var i = 0; i < lvl1.obstacleMap.length; i++){
-  let posX = lvl1.obstacleMap[i][0];
-  let posY = 0;
-  let posZ = lvl1.obstacleMap[i][1];
-  var type = lvl1.obstacleMap[i][2];
-  var pos = new THREE.Vector3(posX, posY, posZ);
-  pos.multiplyScalar(posDelta);
-
-  switch(type) {
-    case ObstacleType.SPINNER:
-      var glowMesh = new THREE.Mesh( cylinderGeometry, glowMaterial );
-      break;
-    case ObstacleType.TRAVELLER:
-      var glowMesh = new THREE.Mesh( sphereGeometry, glowMaterial );
-      break;
-  }
-
-  switch(type) {
-    case ObstacleType.SPINNER:
-      var obstacleMesh = new THREE.Mesh( cylinderGeometry, whiteMaterial );
-      break;
-    case ObstacleType.TRAVELLER:
-      var obstacleMesh = new THREE.Mesh( sphereGeometry, whiteMaterial );
-      break;
-  }
-  obstacleMesh.scale.set(1.01, 1.01, 1.01);
-  obstacleMesh.position.set(pos.x, 1.0, pos.z);
-
-
-  glowMesh.layers.enable(BLOOM);
-  glowMesh.position.set(pos.x, 1.0, pos.z);
-
-  var translation = new THREE.Vector3(0.1, 0, 0);
-  var rotation = new THREE.Vector3(0.0, 0.05, 0);
-
-  var movement = new Movement(translation, rotation);
-  //constructor (type, pos, meshCore, meshGlow, color, movement)
-  var rotation = new THREE.Vector3(0,0,0);
-  var obstacle = new Obstacle(type, pos, obstacleMesh, glowMesh, glowMaterial, movement, rotation);
-  obstacles.push(obstacle);
-}
-
-for(var i = 0; i < obstacles.length; i++){
-  scene.add(obstacles[i].meshGlow);
-  scene.add(obstacles[i].meshCore);
-}
-
 
 class Gift {
   constructor(type, pos, mesh, material) {
@@ -546,42 +472,6 @@ giftGammaGeometry.translate(0, 1.0, 0);
 
 var giftGeometry;
 var giftMaterial;
-
-for(var i = 0; i < lvl1.giftMap.length; i++){
-  let posX = lvl1.giftMap[i][0];
-  let posY = 0;
-  let posZ = lvl1.giftMap[i][1];
-  var pos = new THREE.Vector3(posX, posY, posZ);
-  pos.multiplyScalar(posDelta);
-
-  pos.set(pos.x + posDelta * 0.8 * (Math.random() - 0.5), 0.0 , pos.z + posDelta * 0.8 * (Math.random() - 0.5));  
-
-  let type = lvl1.giftMap[i][2];
-
-  switch(type){
-    case GiftType.ALPHA:
-      giftGeometry = giftAlphaGeometry;
-      giftMaterial = giftAlphaMaterial;
-    break;
-    case GiftType.BETA:
-      giftGeometry = giftBetaGeometry;
-      giftMaterial = giftBetaMaterial;
-    break;
-    case GiftType.GAMMA:
-      giftGeometry = giftGammaGeometry;
-      giftMaterial = giftGammaMaterial;
-    break;
-  }
-
-  var giftMesh = new THREE.Mesh( giftGeometry, giftMaterial );
-  giftMesh.position.copy(pos);
-  var gift = new Gift( type, pos, giftMesh, giftMaterial );
-  giftMesh.layers.enable(BLOOM);
-  gifts.push(gift);
-}
-for(var i = 0; i < gifts.length; i++){
-  scene.add(gifts[i].mesh);
-}
 
 class NPC {
   constructor(type, pos, mesh, material) {
@@ -640,44 +530,6 @@ npcGammaGeometry.translate(0, 3.0, 0);
 
 var npcGeometry;
 var npcMaterial;
-
-for(var i = 0; i < lvl1.npcMap.length; i++){
-  let posX = lvl1.npcMap[i][0];
-  let posY = 0;
-  let posZ = lvl1.npcMap[i][1];
-  var pos = new THREE.Vector3(posX, posY, posZ);
-  pos.multiplyScalar(posDelta);
-
-  pos.set(pos.x + posDelta * 0.8 * (Math.random() - 0.5), 0.0 , pos.z + posDelta * 0.8 * (Math.random() - 0.5));  
-
-  let type = lvl1.npcMap[i][2];
-
-  switch(type){
-    case GiftType.ALPHA:
-      npcGeometry = npcAlphaGeometry;
-      npcMaterial = npcAlphaMaterial;
-    break;
-    case GiftType.BETA:
-      npcGeometry = npcBetaGeometry;
-      npcMaterial = npcBetaMaterial;
-    break;
-    case GiftType.GAMMA:
-      npcGeometry = npcGammaGeometry;
-      npcMaterial = npcGammaMaterial;
-    break;
-  }
-
-  var npcMesh = new THREE.Mesh( npcGeometry, npcMaterial );
-  npcMesh.position.copy(pos);
-  var npc = new NPC( type, pos, npcMesh, npcMaterial );
-  //npcMesh.layers.enable(BLOOM);
-  npcs.push(npc);
-}
-for(var i = 0; i < npcs.length; i++){
-  scene.add(npcs[i].mesh);
-}
-setGiftMap(lvl1.giftMap);
-setNPCMap(lvl1.npcMap);
 
 objectives = npcs.length;
 
