@@ -67,6 +67,7 @@ var songs = [];
   document.body.appendChild(stats.domElement);
   window.addEventListener( 'resize', onWindowResize, false );
   function onWindowResize(){
+    alive = false;
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
