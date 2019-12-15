@@ -674,8 +674,6 @@ obstacles = [];
 
 populateWorld(lvl1);
 
-objectives = npcs.length;
-
 //************** Objects **************
 
 var playerGeometry = new THREE.BoxGeometry(1,1,1);
@@ -958,6 +956,7 @@ function resetWorld(){
   objectives = 1;
   score = 0;
   populateWorld(lvl1);
+  objectives = npcs.length;
   alive = true;
   victory = false;
   inventory.holding = false;
