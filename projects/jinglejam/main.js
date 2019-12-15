@@ -501,6 +501,7 @@ class NPC {
     updateScore();
     if(objectives == 0){
       victory = true;
+      playEnd();
       showSuccess();
     }
   }
