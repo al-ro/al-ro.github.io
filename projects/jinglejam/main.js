@@ -960,7 +960,7 @@ function toggleAudio(){
   if(sound){
     pauseAudio();
   }else{
-    playMainTheme();
+    playTheme();
   }
 }
 

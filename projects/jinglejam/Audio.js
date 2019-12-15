@@ -62,12 +62,13 @@ function playMainTheme(){
   menu.pause();
   theme.play();
   sound = true;
+  current = theme;
 }
 function pauseAudio(){
   for(var i = 0; i < songs.length; i++){
     songs[i].pause();
   }
-  theme.pause();
+  current.pause();
   sound = false;
 }
 function playMenuTheme(){
@@ -75,5 +76,10 @@ function playMenuTheme(){
     songs[i].pause();
   }
   menu.play();
+  current = menu;
   sound = true;
+}
+
+function playTheme(){
+  current.play();
 }
