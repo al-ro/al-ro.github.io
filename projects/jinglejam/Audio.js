@@ -15,7 +15,7 @@ function initAudio(){
   source.connect(analyser);
   analyser.connect(audio_ctx.destination);
   analyser.fftSize = 512;
-  analyser.smoothingTimeConstant = decay;
+  analyser.smoothingTimeConstant = 0.5;
   frequencyCount = analyser.fftSize/2;
   frequencyData = new Uint8Array(analyser.frequencyBinCount);
   timeData = new Uint8Array(analyser.frequencyBinCount);
