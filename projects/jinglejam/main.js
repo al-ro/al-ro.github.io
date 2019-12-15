@@ -98,10 +98,6 @@ function showMenu() {
   playMenuTheme();
   document.getElementById('gameover').style.visibility = 'hidden';
   document.getElementById('success').style.visibility = 'hidden';
-
-  setTimeout(function(){
-      document.getElementById('reset_button').style.visibility = 'visible';
-      },2000);
   document.getElementById('menu').style.visibility = 'visible';
   document.getElementById('menu_button').style.visibility = 'hidden';
 }
@@ -1095,9 +1091,10 @@ function startGame(){
 
   initAudio();
   showMenu()
-  setTimeout(function(){
-  document.getElementById('audio_button').style.visibility = 'visible';
-      }, 2000);
+    setTimeout(function(){
+	document.getElementById('audio_button').style.visibility = 'visible';
+	document.getElementById('reset_button').style.visibility = 'visible';
+	}, 2000);
 };
 
 var startButton = document.getElementById("start_button");
