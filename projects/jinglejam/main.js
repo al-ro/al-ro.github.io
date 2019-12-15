@@ -254,8 +254,7 @@ obstacleMap: [
 giftMap: [
        [0, 0, GiftType.ALPHA],
        [3, 3, GiftType.BETA]
-]
-
+],
 npcMap: [
        [0, 0, NPCType.ALPHA],
        [3, 3, NPCType.BETA]
