@@ -1,6 +1,4 @@
 var audio_ctx;
-var theme1;
-var theme2;
 var theme3;
 var menu;
 var laser;
@@ -20,10 +18,8 @@ var songs = [];
 
 function initAudio(){
   audio_ctx = new (window.AudioContext || window.webkitAudioContext)();
-  theme1 = new Audio('https://al-ro.github.io/projects/jinglejam/music/LVL1-cut.wav');
-  theme2 = new Audio('https://al-ro.github.io/projects/jinglejam/music/LVL2.wav');
-  theme3 = new Audio('https://al-ro.github.io/projects/jinglejam/music/LVL3.wav');
   menu = new Audio('https://al-ro.github.io/projects/jinglejam/music/Main_Menu_C_WITH_MELODY.wav');
+  theme3 = new Audio('https://al-ro.github.io/projects/jinglejam/music/LVL3.wav');
   laser = new Audio('https://al-ro.github.io/projects/jinglejam/music/laser(hit).wav');
   end = new Audio('https://al-ro.github.io/projects/jinglejam/music/CompletionMusic.wav');
   pickup = new Audio('https://al-ro.github.io/projects/jinglejam/music/powerUp.wav');
@@ -31,8 +27,6 @@ function initAudio(){
   damage = new Audio('https://al-ro.github.io/projects/jinglejam/music/Damage_Sound.wav');
   theme = theme3;
   
-  songs.push(theme1);
-  songs.push(theme2);
   songs.push(theme3);
   songs.push(menu);
   songs.push(laser);
