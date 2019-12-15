@@ -972,12 +972,12 @@ function draw(){
     }else{
       glitchPass.goWild = false;
     }
-    // render scene with bloom
-    renderBloom();
-
-    // render the entire scene, then render bloom scene on top
-    finalComposer.render();
   }
+  // render scene with bloom
+  renderBloom();
+
+  // render the entire scene, then render bloom scene on top
+  finalComposer.render();
   stats.end();
   requestAnimationFrame(draw);
 }
