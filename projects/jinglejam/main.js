@@ -456,9 +456,6 @@ class Gift {
 
 }
 
-const GiftType = {
-  ONE: 1
-};
 var giftAlphaMaterial = new THREE.MeshBasicMaterial( {color: 0x44ffaa} );
 var giftBetaMaterial = new THREE.MeshBasicMaterial( {color: 0xaa44ff} );
 var giftGammaMaterial = new THREE.MeshBasicMaterial( {color: 0xffaa44} );
@@ -503,7 +500,7 @@ for(var i = 0; i < lvl1.giftMap.length; i++){
 
   var giftMesh = new THREE.Mesh( giftGeometry, giftMaterial );
   giftMesh.position.copy(pos);
-  var gift = new Gift(GiftType.ONE, pos, giftMesh, giftMaterial);
+  var gift = new Gift( type, pos, giftMesh, giftMaterial );
   giftMesh.layers.enable(BLOOM);
   gifts.push(gift);
 }
@@ -512,7 +509,7 @@ for(var i = 0; i < gifts.length; i++){
 }
 
 class NPC {
-  constructor( pos, mesh, material) {
+  constructor(type, pos, mesh, material) {
     this._pos = pos;
     this._mesh = mesh;
     this._material = material;
