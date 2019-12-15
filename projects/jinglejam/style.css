@@ -92,6 +92,9 @@
 #gameover {
   visibility: hidden;
 }
+#wait {
+  visibility: hidden;
+}
 #success{
   visibility: hidden;
 }

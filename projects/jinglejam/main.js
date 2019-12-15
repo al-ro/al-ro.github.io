@@ -1090,12 +1090,14 @@ function startGame(){
   document.getElementById('start_button').style.visibility = 'hidden';
   document.getElementById('score').style.visibility = 'hidden';
   document.getElementById('lives').style.visibility = 'hidden';
+  document.getElementById('wait').style.visibility = 'visible';
 
   initAudio();
   showMenu()
   setTimeout(function(){
   document.getElementById('audio_button').style.visibility = 'visible';
       document.getElementById('reset_button').style.visibility = 'visible';
+  document.getElementById('wait').style.visibility = 'hidden';
       }, 3000);
 };
 
