@@ -28,8 +28,9 @@
 }
 
 .score {
+    visibility: hidden;
     color: #ffffff;
-    font-size: 20px;
+    font-size: 30px;
     position: absolute;
     top: 2%;
     left: 2%;
@@ -42,7 +43,23 @@
     user-select: none;
 }
 
-.button {
+#lives {
+    visibility: hidden;
+    color: #ffffff;
+    font-size: 30px;
+    position: absolute;
+    top: 2%;
+    right: 2%;
+    z-index: 1;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+#button {
   z-index: 1;
   background-color: rgba(0, 0, 0, .15);
   bottom: 0;
