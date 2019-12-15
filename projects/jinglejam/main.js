@@ -254,7 +254,7 @@ class Tile {
 
 var tileGeometry = new THREE.BoxGeometry(20,2,20);
 tileGeometry.translate(0,-1,0);
-var tileMaterial = new THREE.MeshStandardMaterial({color: 0xbbbbbb, metalness: 0.,  roughness: 1});
+var tileMaterial = new THREE.MeshStandardMaterial({color: 0x555555, metalness: 0.,  roughness: 1});
 
 var posDelta = 20.5;
 for(var i = 0; i < lvl1.map.length; i++){
