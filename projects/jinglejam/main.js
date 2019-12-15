@@ -967,6 +967,7 @@ function toggleAudio(){
 }
 
 function resetWorld(){
+  deducted = false;
   lives = 3;
   menu = false;
   objectives = 1;
@@ -1017,11 +1018,14 @@ var bounds = true;
 var collision = false;
 var deathFrames = 0;
 
+var deducted = false;
+
 function draw(){
   stats.begin();
   if(!menu){
     if(!victory){
       if(deathFrames == 100 && (lives > 0)){
+	deducted = false;
 	deathFrames = 0;
 	if(inventory.holding){
 	  inventory.gift.active = true;
@@ -1049,7 +1053,10 @@ function draw(){
       lastFrame = thisFrame;
       bounds = checkBounds();
       if(!bounds){
-	lives = Math.max(0, lives-1);
+	if(!deducted){
+	  lives = Math.max(0, lives-1);
+	  deducted = true;
+	}
 	alive = false;
 	if(lives == 0){
 	  showGameOver();
@@ -1070,7 +1077,10 @@ function draw(){
 	collision = checkCollision();
 	if(collision){
 	  alive = false;
-	  lives = Math.max(0, lives-1);
+	  if(!deducted){
+	    lives = Math.max(0, lives-1);
+	    deducted = true;
+	  }
 	  if(lives == 0){
 	    showGameOver();
 	  }
