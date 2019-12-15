@@ -981,7 +981,7 @@ function resetWorld(){
   directionalLight.target = player;
 }
 
-function start(){
+function startGame(){
   console.log("START HERE");
   document.getElementById('start_button').style.visibility = 'hidden';
   initAudio();
@@ -989,7 +989,7 @@ function start(){
 };
 
 var startButton = document.getElementById("start_button");
-//startButton.addEventListener('click', start());
+startButton.addEventListener('click', startGame());
 
 var audioButton = document.getElementById("audio_button");
 audioButton.addEventListener('click', toggleAudio);
