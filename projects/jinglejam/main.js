@@ -688,6 +688,10 @@ function move(t, dt){
     gifts[i].move(dt);
   }
 
+  for(var i = 0; i < npcs.length; i++){
+    npcs[i].move(dt);
+  }
+
   //Move player, light and camera
   oldPos.copy(player.position);
   dir.set(t.x - oldPos.x, 0, t.z - oldPos.z);
