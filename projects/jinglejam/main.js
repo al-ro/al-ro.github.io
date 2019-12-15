@@ -333,7 +333,7 @@ function generateRandomMap(){
     lvl1.map.push([posX, posY]);
   }
   
-  for(var i = 0; i < worldLength(); i++){
+  for(var i = 0; i < worldLength; i++){
     if(Math.random > 0.5){
       //create obstacle
       var x = lvl.map[i][0];
