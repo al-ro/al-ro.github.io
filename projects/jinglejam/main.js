@@ -987,6 +987,7 @@ function resetWorld(){
 }
 
 function start(){
+  document.getElementById('start_button').style.visibility = 'hidden';
   initAudio();
   showMenu();
 };

@@ -82,6 +82,12 @@
   left: 50%;
   transform: translate(-50%, -50%);
 }
+#start_button {
+  visibility: visible;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
 #menu_button {
   visibility: hidden;
   top: 62%;
