@@ -1057,6 +1057,7 @@ function toggleAudio(){
 }
 
 function resetWorld(){
+  validMovement = true;
   generateRandomMap();
   document.getElementById('score').style.visibility = 'visible';
   document.getElementById('lives').style.visibility = 'visible';
