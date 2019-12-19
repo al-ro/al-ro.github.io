@@ -17,6 +17,7 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 );
 
 var canvas = document.getElementById("canvas_1");
+var stats;
 
 if(mobile){
 
@@ -41,7 +42,7 @@ if(mobile){
   var time = 0.0;
   var smoothness = 0.7;
 
-  const stats = new Stats();
+  stats = new Stats();
   stats.showPanel(0);
   stats.domElement.style.position = 'relative';
   stats.domElement.style.bottom = '48px';
