@@ -53,7 +53,7 @@
       </section>
 
       <section class="post">
-      <h5>Instructions</h5>
+      <h5>Controls</h5>
       <p>Drag nodes to affect fabric.</p>
       <h5>Overview</h5>
       <p>This simulation is based on a <a href='https://gamedevelopment.tutsplus.com/tutorials/simulate-tearable-cloth-and-ragdolls-with-simple-verlet-integration--gamedev-519'>tutorial by Jared Counts</a>. We maintain a grid of nodes connected to their neighbours. As the nodes move, they are kept within a maximum distance from 4 adjacent nodes by running several iterations of a constraints solver. Each timestep, every node is pulled towards the bottom of the canvas to simulate gravity and towards the positive x-direction to simulate wind. By keeping the left column of nodes static, we can create a cloth simulation that looks like a flag flapping in the wind.</p>
