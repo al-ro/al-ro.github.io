@@ -46,7 +46,7 @@ var scene = new THREE.Scene();
 var renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize(w,h,false);
-renderer.setClearColor( 0x66deff, 1);
+renderer.setClearColor( 0x99e9ff, 1);
 distance = 400;
 
 var FOV = 2 * Math.atan( window.innerHeight / ( 2 * distance ) ) * 90 / Math.PI;
@@ -170,7 +170,7 @@ void main() {
   frc = position.y/float(` + h_ + `);
 
   //Get wind data from simplex noise 
-  float noise = 1.0-(snoise(vec2((time-offset.x/50.0), (time-offset.z/50.0)))); 
+  float noise = 1.0-(snoise(vec2((time-offset.x*0.02), (time-offset.z*0.02)))); 
 
   //Define the direction of an unbent blade of grass rotated around the Y axis
   vec4 direction = vec4(0.0, halfRootAngleSin, 0.0, halfRootAngleCos);
@@ -182,8 +182,8 @@ void main() {
   vPosition = rotateVectorByQuaternion(vPosition, direction);
 
   //Apply wind
-  float angle = noise * 0.3;
-  vPosition = rotateVectorByQuaternion(vPosition, normalize(vec4(sin(angle/2.0), 0.0, -sin(angle/2.0), cos(angle/2.0))));
+  float halfAngle = noise * 0.15;
+  vPosition = rotateVectorByQuaternion(vPosition, normalize(vec4(sin(halfAngle), 0.0, -sin(halfAngle), cos(halfAngle))));
 
   //UV for texture
   vUv = uv;
@@ -332,11 +332,11 @@ var halfRootAngleSinAttribute = new THREE.InstancedBufferAttribute( new Float32A
 var halfRootAngleCosAttribute = new THREE.InstancedBufferAttribute( new Float32Array( halfRootAngleCos ), 1);
 var orientationAttribute = new THREE.InstancedBufferAttribute( new Float32Array( orientations ), 4);
 
-instanced_geometry.addAttribute( 'offset', offsetAttribute);
-instanced_geometry.addAttribute( 'orientation', orientationAttribute);
-instanced_geometry.addAttribute( 'stretch', stretchAttribute);
-instanced_geometry.addAttribute( 'halfRootAngleSin', halfRootAngleSinAttribute);
-instanced_geometry.addAttribute( 'halfRootAngleCos', halfRootAngleCosAttribute);
+instanced_geometry.setAttribute( 'offset', offsetAttribute);
+instanced_geometry.setAttribute( 'orientation', orientationAttribute);
+instanced_geometry.setAttribute( 'stretch', stretchAttribute);
+instanced_geometry.setAttribute( 'halfRootAngleSin', halfRootAngleSinAttribute);
+instanced_geometry.setAttribute( 'halfRootAngleCos', halfRootAngleCosAttribute);
 
 //Get alpha map and blade texture
 //These have been taken from "Realistic real-time grass rendering" by Eddie Lee, 2010
@@ -364,7 +364,7 @@ scene.add(mesh);
 //scene.add(base_blade);
 
 //************** Draw **************
-var time = 0;
+var time = 10;
 
 var lastFrame = Date.now();
 var thisFrame;

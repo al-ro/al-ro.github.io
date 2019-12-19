@@ -86,18 +86,15 @@ function onWindowResize(){
 }
 
 //Lights
-var light_1 = new THREE.AmbientLight( 0xffffff, 1.7); 
-scene.add(light_1);
+var ambientLight = new THREE.AmbientLight( 0xffffff, 0.8); 
+scene.add(ambientLight);
 
-var light_2;
-light_2 = new THREE.DirectionalLight(0xa0a0a0, 0.5);
-light_2.position.set(0, -1, 0);
-scene.add(light_2);
+var hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xdddddd, 1.0);
+scene.add(hemisphereLight);
 
-var light_3;
-light_3 = new THREE.DirectionalLight(0xa0a0a0, 1);
-light_3.position.set(0, 1, -1);
-scene.add(light_3);
+var directionalLight = new THREE.DirectionalLight(0xa0a0a0, 1);
+directionalLight.position.set(0, 1, -1);
+scene.add(directionalLight);
 
 //OrbitControls.js for camera manipulation
 controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -126,7 +123,7 @@ geom.faces.push( new THREE.Face3( 0, 2, 3 ) );
 geom.faces.push( new THREE.Face3( 0, 3, 4 ) );
 geom.faces.push( new THREE.Face3( 0, 4, 5 ) );
 
-geom.scale(30,30,30);
+geom.scale(35,35,35);
 //Rotate planes to point forward with their noses
 geom.rotateX( Math.PI / 2 );
 
@@ -284,7 +281,7 @@ function rules(i){
       dist = Math.sqrt((boids[i].geo.position.x - boids[j].geo.position.x) * (boids[i].geo.position.x - boids[j].geo.position.x) + (boids[i].geo.position.y - boids[j].geo.position.y) * (boids[i].geo.position.y - boids[j].geo.position.y) +(boids[i].geo.position.z - boids[j].geo.position.z) * (boids[i].geo.position.z - boids[j].geo.position.z));
       dot = boids[i].vel_x * (boids[j].geo.position.x - boids[i].geo.position.x) + boids[i].vel_y * (boids[j].geo.position.y - boids[i].geo.position.y)  + boids[i].vel_z * (boids[j].geo.position.z - boids[i].geo.position.z);  
 
-      if((dist < neighbourhood) && (dot > -0.75)){
+      if((dist < neighbourhood) && (dot > -0.95)){
         neighbours++;
 
         //Alignment
