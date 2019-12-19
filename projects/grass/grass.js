@@ -44,6 +44,7 @@ var ratio = w/h;
 var scene = new THREE.Scene();
 
 var renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
+var defaultPixelRatio = renderer.getPixelRatio();
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize(w,h,false);
 renderer.setClearColor( 0x99e9ff, 1);
@@ -60,8 +61,8 @@ if(mobile){
 scene.add(camera);
 
 //Lights
-var light_1 = new THREE.AmbientLight(0xffffff, 0.5); 
-scene.add(light_1);
+var ambientLight = new THREE.AmbientLight(0xffffff, 0.5); 
+scene.add(ambientLight);
 
 //OrbitControls.js for camera manipulation
 controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -80,11 +81,11 @@ function onWindowResize(){
   var w = canvas.clientWidth;
   var h = canvas.clientHeight;
   if(!isInFullscreen()){
+    renderer.setPixelRatio( window.devicePixelRatio );
     h = w/1.6;
   }else{
     //Reduce resolution at full screen for better performance
-    w *= 0.5;
-    h *= 0.5;
+    renderer.setPixelRatio( defaultPixelRatio );
   }
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
