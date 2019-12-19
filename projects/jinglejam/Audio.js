@@ -19,14 +19,14 @@ var songs = [];
 
 function initAudio(){
   audio_ctx = new (window.AudioContext || window.webkitAudioContext)();
-  menu = new Audio('https://al-ro.github.io/projects/jinglejam/music/Main_Menu_C_WITH_MELODY.wav');
-  theme3 = new Audio('https://al-ro.github.io/projects/jinglejam/music/LVL3.wav');
-  laser = new Audio('https://al-ro.github.io/projects/jinglejam/music/laser(hit).wav');
-  end = new Audio('https://al-ro.github.io/projects/jinglejam/music/CompletionMusic.wav');
-  pickup = new Audio('https://al-ro.github.io/projects/jinglejam/music/powerUp.wav');
-  delivery = new Audio('https://al-ro.github.io/projects/jinglejam/music/item_delivery_short.wav');
-  damage = new Audio('https://al-ro.github.io/projects/jinglejam/music/Damage_Sound.wav');
-  credits = new Audio('https://al-ro.github.io/projects/jinglejam/music/End_Music_Melody.wav');
+  menu = new Audio('./music/Main_Menu_C_WITH_MELODY.wav');
+  theme3 = new Audio('./music/LVL3.wav');
+  laser = new Audio('./music/laser(hit).wav');
+  end = new Audio('./music/CompletionMusic.wav');
+  pickup = new Audio('./music/powerUp.wav');
+  delivery = new Audio('./music/item_delivery_short.wav');
+  damage = new Audio('./music/Damage_Sound.wav');
+  credits = new Audio('./music/End_Music_Melody.wav');
   theme = theme3;
   
   songs.push(theme3);
