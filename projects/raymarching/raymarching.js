@@ -76,13 +76,14 @@ if(mobile){
 
   var vertexSource = `
     attribute vec2 position;
-  void main() {
-    gl_Position = vec4(position, 0.0, 1.0);
-  }
+    void main() {
+      gl_Position = vec4(position, 0.0, 1.0);
+    }
   `;
 
   var fragmentSource = `
-    precision highp float;
+
+  precision highp float;
 
   uniform float width;
   uniform float height;
@@ -97,7 +98,7 @@ if(mobile){
   const float MAX_DIST = 100.0;
   const float EPSILON = 1e-4;
   const float PI = 3.1415;
-  const float shadow_sharpness = 64.0;
+  const float SHADOW_SHARPNESS = 64.0;
 
   struct Material{
     vec3 ambientColour;
@@ -113,15 +114,15 @@ if(mobile){
     vec3 position;
     vec3 colour; 
     //Attenuation variables
-    float attn_linear;
-    float attn_quad;
+    float attnLinear;
+    float attnQuad;
   };
 
-  vec4 getColour(vec3 cameraPos, vec3 rayDir, float dist);
+  vec3 getColour(vec3 cameraPos, vec3 rayDir, float dist);
 
-  Material sphere_material = Material(vec3(0.9, 0.9, 0.9), vec3(1.0, 1.0, 1.0), vec3(1.0), 0.8, 1.0, 128.0, 1.0);
-  Material ring_material = Material(vec3(0.9, 0.6, 0.0), vec3(1.0, 0.7, 0.2), vec3(1.0), 0.4, 0.9, 128.0, 1.0);
-  Material floor_material = Material(vec3(0.8), vec3(1.0), vec3(1.0), 0.6, 0.7, 128.0, 0.0);
+  Material sphereMaterial = Material(vec3(0.9, 0.9, 0.9), vec3(1.0, 1.0, 1.0), vec3(1.0), 0.8, 1.0, 128.0, 1.0);
+  Material ringMaterial = Material(vec3(0.9, 0.4, 0.0), vec3(1.0, 0.5, 0.0), vec3(1.0), 0.2, 1.0, 128.0, 1.0);
+  Material floorMaterial = Material(vec3(0.8), vec3(1.0), vec3(1.0), 0.2, 1.0, 128.0, 0.0);
 
   Light light = Light(vec3(-1.0, 4.5, -1.0), vec3(1.0), 0.09, 0.032);
 
@@ -129,7 +130,7 @@ if(mobile){
     return 2.0 * cross(q.xyz, p * q.w + cross(q.xyz, p)) + p;
   }
 
-  vec3 rotate_xyz(vec3 p, float angle){
+  vec3 rotateXYZ(vec3 p, float angle){
     vec3 position = p;
     float sa = sin(angle*0.5);
     float ca = cos(angle*0.5);
@@ -161,9 +162,9 @@ if(mobile){
       c = vec3(1.0, 1.0, 0.0);
     }
 
-    vec3 col = mix(sphere_material.diffuseColour, c, weight);
-    sphere_material.ambientColour = 0.8*col;
-    sphere_material.diffuseColour = col;
+    vec3 col = mix(sphereMaterial.diffuseColour, c, weight);
+    sphereMaterial.ambientColour = 0.8*col;
+    sphereMaterial.diffuseColour = col;
   }
 
   float armillaryScene(vec3 position){
@@ -176,7 +177,7 @@ if(mobile){
     float radius = 1.0;
 
     //Centre
-    position = rotate_xyz(position, angle);
+    position = rotateXYZ(position, angle);
     float dist = max(sphereSDF(position, radius), torusSDF(position, 0.1, radius));
 
     //Middle
@@ -184,7 +185,7 @@ if(mobile){
     position = pos;
 
     angle = 0.4*time + 0.2;
-    position = rotate_xyz(position, angle);
+    position = rotateXYZ(position, angle);
     radius = 1.2;
     dist =  min(max(sphereSDF(position, radius), torusSDF(position, 0.1, radius)), dist);
 
@@ -192,7 +193,7 @@ if(mobile){
     //Undo middle rotation
     position = pos;
     angle = 0.4*-time;
-    position = rotate_xyz(position, angle);
+    position = rotateXYZ(position, angle);
     radius = 1.4;
     dist =  min(max(sphereSDF(position, radius), torusSDF(position, 0.1, radius)), dist);;
     return dist;
@@ -353,10 +354,10 @@ if(mobile){
     return (0.5 - 0.5*s.x*s.y) > 0.5;
   }
 
-  vec4 reflection(vec3 position, vec3 rayDir, vec3 normal){
+  vec3 reflection(vec3 position, vec3 rayDir, vec3 normal){
     vec3 refDir = normalize(reflect(rayDir, normal));
     float dist = distanceToScene(position + normal * EPSILON, refDir, MIN_DIST, MAX_DIST);
-    vec4 col = getColour(position, refDir, dist);
+    vec3 col = getColour(position, refDir, dist);
     return col;
   }
 
@@ -365,15 +366,15 @@ if(mobile){
       Material material, Light light){
 
     //Create checkered pattern on the floor that fades in the distance
-    if(material == floor_material){
+    if(material == floorMaterial){
       float weight = smoothstep(0.0, 0.5, length(cameraPosition - position)/MAX_DIST);
-      vec3 darker_ambient = material.ambientColour * 0.5;
-      vec3 mixed_ambient = (darker_ambient + material.ambientColour) * 0.5;
-      darker_ambient = mix(darker_ambient, mixed_ambient, weight);
-      material.ambientColour = mix(material.ambientColour, mixed_ambient, weight);
+      vec3 darkerAmbient = vec3(0.0);
+      vec3 mixedAmbient = (darkerAmbient + material.ambientColour) * 0.5;
+      darkerAmbient = mix(darkerAmbient, mixedAmbient, weight);
+      material.ambientColour = mix(material.ambientColour, mixedAmbient, weight);
 
       if(isEven(0.5*position)){
-        material.ambientColour = darker_ambient;
+        material.ambientColour = darkerAmbient;
       }
     }
 
@@ -396,11 +397,11 @@ if(mobile){
     vec3 specular = spec * material.specularColour * light.colour;   
 
     //https://learnopengl.com/Lighting/Light-casters
-    float attenuation = 1.0 / (1.0 + light.attn_linear * distToLight + 
-        light.attn_quad * (distToLight * distToLight)); 
+    float attenuation = 1.0 / (1.0 + light.attnLinear * distToLight + 
+        light.attnQuad * (distToLight * distToLight)); 
     //Path to light blocked     
     float shadow = softShadow(position + normal * EPSILON * 8.0, lightDirection, MIN_DIST,
-        distToLight, shadow_sharpness);
+        distToLight, SHADOW_SHARPNESS);
     //Get ambient occlusion
     float ao = ambientOcclusion(position, normal);
 
@@ -413,55 +414,55 @@ if(mobile){
 
   Material getMaterial(int id){
     if(id == 0){
-      return floor_material;
+      return floorMaterial;
     }else{
       if(scene == 0){
-        return ring_material;
+        return ringMaterial;
       }else{
-        return sphere_material;
+        return sphereMaterial;
       }
     }
   }
 
-  float distToFloor(vec3 cameraPos, vec3 rayDir, vec3 floor_norm){
+  float distToFloor(vec3 cameraPos, vec3 rayDir, vec3 floorNorm){
     //Find the distance to the floor as the hypotenuse of a triangle defined by
     //the height of the camera and the angle between the ray direction and the
     //negative floor normal
-    return  abs(cameraPos.y/sin(PI*0.5 - acos(dot(rayDir, -floor_norm))));
+    return  abs(cameraPos.y/sin(PI*0.5 - acos(dot(rayDir, -floorNorm))));
   }
 
-  vec4 getColour(vec3 cameraPos, vec3 rayDir, float dist){
+  vec3 getColour(vec3 cameraPos, vec3 rayDir, float dist){
 
     bool floor_ = false;
-    vec3 floor_norm = vec3(0.0, 1.0, 0.0);
-    float floor_dist = -1.0;
+    vec3 floorNorm = vec3(0.0, 1.0, 0.0);
+    float floorDist = -1.0;
 
     //If ray points below the XZ plane, and the distance to the floor is smaller
     //than what is returned by the ray (either surface or max), render the floor
     if(rayDir.y < -EPSILON){
-      floor_dist = distToFloor(cameraPos, rayDir, floor_norm);
+      floorDist = distToFloor(cameraPos, rayDir, floorNorm);
       //Is the floor closer than other distances?
-      floor_ = dist > floor_dist;
+      floor_ = dist > floorDist;
     }
 
     if(floor_){    
-      dist = floor_dist;
+      dist = floorDist;
     }
 
     //If the ray endpoint is not at a surface
     if (dist > MAX_DIST - EPSILON) {
       //If not pointing to floor, return sky colour
       if(!floor_){
-        float weight = smoothstep(0.45, 0.6, pow(0.5 + 0.5 * rayDir.y, 1.0));
-        return mix(vec4(0.7,0.82,0.92,1), vec4(0.2,0.37,0.68,1), weight);
+	float weight = smoothstep(-0.2, 0.1, rayDir.y);
+	return mix(vec3(0.75, 0.87, 0.93), vec3(0.12, 0.29, 0.55), weight);
       }
     }
 
     //Else, determine the surface colour
     vec3 position = cameraPos + rayDir * dist;
-    vec3 normal = floor_ ? floor_norm : estimateNormal(position);
-    vec3 col = phongShading(position, normal, cameraPos, getMaterial(floor_ ? 0 : 1),light);
-    return vec4(col, 1.0);
+    vec3 normal = floor_ ? floorNorm : estimateNormal(position);
+    vec3 col = phongShading(position, normal, cameraPos, getMaterial(floor_ ? 0 : 1), light);
+    return col;
   }
 
   //https://learnopengl.com/PBR/Theory
@@ -488,31 +489,33 @@ if(mobile){
     //Transform the ray to point in the correct direction
     rayDir = viewMatrix * rayDir;
 
-    vec3 floor_norm = vec3(0.0,1.0,0.0);
+    vec3 floorNorm = vec3(0.0,1.0,0.0);
 
     //Find the distance to where the ray stops
     float dist = distanceToScene(cameraPos, rayDir, MIN_DIST, MAX_DIST);
 
     vec3 position = cameraPos + rayDir * dist;
     vec3 normal = estimateNormal(position);
-    vec4 col = getColour(cameraPos, rayDir, dist);
+    vec3 col = getColour(cameraPos, rayDir, dist);
 
     //If object in scene
     if (dist < MAX_DIST - EPSILON){
-      vec4 reflectedCol = reflection(position, rayDir, normal);
+      vec3 reflectedCol = reflection(position, rayDir, normal);
       float fresnel = fresnelSchlick(cameraPos, position, normal);
       col += reflectedCol * fresnel;
     }
 
     //If floor
     if(rayDir.y < -EPSILON){
-      float floor_dist = distToFloor(cameraPos, rayDir, floor_norm);
-      if(dist > floor_dist){
-        position = cameraPos + rayDir * floor_dist;
-        col = 0.9 * col +  0.1 * vec4(reflection(position, rayDir, floor_norm));
+      float floorDist = distToFloor(cameraPos, rayDir, floorNorm);
+      if(dist > floorDist){
+        position = cameraPos + rayDir * floorDist;
+        col = 0.9 * col +  0.1 * vec3(reflection(position, rayDir, floorNorm));
       }
     }
-    gl_FragColor = col;
+    //Gamma correction 1.0/2.2 = 0.4545...
+    col = pow(col, vec3(0.4545));
+    gl_FragColor = vec4(col, 1.0);
   }
   `;
 
