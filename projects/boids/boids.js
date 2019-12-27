@@ -93,7 +93,7 @@ var hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xdddddd, 1.0);
 scene.add(hemisphereLight);
 
 var directionalLight = new THREE.DirectionalLight(0xa0a0a0, 1);
-directionalLight.position.set(0, 1, -1);
+directionalLight.position.set(0, 1000, -1000);
 scene.add(directionalLight);
 
 //OrbitControls.js for camera manipulation
@@ -109,12 +109,12 @@ var p_geom = new THREE.SphereGeometry( 5, 32, 32 );
 //Brackets for purely aesthetic considerations
 {
   geom.vertices.push(
-      new THREE.Vector3(   0,  0.5,  0 ),
-      new THREE.Vector3( -0.4, -0.6, 0 ),
+      new THREE.Vector3(  0.0,  0.5,  0.0 ),
+      new THREE.Vector3( -0.4, -0.6,  0.0 ),
       new THREE.Vector3( -0.1, -0.6, -0.1 ),
-      new THREE.Vector3(   0, -0.6, 0.15 ),
+      new THREE.Vector3(  0.0, -0.6, 0.15 ),
       new THREE.Vector3(  0.1, -0.6, -0.1 ),
-      new THREE.Vector3(  0.4, -0.6, 0 )
+      new THREE.Vector3(  0.4, -0.6,  0.0 )
       );
 }
 
@@ -129,8 +129,8 @@ geom.rotateX( Math.PI / 2 );
 
 var colour = 0xffffff;
 
-var material = new THREE.MeshStandardMaterial( {color: colour, side: THREE.DoubleSide, flatShading: true} );
-var p_material = new THREE.MeshStandardMaterial( {color: 0xff0000, side: THREE.DoubleSide, flatShading: true} );
+var material = new THREE.MeshStandardMaterial( {color: colour, side: THREE.DoubleSide, flatShading: true, roughness: 0.5, metalness: 0.5} );
+var p_material = new THREE.MeshStandardMaterial( {color: 0xff0000, side: THREE.DoubleSide, flatShading: true, roughness: 0.5, metalness: 0.5} );
 
 //Generate random boids
 for(i = 0; i < boidCount; i++){
