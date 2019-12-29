@@ -61,7 +61,7 @@ function getPos(canvas, evt) {
   var rect = canvas.getBoundingClientRect();
   return {
     x: evt.touches[0].clientX * scale - rect.left,
-      y: evt.touches[0].clientY * scale - rect.top
+    y: evt.touches[0].clientY * scale - rect.top
   };
 }
 
