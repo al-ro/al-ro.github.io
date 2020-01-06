@@ -5,12 +5,6 @@
 //https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/simulating-sky/simulating-colors-of-the-sky
 //https://www.alanzucconi.com/2017/10/10/atmospheric-scattering-1/
 
-//NOTE: Contribution from light rays that hit the planet should be discarded
-//	but this leads to a sharp barrier in the twilight. Current approach leaves a shadow
-//	at the night side because the density inside the planet it very high (possibly leading
-//	to NANs). More correct simulation would take into consideration the Earth's shadow, 
-//	light bending in the atmosphere and multiple scattering. 
-
   const mobile = ( navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/webOS/i)
     || navigator.userAgent.match(/iPhone/i)
@@ -40,11 +34,11 @@ if(mobile){
   }
 
   //Time
-  var sun = 0.0;
-  var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.0};
+  var sun = 0.03;
+  var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.3};
   var isMouseDown = false;
   //Distance of planet
-  var scale = 0.0;
+  var scale = 0.03;
   //Thickness of the atmosphere
   var thickness = 100000.0;
 
@@ -87,9 +81,7 @@ if(mobile){
     vec2 resolution = vec2(width, height);
   
     uniform float sun;
-  
-    //Distance of camera to planet (e.g. 0.0 for ground level, 5.0 for distance view)
-    
+   
     #define PI 3.1415
     
     //Measurements for Earth seen in literature
@@ -153,7 +145,7 @@ if(mobile){
       if(diff < 0.0){
 	return vec3(0.0);
       }
-      return diff * vec3(0.2, 0.2, 0.2) + vec3(0.0);
+      return diff * vec3(0.2, 0.2, 0.2);
     }
 
     //Return colour of the atmosphere or black, if the ray points to space
@@ -220,7 +212,7 @@ if(mobile){
 	  vec3 pos_i = startPos + rayDir * (float(i) * stepSize + 0.5 * stepSize);
 
 	  //Get height of point above surface
-	  float height_i = length(pos_i) - PLANET_RADIUS;
+	  float height_i = max(0.0, length(pos_i) - PLANET_RADIUS);
 
 	  //Density at point
 	  densityRayleigh = exp(-height_i / SCALE_HEIGHT_RAYLEIGH) * stepSize;
@@ -232,23 +224,18 @@ if(mobile){
 
 	  //Find the ray to light
 	  float stepSizeLight = sphereIntersect(pos_i, lightDir, ATMOSPHERE_RADIUS).y / float(STEPS_LIGHT);
-	  vec2 lightRayPlanetIntersect = sphereIntersect(pos_i, lightDir, PLANET_RADIUS);  
 
 	  //Total Rayleigh and Mie optical depth for light ray
 	  float opticalDepthRayleighLight = 0.0;
 	  float opticalDepthMieLight = 0.0;
 
-	  bool lightRayContributes = true;
+	  //To discard contributions from points too far in the shadow of the planet,
+	  //test the light ray against collision with a sphere 95% of the planet size.
+	  //Testing with the actual planet size leads to band artifacts at sunset.
+	  vec2 lightRayPlanetIntersect = sphereIntersect(pos_i, lightDir, PLANET_RADIUS * 0.95);  
 	  bool hitsPlanetLight = (lightRayPlanetIntersect.x <= lightRayPlanetIntersect.y) && lightRayPlanetIntersect.x > 0.0;
 
-	  //If ray to light points into the planet, don't add density from it
-	  //Outright discarding leads to a sharp interface.
-	  if(hitsPlanetLight){
-	    //lightRayContributes = false;
-	  }
-
-	  if(lightRayContributes){
-
+	  if(!hitsPlanetLight){
 	    //Travel from sample point towards the light, stopping at where it enters the atmosphere
 	    for(int j = 0; j < STEPS_LIGHT; j++){
 
@@ -256,24 +243,22 @@ if(mobile){
 	      vec3 pos_j = pos_i + lightDir * (float(j) * stepSizeLight + 0.5 * stepSizeLight);
 
 	      //Get height of point above surface
-	      float height_j = length(pos_j) - PLANET_RADIUS;
+	      float height_j = max(0.0, length(pos_j) - PLANET_RADIUS);
 
 	      //Add density at point to light total
 	      opticalDepthRayleighLight += exp(-height_j / SCALE_HEIGHT_RAYLEIGH) * stepSizeLight;
 	      opticalDepthMieLight += exp(-height_j / SCALE_HEIGHT_MIE) * stepSizeLight;
 	    }
 
-	  }else{
-	    return vec3(0);
+	    vec3 attenuation = exp(-(BETA_RAYLEIGH * (opticalDepthRayleigh + opticalDepthRayleighLight) + (BETA_MIE * (opticalDepthMie + opticalDepthMieLight))));
+	    //Accumulate total scattering
+	    totalRayleigh += densityRayleigh * attenuation;
+	    totalMie += densityMie * attenuation;
 	  }
 
-	  vec3 attenuation = exp(-(BETA_RAYLEIGH * (opticalDepthRayleigh + opticalDepthRayleighLight)  + (BETA_MIE * (opticalDepthMie + opticalDepthMieLight))));
-
-	  //Accumulate total scattering
-	  totalRayleigh += densityRayleigh * attenuation;
-	  totalMie += densityMie * attenuation;
 	}
 
+	//Stop Mie scattering from shining through the planet
 	if(hitsPlanet){
 	  totalMie = vec3(0.0);
 	}
@@ -437,7 +422,8 @@ if(mobile){
     gl.uniform1f(widthHandle, canvas.width);
     gl.uniform1f(heightHandle, canvas.height);
     gl.uniform2f(mouseHandle, mousePosition.x, mousePosition.y);
-    gl.uniform1f(scaleHandle, 0.0);
+    gl.uniform1f(scaleHandle, scale);
+    gl.uniform1f(sunHandle, sun);
     gl.uniform1f(thicknessHandle, thickness);
   }
 
