@@ -52,10 +52,6 @@ if(mobile){
     document.getElementById('cc_1').appendChild(stats.domElement);
   }
 
-  var animate_button = { animate:function(){
-    animate = !animate;
-  }};
-
   //****************** GUI *********************
   var gui = new dat.GUI({ autoPlace: false });
   var customContainer = document.getElementById('gui_container');
@@ -64,7 +60,7 @@ if(mobile){
   }
   gui.add(this, 'sun').min(-0.2).max(6.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(sunHandle, sun);});
   gui.add(this, 'thickness').min(0.0).max(1000000.0).step(100.0).onChange(function(value){gl.uniform1f(thicknessHandle, thickness);});
-  gui.add(animate_button, 'animate');
+  gui.add(this, 'animate');
   gui.close();
 
   //************** Shader sources **************
