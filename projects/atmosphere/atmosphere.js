@@ -35,6 +35,7 @@ if(mobile){
 
   //Time
   var sun = 0.03;
+  var animate = false;
   var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.3};
   var isMouseDown = false;
   //Distance of planet
@@ -51,14 +52,19 @@ if(mobile){
     document.getElementById('cc_1').appendChild(stats.domElement);
   }
 
+  var animate_button = { animate:function(){
+    animate = !animate;
+  }};
+
   //****************** GUI *********************
   var gui = new dat.GUI({ autoPlace: false });
   var customContainer = document.getElementById('gui_container');
   if(!mobile){
     customContainer.appendChild(gui.domElement);
   }
-  gui.add(this, 'sun').min(-0.2).max(6.0).step(0.0001).onChange(function(value){gl.uniform1f(sunHandle, sun)});
-  gui.add(this, 'thickness').min(0.0).max(1000000.0).step(100.0).onChange(function(value){gl.uniform1f(thicknessHandle, thickness)});
+  gui.add(this, 'sun').min(-0.2).max(6.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(sunHandle, sun);});
+  gui.add(this, 'thickness').min(0.0).max(1000000.0).step(100.0).onChange(function(value){gl.uniform1f(thicknessHandle, thickness);});
+  gui.add(animate_button, 'animate');
   gui.close();
 
   //************** Shader sources **************
@@ -250,6 +256,7 @@ if(mobile){
 	      opticalDepthMieLight += exp(-height_j / SCALE_HEIGHT_MIE) * stepSizeLight;
 	    }
 
+	    //Amount of light that makes it to the main sample point
 	    vec3 attenuation = exp(-(BETA_RAYLEIGH * (opticalDepthRayleigh + opticalDepthRayleighLight) + (BETA_MIE * (opticalDepthMie + opticalDepthMieLight))));
 	    //Accumulate total scattering
 	    totalRayleigh += densityRayleigh * attenuation;
@@ -299,17 +306,17 @@ if(mobile){
       mat3 viewMatrix = lookAt(cameraPos, targetDir, up);
   
       //Transform the ray to point in the correct direction
-      rayDir = viewMatrix * rayDir;
+      rayDir = normalize(viewMatrix * rayDir);
   
-      vec2 rayPlanetIntersect = sphereIntersect(cameraPos, normalize(rayDir), PLANET_RADIUS);
+      vec2 rayPlanetIntersect = sphereIntersect(cameraPos, rayDir, PLANET_RADIUS);
   
       vec3 col;
   
       if((rayPlanetIntersect.x <= rayPlanetIntersect.y) && rayPlanetIntersect.x > 0.0){
-        col = renderPlanet(cameraPos, normalize(rayDir), normalize(sunDirection), rayPlanetIntersect);
+        col = renderPlanet(cameraPos, rayDir, sunDirection, rayPlanetIntersect);
       }
   
-      col += 40.0*getSkyColour(cameraPos, normalize(rayDir), 1e12, normalize(sunDirection));
+      col += 40.0*getSkyColour(cameraPos, rayDir, 1e12, sunDirection);
   
       //Tone mapping
       col = 1.0 - exp(-col);
@@ -464,9 +471,25 @@ if(mobile){
   canvas.addEventListener('mousemove', mouseMove);
   canvas.addEventListener('wheel', onScroll);
 
+  function animateSun(dt){
+    sun += dt;
+    sun = sun % 6.283;
+    gl.uniform1f(sunHandle, sun);
+  }
+
   //************** Draw **************
+  var lastFrame = Date.now();
+  var thisFrame;
+  
   function draw(){
     stats.begin();
+  
+    //Update time
+    thisFrame = Date.now();
+    if(animate){
+      animateSun((thisFrame - lastFrame)/3000);	
+    }
+    lastFrame = thisFrame;
 
     //Draw a triangle strip connecting vertices 0-4
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
