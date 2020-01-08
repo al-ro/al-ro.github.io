@@ -536,7 +536,7 @@ function isPowerOf2(value) {
   gl.activeTexture(gl.TEXTURE0);
 var texture = gl.createTexture();
 var texture2 = gl.createTexture();
-loadTexture(gl, texture, 'https://al-ro.github.io/images/lighting/diffuse.jpg', 0);
+loadTexture(gl, texture, 'https://al-ro.github.io/images/lighting/cloudTexture.png', 0);
   //gl.activeTexture(gl.TEXTURE1);
 //loadTexture(gl, texture2, 'https://al-ro.github.io/images/lighting/specular.jpg', 1);
 
