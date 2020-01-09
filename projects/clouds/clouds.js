@@ -41,6 +41,8 @@ if(mobile){
   //Distance of planet
   var scale = 0.03;
   var power = 40.0;
+  var mainStep = 0.0001;
+  var detailStep = 0.0001;
   var exposure = 0.55;
   //Thickness of the atmosphere
   var thickness = 0.6;
@@ -63,6 +65,8 @@ if(mobile){
   gui.add(this, 'time').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(timeHandle, time);});
   gui.add(this, 'thickness').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(thicknessHandle, thickness);});
   gui.add(this, 'power').min(0.0).max(1000.0).step(5.0).onChange(function(value){gl.uniform1f(powerHandle, power);});
+  gui.add(this, 'mainStep').min(0.0).max(0.001).step(0.000001).onChange(function(value){gl.uniform1f(mainStepHandle, mainStep);});
+  gui.add(this, 'detailStep').min(0.0).max(0.001).step(0.000001).onChange(function(value){gl.uniform1f(detailStepHandle, detailStep);});
   gui.add(this, 'exposure').min(0.0).max(1.0).step(0.05).onChange(function(value){gl.uniform1f(exposureHandle, exposure);});
   gui.add(this, 'animate');
   gui.close();
@@ -85,6 +89,8 @@ if(mobile){
     uniform vec2 mouse;
     uniform float time;
     uniform float power;
+    uniform float mainStep;
+    uniform float detailStep;
     uniform float exposure;
     uniform sampler2D cloudShapeTexture;
     uniform sampler2D cloudDetailTexture;
@@ -108,7 +114,7 @@ if(mobile){
   // Cloud parameters
   const float PLANET_RADIUS = 6300e3;
   const float CLOUD_START = 800.0;
-  const float CLOUD_HEIGHT = 600.0;
+  const float CLOUD_HEIGHT = 1600.0;
 
   //const vec3 SUN_POWER = vec3(1.0,0.2,0.1) * 720.;
   #define SUN_POWER power
@@ -235,14 +241,12 @@ if(mobile){
     //p.z += iTime*10.3;
 
     //General density of clouds from Worley texture
-    float largeWeather = clamp((texture2D(cloudShapeTexture, -0.0001*p.xz).r-(1.0-thickness))
-	* 5.0 , 0.0, 2.0);
+    float largeWeather = clamp((texture2D(cloudShapeTexture, -0.00001*p.xz).r-(1.0-thickness)) * 5.0 , 0.0, 2.0);
     //Move cloudscape
     //p.x += time*8.3;
 
     //Add another octave to largeWeather for smaller details
-    float weather = largeWeather*max(0.0, texture2D(cloudShapeTexture, 0.0002
-	  * p.zx).x-(1.0-thickness))/0.72;
+    float weather = largeWeather*max(0.0, texture2D(cloudShapeTexture, 0.00002 * p.xz).x-(1.0-thickness))/0.72;
 
     //Round/fade the top and bottom of the clouds
     weather *= smoothstep(0.0, 0.5, cloudHeight) * smoothstep(1.0, 0.5, cloudHeight);
@@ -560,7 +564,7 @@ var tex1 = gl.createTexture();
 loadTexture(gl, tex1, 'https://al-ro.github.io/projects/clouds/cloudTexture.png');
 gl.activeTexture(gl.TEXTURE1);
 var tex2 = gl.createTexture();
-loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/cloudTexture.png');
+loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/cloudDetails.png');
 
   //Compile shader and combine with source
   function compileShader(shaderSource, shaderType){
@@ -638,12 +642,14 @@ loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/cloudTexture.png'
     var mouseHandle = getUniformLocation(program, 'mouse');
     var scaleHandle = getUniformLocation(program, 'scale');
     var powerHandle = getUniformLocation(program, 'power');
+    var mainStepHandle = getUniformLocation(program, 'mainStep');
+    var detailStepHandle = getUniformLocation(program, 'detailStep');
     var exposureHandle = getUniformLocation(program, 'exposure');
     var thicknessHandle = getUniformLocation(program, 'thickness');
     var shapeTextureHandle = gl.getUniformLocation(program, "cloudShapeTexture");
     var detailTextureHandle = gl.getUniformLocation(program, "cloudDetailTexture");
-    gl.uniform1i(shapeTextureHandle, 0);
-    gl.uniform1i(detailTextureHandle, 1);
+    gl.uniform1i(shapeTextureHandle, 1);
+    gl.uniform1i(detailTextureHandle, 0);
 
     gl.uniform1f(widthHandle, canvas.width);
     gl.uniform1f(heightHandle, canvas.height);
@@ -651,6 +657,8 @@ loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/cloudTexture.png'
     gl.uniform1f(scaleHandle, scale);
     gl.uniform1f(timeHandle, time);
     gl.uniform1f(powerHandle, power);
+    gl.uniform1f(mainStepHandle, mainStep);
+    gl.uniform1f(detailStepHandle, detailStep);
     gl.uniform1f(exposureHandle, exposure);
     gl.uniform1f(thicknessHandle, thickness);
   }
