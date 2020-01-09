@@ -36,16 +36,17 @@ if(mobile){
   //Time
   var time = 0.03;
   var animate = false;
+  var hd = false;
   var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.3};
   var isMouseDown = false;
   //Distance of planet
+  var thickness = 0.3;
   var scale = 0.03;
-  var power = 40.0;
-  var mainStep = 0.0001;
-  var detailStep = 0.0001;
-  var exposure = 0.55;
+  var power = 30.0;
+  var mainStep = 0.0;
+  var detailStep = 0.00;
+  var exposure = 0.5;
   //Thickness of the atmosphere
-  var thickness = 0.6;
 
   stats = new Stats();
   stats.showPanel(0);
@@ -65,10 +66,11 @@ if(mobile){
   gui.add(this, 'time').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(timeHandle, time);});
   gui.add(this, 'thickness').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(thicknessHandle, thickness);});
   gui.add(this, 'power').min(0.0).max(1000.0).step(5.0).onChange(function(value){gl.uniform1f(powerHandle, power);});
-  gui.add(this, 'mainStep').min(0.0).max(0.001).step(0.000001).onChange(function(value){gl.uniform1f(mainStepHandle, mainStep);});
-  gui.add(this, 'detailStep').min(0.0).max(0.001).step(0.000001).onChange(function(value){gl.uniform1f(detailStepHandle, detailStep);});
+  gui.add(this, 'mainStep').min(0.0).max(0.0001).step(0.000001).onChange(function(value){gl.uniform1f(mainStepHandle, mainStep);});
+  gui.add(this, 'detailStep').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.uniform1f(detailStepHandle, detailStep);});
   gui.add(this, 'exposure').min(0.0).max(1.0).step(0.05).onChange(function(value){gl.uniform1f(exposureHandle, exposure);});
   gui.add(this, 'animate');
+  gui.add(this, 'hd').listen().onChange(function(value){gl.uniform1i(hdHandle, hd);});
   gui.close();
 
   //************** Shader sources **************
@@ -94,14 +96,15 @@ if(mobile){
     uniform float exposure;
     uniform sampler2D cloudShapeTexture;
     uniform sampler2D cloudDetailTexture;
+    uniform bool HD;
 
   //#define VOLUME_TEXTURES
   #define NOISE_TEXTURES
 
   //#define HD
 
-    const int STEPS_PRIMARY = 32;//fast ? 13 : 21;   
-    const int STEPS_LIGHT = 16;//fast ? 7 : 3;
+    const int STEPS_PRIMARY = 40;//fast ? 13 : 21;   
+    const int STEPS_LIGHT = 20;//fast ? 7 : 3;
 #ifdef HD
     STEPS_PRIMARY = 128;
 #endif
@@ -114,7 +117,7 @@ if(mobile){
   // Cloud parameters
   const float PLANET_RADIUS = 6300e3;
   const float CLOUD_START = 800.0;
-  const float CLOUD_HEIGHT = 1600.0;
+  const float CLOUD_HEIGHT = 2600.0;
 
   //const vec3 SUN_POWER = vec3(1.0,0.2,0.1) * 720.;
   #define SUN_POWER power
@@ -132,6 +135,14 @@ if(mobile){
     vec2 xy = fragCoord - resolution.xy / 2.0;
     float z = resolution.y / tan(radians(fieldOfView) / 2.0);
     return normalize(vec3(xy, -z));
+  }
+
+  float remap(float x, float low1, float high1, float low2, float high2){
+    return low2 + (x - low1) * (high2 - low2) / (high1 - low1);
+  }
+  
+  float saturate(float x){
+    return clamp(x, 0.0, 1.0);
   }
 
   // Noise generation functions (by iq)
@@ -153,7 +164,7 @@ if(mobile){
     //G and A channels are R and B translated by (37.,17.) 
     //The 2D texture is an atlas of slices of a 3D noise
     vec2 uv = (p.xy+vec2(37.0,17.0)*p.z) + f.xy;
-    vec2 rg = texture2D(cloudDetailTexture, (uv+0.5)/512.0).xx;
+    vec2 rg = 1.0-texture2D(cloudDetailTexture, (uv+0.5)/32.0).xx;
     return mix( rg.x, rg.y, f.z );
   }
 
@@ -241,21 +252,22 @@ if(mobile){
     //p.z += iTime*10.3;
 
     //General density of clouds from Worley texture
-    float largeWeather = clamp((texture2D(cloudShapeTexture, -0.00001*p.xz).r-(1.0-thickness)) * 5.0 , 0.0, 2.0);
+    float shape = clamp((texture2D(cloudShapeTexture, -0.00001*p.xz).r-(1.0-thickness)) * 5.0 , 0.0, 2.0);
     //Move cloudscape
     //p.x += time*8.3;
 
     //Add another octave to largeWeather for smaller details
-    float weather = largeWeather*max(0.0, texture2D(cloudShapeTexture, 0.00002 * p.xz).x-(1.0-thickness))/0.72;
+    //float weather = largeWeather;// * max(0.0, texture2D(cloudShapeTexture, 0.00002 * p.xz).x-(1.0-thickness))/0.72;
 
     //Round/fade the top and bottom of the clouds
-    weather *= smoothstep(0.0, 0.5, cloudHeight) * smoothstep(1.0, 0.5, cloudHeight);
+    shape -= saturate(remap(cloudHeight, 0.0, 0.07, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.03, 1.0, 0.0, 1.0));
+    //weather *= smoothstep(0.0, 0.05, cloudHeight) * smoothstep(1.0, 0.9, cloudHeight);
 
     //A function to further shape the clouds. Create your own to control visuals
-    float cloudShape = pow(weather, 0.3+1.5*smoothstep(0., 2.0, cloudHeight));
+    //float cloudShape = pow(shape, 1.0);//pow(weather, 0.3+1.5*smoothstep(0., 2.0, cloudHeight));
 
     //Early exit from empty space
-    if(cloudShape <= 0.0){
+    if(shape <= 0.0){
       return 0.0;    
     }
 
@@ -263,25 +275,28 @@ if(mobile){
     //p.x += time*12.3;
 
     //Carving clouds out of large slabs (p * 0.01)
-    float den = cloudShape-0.7*fbm(p*.00001);
-
+    //float den = shape-fbm(p*mainStep);
+    float detail = texture2D(cloudDetailTexture, mainStep * p.xz).r;
+    shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
+    return shape;
+/*
     //Early exit from empty space
     if(den <= 0.0){
       return 0.0;
     }
 
     if(fast){
-      return largeWeather*0.2*min(1.0, 5.0*den);
+      return shape*0.2*min(1.0, 5.0*den);
     }
 
     //Moving details on cloud surface
     //p.y += time*15.2;
 
     //Carving details out of clouds
-    den = max(0.0, den-0.2*fbm(p*0.00005));
+    //den = den*fbm(p*detailStep);
 
-    return largeWeather*0.2*min(1.0, 5.0*den);
-
+    return shape * den;//0.2*min(1.0, 5.0*den);
+*/
   }
 
   float HenyeyGreenstein(float g, float costh){
@@ -331,7 +346,10 @@ if(mobile){
 
 
     //Collect total density along light ray
-    for(int j=0; j<STEPS_LIGHT; j++){
+    for(int j=0; j<64; j++){
+      if(!HD){
+	if(j == STEPS_LIGHT){break;}
+      }
       float cloudHeight;
       lighRayDen += clouds(p + sunDirection * float(j) * stepL, cloudHeight, fast);
     }    
@@ -358,7 +376,7 @@ if(mobile){
   }
 
 
-  vec3 skyRay(vec3 org, vec3 dir, vec3 sunDirection, bool fast){
+  vec3 skyRay(vec3 org, vec3 dir, vec3 sunDirection, bool fast, out float totalTransmittance){
 
     //return 12.5 * vec3(dot(dir, vec3(1.0, 0.0, 0.0)));
     //The limits of the cloud shell
@@ -380,10 +398,15 @@ if(mobile){
     //The point at which the ray enters the cloud shell
     vec3 p = org + distToAtmStart * dir;    
     //Step size
-    float stepS = (distToAtmEnd-distToAtmStart) / float(STEPS_PRIMARY); 
+    float stepS;
+    if(HD){
+      stepS = (distToAtmEnd-distToAtmStart) / float(128); 
+    }else{
+      stepS = (distToAtmEnd-distToAtmStart) / float(STEPS_PRIMARY); 
+    }
 
     //Variable to track transmittance along view ray
-    float totalTransmittance = 1.0;    
+    totalTransmittance = 1.0;    
 
     float mu = dot(sunDirection, dir);
 
@@ -395,8 +418,12 @@ if(mobile){
     p += dir*stepS*hash(dot(dir, vec3(12.256, 2.646, 6.356)));
 
     //If vie direction pointing up
-    if(dir.y > 0.015){
-      for(int i=0; i<STEPS_PRIMARY; i++){
+    if(dir.y > -0.015){
+      for(int i=0; i < 128; i++){
+	if(!HD){
+	  //Who said you can't have variable length for-loops
+	  if(i == STEPS_PRIMARY){break;}
+	}
 
 	float cloudHeight;
 
@@ -407,16 +434,15 @@ if(mobile){
 	if(density > 0.0 ){
 
 	  //Temporary hack for sunlight to cycle from white to orange
-	  float sun = SUN_POWER;// * (mix(vec3(1.0), vec3(1.0, 0.2, 0.05), 1.0-(0.5 + 0.5 * sin(iTime * 0.5))));
+	  float sun = SUN_POWER * (0.5 + 0.5 * mu);// * (mix(vec3(1.0), vec3(1.0, 0.2, 0.05), 1.0-(0.5 + 0.5 * sin(iTime * 0.5))));
 
 	  //Lighten dark shadows at the bottom of clouds
-	  vec3 ambient = vec3(1.0);//mix(vec3(3.0), vec3(10.0), (0.5 + 0.5 * sin(iTime * 0.5)));
+	  vec3 ambient = vec3(mix((1.0), (2.0), cloudHeight));//mix(vec3(3.0), vec3(10.0), (0.5 + 0.5 * sin(iTime * 0.5)));
 	  //(0.5 + 0.6*cloudHeight)*vec3(1)*6.5 + vec3(1.) * max(0.0, 1.0-2.0*cloudHeight);
 
 
 	  //Amount of sunlight that reaches the sample point through the cloud
-	  vec3 luminance = ambient + sun * 
-	    lightRay(p, phaseFunction, density, mu, sunDirection, cloudHeight, fast);        	
+	  vec3 luminance = ambient + sun * lightRay(p, phaseFunction, density, mu, sunDirection, cloudHeight, fast);        	
 
 	  luminance *= density;
 
@@ -438,17 +464,6 @@ if(mobile){
 	p += dir*stepS;
       }
     }
-
-    //vec3 background = vec3(0);//6.0*mix(vec3(0.2, 0.52, 1.0),vec3(0.8, 0.95, 1.0), pow(0.5+0.5*mu, 15.0))
-    //  + mix(vec3(3.5), vec3(0.0), min(1.0, 2.3*dir.y));
-    vec3 background = mix(vec3(1.0), vec3(0.0, 0.0, 1.0), 0.5+0.5*dir.y);
-
-    if(!fast){
-      //Draw sun
-      background += totalTransmittance * vec3(1e4*smoothstep(0.9998, 1.0, mu));
-    }
-
-    color += background * totalTransmittance;
 
     return color;
   }
@@ -482,7 +497,16 @@ if(mobile){
     rayDir = normalize(viewMatrix * rayDir);
     vec3 color = vec3(0.0);
 
-    color = exposure * skyRay(cameraPos, rayDir, sunDirection, false); 
+    float totalTransmittance;
+    color = exposure * skyRay(cameraPos, rayDir, sunDirection, false, totalTransmittance); 
+    vec3 background = mix(vec3(1.0), vec3(0.0, 0.0, 1.0), 0.5+0.5*rayDir.y);
+    float weight = smoothstep(-0.2, 0.1, rayDir.y);
+    background =  mix(vec3(0.75, 0.87, 0.93), vec3(0.12, 0.29, 0.55), weight);
+
+    float mu = dot(sunDirection, rayDir);
+    //Draw sun
+    background += totalTransmittance * vec3(1e4*smoothstep(0.9998, 1.0, mu));
+    color += background * totalTransmittance;
 
     //Why is the returned colour so bright?
     vec3 col = 1.0-exp(-color);
@@ -642,6 +666,7 @@ loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/cloudDetails.png'
     var mouseHandle = getUniformLocation(program, 'mouse');
     var scaleHandle = getUniformLocation(program, 'scale');
     var powerHandle = getUniformLocation(program, 'power');
+    var hdHandle = getUniformLocation(program, 'HD');
     var mainStepHandle = getUniformLocation(program, 'mainStep');
     var detailStepHandle = getUniformLocation(program, 'detailStep');
     var exposureHandle = getUniformLocation(program, 'exposure');
@@ -655,6 +680,7 @@ loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/cloudDetails.png'
     gl.uniform1f(heightHandle, canvas.height);
     gl.uniform2f(mouseHandle, mousePosition.x, mousePosition.y);
     gl.uniform1f(scaleHandle, scale);
+    gl.uniform1i(hdHandle, hd);
     gl.uniform1f(timeHandle, time);
     gl.uniform1f(powerHandle, power);
     gl.uniform1f(mainStepHandle, mainStep);
