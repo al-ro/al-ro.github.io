@@ -40,10 +40,10 @@ if(mobile){
   var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.3};
   var isMouseDown = false;
   //Distance of planet
-  var thickness = 0.3;
+  var thickness = 0.4;
   var scale = 0.03;
   var power = 30.0;
-  var mainStep = 0.0;
+  var mainStep = 0.00005;
   var detailStep = 0.00;
   var exposure = 0.5;
   //Thickness of the atmosphere
@@ -259,8 +259,8 @@ if(mobile){
     //Add another octave to largeWeather for smaller details
     //float weather = largeWeather;// * max(0.0, texture2D(cloudShapeTexture, 0.00002 * p.xz).x-(1.0-thickness))/0.72;
 
-    //Round/fade the top and bottom of the clouds
-    shape -= saturate(remap(cloudHeight, 0.0, 0.07, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.03, 1.0, 0.0, 1.0));
+    //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". Assumes there is no height map data and all clouds default to height 1.0
+    shape *= saturate(remap(cloudHeight, 0.0, 0.1, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.2, 1.0, 1.0, 0.0));
     //weather *= smoothstep(0.0, 0.05, cloudHeight) * smoothstep(1.0, 0.9, cloudHeight);
 
     //A function to further shape the clouds. Create your own to control visuals
