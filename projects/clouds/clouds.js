@@ -35,6 +35,7 @@ if(mobile){
 
   //Time
   var time = 0.03;
+  var density = 1.0;
   var animate = false;
   var hd = false;
   var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.3};
@@ -43,8 +44,9 @@ if(mobile){
   var thickness = 0.5;
   var scale = 0.03;
   var power = 30.0;
-  var detailSize = 0.01;
-  var detailStrength = 0.5;
+  var mainSize = 0.00001;
+  var detailSize = 0.02;
+  var detailStrength = 0.3;
   var exposure = 0.5;
   //Thickness of the atmosphere
 
@@ -63,10 +65,12 @@ if(mobile){
   if(!mobile){
     customContainer.appendChild(gui.domElement);
   }
-  gui.add(this, 'time').min(0.0).max(16.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(timeHandle, time);});
-  gui.add(this, 'thickness').min(0.0).max(256.0).step(1.0).onChange(function(value){gl.uniform1f(thicknessHandle, thickness);});
+  gui.add(this, 'time').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(timeHandle, time);});
+  gui.add(this, 'thickness').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(thicknessHandle, thickness);});
   gui.add(this, 'power').min(0.0).max(1000.0).step(5.0).onChange(function(value){gl.uniform1f(powerHandle, power);});
-  gui.add(this, 'detailSize').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.uniform1f(detailSizeHandle, detailSize);});
+  gui.add(this, 'mainSize').min(0.0).max(0.0001).step(0.000001).onChange(function(value){gl.uniform1f(mainSizeHandle, mainSize);});
+  gui.add(this, 'density').min(0.0).max(2.2).step(0.001).onChange(function(value){gl.uniform1f(densityHandle, density);});
+  gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.uniform1f(detailSizeHandle, detailSize);});
   gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(detailStrengthHandle, detailStrength);});
   gui.add(this, 'exposure').min(0.0).max(1.0).step(0.05).onChange(function(value){gl.uniform1f(exposureHandle, exposure);});
   gui.add(this, 'animate');
@@ -91,6 +95,8 @@ if(mobile){
     uniform vec2 mouse;
     uniform float time;
     uniform float power;
+    uniform float density;
+    uniform float mainSize;
     uniform float detailSize;
     uniform float detailStrength;
     uniform float exposure;
@@ -155,20 +161,6 @@ if(mobile){
     return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);
   }
 
-/*
-  float noise( in vec3 x ){
-    vec3 p = floor(x);
-    vec3 f = fract(x);
-    //cubic smoothing, to give the noise that rounded look
-    f = f*f*(3.0-2.0*f);
-    //This is hardcoded for the specific texture on shadertoy where 
-    //G and A channels are R and B translated by (37.,17.) 
-    //The 2D texture is an atlas of slices of a 3D noise
-    vec2 uv = (p.xy);
-    vec2 rg = 1.0-texture2D(cloudDetailTexture, (uv+0.5)/256.0).xx;
-    return mix( rg.x, rg.y, f.z );
-  }
-*/
   float getCloudDetail(vec3 pos){
 
     //Change from Y being height to Z being height
@@ -182,54 +174,11 @@ if(mobile){
     float tileX = level - tileY * 6.0; 
     vec2 offset = 32.0 * vec2(tileX, tileY) + 2.0 * vec2(tileX, tileY) + 1.0;
     vec2 pixel = coord.xy + offset;
-    //pixel.xy *= 10.0;
-    float data0 = texture2D(cloudDetailTexture, pixel/204.0).x;
-
-    coord.z = mod(p.z + 1.0, 36.0);
-    level = floor(coord.z);
-    tileY = floor(level/6.0); 
-    tileX = level - tileY * 6.0; 
-    offset = 32.0 * vec2(tileX, tileY) + 2.0 * vec2(tileX, tileY) + 1.0;
-    pixel = coord.xy + offset;
-    //pixel.xy *= 10.0;
-    float data1 = texture2D(cloudDetailTexture, pixel/204.0).x;
-
-    return mix(data0, data0, 1.0-f);
+    vec2 data0 = texture2D(cloudDetailTexture, mod(pixel, 204.0)/256.0).xy;
+    return mix(data0.x, data0.y, f);
   }
 
-  float noise( in vec2 p ) {
-    vec2 i = floor( p );
-    vec2 f = fract( p );
-    //cubic smoothing, to give the noise that rounded look
-    f = f*f*(3.0-2.0*f);
-//#ifdef NOISE_TEXTURES
-    //return texture2D(iChannel3, (i+f+vec2(0.5))/64.0, 0.0).x*2.0 -1.0;
-//#else    
-    return -1.0+2.0*mix( mix( hash( i + vec2(0.0,0.0) ), 
-	  hash( i + vec2(1.0,0.0) ), f.x),
-	  mix( hash( i + vec2(0.0,1.0) ), 
-	  hash( i + vec2(1.0,1.0) ), f.x), f.y);
-//#endif
-  }
 
-/*
-  //Fractal brownian motion
-  //Remove matrix
-  float fbm( vec3 p ){
-    //Matrix rotation probably unnecessary for clouds
-    mat3 m = mat3( 0.00,  0.80,  0.60,
-	-0.80,  0.36, -0.48,
-	-0.60, -0.48,  0.64 );    
-    float f;
-    //Octave increases by 2.0N times is apparently to avoid small repetition artefacts
-    f  = 0.5000*noise( p ); //p = m*p*2.02;
-    p = p * 2.02;
-    f += 0.2500*noise( p ); //p = m*p*2.03;
-    p = p * 2.03;
-    f += 0.1250*noise( p );
-    return f;
-  }
-*/
   //Return first intersection in front of the camera
   float intersectSphere(vec3 origin, vec3 dir, vec3 spherePos, float sphereRad){
     vec3 oc = origin - spherePos;
@@ -278,61 +227,29 @@ if(mobile){
     //What fraction through the shell is the point situated
     cloudHeight = clamp((atmoHeight-CLOUD_START)/(CLOUD_HEIGHT), 0.0, 1.0);
 
-    //Move cloudscape
-    //p.z += iTime*10.3;
+    //General density of clouds from Perlin-Worley texture
+    float shape = clamp((texture2D(cloudShapeTexture, mainSize*p.xz).r - (1.0-thickness)) * 5.0 , 0.0, 2.0);
 
-    //General density of clouds from Worley texture
-    float shape = clamp((texture2D(cloudShapeTexture, -0.00001*p.xz).r-(1.0-thickness)) * 5.0 , 0.0, 2.0);
-    //Move cloudscape
-    //p.x += time*8.3;
-
-    //Add another octave to largeWeather for smaller details
-    //float weather = largeWeather;// * max(0.0, texture2D(cloudShapeTexture, 0.00002 * p.xz).x-(1.0-thickness))/0.72;
-
-    //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". Assumes there is no height map data and all clouds default to height 1.0
-    shape *= saturate(remap(cloudHeight, 0.0, 0.1, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.2, 1.0, 1.0, 0.0));
-    //weather *= smoothstep(0.0, 0.05, cloudHeight) * smoothstep(1.0, 0.9, cloudHeight);
-
-    //A function to further shape the clouds. Create your own to control visuals
-    //float cloudShape = pow(shape, 1.0);//pow(weather, 0.3+1.5*smoothstep(0., 2.0, cloudHeight));
+    //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
+    //Assumes there is no height map data and all clouds default to height 1.0
+    shape *= saturate(remap(cloudHeight, 0.0, 0.3, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.2, 1.0, 1.0, 0.0));
 
     //Early exit from empty space
     if(shape <= 0.0){
       return 0.0;    
     }
 
-    //Moving details on cloud surface
-    //p.x += time*12.3;
-
-    //Carving clouds out of large slabs (p * 0.01)
-    //float den = shape-fbm(p*detailSize);
-    //float detail = texture2D(cloudDetailTexture, detailSize * p.xz).r;
+    if(shape < 0.5){
+      //shape = pow(shape, 1.1);
+    }
+    //Carving clouds out of large slabs
     float detail = detailStrength*getCloudDetail(detailSize * p);
-    //if(shape < 0.5){
-      shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
-    //detail = 0.5*detailStrength*getCloudDetail(2.0 * detailSize * p);
-      //shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
-    //}
+    shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
+    detail = 0.5*detailStrength*getCloudDetail(0.2 * detailSize * p);
+    shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
+
 
     return shape;
-/*
-    //Early exit from empty space
-    if(den <= 0.0){
-      return 0.0;
-    }
-
-    if(fast){
-      return shape*0.2*min(1.0, 5.0*den);
-    }
-
-    //Moving details on cloud surface
-    //p.y += time*15.2;
-
-    //Carving details out of clouds
-    //den = den*fbm(p*detailStrength);
-
-    return shape * den;//0.2*min(1.0, 5.0*den);
-*/
   }
 
   float HenyeyGreenstein(float g, float costh){
@@ -548,16 +465,17 @@ if(mobile){
     //Why is the returned colour so bright?
     vec3 col = 1.0-exp(-color);
     col = pow(color, vec3(0.4545));
+/*
+    vec3 p = vec3(gl_FragCoord.xy-0.5, time);
+    p *= detailSize;
 
-    vec3 p = vec3(gl_FragCoord.xy-0.5, 0.0);
-
-    //col = vec3(getCloudDetail(p));
-    float wi = time;
-    col = vec3(0);
+    col = vec3(getCloudDetail(p));
+    //float wi = time;
+    //col = vec3(0);
     //p.xy = mod(p.xy, 204.0);
-    p *= time;
-      col = vec3(texture2D(cloudDetailTexture, mod(p.xy, thickness)/256.0).xy, 0.0);
-    
+    //p *= time;
+      //col = vec3(texture2D(cloudDetailTexture, mod(p.xy, 204.0)/256.0).xy, 0.0);
+    */
     gl_FragColor = vec4(col, 1.0);
   }
   `;
@@ -712,6 +630,8 @@ loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.p
     var mouseHandle = getUniformLocation(program, 'mouse');
     var scaleHandle = getUniformLocation(program, 'scale');
     var powerHandle = getUniformLocation(program, 'power');
+    var densityHandle = getUniformLocation(program, 'density');
+    var mainSizeHandle = getUniformLocation(program, 'mainSize');
     var hdHandle = getUniformLocation(program, 'HD');
     var detailSizeHandle = getUniformLocation(program, 'detailSize');
     var detailStrengthHandle = getUniformLocation(program, 'detailStrength');
@@ -729,7 +649,9 @@ loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.p
     gl.uniform1i(hdHandle, hd);
     gl.uniform1f(timeHandle, time);
     gl.uniform1f(powerHandle, power);
+    gl.uniform1f(densityHandle, density);
     gl.uniform1f(detailSizeHandle, detailSize);
+    gl.uniform1f(mainSizeHandle, mainSize);
     gl.uniform1f(detailStrengthHandle, detailStrength);
     gl.uniform1f(exposureHandle, exposure);
     gl.uniform1f(thicknessHandle, thickness);
