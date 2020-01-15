@@ -63,8 +63,8 @@ if(mobile){
   if(!mobile){
     customContainer.appendChild(gui.domElement);
   }
-  gui.add(this, 'time').min(0.0).max(600.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(timeHandle, time);});
-  gui.add(this, 'thickness').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(thicknessHandle, thickness);});
+  gui.add(this, 'time').min(0.0).max(16.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(timeHandle, time);});
+  gui.add(this, 'thickness').min(0.0).max(256.0).step(1.0).onChange(function(value){gl.uniform1f(thicknessHandle, thickness);});
   gui.add(this, 'power').min(0.0).max(1000.0).step(5.0).onChange(function(value){gl.uniform1f(powerHandle, power);});
   gui.add(this, 'detailSize').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.uniform1f(detailSizeHandle, detailSize);});
   gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(detailStrengthHandle, detailStrength);});
@@ -549,13 +549,15 @@ if(mobile){
     vec3 col = 1.0-exp(-color);
     col = pow(color, vec3(0.4545));
 
-    vec3 p = vec3(gl_FragCoord.xy - 0.5, time);
+    vec3 p = vec3(gl_FragCoord.xy-0.5, 0.0);
 
-    col = vec3(getCloudDetail(p));
-    col = vec3(texture2D(cloudDetailTexture, p.xy * detailSize).xy, 0.0);
-    if(p.y > 100.5){
-      col = vec3(1);
-    }
+    //col = vec3(getCloudDetail(p));
+    float wi = time;
+    col = vec3(0);
+    //p.xy = mod(p.xy, 204.0);
+    p *= time;
+      col = vec3(texture2D(cloudDetailTexture, mod(p.xy, thickness)/256.0).xy, 0.0);
+    
     gl_FragColor = vec4(col, 1.0);
   }
   `;
