@@ -181,8 +181,8 @@ if(mobile){
     vec2 offset = vec2(tileX, tileY) * 34.0;
     vec2 pixel = coord.xy + offset;
     //pixel.xy *= 10.0;
-    float data0 = texture2D(cloudDetailTexture, pixel/204.0).x;
-
+    vec2 data0 = texture2D(cloudDetailTexture, pixel/204.0).xy;
+/*
     coord.z = mod(coord.z + 1.0, 36.0);
     level = floor(coord.z);
     tileY = floor(level/6.0); 
@@ -191,7 +191,8 @@ if(mobile){
     pixel = coord.xy + offset;
     //pixel.xy *= 10.0;
     float data1 = texture2D(cloudDetailTexture, pixel/204.0).x;
-    return mix(data0, data1, f);
+*/
+    return mix(data0.x, data0.y, f);
   }
 
   float noise( in vec2 p ) {
@@ -622,7 +623,7 @@ var tex1 = gl.createTexture();
 loadTexture(gl, tex1, 'https://al-ro.github.io/projects/clouds/cloudTexture.png');
 gl.activeTexture(gl.TEXTURE1);
 var tex2 = gl.createTexture();
-loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/cloudDetail.png');
+loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.png');
 
   //Compile shader and combine with source
   function compileShader(shaderSource, shaderType){
