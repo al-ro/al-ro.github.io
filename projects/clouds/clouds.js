@@ -40,11 +40,11 @@ if(mobile){
   var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.3};
   var isMouseDown = false;
   //Distance of planet
-  var thickness = 0.4;
+  var thickness = 0.5;
   var scale = 0.03;
   var power = 30.0;
-  var mainStep = 0.00005;
-  var detailStep = 0.00;
+  var detailSize = 0.01;
+  var detailStrength = 0.5;
   var exposure = 0.5;
   //Thickness of the atmosphere
 
@@ -66,8 +66,8 @@ if(mobile){
   gui.add(this, 'time').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(timeHandle, time);});
   gui.add(this, 'thickness').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(thicknessHandle, thickness);});
   gui.add(this, 'power').min(0.0).max(1000.0).step(5.0).onChange(function(value){gl.uniform1f(powerHandle, power);});
-  gui.add(this, 'mainStep').min(0.0).max(0.0001).step(0.000001).onChange(function(value){gl.uniform1f(mainStepHandle, mainStep);});
-  gui.add(this, 'detailStep').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.uniform1f(detailStepHandle, detailStep);});
+  gui.add(this, 'detailSize').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.uniform1f(detailSizeHandle, detailSize);});
+  gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(detailStrengthHandle, detailStrength);});
   gui.add(this, 'exposure').min(0.0).max(1.0).step(0.05).onChange(function(value){gl.uniform1f(exposureHandle, exposure);});
   gui.add(this, 'animate');
   gui.add(this, 'hd').listen().onChange(function(value){gl.uniform1i(hdHandle, hd);});
@@ -91,8 +91,8 @@ if(mobile){
     uniform vec2 mouse;
     uniform float time;
     uniform float power;
-    uniform float mainStep;
-    uniform float detailStep;
+    uniform float detailSize;
+    uniform float detailStrength;
     uniform float exposure;
     uniform sampler2D cloudShapeTexture;
     uniform sampler2D cloudDetailTexture;
@@ -155,6 +155,7 @@ if(mobile){
     return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);
   }
 
+/*
   float noise( in vec3 x ){
     vec3 p = floor(x);
     vec3 f = fract(x);
@@ -163,9 +164,34 @@ if(mobile){
     //This is hardcoded for the specific texture on shadertoy where 
     //G and A channels are R and B translated by (37.,17.) 
     //The 2D texture is an atlas of slices of a 3D noise
-    vec2 uv = (p.xy+vec2(37.0,17.0)*p.z) + f.xy;
-    vec2 rg = 1.0-texture2D(cloudDetailTexture, (uv+0.5)/32.0).xx;
+    vec2 uv = (p.xy);
+    vec2 rg = 1.0-texture2D(cloudDetailTexture, (uv+0.5)/256.0).xx;
     return mix( rg.x, rg.y, f.z );
+  }
+*/
+  float getCloudDetail(vec3 pos){
+
+    vec3 p = vec3(pos.x, pos.z, pos.y);
+    //Pixel coordinates of point in the 3D data
+    vec3 coord = vec3(mod(p.xy, 34.0), mod(p.z, 36.0));
+    float f = fract(coord.z);  
+    float level = floor(coord.z);
+    float tileY = floor(level/6.0); 
+    float tileX = level - tileY * 6.0; 
+    vec2 offset = vec2(tileX, tileY) * 34.0;
+    vec2 pixel = coord.xy + offset;
+    //pixel.xy *= 10.0;
+    float data0 = texture2D(cloudDetailTexture, pixel/204.0).x;
+
+    coord.z = mod(coord.z + 1.0, 36.0);
+    level = floor(coord.z);
+    tileY = floor(level/6.0); 
+    tileX = level - tileY * 6.0; 
+    offset = vec2(tileX, tileY) * 34.0;
+    pixel = coord.xy + offset;
+    //pixel.xy *= 10.0;
+    float data1 = texture2D(cloudDetailTexture, pixel/204.0).x;
+    return mix(data0, data1, f);
   }
 
   float noise( in vec2 p ) {
@@ -183,6 +209,7 @@ if(mobile){
 //#endif
   }
 
+/*
   //Fractal brownian motion
   //Remove matrix
   float fbm( vec3 p ){
@@ -199,7 +226,7 @@ if(mobile){
     f += 0.1250*noise( p );
     return f;
   }
-
+*/
   //Return first intersection in front of the camera
   float intersectSphere(vec3 origin, vec3 dir, vec3 spherePos, float sphereRad){
     vec3 oc = origin - spherePos;
@@ -275,9 +302,15 @@ if(mobile){
     //p.x += time*12.3;
 
     //Carving clouds out of large slabs (p * 0.01)
-    //float den = shape-fbm(p*mainStep);
-    float detail = texture2D(cloudDetailTexture, mainStep * p.xz).r;
-    shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
+    //float den = shape-fbm(p*detailSize);
+    //float detail = texture2D(cloudDetailTexture, detailSize * p.xz).r;
+    float detail = detailStrength*getCloudDetail(detailSize * p);
+    //if(shape < 0.5){
+      shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
+    //detail = 0.5*detailStrength*getCloudDetail(2.0 * detailSize * p);
+      //shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
+    //}
+
     return shape;
 /*
     //Early exit from empty space
@@ -293,7 +326,7 @@ if(mobile){
     //p.y += time*15.2;
 
     //Carving details out of clouds
-    //den = den*fbm(p*detailStep);
+    //den = den*fbm(p*detailStrength);
 
     return shape * den;//0.2*min(1.0, 5.0*den);
 */
@@ -433,6 +466,7 @@ if(mobile){
 	//If there is a cloud at the sample point
 	if(density > 0.0 ){
 
+	  //stepS = 0.1 * stepS;
 	  //Temporary hack for sunlight to cycle from white to orange
 	  float sun = SUN_POWER * (0.5 + 0.5 * mu);// * (mix(vec3(1.0), vec3(1.0, 0.2, 0.05), 1.0-(0.5 + 0.5 * sin(iTime * 0.5))));
 
@@ -588,7 +622,7 @@ var tex1 = gl.createTexture();
 loadTexture(gl, tex1, 'https://al-ro.github.io/projects/clouds/cloudTexture.png');
 gl.activeTexture(gl.TEXTURE1);
 var tex2 = gl.createTexture();
-loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/cloudDetails.png');
+loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/cloudDetail.png');
 
   //Compile shader and combine with source
   function compileShader(shaderSource, shaderType){
@@ -667,14 +701,14 @@ loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/cloudDetails.png'
     var scaleHandle = getUniformLocation(program, 'scale');
     var powerHandle = getUniformLocation(program, 'power');
     var hdHandle = getUniformLocation(program, 'HD');
-    var mainStepHandle = getUniformLocation(program, 'mainStep');
-    var detailStepHandle = getUniformLocation(program, 'detailStep');
+    var detailSizeHandle = getUniformLocation(program, 'detailSize');
+    var detailStrengthHandle = getUniformLocation(program, 'detailStrength');
     var exposureHandle = getUniformLocation(program, 'exposure');
     var thicknessHandle = getUniformLocation(program, 'thickness');
     var shapeTextureHandle = gl.getUniformLocation(program, "cloudShapeTexture");
     var detailTextureHandle = gl.getUniformLocation(program, "cloudDetailTexture");
-    gl.uniform1i(shapeTextureHandle, 1);
-    gl.uniform1i(detailTextureHandle, 0);
+    gl.uniform1i(shapeTextureHandle, 0);
+    gl.uniform1i(detailTextureHandle, 1);
 
     gl.uniform1f(widthHandle, canvas.width);
     gl.uniform1f(heightHandle, canvas.height);
@@ -683,8 +717,8 @@ loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/cloudDetails.png'
     gl.uniform1i(hdHandle, hd);
     gl.uniform1f(timeHandle, time);
     gl.uniform1f(powerHandle, power);
-    gl.uniform1f(mainStepHandle, mainStep);
-    gl.uniform1f(detailStepHandle, detailStep);
+    gl.uniform1f(detailSizeHandle, detailSize);
+    gl.uniform1f(detailStrengthHandle, detailStrength);
     gl.uniform1f(exposureHandle, exposure);
     gl.uniform1f(thicknessHandle, thickness);
   }
