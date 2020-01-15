@@ -63,7 +63,7 @@ if(mobile){
   if(!mobile){
     customContainer.appendChild(gui.domElement);
   }
-  gui.add(this, 'time').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(timeHandle, time);});
+  gui.add(this, 'time').min(0.0).max(600.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(timeHandle, time);});
   gui.add(this, 'thickness').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(thicknessHandle, thickness);});
   gui.add(this, 'power').min(0.0).max(1000.0).step(5.0).onChange(function(value){gl.uniform1f(powerHandle, power);});
   gui.add(this, 'detailSize').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.uniform1f(detailSizeHandle, detailSize);});
@@ -171,28 +171,30 @@ if(mobile){
 */
   float getCloudDetail(vec3 pos){
 
+    //Change from Y being height to Z being height
     vec3 p = vec3(pos.x, pos.z, pos.y);
+
     //Pixel coordinates of point in the 3D data
-    vec3 coord = vec3(mod(p.xy, 34.0), mod(p.z, 36.0));
+    vec3 coord = vec3(mod(p.xy, 32.0), mod(p.z, 36.0));
     float f = fract(coord.z);  
     float level = floor(coord.z);
     float tileY = floor(level/6.0); 
     float tileX = level - tileY * 6.0; 
-    vec2 offset = vec2(tileX, tileY) * 34.0;
+    vec2 offset = 32.0 * vec2(tileX, tileY) + 2.0 * vec2(tileX, tileY) + 1.0;
     vec2 pixel = coord.xy + offset;
     //pixel.xy *= 10.0;
-    vec2 data0 = texture2D(cloudDetailTexture, pixel/204.0).xy;
-/*
-    coord.z = mod(coord.z + 1.0, 36.0);
+    float data0 = texture2D(cloudDetailTexture, pixel/204.0).x;
+
+    coord.z = mod(p.z + 1.0, 36.0);
     level = floor(coord.z);
     tileY = floor(level/6.0); 
     tileX = level - tileY * 6.0; 
-    offset = vec2(tileX, tileY) * 34.0;
+    offset = 32.0 * vec2(tileX, tileY) + 2.0 * vec2(tileX, tileY) + 1.0;
     pixel = coord.xy + offset;
     //pixel.xy *= 10.0;
     float data1 = texture2D(cloudDetailTexture, pixel/204.0).x;
-*/
-    return mix(data0.x, data0.y, f);
+
+    return mix(data0, data0, 1.0-f);
   }
 
   float noise( in vec2 p ) {
@@ -547,6 +549,13 @@ if(mobile){
     vec3 col = 1.0-exp(-color);
     col = pow(color, vec3(0.4545));
 
+    vec3 p = vec3(gl_FragCoord.xy - 0.5, time);
+
+    col = vec3(getCloudDetail(p));
+    col = vec3(texture2D(cloudDetailTexture, p.xy * detailSize).xy, 0.0);
+    if(p.y > 100.5){
+      col = vec3(1);
+    }
     gl_FragColor = vec4(col, 1.0);
   }
   `;
