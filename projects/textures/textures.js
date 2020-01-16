@@ -461,17 +461,19 @@ void main() {
 
   vec4 col = vec4(0,0,0,1);
   //Get Perlin-Worley noise for level l
-  col.r = getTextureForPoint(p, 0);
+  float worleyPerlinNoise = getTextureForPoint(p, 0);
   //Get Worley noise for level l
-  //col.b = getTextureForPoint(p, 1);
+  float worleyNoise = getTextureForPoint(p, 1);
+  col.r = saturate(remap(worleyPerlinNoise, worleyNoise, 1.0, 0.0, 1.0));
 
   p_ = mod(p_ + 1.0, tileRows * tileRows);
   p = p_;
   p.z /= (tileRows*tileRows); 
   //Get Perlin-Worley noise for level l+1
-  col.g = getTextureForPoint(p, 0);
+  worleyPerlinNoise = getTextureForPoint(p, 0);
   //Get Worley noise for level l+1
-  //col.a = getTextureForPoint(p, 1);
+  worleyNoise = getTextureForPoint(p, 1);
+  col.g = saturate(remap(worleyPerlinNoise, worleyNoise, 1.0, 0.0, 1.0));
 
   //Show erroneous values as red
   if((col.x > 1.0) || (col.x < 0.0)){ col = vec4(1,0,0,1); }
