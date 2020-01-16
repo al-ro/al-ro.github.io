@@ -44,9 +44,9 @@ if(mobile){
   var thickness = 0.5;
   var scale = 0.03;
   var power = 30.0;
-  var mainSize = 0.02;
-  var detailSize = 0.02;
-  var detailStrength = 0.0;
+  var mainSize = 0.001;
+  var detailSize = 0.007;
+  var detailStrength = 0.1;
   var exposure = 0.5;
   //Thickness of the atmosphere
 
@@ -68,7 +68,7 @@ if(mobile){
   gui.add(this, 'time').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(timeHandle, time);});
   gui.add(this, 'thickness').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(thicknessHandle, thickness);});
   gui.add(this, 'power').min(0.0).max(1000.0).step(5.0).onChange(function(value){gl.uniform1f(powerHandle, power);});
-  gui.add(this, 'mainSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.uniform1f(mainSizeHandle, mainSize);});
+  gui.add(this, 'mainSize').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.uniform1f(mainSizeHandle, mainSize);});
   gui.add(this, 'density').min(0.0).max(2.2).step(0.001).onChange(function(value){gl.uniform1f(densityHandle, density);});
   gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.uniform1f(detailSizeHandle, detailSize);});
   gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(detailStrengthHandle, detailStrength);});
@@ -186,10 +186,10 @@ if(mobile){
   float getCloudDetail(vec3 pos){
 
     
-    const float textureWidth = 2048.0;
-    const float dataWidth = 1560.0;
-    const float tileRows = 12.0;
-    const vec3 atlasDimensions = vec3(128.0, 128.0, 144.0);
+    const float textureWidth = 256.0;
+    const float dataWidth = 204.0;
+    const float tileRows = 6.0;
+    const vec3 atlasDimensions = vec3(32.0, 32.0, 36.0);
 
     //Change from Y being height to Z being height
     vec3 p = vec3(pos.x, pos.z, pos.y);
@@ -587,11 +587,11 @@ function isPowerOf2(value) {
 
 gl.activeTexture(gl.TEXTURE0);
 var tex1 = gl.createTexture();
-loadTexture(gl, tex1, 'https://al-ro.github.io/projects/clouds/largeCloudTexture.png');
+loadTexture(gl, tex1, 'https://al-ro.github.io/projects/clouds/cloudShapeTexturePacked.png');
 gl.activeTexture(gl.TEXTURE1);
 var tex2 = gl.createTexture();
 //loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.png');
-loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/largeDetailAtlas.png');
+loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.png');
 gl.activeTexture(gl.TEXTURE2);
 var tex3 = gl.createTexture();
 loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoise.png');
