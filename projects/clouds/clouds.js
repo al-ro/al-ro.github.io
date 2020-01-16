@@ -102,6 +102,7 @@ if(mobile){
     uniform float exposure;
     uniform sampler2D cloudShapeTexture;
     uniform sampler2D cloudDetailTexture;
+    uniform sampler2D blueNoiseTexture;
     uniform bool HD;
 
   //#define VOLUME_TEXTURES
@@ -256,6 +257,10 @@ if(mobile){
     return (1.0/(4.0 * 3.1415))  * ((1.0 - g * g) / pow(1.0 + g*g - 2.0*g*costh, 1.5));
   }
 
+  float getBlueNoise(vec3 p){
+    return texture2D(blueNoiseTexture, p.xy).x;
+  }
+
   // From https://www.shadertoy.com/view/4sjBDG
   float numericalMieFit(float costh)
   {
@@ -366,6 +371,7 @@ if(mobile){
     //Curve fitted to a Mie plot
     float phaseFunction = numericalMieFit(mu);
     //float phaseFunction = HenyeyGreenstein(0.3, mu);
+    vec2 resolution = vec2(width, height);
 
     //Introduce noise to eliminate banding/layering artefacts
     p += dir*stepS*hash(dot(dir, vec3(12.256, 2.646, 6.356)));
@@ -476,6 +482,7 @@ if(mobile){
     //p *= time;
       //col = vec3(texture2D(cloudDetailTexture, mod(p.xy, 204.0)/256.0).xy, 0.0);
     */
+    //col = vec3(getBlueNoise(gl_FragCoord.xyx/resolution.xyx));
     gl_FragColor = vec4(col, 1.0);
   }
   `;
@@ -505,7 +512,7 @@ if(mobile){
 //
 // Initialize a texture and load an image.
 // When the image finished loading copy it into the texture.
-//
+
 function loadTexture(gl, texture, url) {
   gl.bindTexture(gl.TEXTURE_2D, texture);
 
@@ -515,13 +522,13 @@ function loadTexture(gl, texture, url) {
   // use it immediately. When the image has finished downloading
   // we'll update the texture with the contents of the image.
   const internalFormat = gl.RGBA;
-  const width = 1;
-  const height = 1;
+  const width_ = 1;
+  const height_ = 1;
   const border = 0;
   const srcFormat = gl.RGBA;
   const srcType = gl.UNSIGNED_BYTE;
   const pixel = new Uint8Array([255, 0, 0, 255]);  // opaque blue
-  gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, width, height, border, srcFormat, srcType, pixel);
+  gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, width_, height_, border, srcFormat, srcType, pixel);
 
   const image = new Image();
   image.onload = function() {
@@ -553,6 +560,9 @@ loadTexture(gl, tex1, 'https://al-ro.github.io/projects/clouds/cloudTexture.png'
 gl.activeTexture(gl.TEXTURE1);
 var tex2 = gl.createTexture();
 loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.png');
+gl.activeTexture(gl.TEXTURE2);
+var tex3 = gl.createTexture();
+loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoise.png');
 
   //Compile shader and combine with source
   function compileShader(shaderSource, shaderType){
@@ -639,8 +649,10 @@ loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.p
     var thicknessHandle = getUniformLocation(program, 'thickness');
     var shapeTextureHandle = gl.getUniformLocation(program, "cloudShapeTexture");
     var detailTextureHandle = gl.getUniformLocation(program, "cloudDetailTexture");
+    var blueNoiseTextureHandle = gl.getUniformLocation(program, "blueNoiseTexture");
     gl.uniform1i(shapeTextureHandle, 0);
     gl.uniform1i(detailTextureHandle, 1);
+    gl.uniform1i(blueNoiseTextureHandle, 2);
 
     gl.uniform1f(widthHandle, canvas.width);
     gl.uniform1f(heightHandle, canvas.height);
