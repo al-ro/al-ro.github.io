@@ -164,18 +164,23 @@ if(mobile){
 
   float getCloudDetail(vec3 pos){
 
+    const float textureWidth = 2048.0;
+    const float dataWidth = 1560.0;
+    const float tileRows = 12.0;
+    const vec3 atlasDimensions = vec3(128.0, 128.0, 144.0);
+
     //Change from Y being height to Z being height
     vec3 p = vec3(pos.x, pos.z, pos.y);
 
     //Pixel coordinates of point in the 3D data
-    vec3 coord = vec3(mod(p.xy, 32.0), mod(p.z, 36.0));
+    vec3 coord = vec3(mod(p, atlasDimensions));
     float f = fract(coord.z);  
     float level = floor(coord.z);
-    float tileY = floor(level/6.0); 
-    float tileX = level - tileY * 6.0; 
-    vec2 offset = 32.0 * vec2(tileX, tileY) + 2.0 * vec2(tileX, tileY) + 1.0;
+    float tileY = floor(level/tileRows); 
+    float tileX = level - tileY * tileRows; 
+    vec2 offset = atlasDimensions.x * vec2(tileX, tileY) + 2.0 * vec2(tileX, tileY) + 1.0;
     vec2 pixel = coord.xy + offset;
-    vec2 data0 = texture2D(cloudDetailTexture, mod(pixel, 204.0)/256.0).xy;
+    vec2 data0 = texture2D(cloudDetailTexture, mod(pixel, dataWidth)/textureWidth).xy;
     return mix(data0.x, data0.y, f);
   }
 
@@ -559,7 +564,8 @@ var tex1 = gl.createTexture();
 loadTexture(gl, tex1, 'https://al-ro.github.io/projects/clouds/cloudTexture.png');
 gl.activeTexture(gl.TEXTURE1);
 var tex2 = gl.createTexture();
-loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.png');
+//loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.png');
+loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/largeDetailAtlas.png');
 gl.activeTexture(gl.TEXTURE2);
 var tex3 = gl.createTexture();
 loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoise.png');
