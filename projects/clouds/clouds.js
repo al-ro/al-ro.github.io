@@ -44,9 +44,9 @@ if(mobile){
   var thickness = 0.5;
   var scale = 0.03;
   var power = 30.0;
-  var mainSize = 0.00001;
+  var mainSize = 0.02;
   var detailSize = 0.02;
-  var detailStrength = 0.3;
+  var detailStrength = 0.0;
   var exposure = 0.5;
   //Thickness of the atmosphere
 
@@ -68,7 +68,7 @@ if(mobile){
   gui.add(this, 'time').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(timeHandle, time);});
   gui.add(this, 'thickness').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(thicknessHandle, thickness);});
   gui.add(this, 'power').min(0.0).max(1000.0).step(5.0).onChange(function(value){gl.uniform1f(powerHandle, power);});
-  gui.add(this, 'mainSize').min(0.0).max(0.0001).step(0.000001).onChange(function(value){gl.uniform1f(mainSizeHandle, mainSize);});
+  gui.add(this, 'mainSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.uniform1f(mainSizeHandle, mainSize);});
   gui.add(this, 'density').min(0.0).max(2.2).step(0.001).onChange(function(value){gl.uniform1f(densityHandle, density);});
   gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.uniform1f(detailSizeHandle, detailSize);});
   gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(detailStrengthHandle, detailStrength);});
@@ -123,8 +123,8 @@ if(mobile){
 
   // Cloud parameters
   const float PLANET_RADIUS = 6300e3;
-  const float CLOUD_START = 800.0;
-  const float CLOUD_HEIGHT = 2600.0;
+  const float CLOUD_START = 400.0;
+  const float CLOUD_HEIGHT = 10000.0;
 
   //const vec3 SUN_POWER = vec3(1.0,0.2,0.1) * 720.;
   #define SUN_POWER power
@@ -162,8 +162,30 @@ if(mobile){
     return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);
   }
 
+  float getCloudShape(vec3 pos){
+    const float textureWidth = 2048.0;
+    const float dataWidth = 1560.0;
+    const float tileRows = 12.0;
+    const vec3 atlasDimensions = vec3(128.0, 128.0, 144.0);
+
+    //Change from Y being height to Z being height
+    vec3 p = vec3(pos.x, pos.z, pos.y);
+
+    //Pixel coordinates of point in the 3D data
+    vec3 coord = vec3(mod(p, atlasDimensions));
+    float f = fract(coord.z);  
+    float level = floor(coord.z);
+    float tileY = floor(level/tileRows); 
+    float tileX = level - tileY * tileRows; 
+    vec2 offset = atlasDimensions.x * vec2(tileX, tileY) + 2.0 * vec2(tileX, tileY) + 1.0;
+    vec2 pixel = coord.xy + offset;
+    vec2 data0 = texture2D(cloudShapeTexture, mod(pixel, dataWidth)/textureWidth).xy;
+    return mix(data0.x, data0.y, f);
+  }
+
   float getCloudDetail(vec3 pos){
 
+    
     const float textureWidth = 2048.0;
     const float dataWidth = 1560.0;
     const float tileRows = 12.0;
@@ -234,7 +256,8 @@ if(mobile){
     cloudHeight = clamp((atmoHeight-CLOUD_START)/(CLOUD_HEIGHT), 0.0, 1.0);
 
     //General density of clouds from Perlin-Worley texture
-    float shape = clamp((texture2D(cloudShapeTexture, mainSize*p.xz).r - (1.0-thickness)) * 5.0 , 0.0, 2.0);
+    //float shape = clamp((getCloudShape(mainSize*p) - (1.0-thickness)) * 5.0 , 0.0, 2.0);
+    float shape = thickness*saturate(getCloudShape(mainSize*p) - 0.5);
 
     //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
     //Assumes there is no height map data and all clouds default to height 1.0
@@ -250,9 +273,12 @@ if(mobile){
     }
     //Carving clouds out of large slabs
     float detail = detailStrength*getCloudDetail(detailSize * p);
+    //sebh code says the following
+    //shape = saturate(remap(shape, -(1.0-detail), 1.0, 0.0, 1.0));
+    //Other sources this
     shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
-    detail = 0.5*detailStrength*getCloudDetail(0.2 * detailSize * p);
-    shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
+    //detail = 0.5*detailStrength*getCloudDetail(0.2 * detailSize * p);
+    //shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
 
 
     return shape;
@@ -561,7 +587,7 @@ function isPowerOf2(value) {
 
 gl.activeTexture(gl.TEXTURE0);
 var tex1 = gl.createTexture();
-loadTexture(gl, tex1, 'https://al-ro.github.io/projects/clouds/cloudTexture.png');
+loadTexture(gl, tex1, 'https://al-ro.github.io/projects/clouds/largeCloudTexture.png');
 gl.activeTexture(gl.TEXTURE1);
 var tex2 = gl.createTexture();
 //loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.png');
