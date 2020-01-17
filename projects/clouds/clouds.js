@@ -632,7 +632,7 @@ var tex2 = gl.createTexture();
 loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.png');
 gl.activeTexture(gl.TEXTURE2);
 var tex3 = gl.createTexture();
-loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoise.png');
+loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoiseSs.png');
 
   //Compile shader and combine with source
   function compileShader(shaderSource, shaderType){
