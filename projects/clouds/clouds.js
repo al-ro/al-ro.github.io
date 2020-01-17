@@ -37,6 +37,7 @@ if(mobile){
   var time = 0.03;
   var density = 1.0;
   var animate = false;
+  var blur = true;
   var hd = false;
   var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.3};
   var isMouseDown = false;
@@ -65,16 +66,17 @@ if(mobile){
   if(!mobile){
     customContainer.appendChild(gui.domElement);
   }
-  gui.add(this, 'time').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(timeHandle, time);});
-  gui.add(this, 'thickness').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(thicknessHandle, thickness);});
-  gui.add(this, 'power').min(0.0).max(1000.0).step(5.0).onChange(function(value){gl.uniform1f(powerHandle, power);});
-  gui.add(this, 'mainSize').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.uniform1f(mainSizeHandle, mainSize);});
-  gui.add(this, 'density').min(0.0).max(2.2).step(0.001).onChange(function(value){gl.uniform1f(densityHandle, density);});
-  gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.uniform1f(detailSizeHandle, detailSize);});
-  gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.uniform1f(detailStrengthHandle, detailStrength);});
-  gui.add(this, 'exposure').min(0.0).max(1.0).step(0.05).onChange(function(value){gl.uniform1f(exposureHandle, exposure);});
+  gui.add(this, 'time').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(timeHandle, time);});
+  gui.add(this, 'thickness').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(thicknessHandle, thickness);});
+  gui.add(this, 'power').min(0.0).max(1000.0).step(5.0).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power);});
+  gui.add(this, 'mainSize').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize);});
+  gui.add(this, 'density').min(0.0).max(2.2).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(densityHandle, density);});
+  gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize);});
+  gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailStrengthHandle, detailStrength);});
+  gui.add(this, 'exposure').min(0.0).max(1.0).step(0.05).onChange(function(value){gl.useProgram(program); gl.uniform1f(exposureHandle, exposure);});
   gui.add(this, 'animate');
-  gui.add(this, 'hd').listen().onChange(function(value){gl.uniform1i(hdHandle, hd);});
+  gui.add(this, 'hd').listen().onChange(function(value){gl.useProgram(program); gl.uniform1i(hdHandle, hd);});
+  gui.add(this, 'blur');
   gui.close();
 
   //************** Shader sources **************
@@ -123,7 +125,7 @@ if(mobile){
 
   // Cloud parameters
   const float PLANET_RADIUS = 6300e3;
-  const float CLOUD_START = 400.0;
+  const float CLOUD_START = 600.0;
   const float CLOUD_HEIGHT = 10000.0;
 
   //const vec3 SUN_POWER = vec3(1.0,0.2,0.1) * 720.;
@@ -518,6 +520,43 @@ if(mobile){
   }
   `;
   
+//****************** Combine shaders ******************
+
+var combineVertexSource = `
+  attribute vec2 position;
+  void main() {
+    gl_Position = vec4(position, 0.0, 1.0);
+  }
+`;
+
+var combineFragmentSource = `
+precision highp float;
+
+varying vec2 texCoord;
+uniform sampler2D srcData;
+uniform float width;
+uniform float height;
+
+void main() {
+  vec2 resolution = vec2(width, height);
+  vec2 offsets[8];
+  offsets[0] = vec2(-1,-1);
+  offsets[1] = vec2(-1, 1);
+  offsets[2] = vec2(1, -1);
+  offsets[3] = vec2(1, 1);
+  offsets[4] = vec2(1, 0);
+  offsets[5] = vec2(0, -1);
+  offsets[6] = vec2(0, 1);
+  offsets[7] = vec2(-1, 0);
+
+  vec3 col = texture2D(srcData, gl_FragCoord.xy / resolution).rgb;
+  for(int i = 0; i < 8; i++){
+    col += texture2D(srcData, (gl_FragCoord.xy + offsets[i])/resolution).rgb;
+  }
+  gl_FragColor = vec4(col/9.0, 1.0);
+}
+`;
+
   //************** Utility functions **************
 
   window.addEventListener('resize', onWindowResize, false);
@@ -590,7 +629,6 @@ var tex1 = gl.createTexture();
 loadTexture(gl, tex1, 'https://al-ro.github.io/projects/clouds/cloudShapeTexturePacked.png');
 gl.activeTexture(gl.TEXTURE1);
 var tex2 = gl.createTexture();
-//loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.png');
 loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.png');
 gl.activeTexture(gl.TEXTURE2);
 var tex3 = gl.createTexture();
@@ -628,6 +666,9 @@ loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoise.png');
   //************** Create shaders **************
 
   if(!mobile){
+
+  var combineVertexShader = compileShader(combineVertexSource, gl.VERTEX_SHADER);
+  var combineFragmentShader = compileShader(combineFragmentSource, gl.FRAGMENT_SHADER);
     //Create vertex and fragment shaders
     var vertexShader = compileShader(vertexSource, gl.VERTEX_SHADER);
     var fragmentShader = compileShader(fragmentSource, gl.FRAGMENT_SHADER);
@@ -639,6 +680,11 @@ loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoise.png');
     gl.linkProgram(program);
 
     gl.useProgram(program);
+
+    var combine_program = gl.createProgram();
+    gl.attachShader(combine_program, combineVertexShader);
+    gl.attachShader(combine_program, combineFragmentShader);
+    gl.linkProgram(combine_program);
 
     //Set up rectangle covering entire canvas 
     var vertexData = new Float32Array([
@@ -699,6 +745,10 @@ loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoise.png');
     gl.uniform1f(detailStrengthHandle, detailStrength);
     gl.uniform1f(exposureHandle, exposure);
     gl.uniform1f(thicknessHandle, thickness);
+
+    var srcDataHandle = gl.getUniformLocation(combine_program, "srcData");
+    var widthHandle = getUniformLocation(combine_program, 'width');
+    var heightHandle = getUniformLocation(combine_program, 'height');
   }
 
 function getPos(canvas, evt) {
@@ -721,6 +771,7 @@ function getPos(canvas, evt) {
       var pos = getPos(canvas, event);
       pos.x *= canvas.width /canvas.clientWidth;
       pos.y *= canvas.height /canvas.clientHeight;
+      gl.useProgram(program);
       gl.uniform2f(mouseHandle, pos.x, pos.y);
     }
   }
@@ -730,6 +781,7 @@ function getPos(canvas, evt) {
     scale += event.deltaY;
 
     scale = Math.min(Math.max(0.0, scale), 5000.0);
+    gl.useProgram(program);
     gl.uniform1f(scaleHandle, scale);
   }
 
@@ -744,13 +796,48 @@ function getPos(canvas, evt) {
     gl.uniform1f(timeHandle, time);
   }
 
+
+function createAndSetupTexture(gl) {
+  var texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  // Set up texture so we can render any size
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+  return texture;
+}
+//Create and bind frame buffer
+var frameBuffer = gl.createFramebuffer();
+frameBuffer.width = canvas.width;
+frameBuffer.height = canvas.height;
+gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+
+//Create and bind texture
+var sceneTexture = createAndSetupTexture(gl);
+//Allocate/send over empty texture data
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, frameBuffer.width, frameBuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+//Assign texture as framebuffer colour attachment
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, sceneTexture, 0);
+
+var counter = 0;
+var limit = 500;
   //************** Draw **************
   var lastFrame = Date.now();
   var thisFrame;
   
   function draw(){
     stats.begin();
-  
+
+    gl.useProgram(program);
+    if(blur){
+      gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+    }else{
+      //Draw to canvas
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
     //Update time
     thisFrame = Date.now();
     if(animate){
@@ -760,9 +847,24 @@ function getPos(canvas, evt) {
 
     //Draw a triangle strip connecting vertices 0-4
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    if(blur){
+      gl.useProgram(combine_program);
+      gl.uniform1f(widthHandle, canvas.width);
+      gl.uniform1f(heightHandle, canvas.height);
+      gl.uniform1i(srcDataHandle, 3);  // texture unit 0
+      gl.activeTexture(gl.TEXTURE3);
+      gl.bindTexture(gl.TEXTURE_2D, sceneTexture);
 
+      //Draw to canvas
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      //Draw a triangle strip connecting vertices 0-4
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
     stats.end();
-    requestAnimationFrame(draw);
+    if(counter < limit){
+      //      counter++;
+      requestAnimationFrame(draw);
+    }
   }
   draw();
 }
