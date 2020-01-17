@@ -851,7 +851,7 @@ var limit = 500;
       gl.useProgram(combine_program);
       gl.uniform1f(widthHandle, canvas.width);
       gl.uniform1f(heightHandle, canvas.height);
-      gl.uniform1i(srcDataHandle, 3);  // texture unit 0
+      gl.uniform1i(srcDataHandle, 2);  // texture unit 0
       gl.activeTexture(gl.TEXTURE3);
       gl.bindTexture(gl.TEXTURE_2D, sceneTexture);
 
