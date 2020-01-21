@@ -34,20 +34,21 @@ if(mobile){
   }
 
   //Time
-  var time = 0.03;
-  var density = 1.0;
+  var time = 0.0;
+  var sun = 0.03;
+  var noise = 0.03;
   var animate = false;
-  var blur = true;
+  var blur = false;
   var hd = false;
   var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.3};
   var isMouseDown = false;
   //Distance of planet
   var thickness = 0.5;
   var scale = 0.03;
-  var power = 30.0;
-  var mainSize = 0.001;
-  var detailSize = 0.007;
-  var detailStrength = 0.1;
+  var power = 10.0;
+  var mainSize = 0.006;
+  var detailSize = 0.03;
+  var detailStrength = 0.07;
   var exposure = 0.5;
   //Thickness of the atmosphere
 
@@ -66,17 +67,17 @@ if(mobile){
   if(!mobile){
     customContainer.appendChild(gui.domElement);
   }
-  gui.add(this, 'time').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(timeHandle, time);});
+  gui.add(this, 'sun').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(sunHandle, sun);});
   gui.add(this, 'thickness').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(thicknessHandle, thickness);});
   gui.add(this, 'power').min(0.0).max(1000.0).step(5.0).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power);});
   gui.add(this, 'mainSize').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize);});
-  gui.add(this, 'density').min(0.0).max(2.2).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(densityHandle, density);});
+  gui.add(this, 'noise').min(0.0).max(0.1).step(0.0001).onChange(function(value){gl.useProgram(program); gl.uniform1f(noiseHandle, noise);});
   gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize);});
   gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailStrengthHandle, detailStrength);});
   gui.add(this, 'exposure').min(0.0).max(1.0).step(0.05).onChange(function(value){gl.useProgram(program); gl.uniform1f(exposureHandle, exposure);});
   gui.add(this, 'animate');
   gui.add(this, 'hd').listen().onChange(function(value){gl.useProgram(program); gl.uniform1i(hdHandle, hd);});
-  gui.add(this, 'blur');
+  gui.add(this, 'blur').onChange(function(value){gl.useProgram(program); gl.uniform1f(widthHandle); gl.uniform1f(heightHandle);gl.useProgram(combine_program); gl.uniform1f(widthHandle); gl.uniform1f(heightHandle);});
   gui.close();
 
   //************** Shader sources **************
@@ -96,8 +97,9 @@ if(mobile){
     uniform float height;
     uniform vec2 mouse;
     uniform float time;
+    uniform float sun;
     uniform float power;
-    uniform float density;
+    uniform float noise;
     uniform float mainSize;
     uniform float detailSize;
     uniform float detailStrength;
@@ -125,8 +127,9 @@ if(mobile){
 
   // Cloud parameters
   const float PLANET_RADIUS = 6300e3;
-  const float CLOUD_START = 600.0;
-  const float CLOUD_HEIGHT = 10000.0;
+  // From Babic thesis, probably same as HZD
+  const float CLOUD_START = 1500.0;
+  const float CLOUD_HEIGHT = 4000.0;
 
   //const vec3 SUN_POWER = vec3(1.0,0.2,0.1) * 720.;
   #define SUN_POWER power
@@ -263,7 +266,7 @@ if(mobile){
 
     //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
     //Assumes there is no height map data and all clouds default to height 1.0
-    shape *= saturate(remap(cloudHeight, 0.0, 0.3, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.2, 1.0, 1.0, 0.0));
+    shape *= saturate(remap(cloudHeight, 0.0, 0.1, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.2, 1.0, 1.0, 0.0));
 
     //Early exit from empty space
     if(shape <= 0.0){
@@ -274,11 +277,18 @@ if(mobile){
       //shape = pow(shape, 1.1);
     }
     //Carving clouds out of large slabs
-    float detail = detailStrength*getCloudDetail(detailSize * p);
+    //p += time * 100.0;
+    float detail = getCloudDetail(detailSize * p);
+    //HZD mentions how inverting the detail noise at the bottom leads to wispy shapes
+    //The visual effect of this is not clear
+    //detail = mix(1.0-detail, 1.0-detail, saturate(cloudHeight * 10.0));
+    detail *= detailStrength;
     //sebh code says the following
     //shape = saturate(remap(shape, -(1.0-detail), 1.0, 0.0, 1.0));
     //Other sources this
     shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
+    //Alter density at the bottom and top of the clouds
+    shape *= saturate(remap(cloudHeight, 0.0, 0.15, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.9, 1.0, 1.0, 0.0)) * 0.5;
     //detail = 0.5*detailStrength*getCloudDetail(0.2 * detailSize * p);
     //shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
 
@@ -292,6 +302,9 @@ if(mobile){
 
   float getBlueNoise(vec3 p){
     return texture2D(blueNoiseTexture, p.xy).x;
+  }
+  float getBlueNoise(vec2 p){
+    return 4.0*texture2D(blueNoiseTexture, p).x;
   }
 
   // From https://www.shadertoy.com/view/4sjBDG
@@ -322,7 +335,7 @@ if(mobile){
   float lightRay(vec3 p, float phaseFunction, float dC, float mu, vec3 sunDirection, float cloudHeight, bool fast){
     int nbSampleLight = fast ? 7 : 3;
 #ifdef HD
-    nbSampleLight = 64;
+    nbSampleLight = 16;
 #endif
     //The distance for which light samples are taken
     //Reduce to 300 for less noise but also less self-shadowing
@@ -333,11 +346,12 @@ if(mobile){
     float lighRayDen = 0.0;    
 
     //Introduce noise to eliminate banding/layering artefacts
-    p += sunDirection*stepL*hash(dot(p, vec3(12.256, 2.646, 6.356)));
+    //p += sunDirection*stepL*hash(dot(p, vec3(12.256, 2.646, 6.356)));
+    p += sunDirection*stepL*getBlueNoise(gl_FragCoord.xy * noise);
 
 
     //Collect total density along light ray
-    for(int j=0; j<64; j++){
+    for(int j=0; j<16; j++){
       if(!HD){
 	if(j == STEPS_LIGHT){break;}
       }
@@ -390,11 +404,13 @@ if(mobile){
     vec3 p = org + distToAtmStart * dir;    
     //Step size
     float stepS;
+    float stepS_;
     if(HD){
       stepS = (distToAtmEnd-distToAtmStart) / float(128); 
     }else{
       stepS = (distToAtmEnd-distToAtmStart) / float(STEPS_PRIMARY); 
     }
+    stepS_ = stepS;
 
     //Variable to track transmittance along view ray
     totalTransmittance = 1.0;    
@@ -407,9 +423,10 @@ if(mobile){
     vec2 resolution = vec2(width, height);
 
     //Introduce noise to eliminate banding/layering artefacts
-    p += dir*stepS*hash(dot(dir, vec3(12.256, 2.646, 6.356)));
+    p += dir*stepS*getBlueNoise(gl_FragCoord.xy*noise);
+    //hash(dot(dir, vec3(12.256, 2.646, 6.356)));
 
-    //If vie direction pointing up
+    //If view direction pointing up
     if(dir.y > -0.015){
       for(int i=0; i < 128; i++){
 	if(!HD){
@@ -421,11 +438,29 @@ if(mobile){
 
 	//Get density and cloud height at sample point
 	float density = clouds(p, cloudHeight, fast);
+/*
+	float dist = 10.0;
+	vec3 delta = dist*vec3(1.0);
+	density += clouds(p + delta, cloudHeight, fast);
+	delta = dist*vec3(-1.0);
+	density += clouds(p + delta, cloudHeight, fast);
+	delta = dist*vec3(1.0, 0.0, 0.0);
+	density += clouds(p + delta, cloudHeight, fast);
+	delta = dist*vec3(0.0, 1.0, 0.0);
+	density += clouds(p + delta, cloudHeight, fast);
+	delta = dist*vec3(0.0, 0.0, 1.0);
+	density += clouds(p + delta, cloudHeight, fast);
+	density /= 6.0;
+*/
 
+	if(density > 0.0){
+	  stepS = 0.5 * stepS_;
+	}else{
+	  stepS = stepS_;
+	}
 	//If there is a cloud at the sample point
 	if(density > 0.0 ){
 
-	  //stepS = 0.1 * stepS;
 	  //Temporary hack for sunlight to cycle from white to orange
 	  float sun = SUN_POWER * (0.5 + 0.5 * mu);// * (mix(vec3(1.0), vec3(1.0, 0.2, 0.05), 1.0-(0.5 + 0.5 * sin(iTime * 0.5))));
 
@@ -454,6 +489,7 @@ if(mobile){
 	    break;
 	  }
 	}
+
 	p += dir*stepS;
       }
     }
@@ -473,7 +509,7 @@ if(mobile){
 
     vec3 cameraPos = vec3(0.0, PLANET_RADIUS + scale, 0.0);
 
-    vec3 sunDirection = normalize(vec3(sin(time), 0.2, -cos(time)));
+    vec3 sunDirection = normalize(vec3(sin(sun), 0.2, -cos(sun)));
     //sunDirection = normalize(vec3(cos(time), 0.5 + 0.5 * sin(time), sin(time)) );
     //sunDirection = vec3(cos(time), 0.5 + 0.5 * sin(time), sin(time));
 
@@ -515,7 +551,8 @@ if(mobile){
     //p *= time;
       //col = vec3(texture2D(cloudDetailTexture, mod(p.xy, 204.0)/256.0).xy, 0.0);
     */
-    //col = vec3(getBlueNoise(gl_FragCoord.xyx/resolution.xyx));
+    vec3 p = cameraPos + rayDir * 100.0;
+    //col = vec3(getBlueNoise(gl_FragCoord.xy/500.0));
     gl_FragColor = vec4(col, 1.0);
   }
   `;
@@ -575,6 +612,11 @@ void main() {
     canvas.height = h;
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    
+    gl.useProgram(program);
+    gl.uniform1f(widthHandle, canvas.width);
+    gl.uniform1f(heightHandle, canvas.height);
+    gl.useProgram(combine_program);
     gl.uniform1f(widthHandle, canvas.width);
     gl.uniform1f(heightHandle, canvas.height);
   }
@@ -632,7 +674,7 @@ var tex2 = gl.createTexture();
 loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.png');
 gl.activeTexture(gl.TEXTURE2);
 var tex3 = gl.createTexture();
-loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoiseSs.png');
+loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoise.png');
 
   //Compile shader and combine with source
   function compileShader(shaderSource, shaderType){
@@ -713,12 +755,13 @@ loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoiseSs.png')
 
     //Set uniform handle
     var timeHandle = getUniformLocation(program, 'time');
+    var sunHandle = getUniformLocation(program, 'sun');
     var widthHandle = getUniformLocation(program, 'width');
     var heightHandle = getUniformLocation(program, 'height');
     var mouseHandle = getUniformLocation(program, 'mouse');
     var scaleHandle = getUniformLocation(program, 'scale');
     var powerHandle = getUniformLocation(program, 'power');
-    var densityHandle = getUniformLocation(program, 'density');
+    var noiseHandle = getUniformLocation(program, 'noise');
     var mainSizeHandle = getUniformLocation(program, 'mainSize');
     var hdHandle = getUniformLocation(program, 'HD');
     var detailSizeHandle = getUniformLocation(program, 'detailSize');
@@ -728,8 +771,12 @@ loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoiseSs.png')
     var shapeTextureHandle = gl.getUniformLocation(program, "cloudShapeTexture");
     var detailTextureHandle = gl.getUniformLocation(program, "cloudDetailTexture");
     var blueNoiseTextureHandle = gl.getUniformLocation(program, "blueNoiseTexture");
+
+    gl.activeTexture(gl.TEXTURE0);
     gl.uniform1i(shapeTextureHandle, 0);
+    gl.activeTexture(gl.TEXTURE1);
     gl.uniform1i(detailTextureHandle, 1);
+    gl.activeTexture(gl.TEXTURE2);
     gl.uniform1i(blueNoiseTextureHandle, 2);
 
     gl.uniform1f(widthHandle, canvas.width);
@@ -738,8 +785,9 @@ loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoiseSs.png')
     gl.uniform1f(scaleHandle, scale);
     gl.uniform1i(hdHandle, hd);
     gl.uniform1f(timeHandle, time);
+    gl.uniform1f(sunHandle, sun);
     gl.uniform1f(powerHandle, power);
-    gl.uniform1f(densityHandle, density);
+    gl.uniform1f(noiseHandle, noise);
     gl.uniform1f(detailSizeHandle, detailSize);
     gl.uniform1f(mainSizeHandle, mainSize);
     gl.uniform1f(detailStrengthHandle, detailStrength);
@@ -791,9 +839,9 @@ function getPos(canvas, evt) {
   canvas.addEventListener('wheel', onScroll);
 
   function animateSun(dt){
-    time += dt;
-    time = time % 6.283;
-    gl.uniform1f(timeHandle, time);
+    sun += dt;
+    sun = sun % 6.283;
+    gl.uniform1f(sunHandle, sun);
   }
 
 
@@ -809,6 +857,7 @@ function createAndSetupTexture(gl) {
 
   return texture;
 }
+gl.activeTexture(gl.TEXTURE3);
 //Create and bind frame buffer
 var frameBuffer = gl.createFramebuffer();
 frameBuffer.width = canvas.width;
@@ -840,18 +889,26 @@ var limit = 500;
     }
     //Update time
     thisFrame = Date.now();
+    
+    time += (thisFrame - lastFrame)/1000;	
     if(animate){
       animateSun((thisFrame - lastFrame)/1000);	
     }
     lastFrame = thisFrame;
 
+    //Send uniforms to program
+    gl.uniform1f(timeHandle, time);
+
+    gl.useProgram(program);
+    gl.uniform1f(widthHandle, canvas.width);
+    gl.uniform1f(heightHandle, canvas.height);
     //Draw a triangle strip connecting vertices 0-4
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     if(blur){
       gl.useProgram(combine_program);
       gl.uniform1f(widthHandle, canvas.width);
       gl.uniform1f(heightHandle, canvas.height);
-      gl.uniform1i(srcDataHandle, 2);  // texture unit 0
+      gl.uniform1i(srcDataHandle, 3);  // texture unit 0
       gl.activeTexture(gl.TEXTURE3);
       gl.bindTexture(gl.TEXTURE_2D, sceneTexture);
 
