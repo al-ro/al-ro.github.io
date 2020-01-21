@@ -17,7 +17,7 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 
 var canvas = document.getElementById("canvas_1");
 
-var WIDTH = 2048;
+var WIDTH = 512;
 var HEIGHT = WIDTH;
 
 canvas.width = WIDTH;
@@ -341,14 +341,14 @@ float getPerlinNoise(vec3 pos, float frequency){
   // Compute the sum for each octave
   float sum = 0.0;
   float weightSum = 0.0;
-  float weight = 0.5;
-  for(int oct = 0; oct < 3; oct++){
+  float weight = 1.0;
+  for(int oct = 0; oct < 1; oct++){
 
     vec3 p = pos * frequency;
     //Hillaire says that the 3D version of tileable perlin noise in GLM is broken
     //Use 4D noise with w component set to 0 as in example code
     float val = 0.5 + 0.5 * glmPerlin(vec4(p, 0.0), vec4(frequency));
-
+    return val;
     sum += val * weight;
     weightSum += weight;
 
@@ -402,10 +402,10 @@ float getTextureForPoint(vec3 p, int type){
 
 void main() {
   //Normalized pixel coordinates (from 0 to 1)
-  float tileSize = 130.0;
-  float padWidth = 1.0;
+  float tileSize = 512.0;
+  float padWidth = 0.0;
   float coreSize = tileSize - 2.0 * padWidth;
-  float tileRows = 12.0;
+  float tileRows = 1.0;
   float tileCount = tileRows * tileRows;
   vec2 tile = floor((gl_FragCoord.xy - 0.5) / tileSize);
 
@@ -500,6 +500,30 @@ void main() {
   if(gl_FragCoord.x > tileRows * tileSize || gl_FragCoord.y > tileRows * tileSize){
     col = vec4(0,0,0,1);
   }
+  vec3 position = vec3(gl_FragCoord.xy/512.0, 0.0);
+  //position.xy += time * 0.1;
+  float freq = 15.0;
+  float delta = 0.01 * freq;
+  float noise = getPerlinNoise(position, freq);
+  float noise_xp = getPerlinNoise(position + vec3(delta, 0.0, 0.0), freq);
+  float noise_xn = getPerlinNoise(position + vec3(-delta,0.0, 0.0), freq);
+  float noise_yp = getPerlinNoise(position + vec3(0.0, delta, 0.0), freq);
+  float noise_yn = getPerlinNoise(position + vec3(0.0,-delta, 0.0), freq);
+/*
+  noise = noise * 0.25 + 0.5;
+  noise_xp = noise_xp * 0.25 + 0.5;
+  noise_yp = noise_yp * 0.25 + 0.5;
+  noise_xn = noise_xn * 0.25 + 0.5;
+  noise_yn = noise_yn * 0.25 + 0.5;
+*/
+  float grad_x = noise_xp - noise;
+  float grad_y = noise_yp - noise;
+  //grad_x = grad_x * 0.5 + 0.5;
+  //grad_y = grad_y * 0.5 + 0.5;
+  col.r = grad_x * 0.5 + 0.5;
+  col.g = grad_y * 0.5 + 0.5;
+  col.b = 0.0;
+  col.a = 1.0;
   gl_FragColor = col;
 }
 `;
@@ -708,7 +732,7 @@ function step(){
   //Draw a triangle strip connecting vertices 0-4
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-  //requestAnimationFrame(step);
+  requestAnimationFrame(step);
 }
 
 step();
