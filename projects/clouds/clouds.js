@@ -52,6 +52,8 @@ if(mobile){
   var exposure = 0.5;
   //Thickness of the atmosphere
 
+  var framebuffer;
+
   stats = new Stats();
   stats.showPanel(0);
   stats.domElement.style.position = 'relative';
@@ -77,7 +79,15 @@ if(mobile){
   gui.add(this, 'exposure').min(0.0).max(1.0).step(0.05).onChange(function(value){gl.useProgram(program); gl.uniform1f(exposureHandle, exposure);});
   gui.add(this, 'animate');
   gui.add(this, 'hd').listen().onChange(function(value){gl.useProgram(program); gl.uniform1i(hdHandle, hd);});
-  gui.add(this, 'blur').onChange(function(value){gl.useProgram(program); gl.uniform1f(widthHandle); gl.uniform1f(heightHandle);gl.useProgram(combine_program); gl.uniform1f(widthHandle); gl.uniform1f(heightHandle);});
+  gui.add(this, 'blur').onChange(function(value){
+    gl.useProgram(program);
+    gl.uniform1f(widthHandle, canvas.width);
+    gl.uniform1f(heightHandle, canvas.height);
+    gl.useProgram(combine_program);
+    gl.uniform1f(widthHandle_, canvas.width);
+    gl.uniform1f(heightHandle_, canvas.height);
+});
+
   gui.close();
 
   //************** Shader sources **************
@@ -107,6 +117,7 @@ if(mobile){
     uniform sampler2D cloudShapeTexture;
     uniform sampler2D cloudDetailTexture;
     uniform sampler2D blueNoiseTexture;
+    uniform sampler2D curlNoiseTexture;
     uniform bool HD;
 
   //#define VOLUME_TEXTURES
@@ -278,6 +289,7 @@ if(mobile){
     }
     //Carving clouds out of large slabs
     //p += time * 100.0;
+    p.xz += exposure * 10.0 * texture2D(curlNoiseTexture, p.xz).rg * 2.0 - 1.0;
     float detail = getCloudDetail(detailSize * p);
     //HZD mentions how inverting the detail noise at the bottom leads to wispy shapes
     //The visual effect of this is not clear
@@ -288,7 +300,7 @@ if(mobile){
     //Other sources this
     shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
     //Alter density at the bottom and top of the clouds
-    shape *= saturate(remap(cloudHeight, 0.0, 0.15, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.9, 1.0, 1.0, 0.0)) * 0.5;
+    shape *= saturate(remap(cloudHeight, 0.0, 0.15, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.9, 1.0, 1.0, 0.0)) * 0.2;
     //detail = 0.5*detailStrength*getCloudDetail(0.2 * detailSize * p);
     //shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
 
@@ -527,7 +539,7 @@ if(mobile){
     vec3 color = vec3(0.0);
 
     float totalTransmittance;
-    color = exposure * skyRay(cameraPos, rayDir, sunDirection, false, totalTransmittance); 
+    color = 0.5 * skyRay(cameraPos, rayDir, sunDirection, false, totalTransmittance); 
     vec3 background = mix(vec3(1.0), vec3(0.0, 0.0, 1.0), 0.5+0.5*rayDir.y);
     float weight = smoothstep(-0.2, 0.1, rayDir.y);
     background =  mix(vec3(0.75, 0.87, 0.93), vec3(0.12, 0.29, 0.55), weight);
@@ -617,8 +629,17 @@ void main() {
     gl.uniform1f(widthHandle, canvas.width);
     gl.uniform1f(heightHandle, canvas.height);
     gl.useProgram(combine_program);
-    gl.uniform1f(widthHandle, canvas.width);
-    gl.uniform1f(heightHandle, canvas.height);
+    gl.uniform1f(widthHandle_, canvas.width);
+    gl.uniform1f(heightHandle_, canvas.height);
+    gl.deleteFramebuffer(framebuffer);
+    frameBuffer = gl.createFramebuffer();
+    frameBuffer.width = canvas.width;
+    frameBuffer.height = canvas.height;
+    gl.activeTexture(gl.TEXTURE4);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, frameBuffer.width, frameBuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    //Assign texture as framebuffer colour attachment
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, sceneTexture, 0);
   }
 
 //
@@ -675,6 +696,9 @@ loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.p
 gl.activeTexture(gl.TEXTURE2);
 var tex3 = gl.createTexture();
 loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoise.png');
+gl.activeTexture(gl.TEXTURE3);
+var tex4 = gl.createTexture();
+loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png');
 
   //Compile shader and combine with source
   function compileShader(shaderSource, shaderType){
@@ -771,6 +795,7 @@ loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoise.png');
     var shapeTextureHandle = gl.getUniformLocation(program, "cloudShapeTexture");
     var detailTextureHandle = gl.getUniformLocation(program, "cloudDetailTexture");
     var blueNoiseTextureHandle = gl.getUniformLocation(program, "blueNoiseTexture");
+    var curlNoiseTextureHandle = gl.getUniformLocation(program, "curlNoiseTexture");
 
     gl.activeTexture(gl.TEXTURE0);
     gl.uniform1i(shapeTextureHandle, 0);
@@ -795,8 +820,8 @@ loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoise.png');
     gl.uniform1f(thicknessHandle, thickness);
 
     var srcDataHandle = gl.getUniformLocation(combine_program, "srcData");
-    var widthHandle = getUniformLocation(combine_program, 'width');
-    var heightHandle = getUniformLocation(combine_program, 'height');
+    var widthHandle_ = getUniformLocation(combine_program, 'width');
+    var heightHandle_ = getUniformLocation(combine_program, 'height');
   }
 
 function getPos(canvas, evt) {
@@ -857,9 +882,9 @@ function createAndSetupTexture(gl) {
 
   return texture;
 }
-gl.activeTexture(gl.TEXTURE3);
+gl.activeTexture(gl.TEXTURE4);
 //Create and bind frame buffer
-var frameBuffer = gl.createFramebuffer();
+frameBuffer = gl.createFramebuffer();
 frameBuffer.width = canvas.width;
 frameBuffer.height = canvas.height;
 gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
@@ -887,6 +912,8 @@ var limit = 500;
       //Draw to canvas
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
+    gl.activeTexture(gl.TEXTURE0);
+    gl.uniform1i(shapeTextureHandle, 0);
     //Update time
     thisFrame = Date.now();
     
@@ -906,10 +933,10 @@ var limit = 500;
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     if(blur){
       gl.useProgram(combine_program);
-      gl.uniform1f(widthHandle, canvas.width);
-      gl.uniform1f(heightHandle, canvas.height);
-      gl.uniform1i(srcDataHandle, 3);  // texture unit 0
-      gl.activeTexture(gl.TEXTURE3);
+      gl.uniform1f(widthHandle_, canvas.width);
+      gl.uniform1f(heightHandle_, canvas.height);
+      gl.activeTexture(gl.TEXTURE4);
+      gl.uniform1i(srcDataHandle, 4);  // texture unit 0
       gl.bindTexture(gl.TEXTURE_2D, sceneTexture);
 
       //Draw to canvas
