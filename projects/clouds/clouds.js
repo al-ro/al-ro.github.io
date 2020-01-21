@@ -36,14 +36,14 @@ if(mobile){
   //Time
   var time = 0.0;
   var sun = 0.03;
-  var noise = 0.03;
+  var edges = 0.2;
   var animate = false;
   var blur = false;
   var hd = false;
   var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.3};
   var isMouseDown = false;
   //Distance of planet
-  var thickness = 0.5;
+  var coverage = 0.5;
   var scale = 0.03;
   var power = 10.0;
   var mainSize = 0.006;
@@ -70,13 +70,13 @@ if(mobile){
     customContainer.appendChild(gui.domElement);
   }
   gui.add(this, 'sun').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(sunHandle, sun);});
-  gui.add(this, 'thickness').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(thicknessHandle, thickness);});
+  gui.add(this, 'coverage').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(coverageHandle, coverage);});
   gui.add(this, 'power').min(0.0).max(1000.0).step(5.0).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power);});
   gui.add(this, 'mainSize').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize);});
-  gui.add(this, 'noise').min(0.0).max(0.1).step(0.0001).onChange(function(value){gl.useProgram(program); gl.uniform1f(noiseHandle, noise);});
+  gui.add(this, 'edges').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(edgesHandle, edges);});
   gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize);});
   gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailStrengthHandle, detailStrength);});
-  gui.add(this, 'exposure').min(0.0).max(1.0).step(0.05).onChange(function(value){gl.useProgram(program); gl.uniform1f(exposureHandle, exposure);});
+  gui.add(this, 'exposure').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(exposureHandle, exposure);});
   gui.add(this, 'animate');
   gui.add(this, 'hd').listen().onChange(function(value){gl.useProgram(program); gl.uniform1i(hdHandle, hd);});
   gui.add(this, 'blur').onChange(function(value){
@@ -102,14 +102,14 @@ if(mobile){
   var fragmentSource = `
     precision highp float;
     uniform float scale;
-    uniform float thickness;
+    uniform float coverage;
     uniform float width;
     uniform float height;
     uniform vec2 mouse;
     uniform float time;
     uniform float sun;
     uniform float power;
-    uniform float noise;
+    uniform float edges;
     uniform float mainSize;
     uniform float detailSize;
     uniform float detailStrength;
@@ -179,6 +179,13 @@ if(mobile){
   }
 
   float getCloudShape(vec3 pos){
+    //The cloud shape texture is a 2048*2048 atlas of 12*12 tiles (144). Each tile is 128*128 with a 1 pixel wide boundary
+    //Per tile:		128 + 2 = 130
+    //Atlas width:	12 * 130 = 1560
+    //The rest of the texture is black
+    //The 3D texture the atlas represents has dimensions 128 * 128 * 144
+    //The green channel is the data of the red channel shifted by one tile (tex.g is the data one level above tex.r). 
+    //To get the necessary data only requires a single texture fetch
     const float textureWidth = 2048.0;
     const float dataWidth = 1560.0;
     const float tileRows = 12.0;
@@ -193,15 +200,21 @@ if(mobile){
     float level = floor(coord.z);
     float tileY = floor(level/tileRows); 
     float tileX = level - tileY * tileRows; 
+    //The data coordinates are offset by the x and y tile, the two boundary cells between each tile pair and the initial boundary cell on the first row/column
     vec2 offset = atlasDimensions.x * vec2(tileX, tileY) + 2.0 * vec2(tileX, tileY) + 1.0;
     vec2 pixel = coord.xy + offset;
-    vec2 data0 = texture2D(cloudShapeTexture, mod(pixel, dataWidth)/textureWidth).xy;
-    return mix(data0.x, data0.y, f);
+    vec2 data = texture2D(cloudShapeTexture, mod(pixel, dataWidth)/textureWidth).xy;
+    return mix(data.x, data.y, f);
   }
 
-  float getCloudDetail(vec3 pos){
-
-    
+  float getCloudDetail(vec3 pos, float h){
+    //The cloud shape texture is a 256*256 atlas of 6*6 tiles (36). Each tile is 32*32 with a 1 pixel wide boundary
+    //Per tile:		32 + 2 = 34
+    //Atlas width:	6 * 34 = 204
+    //The rest of the texture is black
+    //The 3D texture the atlas represents has dimensions 32 * 32 * 36
+    //The green channel is the data of the red channel shifted by one tile (tex.g is the data one level above tex.r). 
+    //To get the necessary data only requires a single texture fetch
     const float textureWidth = 256.0;
     const float dataWidth = 204.0;
     const float tileRows = 6.0;
@@ -216,10 +229,11 @@ if(mobile){
     float level = floor(coord.z);
     float tileY = floor(level/tileRows); 
     float tileX = level - tileY * tileRows; 
+    //The data coordinates are offset by the x and y tile, the two boundary cells between each tile pair and the initial boundary cell on the first row/column
     vec2 offset = atlasDimensions.x * vec2(tileX, tileY) + 2.0 * vec2(tileX, tileY) + 1.0;
     vec2 pixel = coord.xy + offset;
-    vec2 data0 = texture2D(cloudDetailTexture, mod(pixel, dataWidth)/textureWidth).xy;
-    return mix(data0.x, data0.y, f);
+    vec2 data = texture2D(cloudDetailTexture, mod(pixel, dataWidth)/textureWidth).xy;
+    return mix(data.x, data.y, f);
   }
 
 
@@ -257,7 +271,7 @@ if(mobile){
 	return -10.0;//vec2(1e5, -1e5);
       }
       float first = (-b - sqrt(d))/(2.0*a);
-      float second =  (-b + sqrt(d))/(2.0*a);
+      float second = (-b + sqrt(d))/(2.0*a);
       return (first >= 0.0) ? first : second;
     }
 
@@ -272,8 +286,8 @@ if(mobile){
     cloudHeight = clamp((atmoHeight-CLOUD_START)/(CLOUD_HEIGHT), 0.0, 1.0);
 
     //General density of clouds from Perlin-Worley texture
-    //float shape = clamp((getCloudShape(mainSize*p) - (1.0-thickness)) * 5.0 , 0.0, 2.0);
-    float shape = thickness*saturate(getCloudShape(mainSize*p) - 0.5);
+    //float shape = clamp((getCloudShape(mainSize*p) - (1.0-coverage)) * 5.0 , 0.0, 2.0);
+    float shape = coverage*saturate(getCloudShape(mainSize*p) - 0.5);
 
     //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
     //Assumes there is no height map data and all clouds default to height 1.0
@@ -289,8 +303,7 @@ if(mobile){
     }
     //Carving clouds out of large slabs
     //p += time * 100.0;
-    p.xz += exposure * 10.0 * texture2D(curlNoiseTexture, p.xz).rg * 2.0 - 1.0;
-    float detail = getCloudDetail(detailSize * p);
+    float detail = getCloudDetail(detailSize * p, cloudHeight);
     //HZD mentions how inverting the detail noise at the bottom leads to wispy shapes
     //The visual effect of this is not clear
     //detail = mix(1.0-detail, 1.0-detail, saturate(cloudHeight * 10.0));
@@ -300,7 +313,7 @@ if(mobile){
     //Other sources this
     shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
     //Alter density at the bottom and top of the clouds
-    shape *= saturate(remap(cloudHeight, 0.0, 0.15, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.9, 1.0, 1.0, 0.0)) * 0.2;
+    shape *= saturate(remap(cloudHeight, 0.0, 0.15, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.9, 1.0, 1.0, 0.0)) * edges;
     //detail = 0.5*detailStrength*getCloudDetail(0.2 * detailSize * p);
     //shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
 
@@ -359,7 +372,7 @@ if(mobile){
 
     //Introduce noise to eliminate banding/layering artefacts
     //p += sunDirection*stepL*hash(dot(p, vec3(12.256, 2.646, 6.356)));
-    p += sunDirection*stepL*getBlueNoise(gl_FragCoord.xy * noise);
+    p += sunDirection*stepL*getBlueNoise(gl_FragCoord.xy * 0.03);
 
 
     //Collect total density along light ray
@@ -435,7 +448,7 @@ if(mobile){
     vec2 resolution = vec2(width, height);
 
     //Introduce noise to eliminate banding/layering artefacts
-    p += dir*stepS*getBlueNoise(gl_FragCoord.xy*noise);
+    p += dir*stepS*getBlueNoise(gl_FragCoord.xy*0.03);
     //hash(dot(dir, vec3(12.256, 2.646, 6.356)));
 
     //If view direction pointing up
@@ -539,7 +552,7 @@ if(mobile){
     vec3 color = vec3(0.0);
 
     float totalTransmittance;
-    color = 0.5 * skyRay(cameraPos, rayDir, sunDirection, false, totalTransmittance); 
+    color = exposure * skyRay(cameraPos, rayDir, sunDirection, false, totalTransmittance); 
     vec3 background = mix(vec3(1.0), vec3(0.0, 0.0, 1.0), 0.5+0.5*rayDir.y);
     float weight = smoothstep(-0.2, 0.1, rayDir.y);
     background =  mix(vec3(0.75, 0.87, 0.93), vec3(0.12, 0.29, 0.55), weight);
@@ -563,8 +576,11 @@ if(mobile){
     //p *= time;
       //col = vec3(texture2D(cloudDetailTexture, mod(p.xy, 204.0)/256.0).xy, 0.0);
     */
-    vec3 p = cameraPos + rayDir * 100.0;
+    vec3 p = cameraPos + rayDir * 10.0;
     //col = vec3(getBlueNoise(gl_FragCoord.xy/500.0));
+    //vec2 uv = p.xz/10.0;
+    //uv += texture2D(curlNoiseTexture, uv).rg * 2.0 - 1.0;
+    //uv = uv * 0.5 + 0.5;
     gl_FragColor = vec4(col, 1.0);
   }
   `;
@@ -785,13 +801,13 @@ loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png');
     var mouseHandle = getUniformLocation(program, 'mouse');
     var scaleHandle = getUniformLocation(program, 'scale');
     var powerHandle = getUniformLocation(program, 'power');
-    var noiseHandle = getUniformLocation(program, 'noise');
+    var edgesHandle = getUniformLocation(program, 'edges');
     var mainSizeHandle = getUniformLocation(program, 'mainSize');
     var hdHandle = getUniformLocation(program, 'HD');
     var detailSizeHandle = getUniformLocation(program, 'detailSize');
     var detailStrengthHandle = getUniformLocation(program, 'detailStrength');
     var exposureHandle = getUniformLocation(program, 'exposure');
-    var thicknessHandle = getUniformLocation(program, 'thickness');
+    var coverageHandle = getUniformLocation(program, 'coverage');
     var shapeTextureHandle = gl.getUniformLocation(program, "cloudShapeTexture");
     var detailTextureHandle = gl.getUniformLocation(program, "cloudDetailTexture");
     var blueNoiseTextureHandle = gl.getUniformLocation(program, "blueNoiseTexture");
@@ -803,6 +819,8 @@ loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png');
     gl.uniform1i(detailTextureHandle, 1);
     gl.activeTexture(gl.TEXTURE2);
     gl.uniform1i(blueNoiseTextureHandle, 2);
+    gl.activeTexture(gl.TEXTURE3);
+    gl.uniform1i(curlNoiseTextureHandle, 3);
 
     gl.uniform1f(widthHandle, canvas.width);
     gl.uniform1f(heightHandle, canvas.height);
@@ -812,12 +830,12 @@ loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png');
     gl.uniform1f(timeHandle, time);
     gl.uniform1f(sunHandle, sun);
     gl.uniform1f(powerHandle, power);
-    gl.uniform1f(noiseHandle, noise);
+    gl.uniform1f(edgesHandle, edges);
     gl.uniform1f(detailSizeHandle, detailSize);
     gl.uniform1f(mainSizeHandle, mainSize);
     gl.uniform1f(detailStrengthHandle, detailStrength);
     gl.uniform1f(exposureHandle, exposure);
-    gl.uniform1f(thicknessHandle, thickness);
+    gl.uniform1f(coverageHandle, coverage);
 
     var srcDataHandle = gl.getUniformLocation(combine_program, "srcData");
     var widthHandle_ = getUniformLocation(combine_program, 'width');
