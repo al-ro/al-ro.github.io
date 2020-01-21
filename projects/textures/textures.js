@@ -17,7 +17,7 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 
 var canvas = document.getElementById("canvas_1");
 
-var WIDTH = 512;
+var WIDTH = 128;
 var HEIGHT = WIDTH;
 
 canvas.width = WIDTH;
@@ -402,7 +402,7 @@ float getTextureForPoint(vec3 p, int type){
 
 void main() {
   //Normalized pixel coordinates (from 0 to 1)
-  float tileSize = 512.0;
+  float tileSize = 128.0;
   float padWidth = 0.0;
   float coreSize = tileSize - 2.0 * padWidth;
   float tileRows = 1.0;
@@ -500,7 +500,7 @@ void main() {
   if(gl_FragCoord.x > tileRows * tileSize || gl_FragCoord.y > tileRows * tileSize){
     col = vec4(0,0,0,1);
   }
-  vec3 position = vec3(gl_FragCoord.xy/512.0, 0.0);
+  vec3 position = vec3(gl_FragCoord.xy/128.0, 0.0);
   //position.xy += time * 0.1;
   float freq = 15.0;
   float delta = 0.01 * freq;
