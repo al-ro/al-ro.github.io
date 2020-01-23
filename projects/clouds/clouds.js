@@ -276,7 +276,7 @@ if(mobile){
     }
 
   //Get density and cloud height at sample point
-  float clouds(vec3 p, out float cloudHeight, bool fast){
+  float clouds(vec3 p, out float cloudHeight, float dist){
 //Get density and cloud height at sample point
   
     //Height of point above the ground
@@ -304,6 +304,7 @@ if(mobile){
     //Carving clouds out of large slabs
     //p += time * 100.0;
     float detail = getCloudDetail(detailSize * p, cloudHeight);
+    //float detail = getCloudDetail((min(0.04, mainSize * 10.0)) * p, cloudHeight);
     //HZD mentions how inverting the detail noise at the bottom leads to wispy shapes
     //The visual effect of this is not clear
     //detail = mix(1.0-detail, 1.0-detail, saturate(cloudHeight * 10.0));
@@ -357,8 +358,8 @@ if(mobile){
     return dot(expValues, expValWeight);
   }
 
-  float lightRay(vec3 p, float phaseFunction, float dC, float mu, vec3 sunDirection, float cloudHeight, bool fast){
-    int nbSampleLight = fast ? 7 : 3;
+  float lightRay(vec3 p, float phaseFunction, float dC, float mu, vec3 sunDirection, float cloudHeight, float dist){
+    int nbSampleLight = 7;
 #ifdef HD
     nbSampleLight = 16;
 #endif
@@ -381,13 +382,8 @@ if(mobile){
 	if(j == STEPS_LIGHT){break;}
       }
       float cloudHeight;
-      lighRayDen += clouds(p + sunDirection * float(j) * stepL, cloudHeight, fast);
+      lighRayDen += clouds(p + sunDirection * float(j) * stepL, cloudHeight, dist);
     }    
-
-    if(fast){
-      return (0.5*exp(-0.4*stepL*lighRayDen) + max(0.0, -mu*0.6+0.3)
-	  * exp(-0.02*stepL*lighRayDen))*phaseFunction;
-    }
 
     float scatterAmount = mix(0.008, 1.0, smoothstep(0.96, 0.0, mu));
 
@@ -406,7 +402,7 @@ if(mobile){
   }
 
 
-  vec3 skyRay(vec3 org, vec3 dir, vec3 sunDirection, bool fast, out float totalTransmittance){
+  vec3 skyRay(vec3 org, vec3 dir, vec3 sunDirection, out float totalTransmittance){
 
     //return 12.5 * vec3(dot(dir, vec3(1.0, 0.0, 0.0)));
     //The limits of the cloud shell
@@ -449,6 +445,7 @@ if(mobile){
 
     //Introduce noise to eliminate banding/layering artefacts
     p += dir*stepS*getBlueNoise(gl_FragCoord.xy*0.03);
+    float dist = 0.0;
     //hash(dot(dir, vec3(12.256, 2.646, 6.356)));
 
     //If view direction pointing up
@@ -462,21 +459,7 @@ if(mobile){
 	float cloudHeight;
 
 	//Get density and cloud height at sample point
-	float density = clouds(p, cloudHeight, fast);
-/*
-	float dist = 10.0;
-	vec3 delta = dist*vec3(1.0);
-	density += clouds(p + delta, cloudHeight, fast);
-	delta = dist*vec3(-1.0);
-	density += clouds(p + delta, cloudHeight, fast);
-	delta = dist*vec3(1.0, 0.0, 0.0);
-	density += clouds(p + delta, cloudHeight, fast);
-	delta = dist*vec3(0.0, 1.0, 0.0);
-	density += clouds(p + delta, cloudHeight, fast);
-	delta = dist*vec3(0.0, 0.0, 1.0);
-	density += clouds(p + delta, cloudHeight, fast);
-	density /= 6.0;
-*/
+	float density = clouds(p, cloudHeight, dist);
 
 	if(density > 0.0){
 	  stepS = 0.5 * stepS_;
@@ -487,7 +470,7 @@ if(mobile){
 	if(density > 0.0 ){
 
 	  //Temporary hack for sunlight to cycle from white to orange
-	  float sun = SUN_POWER * (0.5 + 0.5 * mu);// * (mix(vec3(1.0), vec3(1.0, 0.2, 0.05), 1.0-(0.5 + 0.5 * sin(iTime * 0.5))));
+	  float sunLight = SUN_POWER * (0.5 + 0.5 * mu);// * (mix(vec3(1.0), vec3(1.0, 0.2, 0.05), 1.0-(0.5 + 0.5 * sin(iTime * 0.5))));
 
 	  //Lighten dark shadows at the bottom of clouds
 	  vec3 ambient = vec3(mix((1.0), (2.0), cloudHeight));//mix(vec3(3.0), vec3(10.0), (0.5 + 0.5 * sin(iTime * 0.5)));
@@ -495,7 +478,7 @@ if(mobile){
 
 
 	  //Amount of sunlight that reaches the sample point through the cloud
-	  vec3 luminance = ambient + sun * lightRay(p, phaseFunction, density, mu, sunDirection, cloudHeight, fast);        	
+	  vec3 luminance = ambient + sunLight * lightRay(p, phaseFunction, density, mu, sunDirection, cloudHeight, dist);        	
 
 	  luminance *= density;
 
@@ -515,6 +498,7 @@ if(mobile){
 	  }
 	}
 
+	dist += stepS;
 	p += dir*stepS;
       }
     }
@@ -552,7 +536,7 @@ if(mobile){
     vec3 color = vec3(0.0);
 
     float totalTransmittance;
-    color = exposure * skyRay(cameraPos, rayDir, sunDirection, false, totalTransmittance); 
+    color = exposure * skyRay(cameraPos, rayDir, sunDirection, totalTransmittance); 
     vec3 background = mix(vec3(1.0), vec3(0.0, 0.0, 1.0), 0.5+0.5*rayDir.y);
     float weight = smoothstep(-0.2, 0.1, rayDir.y);
     background =  mix(vec3(0.75, 0.87, 0.93), vec3(0.12, 0.29, 0.55), weight);
