@@ -430,7 +430,7 @@ if(mobile){
     gl.uniform1f(thicknessHandle, thickness);
   }
 
-  function getPos(canvas, evt) {
+  function getPos(canvas, evt){
     var rect = canvas.getBoundingClientRect();
     return {
       x: evt.clientX - rect.left,
