@@ -26,7 +26,7 @@ if(mobile){
   ctx.font="50px Arial";
   ctx.fillStyle = "black";
   ctx.textAlign = "center";
-  ctx.fillText("This project is not available on mobile :(", canvas.width/2, canvas.height/2);
+  ctx.fillText("This project is not available on mobile :(", canvasWidth/2, canvasHeight/2);
 
 }else{
 
@@ -36,17 +36,12 @@ if(mobile){
     alert("Unable to initialize WebGL.");
   }
 
-  var quality = 0.8;
-
-  var canvasWidth = canvas.width * quality;
-  var canvasHeight = canvas.height * quality;
-
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
+  var canvasWidth = canvas.width * 0.8;
+  var canvasHeight = canvas.height * 0.8;
 
   //Time
   var time = 0.0;
-  var mousePosition = {x: canvas.width/2.0, y: canvas.height/1.8};
+  var mousePosition = {x: canvasWidth/2.0, y: canvasHeight/2.3};
   var isMouseDown = false;
 
   stats = new Stats();
@@ -62,7 +57,6 @@ if(mobile){
 
   var gui = new dat.GUI({ autoPlace: false });
   var customContainer = document.getElementById('gui_container');
-  gui.add(this, 'quality').min(0.2).max(1.0).step(0.1).listen().onChange(function(value){onWindowResize();});
   if(!mobile){
     customContainer.appendChild(gui.domElement);
   }
@@ -483,9 +477,9 @@ void main(){
       mouseRelative.x *= PI;
     //----------------- Define a camera -----------------
     
-    vec3 cameraPos = vec3(120.0, 40.0, 1040.0 - time * speed);
+    vec3 cameraPos = vec3(120.0, 40.0, -400.0 * 0.001 * time * speed);
     cameraPos.y = getHeight(cameraPos, cameraLimit) + 30.0;
- 
+    
     vec3 lightDirection = normalize(vec3(sin(sunLocation), sunHeight, cos(sunLocation)));
 	
     vec3 targetDir = vec3(sin(mouseRelative.x), mouseRelative.y, -cos(mouseRelative.x));
@@ -573,30 +567,36 @@ void main(){
     return texture;
   }
   
+  function isPowerOf2(value) {
+    return (value & (value - 1)) == 0;
+  }
+  
   gl.activeTexture(gl.TEXTURE0);
   var tex1 = gl.createTexture();
-  //Noise LUT from Shadertoy which is cheaper than calculating simplex noise in the fragment shader
+  //From the Shadertoy
   //https://shadertoyunofficial.wordpress.com/2019/07/23/shadertoy-media-files/
   loadTexture(gl, tex1, 'https://al-ro.github.io/images/terrain/greyNoise.png');
 
   window.addEventListener('resize', onWindowResize, false);
 
   function onWindowResize(){
-    var w = canvas.clientWidth * quality;
-    var h = canvas.clientHeight * quality;
+    var w = canvas.clientWidth * 0.8;
+    var h = canvas.clientHeight * 0.8;
     if(!isInFullscreen()){
       h = w / 1.6;
+    }else{
+      //Reduce resolution at full screen for better performance
+      w *= 0.8;
+      h *= 0.8;
     }
-
     console.log(canvas.width);
     canvas.width = w;
     canvas.height = h;
     console.log(canvas.width);
 
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.viewport(0, 0, gl.canvasWidth, gl.canvasHeight);
     gl.uniform1f(widthHandle, w);
     gl.uniform1f(heightHandle, h);
-    resizeMouse();
   }
   //Compile shader and combine with source
   function compileShader(shaderSource, shaderType){
@@ -681,21 +681,12 @@ void main(){
   gl.activeTexture(gl.TEXTURE0);
   gl.uniform1i(noiseTextureHandle, 0);
 
-  var lastPos = {x: mousePosition.x, y: mousePosition.y};
-
   function getPos(canvas, evt){
     var rect = canvas.getBoundingClientRect();
     return {
       x: evt.clientX - rect.left,
       y: evt.clientY - rect.top
     };
-  }
-
-  function resizeMouse(){
-      var pos = lastPos;
-      pos.x *= canvas.width / canvas.clientWidth;
-      pos.y *= canvas.height / canvas.clientHeight;
-      gl.uniform2f(mouseHandle, pos.x, pos.y);
   }
 
   function mouseDown(event){
@@ -708,9 +699,8 @@ void main(){
   function mouseMove(event){
     if(isMouseDown){
       var pos = getPos(canvas, event);
-      lastPos = pos;
-      pos.x *= canvas.width / canvas.clientWidth;
-      pos.y *= canvas.height / canvas.clientHeight;
+      pos.x *= canvasWidth / canvas.clientWidth;
+      pos.y *= canvasHeight / canvas.clientHeight;
       gl.uniform2f(mouseHandle, pos.x, pos.y);
     }
   }
