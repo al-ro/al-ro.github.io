@@ -60,22 +60,32 @@ if(mobile){
     alert("Unable to initialize WebGL.");
   }
 
-  var quality = 0.8;
+  var quality = 0.5;
 
-  var canvasWidth = canvas.width * quality;
-  var canvasHeight = canvas.height * quality;
-
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
+  canvas.width *= quality;
+  canvas.height *= quality;
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
   //Time
   var time = 0.0;
-  var cameraPosition = {x: 0, y: 0, z: 0};
+  //Sun
+
+  //Height over horizon in range [0, PI/2.0]
+  var elevation = 0.2;
+  //Rotation around Y axis in range [0, 2*PI]
+  var azimuth = 1.633;
+  //View direction
+  //Left/right in range [0; 2*PI]
+  var yaw = Math.PI/4.0; 
+  //Up/down in range [-PI/2; PI/2]
+  var pitch = -0.12;
+  //Camera movement speed
+  var speed = 50.0;
+  var cameraPosition = {x: 336, y: 0, z: -742};
   var upVector = {x: 0, y: 1, z: 0};
-  var mousePosition = {x: canvas.width/2.0, y: canvas.height/1.8};
+  var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.0};
   var mouseDelta = {x: 0, y: 0};
-  var mouseMultiplier = 1/canvas.width;
-  var viewDirection = {x: 0, y: 0, z: 1};
+  var viewDirection = {x: Math.sin(yaw), y: Math.sin(pitch),  z: Math.cos(yaw)};
   var viewMatrix = [{x: 1, y: 0, z: 0}, 
 		    {x: 0, y: 1, z: 0}, 
 		    {x: 0, y: 0, z: 1}];
@@ -125,11 +135,19 @@ if(mobile){
     return [xaxis, yaxis, negate(zaxis)];
   }
 
+  function updateSunPosition(){
+    gl.uniform3f(sunPositionHandle, Math.sin(azimuth), Math.sin(elevation), -Math.cos(azimuth));
+  }
+
   //****************** GUI *********************
 
   var gui = new dat.GUI({ autoPlace: false });
   var customContainer = document.getElementById('gui_container');
   gui.add(this, 'quality').min(0.2).max(1.0).step(0.1).listen().onChange(function(value){onWindowResize();});
+  gui.add(this, 'speed').min(10.0).max(100.0).step(10.0);
+  gui.add(this, 'elevation').min(0.0).max(Math.PI/2.0).step(0.01).listen().onChange(function(value){updateSunPosition();});
+  gui.add(this, 'azimuth').min(0.0).max(Math.PI*2.0).step(0.01).listen().onChange(function(value){updateSunPosition();});
+
   if(!mobile){
     customContainer.appendChild(gui.domElement);
   }
@@ -151,11 +169,12 @@ if(mobile){
     uniform float time;
     uniform float width;
     uniform float height;
-    uniform sampler2D greyNoiseTexture;
-    uniform mat3 viewMatrix_;
-    uniform vec3 cameraPosition_;
-
     vec2 resolution = vec2(width, height);
+
+    uniform vec3 cameraPosition;
+    uniform mat3 viewMatrix;
+    uniform vec3 sunPosition;
+    uniform sampler2D greyNoiseTexture;
 
     const int MAX_STEPS = 250;
     const float MAX_DIST = 3000.0;
@@ -177,26 +196,10 @@ if(mobile){
     const vec3 sunColour = vec3(1.0, 1.0, 0.8);
     const vec3 specularColour = vec3(1);
 
-    const float speed = 10.0;
-
-    //In a circle of 2*PI
-    const float sunLocation = 1.633;
-    //0: horizon, 1: zenith
-    const float sunHeight = 0.2;
-
     vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
       vec2 xy = fragCoord - resolution.xy / 2.0;
       float z = resolution.y / tan(radians(fieldOfView) / 2.0);
       return normalize(vec3(xy, -z));
-    }
-
-    //https://www.geertarien.com/blog/2017/07/30/breakdown-of-the-lookAt-function-in-OpenGL/
-    mat3 lookAt(vec3 camera, vec3 targetDir, vec3 up){
-      vec3 zaxis = normalize(targetDir);    
-      vec3 xaxis = normalize(cross(zaxis, up));
-      vec3 yaxis = cross(xaxis, zaxis);
-
-      return mat3(xaxis, yaxis, -zaxis);
     }
 
     //Darken sky when looking up
@@ -206,7 +209,6 @@ if(mobile){
 
     //By iq
     float noised(vec2 x ){
-      //return snoise(x*0.01);
 
       vec2 f = fract(x);
       vec2 u = f*f*(3.0-2.0*f);
@@ -483,12 +485,13 @@ if(mobile){
     vec3 applyFog(vec3  rgb, float dist, vec3 rayOri, vec3 rayDir, vec3 sunDir){
       //Make horizon more hazy
       if(dist == MAX_DIST){dist = 4000.0;}
+      if(abs(rayDir.y) < 0.0001){rayDir.y = 0.0001;}
       //Rate of fade
       float b = 0.014;
       float fogAmount = 1.0 * exp(-rayOri.y*b) * (1.0-exp(-dist*rayDir.y*b))/rayDir.y;
       float sunAmount = max( dot( rayDir, sunDir ), 0.0 );
-      vec3  fogColor  = mix( vec3(0.5,0.6,0.7), vec3(1.0), pow(sunAmount, 8.0) );
-      return mix(rgb, fogColor, fogAmount);
+      vec3  fogColour  = mix( vec3(0.5,0.6,0.7), vec3(1.0), pow(sunAmount, 8.0) );
+      return mix(rgb, fogColour, fogAmount);
     }
 
     float getGlow(float dist, float radius, float intensity){
@@ -511,19 +514,11 @@ if(mobile){
       //Get the default direction of the ray (along the negative Z direction)
       vec3 rayDir = rayDirection(45.0, gl_FragCoord.xy);
 
-      //----------------- Define a camera -----------------
-      
-      vec3 cameraPos = cameraPosition_;
+      vec3 cameraPos = cameraPosition;
       cameraPos.y = getHeight(cameraPos, cameraLimit) + 30.0;
 
-      vec3 lightDirection = normalize(vec3(sin(sunLocation), sunHeight, cos(sunLocation)));
-          
-      vec3 up = vec3(0.0, 1.0, 0.0);
+      vec3 lightDirection = normalize(sunPosition);
       
-      //---------------------------------------------------
-      
-      //Get the view matrix from the camera orientation
-      mat3 viewMatrix = viewMatrix_;
       //Transform the ray to point in the correct direction
       rayDir = normalize(viewMatrix * rayDir);
       
@@ -696,19 +691,19 @@ if(mobile){
   var timeHandle = getUniformLocation(program, 'time');
   var widthHandle = getUniformLocation(program, 'width');
   var heightHandle = getUniformLocation(program, 'height');
-  var mouseHandle = getUniformLocation(program, 'mouse');
-  var viewMatrixHandle = getUniformLocation(program, 'viewMatrix_');
-  var cameraPositionHandle = getUniformLocation(program, 'cameraPosition_');
+  var viewMatrixHandle = getUniformLocation(program, 'viewMatrix');
+  var cameraPositionHandle = getUniformLocation(program, 'cameraPosition');
   var noiseTextureHandle = gl.getUniformLocation(program, "greyNoiseTexture");
+  var sunPositionHandle = getUniformLocation(program, 'sunPosition');
 
   viewMatrix = lookAt(cameraPosition, viewDirection, upVector);
 
-  gl.uniform1f(widthHandle, canvasWidth);
-  gl.uniform1f(heightHandle, canvasHeight);
+  gl.uniform1f(widthHandle, canvas.width);
+  gl.uniform1f(heightHandle, canvas.height);
   gl.uniform1f(timeHandle, time);
-  gl.uniform2f(mouseHandle, mousePosition.x, mousePosition.y);
   gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
   gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+  gl.uniform3f(sunPositionHandle, Math.sin(azimuth), Math.sin(elevation), Math.cos(azimuth));
 
   gl.activeTexture(gl.TEXTURE0);
   gl.uniform1i(noiseTextureHandle, 0);
@@ -726,8 +721,6 @@ if(mobile){
   function mouseDown(event){
     isMouseDown = true;
     var pos = getPos(canvas, event);
-    //pos.x *= canvas.width / canvas.clientWidth;
-    //pos.y *= canvas.height / canvas.clientHeight;
     lastPos.x = pos.x;
     lastPos.y = pos.y;
   }
@@ -737,31 +730,24 @@ if(mobile){
     mouseDelta.y = 0.0;
   }
 
-  var angle = 0.0;
-  var angle2 = 0.0;
-
   function updateViewDirection(delta){
-    var angleChange = (delta.x * 0.005) % (2.0 * Math.PI);
-    angle += angleChange;
-    viewDirection.x = Math.sin(angle);
-    viewDirection.z = Math.cos(angle);
+    var yawChange = (delta.x * 0.005) % (2.0 * Math.PI);
+    yaw += yawChange;
+    viewDirection.x = Math.sin(yaw);
+    viewDirection.z = Math.cos(yaw);
     viewDirection = normalize(viewDirection);
-    angleChange = (delta.y * 0.002) % (2.0 * Math.PI);
-    angle2 += angleChange;
-    angle2 = Math.max(-Math.PI/2.0, Math.min(Math.PI/2.0, angle2));
-    viewDirection.y = Math.sin(angle2);
-
+    yawChange = (delta.y * 0.002) % (2.0 * Math.PI);
+    pitch += yawChange;
+    pitch = Math.max(-Math.PI/2.0, Math.min(Math.PI/2.0, pitch));
+    viewDirection.y = Math.sin(pitch);
   }
 
   function mouseMove(event){
     if(isMouseDown){
       var pos = getPos(canvas, event);
-      //pos.x *= canvas.width / canvas.clientWidth;
-      //pos.y *= canvas.height / canvas.clientHeight;
       mouseDelta.x = lastPos.x - pos.x;
       mouseDelta.y = lastPos.y - pos.y;
       
-      gl.uniform2f(mouseHandle, pos.x, pos.y);
       updateViewDirection(mouseDelta);
       viewMatrix = lookAt(cameraPosition, viewDirection, upVector);
       gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
@@ -813,7 +799,6 @@ if(mobile){
   document.addEventListener('keydown', keyDown);
   document.addEventListener('keyup', keyUp);
 
-  var speed = 20.0;
   function moveCamera(dT){
     if(forward){
       cameraPosition.x += dT * speed * viewDirection.x;
@@ -838,7 +823,6 @@ if(mobile){
       gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
     }
   }
-
 
   //************** Draw **************
 
