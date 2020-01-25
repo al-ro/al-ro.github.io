@@ -151,7 +151,6 @@ if(mobile){
     uniform float time;
     uniform float width;
     uniform float height;
-    uniform vec2 mouse;
     uniform sampler2D greyNoiseTexture;
     uniform mat3 viewMatrix_;
     uniform vec3 cameraPosition_;
@@ -511,24 +510,20 @@ if(mobile){
     void main(){
       //Get the default direction of the ray (along the negative Z direction)
       vec3 rayDir = rayDirection(45.0, gl_FragCoord.xy);
-      vec2 mouseRelative;
-      mouseRelative.x = (mouse.x / resolution.x) * 2.0 - 1.0;
-      mouseRelative.y = (mouse.y / resolution.y) * -2.0 + 1.0;
-      mouseRelative.x *= PI;
+
       //----------------- Define a camera -----------------
       
-      vec3 cameraPos = cameraPosition_;//vec3(120.0, 40.0, 1040.0 - time * speed);
+      vec3 cameraPos = cameraPosition_;
       cameraPos.y = getHeight(cameraPos, cameraLimit) + 30.0;
 
       vec3 lightDirection = normalize(vec3(sin(sunLocation), sunHeight, cos(sunLocation)));
           
-      vec3 targetDir = vec3(sin(mouseRelative.x), mouseRelative.y, -cos(mouseRelative.x));
       vec3 up = vec3(0.0, 1.0, 0.0);
       
       //---------------------------------------------------
       
       //Get the view matrix from the camera orientation
-      mat3 viewMatrix = viewMatrix_;//lookAt(cameraPos, targetDir, up);
+      mat3 viewMatrix = viewMatrix_;
       //Transform the ray to point in the correct direction
       rayDir = normalize(viewMatrix * rayDir);
       
@@ -731,8 +726,8 @@ if(mobile){
   function mouseDown(event){
     isMouseDown = true;
     var pos = getPos(canvas, event);
-    pos.x *= canvas.width / canvas.clientWidth;
-    pos.y *= canvas.height / canvas.clientHeight;
+    //pos.x *= canvas.width / canvas.clientWidth;
+    //pos.y *= canvas.height / canvas.clientHeight;
     lastPos.x = pos.x;
     lastPos.y = pos.y;
   }
@@ -761,8 +756,8 @@ if(mobile){
   function mouseMove(event){
     if(isMouseDown){
       var pos = getPos(canvas, event);
-      pos.x *= canvas.width / canvas.clientWidth;
-      pos.y *= canvas.height / canvas.clientHeight;
+      //pos.x *= canvas.width / canvas.clientWidth;
+      //pos.y *= canvas.height / canvas.clientHeight;
       mouseDelta.x = lastPos.x - pos.x;
       mouseDelta.y = lastPos.y - pos.y;
       
@@ -783,6 +778,9 @@ if(mobile){
   var left = false;
   var right = false;
   function keyDown(e){
+    if(e.keyCode == 38 || e.keyCode == 40){
+      e.preventDefault();
+    }
     if(e.keyCode == 87 || e.keyCode == 38) {
       forward = true;
     }
@@ -829,14 +827,12 @@ if(mobile){
     }
     if(left){
       var rightVector = cross(upVector, viewDirection);
-      console.log(left);
       cameraPosition.x += dT * speed * rightVector.x;
       cameraPosition.z += dT * speed * rightVector.z;
       gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
     }
     if(right){
       var rightVector = cross(upVector, viewDirection);
-      console.log(left);
       cameraPosition.x -= dT * speed * rightVector.x;
       cameraPosition.z -= dT * speed * rightVector.z;
       gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
