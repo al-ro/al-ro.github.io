@@ -387,8 +387,6 @@ if(mobile){
       
       //Add several horizontal lines (offset by the above) for layers
       for(int i = 0; i < 4; i++){
-        //res += texture(iChannel0, freq * p.yy).r * amp;
-        //res += snoise(freq * p.yy) * amp;
         res += texture2D(greyNoiseTexture, freq * p.yy).x * amp;
         freq *= 1.5;
         amp *= 0.5;
