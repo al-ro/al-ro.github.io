@@ -411,10 +411,15 @@ if(mobile){
 
     vec3 color = vec3(0.0);
 
-
     //Limits of the ray within the cloud shell
     //float distToAtmStart = intersectSphere(org, dir, vec3(0.0, 0.0, 0.0), ATM_START);
     float distToAtmStart = sphereIntersect(org, dir, ATM_START);
+
+    vec3 pos_ = org + dir * distToAtmStart;
+    totalTransmittance = max(0.0, getCloudShape(pos_/10.0));
+
+    return vec3(0.0);
+
     if(length(org) > ATM_START){
       distToAtmStart = 0.0;
     }
@@ -510,6 +515,8 @@ if(mobile){
     vec2 resolution = vec2(width, height);
     //Get the default direction of the ray (along the negative z direction)
     vec3 rayDir = rayDirection(45.0, gl_FragCoord.xy);
+    vec2 uv = gl_FragCoord.xy/resolution;
+    
     vec2 mouseRelative;
     mouseRelative.x = (mouse.x / resolution.x) * 2.0 - 1.0;
     mouseRelative.y = (mouse.y / resolution.y) * -2.0 + 1.0;
@@ -549,6 +556,7 @@ if(mobile){
     //Why is the returned colour so bright?
     vec3 col = 1.0-exp(-color);
     col = pow(color, vec3(0.4545));
+    col = vec3(totalTransmittance);
 /*
     vec3 p = vec3(gl_FragCoord.xy-0.5, time);
     p *= detailSize;
@@ -560,11 +568,12 @@ if(mobile){
     //p *= time;
       //col = vec3(texture2D(cloudDetailTexture, mod(p.xy, 204.0)/256.0).xy, 0.0);
     */
-    vec3 p = cameraPos + rayDir * 10.0;
+    //vec3 p = cameraPos + rayDir * 10.0;
     //col = vec3(getBlueNoise(gl_FragCoord.xy/500.0));
     //vec2 uv = p.xz/10.0;
     //uv += texture2D(curlNoiseTexture, uv).rg * 2.0 - 1.0;
     //uv = uv * 0.5 + 0.5;
+    //col = texture2D(cloudShapeTexture, uv).rgb;
     gl_FragColor = vec4(col, 1.0);
   }
   `;
