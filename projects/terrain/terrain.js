@@ -597,7 +597,7 @@ if(mobile){
   
   gl.activeTexture(gl.TEXTURE0);
   var tex1 = gl.createTexture();
-  //Noise LUT from Shadertoy which is cheaper than calculating simplex noise in the fragment shader
+  //Noise LUT from Shadertoy which is cheaper than calculating noise in the fragment shader
   //https://shadertoyunofficial.wordpress.com/2019/07/23/shadertoy-media-files/
   loadTexture(gl, tex1, 'https://al-ro.github.io/images/terrain/greyNoise.png');
 
