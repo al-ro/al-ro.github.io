@@ -531,6 +531,7 @@ void main() {
 */
   uv = (gl_FragCoord.xy) / resolution;
   vec2 cell = floor(gl_FragCoord.xy);
+  cell.y = 1.0 - cell.y;
 
   col.r = texture2D(greyNoiseTexture, (cell+vec2(0.5,0.5))/256.0).r;
   col.g = texture2D(greyNoiseTexture, (cell+vec2(1.5,0.5))/256.0).r;
