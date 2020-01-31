@@ -17,7 +17,7 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 
 var canvas = document.getElementById("canvas_1");
 
-var WIDTH = 128;
+var WIDTH = 256;
 var HEIGHT = WIDTH;
 
 canvas.width = WIDTH;
@@ -67,6 +67,7 @@ const float WIDTH = ` + WIDTH + `.0;
 const float HEIGHT = ` + HEIGHT + `.0;
 vec2 resolution = vec2(WIDTH, HEIGHT);
 uniform float time;
+uniform sampler2D greyNoiseTexture;
 
 //WEBGL-NOISE FROM https://github.com/stegu/webgl-noise
 
@@ -402,7 +403,7 @@ float getTextureForPoint(vec3 p, int type){
 
 void main() {
   //Normalized pixel coordinates (from 0 to 1)
-  float tileSize = 128.0;
+  float tileSize = 256.0;
   float padWidth = 0.0;
   float coreSize = tileSize - 2.0 * padWidth;
   float tileRows = 1.0;
@@ -500,7 +501,8 @@ void main() {
   if(gl_FragCoord.x > tileRows * tileSize || gl_FragCoord.y > tileRows * tileSize){
     col = vec4(0,0,0,1);
   }
-  vec3 position = vec3(gl_FragCoord.xy/128.0, 0.0);
+  vec3 position = vec3(gl_FragCoord.xy/256.0, 0.0);
+/*
   //position.xy += time * 0.1;
   float freq = 15.0;
   float delta = 0.01 * freq;
@@ -509,6 +511,7 @@ void main() {
   float noise_xn = getPerlinNoise(position + vec3(-delta,0.0, 0.0), freq);
   float noise_yp = getPerlinNoise(position + vec3(0.0, delta, 0.0), freq);
   float noise_yn = getPerlinNoise(position + vec3(0.0,-delta, 0.0), freq);
+*/
 /*
   noise = noise * 0.25 + 0.5;
   noise_xp = noise_xp * 0.25 + 0.5;
@@ -516,6 +519,7 @@ void main() {
   noise_xn = noise_xn * 0.25 + 0.5;
   noise_yn = noise_yn * 0.25 + 0.5;
 */
+/*
   float grad_x = noise_xp - noise;
   float grad_y = noise_yp - noise;
   //grad_x = grad_x * 0.5 + 0.5;
@@ -524,6 +528,14 @@ void main() {
   col.g = grad_y * 0.5 + 0.5;
   col.b = 0.0;
   col.a = 1.0;
+*/
+  uv = (gl_FragCoord.xy) / resolution;
+  float dx = 1.0 / resolution.x;
+
+  col.r = texture2D(greyNoiseTexture, uv).r;
+  col.g = texture2D(greyNoiseTexture, uv + vec2(1.0, 0.0) * dx).r;
+  col.b = texture2D(greyNoiseTexture, uv + vec2(0.0, 1.0) * dx).r;
+  col.a = texture2D(greyNoiseTexture, uv + vec2(1.0, 1.0) * dx).r;
   gl_FragColor = col;
 }
 `;
@@ -551,13 +563,59 @@ varying vec2 texCoord;
 uniform sampler2D srcData;
 uniform sampler2D blurData;
 
-void main() {
+void main(){
   vec4 srcColour = texture2D(srcData, texCoord);
   gl_FragColor = srcColour;
 }
 `;
 
 //****************** Utility functions ******************
+// Initialize a texture and load an image.
+// When the image finished loading copy it into the texture.
+
+function loadTexture(gl, texture, url) {
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  // Because images have to be download over the internet
+  // they might take a moment until they are ready.
+  // Until then put a single pixel in the texture so we can
+  // use it immediately. When the image has finished downloading
+  // we'll update the texture with the contents of the image.
+  const internalFormat = gl.RGBA;
+  const width_ = 1;
+  const height_ = 1;
+  const border = 0;
+  const srcFormat = gl.RGBA;
+  const srcType = gl.UNSIGNED_BYTE;
+  const pixel = new Uint8Array([255, 0, 0, 255]);  // opaque blue
+  gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, width_, height_, border, srcFormat, srcType, pixel);
+
+  const image = new Image();
+  image.onload = function() {
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, srcFormat, srcType, image);
+
+    // WebGL1 has different requirements for power of 2 images
+    // vs non power of 2 images so check if the image is a
+    // power of 2 in both dimensions.
+    // No, it's not a power of 2. Turn off mips and set
+    // wrapping to clamp to edge
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  };
+  image.crossOrigin = "";
+  image.src = url;
+
+  return texture;
+}
+
+function isPowerOf2(value) {
+  return (value & (value - 1)) == 0;
+}
+gl.activeTexture(gl.TEXTURE3);
+var tex1 = gl.createTexture();
+loadTexture(gl, tex1, 'https://al-ro.github.io/images/terrain/greyNoise.png');
 
 //Compile shader and canvas with source
 function compileShader(shaderSource, shaderType){
@@ -653,6 +711,10 @@ gl.vertexAttribPointer(positionHandle,
 
 //Set uniform handles
 var timeHandle = getUniformLocation(noise_program, 'time');
+var greyNoiseTextureHandle = gl.getUniformLocation(noise_program, "greyNoiseTexture");
+  gl.useProgram(noise_program);
+    gl.activeTexture(gl.TEXTURE3);
+    gl.uniform1i(greyNoiseTextureHandle, 3);
 var srcLocation = gl.getUniformLocation(canvas_program, "srcData");
 
 //Create and bind frame buffer
@@ -661,6 +723,9 @@ noiseFramebuffer.width = WIDTH;
 noiseFramebuffer.height = HEIGHT;
 gl.bindFramebuffer(gl.FRAMEBUFFER, noiseFramebuffer);
 
+  gl.useProgram(canvas_program);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.uniform1i(srcLocation, 0);  // texture unit 0
 //Create and bind texture
 var noiseTexture = createAndSetupTexture(gl);
 
