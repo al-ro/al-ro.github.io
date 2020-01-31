@@ -214,10 +214,10 @@ if(mobile){
       vec2 u = f*f*(3.0-2.0*f);
 
       vec2 p = floor(x);
-      float a = texture2D(greyNoiseTexture, (p+vec2(0.5,0.5))/256.0, 0.0 ).r;
-      float b = texture2D(greyNoiseTexture, (p+vec2(0.5,0.5))/256.0, 0.0 ).g;
-      float c = texture2D(greyNoiseTexture, (p-vec2(0.5,0.5))/256.0, 0.0 ).b;
-      float d = texture2D(greyNoiseTexture, (p-vec2(0.5,0.5))/256.0, 0.0 ).a;
+      float a = texture2D(greyNoiseTexture, (p+vec2(0.5,0.5))/256.0, 0.0 ).x;
+      float b = texture2D(greyNoiseTexture, (p+vec2(1.5,0.5))/256.0, 0.0 ).x;
+      float c = texture2D(greyNoiseTexture, (p+vec2(0.5,1.5))/256.0, 0.0 ).x;
+      float d = texture2D(greyNoiseTexture, (p+vec2(1.5,1.5))/256.0, 0.0 ).x;
 
       float res = (a+(b-a)*u.x+(c-a)*u.y+(a-b-c+d)*u.x*u.y);
       res = res - 0.5;
@@ -599,7 +599,7 @@ if(mobile){
   var tex1 = gl.createTexture();
   //Noise LUT from Shadertoy which is cheaper than calculating noise in the fragment shader
   //https://shadertoyunofficial.wordpress.com/2019/07/23/shadertoy-media-files/
-  loadTexture(gl, tex1, 'https://al-ro.github.io/images/terrain/rgbNoise.png');
+  loadTexture(gl, tex1, 'https://al-ro.github.io/images/terrain/greyNoise.png');
 
   window.addEventListener('resize', onWindowResize, false);
 
