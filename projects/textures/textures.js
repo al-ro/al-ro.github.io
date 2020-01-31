@@ -530,12 +530,12 @@ void main() {
   col.a = 1.0;
 */
   uv = (gl_FragCoord.xy) / resolution;
-  float dx = 1.0 / resolution.x;
+  vec2 cell = floor(gl_FragCoord.xy);
 
-  col.r = texture2D(greyNoiseTexture, uv).r;
-  col.g = texture2D(greyNoiseTexture, uv + vec2(1.0, 0.0) * dx).r;
-  col.b = texture2D(greyNoiseTexture, uv + vec2(0.0, 1.0) * dx).r;
-  col.a = texture2D(greyNoiseTexture, uv + vec2(1.0, 1.0) * dx).r;
+  col.r = texture2D(greyNoiseTexture, (cell+vec2(0.5,0.5))/256.0).r;
+  col.g = texture2D(greyNoiseTexture, (cell+vec2(1.5,0.5))/256.0).r;
+  col.b = texture2D(greyNoiseTexture, (cell+vec2(0.5,1.5))/256.0).r;
+  col.a = texture2D(greyNoiseTexture, (cell+vec2(1.5,1.5))/256.0).r;
   gl_FragColor = col;
 }
 `;
@@ -543,7 +543,7 @@ void main() {
 //****************** Canvas shaders ******************
 
 var canvasVertexSource = `
-attribute vec2 texPosition;
+attribute vec2 position;
 varying vec2 texCoord;
 
 void main() {
@@ -551,8 +551,8 @@ void main() {
   // convert from 0->1 to 0->2
   // convert from 0->2 to -1->+1 (clipspace)
 
-  texCoord = texPosition;
-  gl_Position = vec4(texPosition*2.0-1.0, 0.0, 1.0);
+  texCoord = position;
+  gl_Position = vec4(position, 0.0, 1.0);
 }
 `;
 
@@ -564,7 +564,7 @@ uniform sampler2D srcData;
 uniform sampler2D blurData;
 
 void main(){
-  vec4 srcColour = texture2D(srcData, texCoord);
+  vec4 srcColour = texture2D(srcData, gl_FragCoord.xy/256.0);
   gl_FragColor = srcColour;
 }
 `;
@@ -779,10 +779,10 @@ function step(){
   //Send time to program
   gl.uniform1f(timeHandle, time);
   //Render to texture
-  gl.bindFramebuffer(gl.FRAMEBUFFER, noiseFramebuffer);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   //Draw a triangle strip connecting vertices 0-4
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
+/*
 
   //Combine original and blurred image 
   gl.useProgram(canvas_program);
@@ -796,7 +796,7 @@ function step(){
 
   //Draw a triangle strip connecting vertices 0-4
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
+*/
   requestAnimationFrame(step);
 }
 
