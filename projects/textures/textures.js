@@ -537,7 +537,7 @@ void main() {
   col.g = texture2D(greyNoiseTexture, (cell+vec2(1.5,0.5))/256.0).r;
   col.b = texture2D(greyNoiseTexture, (cell+vec2(0.5,1.5))/256.0).r;
   col.a = texture2D(greyNoiseTexture, (cell+vec2(1.5,1.5))/256.0).r;
-  gl_FragColor = vec4(col.r, 0.0, 0.0, 1.0);
+  gl_FragColor = vec4(col.r, col.g, col.b, 1.0);
 }
 `;
 
