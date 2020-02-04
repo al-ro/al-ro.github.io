@@ -1,6 +1,6 @@
 {
-    "name": "al-ro",
-    "short_name": "al-ro",
+    "name": "",
+    "short_name": "",
     "icons": [
         {
             "src": "/android-chrome-192x192.png",
@@ -15,5 +15,5 @@
     ],
     "theme_color": "#ffffff",
     "background_color": "#ffffff",
-    "display": "browser"
+    "display": "standalone"
 }
