@@ -32,6 +32,9 @@ if(mobile){
   if(!gl){
     alert("Unable to initialize WebGL.");
   }
+  
+  //canvas.width *= 0.75;
+  //canvas.height *= 0.75;
 
   //Time
   var time = 0.0;
@@ -45,8 +48,8 @@ if(mobile){
   //Distance of planet
   var coverage = 0.0;
   var scale = 0.03;
-  var power = 5.0;
-  var mainSize = 0.004;
+  var power = 15.0;
+  var mainSize = 0.0014;
   var detailSize = 0.02;
   var detailStrength = 1.0;
   var exposure = 0.5;
@@ -71,7 +74,7 @@ if(mobile){
   }
   gui.add(this, 'sun').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(sunHandle, sun);});
   gui.add(this, 'coverage').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(coverageHandle, coverage);});
-  gui.add(this, 'power').min(0.0).max(1000.0).step(5.0).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power);});
+  gui.add(this, 'power').min(0.0).max(50.0).step(0.1).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power);});
   gui.add(this, 'mainSize').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize);});
   gui.add(this, 'edges').min(0.0).max(1.0).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(edgesHandle, edges);});
   gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize);});
@@ -131,7 +134,7 @@ if(mobile){
     STEPS_PRIMARY = 128;
 #endif
 #ifdef HD
-    STEPS_LIGHT = 64;
+    STEPS_LIGHT = 32;
 #endif
 
   const float PI = 3.141592;
@@ -287,8 +290,11 @@ if(mobile){
 
     //General density of clouds from Perlin-Worley texture
     //float shape = clamp((getCloudShape(mainSize*p) - (1.0-coverage)) * 5.0 , 0.0, 2.0);
-    vec2 coverage_ = 0.5+0.5*cos(p.xz / 10000.0);
-    float shape = coverage+(coverage_.x * coverage_.y)*saturate(getCloudShape(mainSize*p));
+    vec2 coverage_ = cos(p.xz / 10000.0);
+    if(coverage_.x <= 0.5){
+      return 0.0;
+    }
+    float shape = coverage+(coverage_.x)*saturate(getCloudShape(mainSize*p));
 
     //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
     //Assumes there is no height map data and all clouds default to height 1.0
@@ -303,10 +309,10 @@ if(mobile){
       //shape = pow(shape, 1.1);
     }
     //Carving clouds out of large slabs
-    p.xz += time * 100.0;
+    //p.xz += time * 100.0;
     //p.z = 10.0*texture2D(curlNoiseTexture, p.xz/100.0).r;
-    float detailSize_ = detailSize;// mainSize * 5.0;
-    vec3 curl = 500.0 * texture2D(curlNoiseTexture, (time * 100.0 + p.xy)/10000.0).rgr;
+    float detailSize_ = detailSize;//100.0/dist;// mainSize * 5.0;
+    vec3 curl = 50.0 * texture2D(curlNoiseTexture, (time * 100.0 + p.xy)/10000.0).rgr;
     p += curl;
     float detail = getCloudDetail(detailSize_ * p);
     //float detail = getCloudDetail((min(0.04, mainSize * 10.0)) * p, cloudHeight);
@@ -320,7 +326,10 @@ if(mobile){
     //Other sources this
     shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
     //Alter density at the bottom and top of the clouds
-      shape *= saturate(remap(shape, edges, 0.0, 0.01, 0.0));//saturate(remap(edges * shape, 0.0, 0.1, 0.0, 1.0)) * saturate(remap(edges * shape, 0.5, 1.0, 1.0, 0.0));
+    if(edges > 0.0){
+      shape *= saturate(remap(shape, edges, 0.0, 0.01, 0.0));
+    }
+    //saturate(remap(edges * shape, 0.0, 0.1, 0.0, 1.0)) * saturate(remap(edges * shape, 0.5, 1.0, 1.0, 0.0));
     //shape *= saturate(remap(cloudHeight, 0.0, 0.1, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.2, 1.0, 1.0, 0.0));
 
     //detail = 0.5*detailStrength*getCloudDetail(0.2 * detailSize * p);
@@ -367,21 +376,21 @@ if(mobile){
   }
 
   float lightRay(vec3 org, vec3 p, float phaseFunction, float dC, float mu, vec3 sunDirection, float cloudHeight, float dist){
-    int nbSampleLight = 7;
+    int nbSampleLight = 6;
 #ifdef HD
-    nbSampleLight = 16;
+    nbSampleLight = 6;
 #endif
     //The distance for which light samples are taken
     //Reduce to 300 for less noise but also less self-shadowing
     //Try cone sampling
-    float zMaxl         = 200.;
+    float zMaxl         = 300.;
     float stepL         = zMaxl/float(nbSampleLight);
 
     float lighRayDen = 0.0;    
 
     //Introduce noise to eliminate banding/layering artefacts
     //p += sunDirection*stepL*hash(dot(p, vec3(12.256, 2.646, 6.356)));
-    p += sunDirection*stepL*getBlueNoise(gl_FragCoord.xy * 0.03);
+    p += -sunDirection*stepL*getBlueNoise(gl_FragCoord.xy * 0.03);
 
 
     //Collect total density along light ray
@@ -393,20 +402,23 @@ if(mobile){
       lighRayDen += clouds(p + sunDirection * float(j) * stepL, cloudHeight, dist, org);
     }    
 
-    float scatterAmount = mix(0.008, 1.0, smoothstep(0.96, 0.0, mu));
+    float scatterAmount = 0.25;// mix(0.008, 1.0, smoothstep(0.96, 0.0, mu));
 
     //Fake multiple scattering by combining multiple scattering octaves with
     //reduced strength. Modulate wrt. view/sun direction
     //This is very much artistic and can be played around with
     //Discussed in Frostbite paper, credited to Wrenninge et al.
-    float beersLaw = exp(-stepL*lighRayDen)
-      + 0.5 * scatterAmount * exp(-0.1  * stepL * lighRayDen)
-      + 2.0 * scatterAmount * exp(-0.1  * stepL * lighRayDen)
-      + 0.4 * scatterAmount * exp(-0.02 * stepL * lighRayDen);
+
+    //Multiple scattering from Nubis presentation
+    float beersLaw = mix(max(exp(-stepL * lighRayDen), exp(-stepL * lighRayDen * 0.25) * 0.25), exp(-stepL * lighRayDen), mu);
+    /*  + 0.25 * exp(-stepL * 2.0*lighRayDen)
+      + 0.125 * exp(-stepL * 4.0*lighRayDen)
+      + 0.125 * exp(-stepL * 8.0*lighRayDen);
+*/
 
     //Return product of Beer's law and phase function
     //The rest is some height based brightness modulation which is probably very bespoke
-    return beersLaw * phaseFunction *  mix(0.05 + 1.5 * pow(min(1.0, dC * 8.5), 0.3 + 5.5 * cloudHeight), 1.0,  clamp(lighRayDen*0.4, 0.0, 1.0));
+    return beersLaw * 2.0 * (1.0-(exp(-stepL*lighRayDen*2.0)));// *  mix(0.05 + 1.5 * pow(min(1.0, dC * 8.5), 0.3 + 5.5 * cloudHeight), 1.0,  clamp(lighRayDen*0.4, 0.0, 1.0));
   }
 
 
@@ -418,7 +430,6 @@ if(mobile){
     const float ATM_END = ATM_START+CLOUD_HEIGHT;
 
     vec3 color = vec3(0.0);
-
 
     //Limits of the ray within the cloud shell
     //float distToAtmStart = intersectSphere(org, dir, vec3(0.0, 0.0, 0.0), ATM_START);
@@ -444,17 +455,16 @@ if(mobile){
     //Variable to track transmittance along view ray
     totalTransmittance = 1.0;    
 
-    float mu = dot(sunDirection, dir);
+    float mu = 0.5+0.5*dot(sunDirection, dir);
 
     //Curve fitted to a Mie plot
-    float phaseFunction = numericalMieFit(mu);
-    //float phaseFunction = HenyeyGreenstein(0.3, mu);
+    //float phaseFunction = numericalMieFit(mu);
+    float phaseFunction = mix(HenyeyGreenstein(-0.5, mu), HenyeyGreenstein(0.5, mu), 0.8);
     vec2 resolution = vec2(width, height);
 
     //Introduce noise to eliminate banding/layering artefacts
-    p += dir*stepS*getBlueNoise(gl_FragCoord.xy*0.03);
+    p += dir*stepS*getBlueNoise(gl_FragCoord.xy * 0.03);
     float dist = 0.0;
-    //hash(dot(dir, vec3(12.256, 2.646, 6.356)));
 
     //If view direction pointing up
     if(dir.y > -0.015){
@@ -477,16 +487,15 @@ if(mobile){
 	//If there is a cloud at the sample point
 	if(density > 0.0 ){
 
-	  //Temporary hack for sunlight to cycle from white to orange
-	  float sunLight = SUN_POWER * (0.5 + 0.5 * mu);// * (mix(vec3(1.0), vec3(1.0, 0.2, 0.05), 1.0-(0.5 + 0.5 * sin(iTime * 0.5))));
+	  //Increase light when sun is behind camera for better details on cloud surface.
+	  vec3 sunLight = vec3(1) * SUN_POWER * (1.0 + 0.5 * (1.0-mu));
 
 	  //Lighten dark shadows at the bottom of clouds
-	  vec3 ambient = vec3(mix((1.0), (2.0), cloudHeight));//mix(vec3(3.0), vec3(10.0), (0.5 + 0.5 * sin(iTime * 0.5)));
-	  //(0.5 + 0.6*cloudHeight)*vec3(1)*6.5 + vec3(1.) * max(0.0, 1.0-2.0*cloudHeight);
+	  float ambient = mix((1.0), (2.0), cloudHeight);
 
 
 	  //Amount of sunlight that reaches the sample point through the cloud
-	  vec3 luminance = ambient + sunLight * lightRay(org, p, phaseFunction, density, mu, sunDirection, cloudHeight, dist);        	
+	  vec3 luminance = ambient + sunLight * phaseFunction * lightRay(org, p, phaseFunction, density, mu, sunDirection, cloudHeight, dist);        	
 
 	  luminance *= density;
 
@@ -501,7 +510,8 @@ if(mobile){
 
 	  //If ray combined transmittance is close to 0, nothing beyond this sample 
 	  //point is visible, so break early
-	  if(totalTransmittance <= 0.05){
+	  if(totalTransmittance <= 0.01){
+	    totalTransmittance = 0.0;
 	    break;
 	  }
 	}
@@ -568,8 +578,8 @@ if(mobile){
     //p *= time;
       //col = vec3(texture2D(cloudDetailTexture, mod(p.xy, 204.0)/256.0).xy, 0.0);
     */
-    vec3 p = cameraPos + rayDir * 10.0;
-    vec2 curl = texture2D(curlNoiseTexture, 2.1*gl_FragCoord.xy/resolution.x).rg;
+    //vec3 p = cameraPos + rayDir * 10.0;
+    //vec2 curl = texture2D(curlNoiseTexture, 2.1*gl_FragCoord.xy/resolution.x).rg;
     //col = vec3(gl_FragCoord.xy/resolution.x + curl, 0.0);
     //vec2 uv = p.xz/10.0;
     //uv += texture2D(curlNoiseTexture, uv).rg * 2.0 - 1.0;
