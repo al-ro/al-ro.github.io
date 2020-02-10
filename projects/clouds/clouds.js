@@ -33,13 +33,13 @@ if(mobile){
     alert("Unable to initialize WebGL.");
   }
   
-  //canvas.width *= 0.75;
-  //canvas.height *= 0.75;
+  //canvas.width *= 0.5;
+  //canvas.height *= 0.5;
 
   //Time
   var time = 0.0;
   var sun = 0.03;
-  var edges = 0.25;
+  var edges = 0.15;
   var animate = false;
   var blur = false;
   var hd = false;
@@ -49,11 +49,26 @@ if(mobile){
   var coverage = 0.0;
   var scale = 0.03;
   var power = 15.0;
-  var mainSize = 0.0014;
+  var mainSize = 0.01;
   var detailSize = 0.02;
+  var stepSize = 100.0;
   var detailStrength = 1.0;
   var exposure = 0.5;
   //Thickness of the atmosphere
+
+  //Left/right in range [0; 2*PI]
+  var yaw = Math.PI/4.0; 
+  //Up/down in range [-PI/2; PI/2]
+  var pitch = -0.12;
+  var cameraPosition = {x: 0, y: 6300e3, z: 0};
+  var upVector = {x: 0, y: 1, z: 0};
+  var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.0};
+  var mouseDelta = {x: 0, y: 0};
+  var viewDirection = {x: Math.sin(yaw), y: Math.sin(pitch),  z: Math.cos(yaw)};
+  var viewMatrix = [{x: 1, y: 0, z: 0}, 
+		    {x: 0, y: 1, z: 0}, 
+		    {x: 0, y: 0, z: 1}];
+  var isMouseDown = false;
 
   var framebuffer;
 
@@ -64,6 +79,41 @@ if(mobile){
 
   if(!mobile){
     document.getElementById('cc_1').appendChild(stats.domElement);
+  }
+
+  function getViewMatrixAsArray(){
+    var array = [];
+    for(i = 0; i < 3; i++){
+      array.push(viewMatrix[i].x);
+      array.push(viewMatrix[i].y);
+      array.push(viewMatrix[i].z);
+    }
+    return array;
+  }
+
+  function normalize(v){
+    var length = Math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+    return {x: v.x/length, y: v.y/length, z: v.z/length};
+  }
+
+  function cross(a, b){
+    return {x: a.y * b.z - a.z * b.y,
+	    y: a.z * b.x - a.x * b.z,
+	    z: a.x * b.y - a.y * b.x
+    }; 
+  }
+
+  function negate(a){
+    return {x: -a.x, y: -a.y, z: -a.z};
+  }
+
+  //https://www.geertarien.com/blog/2017/07/30/breakdown-of-the-lookAt-function-in-OpenGL/
+  function lookAt(camera, targetDir, up){
+    var zaxis = normalize(targetDir);    
+    var xaxis = normalize(cross(zaxis, up));
+    var yaxis = cross(xaxis, zaxis);
+
+    return [xaxis, yaxis, negate(zaxis)];
   }
 
   //****************** GUI *********************
@@ -78,6 +128,7 @@ if(mobile){
   gui.add(this, 'mainSize').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize);});
   gui.add(this, 'edges').min(0.0).max(1.0).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(edgesHandle, edges);});
   gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize);});
+  gui.add(this, 'stepSize').min(0.0).max(1000.0).step(1.0).onChange(function(value){gl.useProgram(program); gl.uniform1f(stepSizeHandle, stepSize);});
   gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailStrengthHandle, detailStrength);});
   gui.add(this, 'exposure').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(exposureHandle, exposure);});
   gui.add(this, 'animate');
@@ -115,6 +166,7 @@ if(mobile){
     uniform float edges;
     uniform float mainSize;
     uniform float detailSize;
+    uniform float stepSize;
     uniform float detailStrength;
     uniform float exposure;
     uniform sampler2D cloudShapeTexture;
@@ -122,6 +174,9 @@ if(mobile){
     uniform sampler2D blueNoiseTexture;
     uniform sampler2D curlNoiseTexture;
     uniform bool HD;
+
+    uniform vec3 cameraPosition;
+    uniform mat3 viewMatrix;
 
   //#define VOLUME_TEXTURES
   #define NOISE_TEXTURES
@@ -281,7 +336,15 @@ if(mobile){
   //Get density and cloud height at sample point
   float clouds(vec3 p, out float cloudHeight, float dist, vec3 org){
 //Get density and cloud height at sample point
-  
+/*
+    float d = 0.0;
+
+    if(length((p-org)-vec3(0.0, 2000.0, -5000.0)) < 1000.0){
+      d = 0.00001 * length((p-org)-vec3(0.0, 2000.0, -5000.0));
+    }
+
+    return d;
+  */
     //Height of point above the ground
     float atmoHeight = length(p - vec3(0.0, 0.0, 0.0)) - PLANET_RADIUS;
   
@@ -290,11 +353,14 @@ if(mobile){
 
     //General density of clouds from Perlin-Worley texture
     //float shape = clamp((getCloudShape(mainSize*p) - (1.0-coverage)) * 5.0 , 0.0, 2.0);
-    vec2 coverage_ = cos(p.xz / 10000.0);
-    if(coverage_.x <= 0.5){
+    //vec2 coverage_ = cos(p.xz / 10000.0);
+    float polar = atan(p.y/p.x);
+    float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
+    float coverage_ = sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    if(coverage_ <= 0.1){
       return 0.0;
     }
-    float shape = coverage+(coverage_.x)*saturate(getCloudShape(mainSize*p));
+    float shape = coverage+(coverage_)*saturate(getCloudShape(mainSize*p));
 
     //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
     //Assumes there is no height map data and all clouds default to height 1.0
@@ -312,7 +378,7 @@ if(mobile){
     //p.xz += time * 100.0;
     //p.z = 10.0*texture2D(curlNoiseTexture, p.xz/100.0).r;
     float detailSize_ = detailSize;//100.0/dist;// mainSize * 5.0;
-    vec3 curl = 50.0 * texture2D(curlNoiseTexture, (time * 100.0 + p.xy)/10000.0).rgr;
+    vec3 curl = 1000.0 * texture2D(curlNoiseTexture, (100.0 + p.xy)/10000.0).rgr;
     p += curl;
     float detail = getCloudDetail(detailSize_ * p);
     //float detail = getCloudDetail((min(0.04, mainSize * 10.0)) * p, cloudHeight);
@@ -347,7 +413,7 @@ if(mobile){
     return texture2D(blueNoiseTexture, p.xy).x;
   }
   float getBlueNoise(vec2 p){
-    return 4.0*texture2D(blueNoiseTexture, p).x;
+    return 1.0*texture2D(blueNoiseTexture, p).x;
   }
 
   // From https://www.shadertoy.com/view/4sjBDG
@@ -410,7 +476,7 @@ if(mobile){
     //Discussed in Frostbite paper, credited to Wrenninge et al.
 
     //Multiple scattering from Nubis presentation
-    float beersLaw = mix(max(exp(-stepL * lighRayDen), exp(-stepL * lighRayDen * 0.25) * 0.25), exp(-stepL * lighRayDen), mu);
+    float beersLaw = exp(-stepL * lighRayDen);// mix(max(exp(-stepL * lighRayDen), exp(-stepL * lighRayDen * 0.25) * 0.25), exp(-stepL * lighRayDen), mu);
     /*  + 0.25 * exp(-stepL * 2.0*lighRayDen)
       + 0.125 * exp(-stepL * 4.0*lighRayDen)
       + 0.125 * exp(-stepL * 8.0*lighRayDen);
@@ -434,23 +500,34 @@ if(mobile){
     //Limits of the ray within the cloud shell
     //float distToAtmStart = intersectSphere(org, dir, vec3(0.0, 0.0, 0.0), ATM_START);
     float distToAtmStart = sphereIntersect(org, dir, ATM_START);
+    if(distToAtmStart < 0.0){
+      return vec3(-1);
+    }
     if(length(org) > ATM_START){
       distToAtmStart = 0.0;
     }
 
     //float distToAtmEnd = intersectSphere(org, dir, vec3(0.0, 0.0, 0.0), ATM_END);
     float distToAtmEnd = sphereIntersect(org, dir, ATM_END);
-    //The point at which the ray enters the cloud shell
-    vec3 p = org + distToAtmStart * dir;    
+    if(distToAtmEnd < 0.0){
+      return vec3(-1);
+    }
+
     //Step size
     float stepS;
     float stepS_;
     if(HD){
-      stepS = (distToAtmEnd-distToAtmStart) / float(128); 
+      stepS = (distToAtmEnd-distToAtmStart) / float(256); 
     }else{
       stepS = (distToAtmEnd-distToAtmStart) / float(STEPS_PRIMARY); 
     }
+    //stepS = stepSize;
     stepS_ = stepS;
+    float fractional = 0.0;
+    float step = ceil(distToAtmStart / stepS);
+    fractional = step - distToAtmStart;
+    //The point at which the ray enters the cloud shell
+    vec3 p = (org + distToAtmStart  * dir);    
 
     //Variable to track transmittance along view ray
     totalTransmittance = 1.0;    
@@ -462,13 +539,13 @@ if(mobile){
     float phaseFunction = mix(HenyeyGreenstein(-0.5, mu), HenyeyGreenstein(0.5, mu), 0.8);
     vec2 resolution = vec2(width, height);
 
+    float dist = distToAtmStart;
     //Introduce noise to eliminate banding/layering artefacts
-    p += dir*stepS*getBlueNoise(gl_FragCoord.xy * 0.03);
-    float dist = 0.0;
+    //dist += stepS*getBlueNoise(fract(p.xz));
 
     //If view direction pointing up
     if(dir.y > -0.015){
-      for(int i=0; i < 128; i++){
+      for(int i=0; i < 256; i++){
 	if(!HD){
 	  //Who said you can't have variable length for-loops
 	  if(i == STEPS_PRIMARY){break;}
@@ -488,9 +565,12 @@ if(mobile){
 	if(density > 0.0 ){
 
 	  //Increase light when sun is behind camera for better details on cloud surface.
-	  vec3 sunLight = vec3(1) * SUN_POWER * (1.0 + 0.5 * (1.0-mu));
+	  vec3 sunLight = vec3(1) * SUN_POWER;// * (1.0 + 0.5 * (1.0-mu));
 
 	  //Lighten dark shadows at the bottom of clouds
+	  //Tinted reflection protype
+	  //vec3 ambient = mix(vec3(2.0), 1.7*vec3(0.6, 0.76, 0.95), 1.0-cloudHeight);
+
 	  float ambient = mix((1.0), (2.0), cloudHeight);
 
 
@@ -517,7 +597,7 @@ if(mobile){
 	}
 
 	dist += stepS;
-	p += dir*stepS;
+	p = org+dir*dist;
       }
     }
 
@@ -527,27 +607,19 @@ if(mobile){
   void main(){
     vec2 resolution = vec2(width, height);
     //Get the default direction of the ray (along the negative z direction)
-    vec3 rayDir = rayDirection(45.0, gl_FragCoord.xy);
-    vec2 mouseRelative;
-    mouseRelative.x = (mouse.x / resolution.x) * 2.0 - 1.0;
-    mouseRelative.y = (mouse.y / resolution.y) * -2.0 + 1.0;
+    vec3 rayDir = rayDirection(90.0, gl_FragCoord.xy);
 
     //----------------- Define a camera -----------------
 
-    vec3 cameraPos = vec3(0.0, PLANET_RADIUS + scale, 0.0);
+    //vec3 cameraPos = vec3(0.0, PLANET_RADIUS + scale, 0.0);
+    vec3 cameraPos = cameraPosition;
+    cameraPos.y += scale;
 
-    vec3 sunDirection = normalize(vec3(sin(sun), 0.2, -cos(sun)));
+    vec3 sunDirection = normalize(vec3(sin(sun), 0.6, -cos(sun)));
     //sunDirection = normalize(vec3(cos(time), 0.5 + 0.5 * sin(time), sin(time)) );
     //sunDirection = vec3(cos(time), 0.5 + 0.5 * sin(time), sin(time));
 
-    vec3 targetDir = normalize(vec3(sin(mouseRelative.x), mouseRelative.y, -cos(mouseRelative.x)));
-
-    vec3 up = vec3(0.0, 1.0, 0.0);
-
     //---------------------------------------------------
-
-    //Get the view matrix from the camera orientation
-    mat3 viewMatrix = lookAt(cameraPos, targetDir, up);
 
     //Transform the ray to point in the correct direction
     rayDir = normalize(viewMatrix * rayDir);
@@ -808,6 +880,7 @@ loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png');
     var mainSizeHandle = getUniformLocation(program, 'mainSize');
     var hdHandle = getUniformLocation(program, 'HD');
     var detailSizeHandle = getUniformLocation(program, 'detailSize');
+    var stepSizeHandle = getUniformLocation(program, 'stepSize');
     var detailStrengthHandle = getUniformLocation(program, 'detailStrength');
     var exposureHandle = getUniformLocation(program, 'exposure');
     var coverageHandle = getUniformLocation(program, 'coverage');
@@ -815,6 +888,11 @@ loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png');
     var detailTextureHandle = gl.getUniformLocation(program, "cloudDetailTexture");
     var blueNoiseTextureHandle = gl.getUniformLocation(program, "blueNoiseTexture");
     var curlNoiseTextureHandle = gl.getUniformLocation(program, "curlNoiseTexture");
+
+  var viewMatrixHandle = getUniformLocation(program, 'viewMatrix');
+  var cameraPositionHandle = getUniformLocation(program, 'cameraPosition');
+  gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+  gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
 
     gl.activeTexture(gl.TEXTURE0);
     gl.uniform1i(shapeTextureHandle, 0);
@@ -835,6 +913,7 @@ loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png');
     gl.uniform1f(powerHandle, power);
     gl.uniform1f(edgesHandle, edges);
     gl.uniform1f(detailSizeHandle, detailSize);
+    gl.uniform1f(stepSizeHandle, stepSize);
     gl.uniform1f(mainSizeHandle, mainSize);
     gl.uniform1f(detailStrengthHandle, detailStrength);
     gl.uniform1f(exposureHandle, exposure);
@@ -917,6 +996,125 @@ gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, frameBuffer.width, frameBuffer.height, 
 //Assign texture as framebuffer colour attachment
 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, sceneTexture, 0);
 
+
+var lastPos = {x: mousePosition.x, y: mousePosition.y};
+
+  function getPos(canvas, evt){
+    var rect = canvas.getBoundingClientRect();
+    return {
+      x: evt.clientX - rect.left,
+      y: evt.clientY - rect.top
+    };
+  }
+
+  function mouseDown(event){
+    isMouseDown = true;
+    var pos = getPos(canvas, event);
+    lastPos.x = pos.x;
+    lastPos.y = pos.y;
+  }
+  function mouseUp(event){
+    isMouseDown = false;
+    mouseDelta.x = 0.0;
+    mouseDelta.y = 0.0;
+  }
+
+  function updateViewDirection(delta){
+    var yawChange = (delta.x * 0.005) % (2.0 * Math.PI);
+    yaw += yawChange;
+    viewDirection.x = Math.sin(yaw);
+    viewDirection.z = Math.cos(yaw);
+    viewDirection = normalize(viewDirection);
+    yawChange = (delta.y * 0.002) % (2.0 * Math.PI);
+    pitch += yawChange;
+    pitch = Math.max(-Math.PI/2.0, Math.min(Math.PI/2.0, pitch));
+    viewDirection.y = Math.sin(pitch);
+  }
+
+  function mouseMove(event){
+    if(isMouseDown){
+      var pos = getPos(canvas, event);
+      mouseDelta.x = lastPos.x - pos.x;
+      mouseDelta.y = lastPos.y - pos.y;
+      
+      updateViewDirection(mouseDelta);
+      viewMatrix = lookAt(cameraPosition, viewDirection, upVector);
+      gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+      lastPos.x = pos.x;
+      lastPos.y = pos.y;
+    }
+  }
+  canvas.addEventListener('mousedown', mouseDown);
+  canvas.addEventListener('mouseup', mouseUp);
+  canvas.addEventListener('mousemove', mouseMove);
+  var speed = 10050.0;
+  var forward = false;
+  var backward = false;
+  var left = false;
+  var right = false;
+  function keyDown(e){
+    if(e.keyCode == 38 || e.keyCode == 40){
+      e.preventDefault();
+    }
+    if(e.keyCode == 87 || e.keyCode == 38) {
+      forward = true;
+    }
+    if(e.keyCode == 83 || e.keyCode == 40) {
+      backward = true;
+    }
+    if(e.keyCode == 65 || e.keyCode == 37) {
+      left = true;
+    }
+    if(e.keyCode == 68 || e.keyCode == 39) {
+      right = true;
+    }
+  };
+
+  function keyUp(e){
+    if(e.keyCode == 87 || e.keyCode == 38) {
+      forward = false;
+    }
+    if(e.keyCode == 83 || e.keyCode == 40) {
+      backward = false;
+    }
+    if(e.keyCode == 65 || e.keyCode == 37) {
+      left = false;
+    }
+    if(e.keyCode == 68 || e.keyCode == 39) {
+      right = false;
+    }
+  };
+
+  document.addEventListener('keydown', keyDown);
+  document.addEventListener('keyup', keyUp);
+
+  function moveCamera(dT){
+    if(forward){
+      cameraPosition.x += dT * speed * viewDirection.x;
+      cameraPosition.z += dT * speed * viewDirection.z;
+      gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+    }
+    if(backward){
+      cameraPosition.x -= dT * speed * viewDirection.x;
+      cameraPosition.z -= dT * speed * viewDirection.z;
+      gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+    }
+    if(left){
+      var rightVector = cross(upVector, viewDirection);
+      cameraPosition.x += dT * speed * rightVector.x;
+      cameraPosition.z += dT * speed * rightVector.z;
+      gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+    }
+    if(right){
+      var rightVector = cross(upVector, viewDirection);
+      cameraPosition.x -= dT * speed * rightVector.x;
+      cameraPosition.z -= dT * speed * rightVector.z;
+      gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+    }
+  }
+
+
+
 var counter = 0;
 var limit = 500;
   //************** Draw **************
@@ -937,10 +1135,12 @@ var limit = 500;
     gl.uniform1i(shapeTextureHandle, 0);
     //Update time
     thisFrame = Date.now();
+    dT = (thisFrame - lastFrame)/1000.0;
+    time += dT;	
+    moveCamera(dT);
     
-    time += (thisFrame - lastFrame)/1000;	
     if(animate){
-      animateSun((thisFrame - lastFrame)/1000);	
+      animateSun(dT);	
     }
     lastFrame = thisFrame;
 
