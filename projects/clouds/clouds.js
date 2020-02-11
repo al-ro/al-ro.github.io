@@ -36,30 +36,32 @@ if(mobile){
   //canvas.width *= 0.5;
   //canvas.height *= 0.5;
 
+  textureSize = 1024;
+  renderFlag = true;
+
   //Time
   var time = 0.0;
   var sun = 0.03;
-  var edges = 0.15;
+  var edges = 0.5;
   var animate = false;
-  var blur = false;
-  var hd = false;
-  var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.3};
+  var cube = true;
+  var hd = true;
   var isMouseDown = false;
   //Distance of planet
   var coverage = 0.0;
-  var scale = 0.03;
-  var power = 15.0;
+  var scale = 0.0;
+  var power = 10.0;
   var mainSize = 0.01;
   var detailSize = 0.02;
   var stepSize = 100.0;
-  var detailStrength = 1.0;
+  var detailStrength = 0.5;
   var exposure = 0.5;
   //Thickness of the atmosphere
 
   //Left/right in range [0; 2*PI]
-  var yaw = Math.PI/4.0; 
+  var yaw = 0.0;//Math.PI/4.0; 
   //Up/down in range [-PI/2; PI/2]
-  var pitch = -0.12;
+  var pitch = 0.0;//-0.12;
   var cameraPosition = {x: 0, y: 6300e3, z: 0};
   var upVector = {x: 0, y: 1, z: 0};
   var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.0};
@@ -122,24 +124,24 @@ if(mobile){
   if(!mobile){
     customContainer.appendChild(gui.domElement);
   }
-  gui.add(this, 'sun').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(sunHandle, sun);});
-  gui.add(this, 'coverage').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(coverageHandle, coverage);});
-  gui.add(this, 'power').min(0.0).max(50.0).step(0.1).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power);});
-  gui.add(this, 'mainSize').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize);});
-  gui.add(this, 'edges').min(0.0).max(1.0).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(edgesHandle, edges);});
-  gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize);});
-  gui.add(this, 'stepSize').min(0.0).max(1000.0).step(1.0).onChange(function(value){gl.useProgram(program); gl.uniform1f(stepSizeHandle, stepSize);});
-  gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailStrengthHandle, detailStrength);});
-  gui.add(this, 'exposure').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(exposureHandle, exposure);});
+  gui.add(this, 'sun').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(sunHandle, sun); renderFlag = true;});
+  gui.add(this, 'coverage').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(coverageHandle, coverage); renderFlag = true;});
+  gui.add(this, 'power').min(0.0).max(50.0).step(0.1).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power); renderFlag = true;});
+  gui.add(this, 'mainSize').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize); renderFlag = true;});
+  gui.add(this, 'edges').min(0.0).max(1.0).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(edgesHandle, edges); renderFlag = true;});
+  gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize); renderFlag = true;});
+  gui.add(this, 'stepSize').min(0.0).max(1000.0).step(1.0).onChange(function(value){gl.useProgram(program); gl.uniform1f(stepSizeHandle, stepSize); renderFlag = true;});
+  gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailStrengthHandle, detailStrength); renderFlag = true;});
+  gui.add(this, 'exposure').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(exposureHandle, exposure); renderFlag = true;});
   gui.add(this, 'animate');
-  gui.add(this, 'hd').listen().onChange(function(value){gl.useProgram(program); gl.uniform1i(hdHandle, hd);});
-  gui.add(this, 'blur').onChange(function(value){
+  gui.add(this, 'hd').listen().onChange(function(value){gl.useProgram(program); gl.uniform1i(hdHandle, hd); renderFlag = true;});
+  gui.add(this, 'cube').onChange(function(value){
     gl.useProgram(program);
-    gl.uniform1f(widthHandle, canvas.width);
-    gl.uniform1f(heightHandle, canvas.height);
-    gl.useProgram(combine_program);
+    gl.uniform1f(widthHandle, textureSize);
+    gl.uniform1f(heightHandle, textureSize);
+    gl.useProgram(cube_program);
     gl.uniform1f(widthHandle_, canvas.width);
-    gl.uniform1f(heightHandle_, canvas.height);
+    gl.uniform1f(heightHandle_, canvas.height); renderFlag = true;
 });
 
   gui.close();
@@ -662,38 +664,37 @@ if(mobile){
   
 //****************** Combine shaders ******************
 
-var combineVertexSource = `
+var cubeVertexSource = `
   attribute vec2 position;
   void main() {
     gl_Position = vec4(position, 0.0, 1.0);
   }
 `;
 
-var combineFragmentSource = `
+var cubeFragmentSource = `
 precision highp float;
 
 varying vec2 texCoord;
 uniform sampler2D srcData;
 uniform float width;
 uniform float height;
+uniform mat3 viewMatrix;
+
+uniform samplerCube skyBox;
+
+vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
+  vec2 resolution = vec2(width, height);
+  vec2 xy = fragCoord - resolution.xy / 2.0;
+  float z = resolution.y / tan(radians(fieldOfView) / 2.0);
+  return normalize(vec3(xy, -z));
+}
 
 void main() {
   vec2 resolution = vec2(width, height);
-  vec2 offsets[8];
-  offsets[0] = vec2(-1,-1);
-  offsets[1] = vec2(-1, 1);
-  offsets[2] = vec2(1, -1);
-  offsets[3] = vec2(1, 1);
-  offsets[4] = vec2(1, 0);
-  offsets[5] = vec2(0, -1);
-  offsets[6] = vec2(0, 1);
-  offsets[7] = vec2(-1, 0);
-
-  vec3 col = texture2D(srcData, gl_FragCoord.xy / resolution).rgb;
-  for(int i = 0; i < 8; i++){
-    col += texture2D(srcData, (gl_FragCoord.xy + offsets[i])/resolution).rgb;
-  }
-  gl_FragColor = vec4(col/9.0, 1.0);
+  vec3 rayDir = rayDirection(90.0, gl_FragCoord.xy);
+  rayDir = normalize(viewMatrix * rayDir);
+  vec3 col = textureCube(skyBox, vec3(1, -1, 1) * rayDir).rgb;
+  gl_FragColor = vec4(col, 1.0);
 }
 `;
 
@@ -714,30 +715,52 @@ void main() {
     canvas.width = w;
     canvas.height = h;
 
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.viewport(0, 0, textureSize, textureSize);
     
     gl.useProgram(program);
-    gl.uniform1f(widthHandle, canvas.width);
-    gl.uniform1f(heightHandle, canvas.height);
-    gl.useProgram(combine_program);
+    gl.uniform1f(widthHandle, textureSize);
+    gl.uniform1f(heightHandle, textureSize);
+    gl.useProgram(cube_program);
     gl.uniform1f(widthHandle_, canvas.width);
     gl.uniform1f(heightHandle_, canvas.height);
     gl.deleteFramebuffer(framebuffer);
     frameBuffer = gl.createFramebuffer();
-    frameBuffer.width = canvas.width;
-    frameBuffer.height = canvas.height;
+    frameBuffer.width = textureSize;
+    frameBuffer.height = textureSize;
     gl.activeTexture(gl.TEXTURE4);
     gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, frameBuffer.width, frameBuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
     //Assign texture as framebuffer colour attachment
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, sceneTexture, 0);
+    //gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, sceneTexture, 0);
   }
 
 //
 // Initialize a texture and load an image.
 // When the image finished loading copy it into the texture.
 
-function loadTexture(gl, texture, url) {
+
+function createCubeMap(texture){
+  for(i = 0; i < 6; i++){
+    const target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + i;
+
+    // Upload the canvas to the cubemap face.
+    const level = 0;
+    const internalFormat = gl.RGBA;
+    const width = textureSize;
+    const height = textureSize;
+    const format = gl.RGBA;
+    const type = gl.UNSIGNED_BYTE;
+    const pixel = new Uint8Array([255, 0, 0, 255]);  // opaque red
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+    gl.texImage2D(target, level, internalFormat, width, height, 0, format, type, null);
+  }
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+}
+
+var imagesLoaded = [false, false, false, false];
+function loadTexture(gl, texture, url, ready) {
   gl.bindTexture(gl.TEXTURE_2D, texture);
 
   // Because images have to be download over the internet
@@ -751,7 +774,7 @@ function loadTexture(gl, texture, url) {
   const border = 0;
   const srcFormat = gl.RGBA;
   const srcType = gl.UNSIGNED_BYTE;
-  const pixel = new Uint8Array([255, 0, 0, 255]);  // opaque blue
+  const pixel = new Uint8Array([255, 0, 0, 255]);  // opaque red
   gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, width_, height_, border, srcFormat, srcType, pixel);
 
   const image = new Image();
@@ -767,6 +790,7 @@ function loadTexture(gl, texture, url) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    imagesLoaded[ready] = true;
   };
   image.crossOrigin = "";
   image.src = url;
@@ -780,16 +804,21 @@ function isPowerOf2(value) {
 
 gl.activeTexture(gl.TEXTURE0);
 var tex1 = gl.createTexture();
-loadTexture(gl, tex1, 'https://al-ro.github.io/projects/clouds/cloudShapeTexturePacked.png');
+loadTexture(gl, tex1, 'https://al-ro.github.io/projects/clouds/cloudShapeTexturePacked.png', 0);
 gl.activeTexture(gl.TEXTURE1);
 var tex2 = gl.createTexture();
-loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.png');
+loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.png', 1);
 gl.activeTexture(gl.TEXTURE2);
 var tex3 = gl.createTexture();
-loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoise.png');
+loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoise.png', 2);
 gl.activeTexture(gl.TEXTURE3);
 var tex4 = gl.createTexture();
-loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png');
+loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png', 3);
+
+//Cubemap
+gl.activeTexture(gl.TEXTURE5);
+var tex5 = gl.createTexture();
+createCubeMap(tex5);
 
   //Compile shader and combine with source
   function compileShader(shaderSource, shaderType){
@@ -824,8 +853,8 @@ loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png');
 
   if(!mobile){
 
-  var combineVertexShader = compileShader(combineVertexSource, gl.VERTEX_SHADER);
-  var combineFragmentShader = compileShader(combineFragmentSource, gl.FRAGMENT_SHADER);
+  var cubeVertexShader = compileShader(cubeVertexSource, gl.VERTEX_SHADER);
+  var cubeFragmentShader = compileShader(cubeFragmentSource, gl.FRAGMENT_SHADER);
     //Create vertex and fragment shaders
     var vertexShader = compileShader(vertexSource, gl.VERTEX_SHADER);
     var fragmentShader = compileShader(fragmentSource, gl.FRAGMENT_SHADER);
@@ -838,10 +867,10 @@ loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png');
 
     gl.useProgram(program);
 
-    var combine_program = gl.createProgram();
-    gl.attachShader(combine_program, combineVertexShader);
-    gl.attachShader(combine_program, combineFragmentShader);
-    gl.linkProgram(combine_program);
+    var cube_program = gl.createProgram();
+    gl.attachShader(cube_program, cubeVertexShader);
+    gl.attachShader(cube_program, cubeFragmentShader);
+    gl.linkProgram(cube_program);
 
     //Set up rectangle covering entire canvas 
     var vertexData = new Float32Array([
@@ -868,6 +897,7 @@ loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png');
         0 		// how many bytes inside the buffer to start from
     );
 
+      viewMatrix = lookAt(cameraPosition, viewDirection, upVector);
     //Set uniform handle
     var timeHandle = getUniformLocation(program, 'time');
     var sunHandle = getUniformLocation(program, 'sun');
@@ -903,8 +933,8 @@ loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png');
     gl.activeTexture(gl.TEXTURE3);
     gl.uniform1i(curlNoiseTextureHandle, 3);
 
-    gl.uniform1f(widthHandle, canvas.width);
-    gl.uniform1f(heightHandle, canvas.height);
+    gl.uniform1f(widthHandle, textureSize);
+    gl.uniform1f(heightHandle, textureSize);
     gl.uniform2f(mouseHandle, mousePosition.x, mousePosition.y);
     gl.uniform1f(scaleHandle, scale);
     gl.uniform1i(hdHandle, hd);
@@ -919,9 +949,10 @@ loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png');
     gl.uniform1f(exposureHandle, exposure);
     gl.uniform1f(coverageHandle, coverage);
 
-    var srcDataHandle = gl.getUniformLocation(combine_program, "srcData");
-    var widthHandle_ = getUniformLocation(combine_program, 'width');
-    var heightHandle_ = getUniformLocation(combine_program, 'height');
+    var skyBoxHandle = gl.getUniformLocation(cube_program, "skyBox");
+    var widthHandle_ = getUniformLocation(cube_program, 'width');
+    var heightHandle_ = getUniformLocation(cube_program, 'height');
+    var viewMatrixHandle_ = getUniformLocation(cube_program, "viewMatrix");
   }
 
 function getPos(canvas, evt) {
@@ -985,8 +1016,8 @@ function createAndSetupTexture(gl) {
 gl.activeTexture(gl.TEXTURE4);
 //Create and bind frame buffer
 frameBuffer = gl.createFramebuffer();
-frameBuffer.width = canvas.width;
-frameBuffer.height = canvas.height;
+frameBuffer.width = textureSize;
+frameBuffer.height = textureSize;
 gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
 
 //Create and bind texture
@@ -1039,7 +1070,10 @@ var lastPos = {x: mousePosition.x, y: mousePosition.y};
       
       updateViewDirection(mouseDelta);
       viewMatrix = lookAt(cameraPosition, viewDirection, upVector);
+      gl.useProgram(program);
       gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+      gl.useProgram(cube_program);
+      gl.uniformMatrix3fv(viewMatrixHandle_, false, getViewMatrixAsArray());
       lastPos.x = pos.x;
       lastPos.y = pos.y;
     }
@@ -1071,6 +1105,7 @@ var lastPos = {x: mousePosition.x, y: mousePosition.y};
   };
 
   function keyUp(e){
+    renderFlag = true;
     if(e.keyCode == 87 || e.keyCode == 38) {
       forward = false;
     }
@@ -1088,7 +1123,7 @@ var lastPos = {x: mousePosition.x, y: mousePosition.y};
   document.addEventListener('keydown', keyDown);
   document.addEventListener('keyup', keyUp);
 
-  function moveCamera(dT){
+  function moveCamera(dT){ 
     if(forward){
       cameraPosition.x += dT * speed * viewDirection.x;
       cameraPosition.z += dT * speed * viewDirection.z;
@@ -1114,6 +1149,73 @@ var lastPos = {x: mousePosition.x, y: mousePosition.y};
   }
 
 
+  var viewDirections = [{x:  1, y:  0, z:  0},
+			{x: -1, y:  0, z:  0},
+			{x:  0, y: -1, z:  0},
+			{x:  0, y:  1, z:  0},
+			{x:  0, y:  0, z:  1},
+			{x:  0, y:  0, z: -1}];
+
+  var upDirections =   [{x:  0, y:  1, z:  0},
+			{x:  0, y:  1, z:  0},
+			{x:  0, y:  0, z:  1},
+			{x:  0, y:  0, z:  1},
+			{x:  0, y:  1, z:  0},
+			{x:  0, y:  1, z:  0}];
+function renderCubeMap(){
+  gl.useProgram(program);
+  gl.viewport(0, 0, textureSize, textureSize);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.uniform1i(shapeTextureHandle, 0);
+    gl.uniform1f(timeHandle, time);
+    //gl.useProgram(program);
+    gl.uniform1f(widthHandle, textureSize);
+    gl.uniform1f(heightHandle, textureSize);
+    gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
+    var vM = viewMatrix;
+
+    viewMatrix = lookAt(cameraPosition, viewDirections[0], upDirections[0]);
+    gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X, tex5, 0);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    viewMatrix = lookAt(cameraPosition, viewDirections[1], upDirections[1]);
+    gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_NEGATIVE_X, tex5, 0);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    viewMatrix = lookAt(cameraPosition, viewDirections[2], upDirections[2]);
+    gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, tex5, 0);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    viewMatrix = lookAt(cameraPosition, viewDirections[3], upDirections[3]);
+    gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, tex5, 0);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    viewMatrix = lookAt(cameraPosition, viewDirections[4], upDirections[4]);
+    gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, tex5, 0);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    viewMatrix = lookAt(cameraPosition, viewDirections[5], upDirections[5]);
+    gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, tex5, 0);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    viewMatrix = vM;
+}
+
+function renderSkyBox(){
+
+  if(renderFlag && imagesLoaded[0] && imagesLoaded[1] && imagesLoaded[2] && imagesLoaded[3]){
+    renderFlag = false;
+    return true;
+  }
+  return false;
+}
 
 var counter = 0;
 var limit = 500;
@@ -1121,12 +1223,18 @@ var limit = 500;
   var lastFrame = Date.now();
   var thisFrame;
   
+  //renderCubeMap();
   function draw(){
     stats.begin();
-
+    if(renderSkyBox()){
+      renderCubeMap();
+    }
+    
     gl.useProgram(program);
-    if(blur){
-      gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+    if(cube){
+      //gl.viewport(0, 0, textureSize, textureSize);
+      //gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+      //gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X, tex5, 0);
     }else{
       //Draw to canvas
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -1147,18 +1255,22 @@ var limit = 500;
     //Send uniforms to program
     gl.uniform1f(timeHandle, time);
 
-    gl.useProgram(program);
-    gl.uniform1f(widthHandle, canvas.width);
-    gl.uniform1f(heightHandle, canvas.height);
+    //gl.useProgram(program);
+    gl.uniform1f(widthHandle, textureSize);
+    gl.uniform1f(heightHandle, textureSize);
+/*
     //Draw a triangle strip connecting vertices 0-4
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    if(blur){
-      gl.useProgram(combine_program);
+*/
+    if(cube){
+      gl.useProgram(cube_program);
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
       gl.uniform1f(widthHandle_, canvas.width);
       gl.uniform1f(heightHandle_, canvas.height);
-      gl.activeTexture(gl.TEXTURE4);
-      gl.uniform1i(srcDataHandle, 4);  // texture unit 0
-      gl.bindTexture(gl.TEXTURE_2D, sceneTexture);
+      gl.uniformMatrix3fv(viewMatrixHandle_, false, getViewMatrixAsArray());
+      gl.activeTexture(gl.TEXTURE5);
+      gl.uniform1i(skyBoxHandle, 5);  // texture unit 0
+      //gl.bindTexture(gl.TEXTURE_CUBE, tex5);
 
       //Draw to canvas
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
