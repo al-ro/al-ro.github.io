@@ -85,7 +85,7 @@ if(mobile){
 
   function getViewMatrixAsArray(){
     var array = [];
-    for(i = 0; i < 3; i++){
+    for(let i = 0; i < 3; i++){
       array.push(viewMatrix[i].x);
       array.push(viewMatrix[i].y);
       array.push(viewMatrix[i].z);
@@ -216,7 +216,7 @@ if(mobile){
   vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
     vec2 resolution = vec2(width, height);
     vec2 xy = fragCoord - resolution.xy / 2.0;
-    float z = resolution.y / tan(radians(fieldOfView) / 2.0);
+    float z = (0.5 * resolution.y) / tan(radians(fieldOfView) / 2.0);
     return normalize(vec3(xy, -z));
   }
 
@@ -658,6 +658,7 @@ if(mobile){
     //vec2 uv = p.xz/10.0;
     //uv += texture2D(curlNoiseTexture, uv).rg * 2.0 - 1.0;
     //uv = uv * 0.5 + 0.5;
+    //col = 0.5+0.5*normalize(rayDir);
     gl_FragColor = vec4(col, 1.0);
   }
   `;
@@ -685,15 +686,15 @@ uniform samplerCube skyBox;
 vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
   vec2 resolution = vec2(width, height);
   vec2 xy = fragCoord - resolution.xy / 2.0;
-  float z = resolution.y / tan(radians(fieldOfView) / 2.0);
+  float z = (0.5 * resolution.y) / tan(radians(fieldOfView) / 2.0);
   return normalize(vec3(xy, -z));
 }
 
 void main() {
   vec2 resolution = vec2(width, height);
-  vec3 rayDir = rayDirection(90.0, gl_FragCoord.xy);
+  vec3 rayDir = rayDirection(60.0, gl_FragCoord.xy);
   rayDir = normalize(viewMatrix * rayDir);
-  vec3 col = textureCube(skyBox, vec3(1, -1, 1) * rayDir).rgb;
+  vec3 col = textureCube(skyBox, rayDir).rgb;
   gl_FragColor = vec4(col, 1.0);
 }
 `;
@@ -740,7 +741,7 @@ void main() {
 
 
 function createCubeMap(texture){
-  for(i = 0; i < 6; i++){
+  for(let i = 0; i < 6; i++){
     const target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + i;
 
     // Upload the canvas to the cubemap face.
@@ -1148,64 +1149,41 @@ var lastPos = {x: mousePosition.x, y: mousePosition.y};
     }
   }
 
-
+  //https://stackoverflow.com/questions/11685608/convention-of-faces-in-opengl-cubemapping/11694336#11694336
   var viewDirections = [{x:  1, y:  0, z:  0},
 			{x: -1, y:  0, z:  0},
-			{x:  0, y: -1, z:  0},
 			{x:  0, y:  1, z:  0},
+			{x:  0, y: -1, z:  0},
 			{x:  0, y:  0, z:  1},
 			{x:  0, y:  0, z: -1}];
 
-  var upDirections =   [{x:  0, y:  1, z:  0},
-			{x:  0, y:  1, z:  0},
+  var upDirections =   [{x:  0, y: -1, z:  0},
+			{x:  0, y: -1, z:  0},
 			{x:  0, y:  0, z:  1},
-			{x:  0, y:  0, z:  1},
-			{x:  0, y:  1, z:  0},
-			{x:  0, y:  1, z:  0}];
+			{x:  0, y:  0, z:  -1},
+			{x:  0, y: -1, z:  0},
+			{x:  0, y: -1, z:  0}];
 function renderCubeMap(){
   gl.useProgram(program);
   gl.viewport(0, 0, textureSize, textureSize);
   gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
-    gl.activeTexture(gl.TEXTURE0);
-    gl.uniform1i(shapeTextureHandle, 0);
-    gl.uniform1f(timeHandle, time);
-    //gl.useProgram(program);
-    gl.uniform1f(widthHandle, textureSize);
-    gl.uniform1f(heightHandle, textureSize);
-    gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.uniform1i(shapeTextureHandle, 0);
+  gl.uniform1f(timeHandle, time);
+  //gl.useProgram(program);
+  gl.uniform1f(widthHandle, textureSize);
+  gl.uniform1f(heightHandle, textureSize);
+  gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
 
-    var vM = viewMatrix;
+  var vM = viewMatrix;
 
-    viewMatrix = lookAt(cameraPosition, viewDirections[0], upDirections[0]);
+  for(let i = 0; i < 6; i++){
+    viewMatrix = lookAt(cameraPosition, viewDirections[i], upDirections[i]);
     gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X, tex5, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, tex5, 0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-    viewMatrix = lookAt(cameraPosition, viewDirections[1], upDirections[1]);
-    gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_NEGATIVE_X, tex5, 0);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-    viewMatrix = lookAt(cameraPosition, viewDirections[2], upDirections[2]);
-    gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, tex5, 0);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-    viewMatrix = lookAt(cameraPosition, viewDirections[3], upDirections[3]);
-    gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, tex5, 0);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-    viewMatrix = lookAt(cameraPosition, viewDirections[4], upDirections[4]);
-    gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, tex5, 0);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-    viewMatrix = lookAt(cameraPosition, viewDirections[5], upDirections[5]);
-    gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, tex5, 0);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    viewMatrix = vM;
+  }
+  viewMatrix = vM;
 }
 
 function renderSkyBox(){
@@ -1232,9 +1210,6 @@ var limit = 500;
     
     gl.useProgram(program);
     if(cube){
-      //gl.viewport(0, 0, textureSize, textureSize);
-      //gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
-      //gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X, tex5, 0);
     }else{
       //Draw to canvas
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
