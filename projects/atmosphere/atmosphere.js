@@ -33,13 +33,29 @@ if(mobile){
     alert("Unable to initialize WebGL.");
   }
 
-  //Time
-  var sun = 0.03;
-  var animate = false;
-  var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.3};
+  //Sun
+  var elevation = 0.3;
+  var azimuth = 1.0;
+
+  //View direction
+  //Left/right in range [0; 2*PI]
+  var yaw = Math.PI; 
+  //Up/down in range [-PI/2; PI/2]
+  var pitch = -0.12;
+
+  var cameraPosition = {x: 0, y: 0, z: 0};
+  var upVector = {x: 0, y: 1, z: 0};
+  var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.0};
+  var mouseDelta = {x: 0, y: 0};
+  var viewDirection = {x: Math.sin(yaw), y: Math.sin(pitch),  z: Math.cos(yaw)};
+  var viewMatrix = [{x: 1, y: 0, z: 0}, 
+		    {x: 0, y: 1, z: 0}, 
+		    {x: 0, y: 0, z: 1}];
   var isMouseDown = false;
+
   //Distance of planet
-  var scale = 0.03;
+  var scale = 1.5;
+
   //Thickness of the atmosphere
   var thickness = 100000.0;
 
@@ -52,15 +68,54 @@ if(mobile){
     document.getElementById('cc_1').appendChild(stats.domElement);
   }
 
+  function getViewMatrixAsArray(){
+    var array = [];
+    for(i = 0; i < 3; i++){
+      array.push(viewMatrix[i].x);
+      array.push(viewMatrix[i].y);
+      array.push(viewMatrix[i].z);
+    }
+    return array;
+  }
+
+  function normalize(v){
+    var length = Math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+    return {x: v.x/length, y: v.y/length, z: v.z/length};
+  }
+
+  function cross(a, b){
+    return {x: a.y * b.z - a.z * b.y,
+	    y: a.z * b.x - a.x * b.z,
+	    z: a.x * b.y - a.y * b.x
+    }; 
+  }
+
+  function negate(a){
+    return {x: -a.x, y: -a.y, z: -a.z};
+  }
+
+  //https://www.geertarien.com/blog/2017/07/30/breakdown-of-the-lookAt-function-in-OpenGL/
+  function lookAt(camera, targetDir, up){
+    var zaxis = normalize(targetDir);    
+    var xaxis = normalize(cross(zaxis, up));
+    var yaxis = cross(xaxis, zaxis);
+
+    return [xaxis, yaxis, negate(zaxis)];
+  }
+
+  function updateSunPosition(){
+    gl.uniform3f(sunPositionHandle, Math.sin(azimuth), Math.sin(elevation), -Math.cos(azimuth));
+  }
+
   //****************** GUI *********************
   var gui = new dat.GUI({ autoPlace: false });
   var customContainer = document.getElementById('gui_container');
   if(!mobile){
     customContainer.appendChild(gui.domElement);
   }
-  gui.add(this, 'sun').min(-0.2).max(6.283).step(0.0001).listen().onChange(function(value){gl.uniform1f(sunHandle, sun);});
+  gui.add(this, 'azimuth').min(0.0).max(Math.PI*2.0).step(0.01).listen().onChange(function(value){updateSunPosition();});
+  gui.add(this, 'elevation').min(-Math.PI/2.0).max(Math.PI/2.0).step(0.01).listen().onChange(function(value){updateSunPosition();});
   gui.add(this, 'thickness').min(0.0).max(1000000.0).step(100.0).onChange(function(value){gl.uniform1f(thicknessHandle, thickness);});
-  gui.add(this, 'animate');
   gui.close();
 
   //************** Shader sources **************
@@ -79,10 +134,10 @@ if(mobile){
     uniform float height;
     uniform float scale;
     uniform float thickness;
-    uniform vec2 mouse;
+    uniform vec3 sunPosition;
+    uniform vec3 cameraPosition;
+    uniform mat3 viewMatrix;
     vec2 resolution = vec2(width, height);
-  
-    uniform float sun;
    
     #define PI 3.1415
     
@@ -123,7 +178,7 @@ if(mobile){
 
     vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
       vec2 xy = fragCoord - resolution.xy / 2.0;
-      float z = resolution.y / tan(radians(fieldOfView) / 2.0);
+      float z = (0.5 * resolution.y) / tan(radians(fieldOfView) / 2.0);
       return normalize(vec3(xy, -z));
     }
 
@@ -277,29 +332,22 @@ if(mobile){
       }
       return col;
     }
+
+    float getGlow(float dist, float radius, float intensity){
+      dist = max(dist, 1e-6);
+      return pow(radius/dist, intensity);	
+    }
   
     void main(){
   
       //Get the default direction of the ray (along the negative z direction)
-      vec3 rayDir = rayDirection(45.0, gl_FragCoord.xy);
-      vec2 mouseRelative;
-      mouseRelative.x = (mouse.x / resolution.x) * 2.0 - 1.0;
-      mouseRelative.y = (mouse.y / resolution.y) * -2.0 + 1.0;
-   
-      //----------------- Define a camera -----------------
+      vec3 rayDir = rayDirection(50.0, gl_FragCoord.xy);
   
-      vec3 cameraPos = vec3(0.0, PLANET_RADIUS + 1.0, PLANET_RADIUS * scale);
+      vec3 cameraPos = cameraPosition;
+      cameraPos.y = PLANET_RADIUS + 1.0;
+      cameraPos.z = PLANET_RADIUS * scale;
   
-      vec3 sunDirection = vec3(0.0, sin(sun), -cos(sun));
-  
-      vec3 targetDir = vec3(sin(mouseRelative.x), mouseRelative.y, -cos(mouseRelative.x));
-  
-      vec3 up = vec3(0.0, 1.0, 0.0);
-  
-      //---------------------------------------------------
-  
-      //Get the view matrix from the camera orientation
-      mat3 viewMatrix = lookAt(cameraPos, targetDir, up);
+      vec3 sunDirection = normalize(sunPosition);
   
       //Transform the ray to point in the correct direction
       rayDir = normalize(viewMatrix * rayDir);
@@ -310,10 +358,13 @@ if(mobile){
   
       if((rayPlanetIntersect.x <= rayPlanetIntersect.y) && rayPlanetIntersect.x > 0.0){
         col = renderPlanet(cameraPos, rayDir, sunDirection, rayPlanetIntersect);
+      }else{
+	float mu = dot(rayDir, sunDirection);
+	col += getGlow(1.0-mu, 0.00005, 1.4);
       }
   
       col += 40.0*getSkyColour(cameraPos, rayDir, 1e12, sunDirection);
-  
+ 
       //Tone mapping
       col = 1.0 - exp(-col);
       //Gamma correction 1.0/2.2 = 0.4545...
@@ -415,20 +466,25 @@ if(mobile){
     );
 
     //Set uniform handle
-    var sunHandle = getUniformLocation(program, 'sun');
     var widthHandle = getUniformLocation(program, 'width');
     var heightHandle = getUniformLocation(program, 'height');
-    var mouseHandle = getUniformLocation(program, 'mouse');
+    var viewMatrixHandle = getUniformLocation(program, 'viewMatrix');
+    var cameraPositionHandle = getUniformLocation(program, 'cameraPosition');
     var scaleHandle = getUniformLocation(program, 'scale');
     var thicknessHandle = getUniformLocation(program, 'thickness');
+    var sunPositionHandle = getUniformLocation(program, 'sunPosition');
+
+    viewMatrix = lookAt(cameraPosition, viewDirection, upVector);
 
     gl.uniform1f(widthHandle, canvas.width);
     gl.uniform1f(heightHandle, canvas.height);
-    gl.uniform2f(mouseHandle, mousePosition.x, mousePosition.y);
     gl.uniform1f(scaleHandle, scale);
-    gl.uniform1f(sunHandle, sun);
     gl.uniform1f(thicknessHandle, thickness);
+    gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+    gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+    gl.uniform3f(sunPositionHandle, Math.sin(azimuth), Math.sin(elevation), -Math.cos(azimuth));
   }
+  var lastPos = {x: mousePosition.x, y: mousePosition.y};
 
   function getPos(canvas, evt){
     var rect = canvas.getBoundingClientRect();
@@ -440,20 +496,41 @@ if(mobile){
 
   function mouseDown(event){
     isMouseDown = true;
+    var pos = getPos(canvas, event);
+    lastPos.x = pos.x;
+    lastPos.y = pos.y;
   }
   function mouseUp(event){
     isMouseDown = false;
+    mouseDelta.x = 0.0;
+    mouseDelta.y = 0.0;
+  }
+
+  function updateViewDirection(delta){
+    var yawChange = (delta.x * 0.005) % (2.0 * Math.PI);
+    yaw += yawChange;
+    viewDirection.x = Math.sin(yaw);
+    viewDirection.z = Math.cos(yaw);
+    viewDirection = normalize(viewDirection);
+    yawChange = (delta.y * 0.002) % (2.0 * Math.PI);
+    pitch += yawChange;
+    pitch = Math.max(-Math.PI/2.0, Math.min(Math.PI/2.0, pitch));
+    viewDirection.y = Math.sin(pitch);
   }
 
   function mouseMove(event){
     if(isMouseDown){
       var pos = getPos(canvas, event);
-      pos.x *= canvas.width /canvas.clientWidth;
-      pos.y *= canvas.height /canvas.clientHeight;
-      gl.uniform2f(mouseHandle, pos.x, pos.y);
+      mouseDelta.x = lastPos.x - pos.x;
+      mouseDelta.y = lastPos.y - pos.y;
+      
+      updateViewDirection(mouseDelta);
+      viewMatrix = lookAt(cameraPosition, viewDirection, upVector);
+      gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+      lastPos.x = pos.x;
+      lastPos.y = pos.y;
     }
   }
-
   function onScroll(event){
     event.preventDefault();
     scale += event.deltaY * 0.001;
@@ -467,25 +544,11 @@ if(mobile){
   canvas.addEventListener('mousemove', mouseMove);
   canvas.addEventListener('wheel', onScroll);
 
-  function animateSun(dt){
-    sun += dt;
-    sun = sun % 6.283;
-    gl.uniform1f(sunHandle, sun);
-  }
 
   //************** Draw **************
-  var lastFrame = Date.now();
-  var thisFrame;
   
   function draw(){
     stats.begin();
-  
-    //Update time
-    thisFrame = Date.now();
-    if(animate){
-      animateSun((thisFrame - lastFrame)/3000);	
-    }
-    lastFrame = thisFrame;
 
     //Draw a triangle strip connecting vertices 0-4
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
