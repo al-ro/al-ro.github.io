@@ -198,7 +198,7 @@ if(mobile){
 
     vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
       vec2 xy = fragCoord - resolution.xy / 2.0;
-      float z = resolution.y / tan(radians(fieldOfView) / 2.0);
+      float z = (0.5 * resolution.y) / tan(radians(fieldOfView) / 2.0);
       return normalize(vec3(xy, -z));
     }
 
@@ -510,7 +510,7 @@ if(mobile){
 
     void main(){
       //Get the default direction of the ray (along the negative Z direction)
-      vec3 rayDir = rayDirection(45.0, gl_FragCoord.xy);
+      vec3 rayDir = rayDirection(50.0, gl_FragCoord.xy);
 
       vec3 cameraPos = cameraPosition;
       cameraPos.y = getHeight(cameraPos, cameraLimit) + 30.0;

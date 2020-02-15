@@ -478,7 +478,7 @@ if(mobile){
     //Discussed in Frostbite paper, credited to Wrenninge et al.
 
     //Multiple scattering from Nubis presentation
-    float beersLaw = exp(-stepL * lighRayDen);// mix(max(exp(-stepL * lighRayDen), exp(-stepL * lighRayDen * 0.25) * 0.25), exp(-stepL * lighRayDen), mu);
+    float beersLaw = mix(max(exp(-stepL * lighRayDen), exp(-stepL * lighRayDen * 0.25) * 0.25), exp(-stepL * lighRayDen), mu);
     /*  + 0.25 * exp(-stepL * 2.0*lighRayDen)
       + 0.125 * exp(-stepL * 4.0*lighRayDen)
       + 0.125 * exp(-stepL * 8.0*lighRayDen);
@@ -538,7 +538,7 @@ if(mobile){
 
     //Curve fitted to a Mie plot
     //float phaseFunction = numericalMieFit(mu);
-    float phaseFunction = mix(HenyeyGreenstein(-0.5, mu), HenyeyGreenstein(0.5, mu), 0.8);
+    float phaseFunction = mix(HenyeyGreenstein(-0.3, mu), HenyeyGreenstein(0.3, mu), 0.7);
     vec2 resolution = vec2(width, height);
 
     float dist = distToAtmStart;
@@ -573,7 +573,7 @@ if(mobile){
 	  //Tinted reflection protype
 	  //vec3 ambient = mix(vec3(2.0), 1.7*vec3(0.6, 0.76, 0.95), 1.0-cloudHeight);
 
-	  float ambient = mix((1.0), (2.0), cloudHeight);
+	  float ambient = mix((0.75), (1.5), cloudHeight);
 
 
 	  //Amount of sunlight that reaches the sample point through the cloud
@@ -1163,6 +1163,7 @@ var lastPos = {x: mousePosition.x, y: mousePosition.y};
 			{x:  0, y:  0, z:  -1},
 			{x:  0, y: -1, z:  0},
 			{x:  0, y: -1, z:  0}];
+
 function renderCubeMap(){
   gl.useProgram(program);
   gl.viewport(0, 0, textureSize, textureSize);
