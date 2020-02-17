@@ -451,7 +451,7 @@ if(mobile){
     //The distance for which light samples are taken
     //Reduce to 300 for less noise but also less self-shadowing
     //Try cone sampling
-    float zMaxl         = 300.;
+    float zMaxl         = 600.;
     float stepL         = zMaxl/float(nbSampleLight);
 
     float lighRayDen = 0.0;    
