@@ -547,14 +547,14 @@ if(mobile){
 	return true;
       }
       if(!hitsStart || (abs(rayStartIntersect.x - rayStartIntersect.y) < 1.0e-4)){
-	//Ray points straight to space. Single intersection with upper limit
+	//Ray points straight to space. Single intersection with upper limit and possible grazing point with lower limit.
 	totalDistance = rayEndIntersect.y;
 	reentry = false;
 	return true;
       }
 
       if(hitsStart && (abs(rayStartIntersect.x - rayStartIntersect.y) > 1.0e-4) ){
-	//Ray points into space but through the cloud layer. Ray exits and reenters the layer. 
+	//Ray points into space but through the cloud layer. Ray exits and reenters the layer. Three intersection points.
 	//Find total distance in layer and exit limits accordingly.
 	exit = rayStartIntersect.x;
 	reenter = rayStartIntersect.y;
@@ -579,7 +579,7 @@ if(mobile){
       }
 
       if(!hitsStart || (abs(rayStartIntersect.x - rayStartIntersect.y) < 1.0e-4)){
-	//Ray intersects upper limit, travels through the cloud layer and exists at the upper limit without exiting at the lower limit.
+	//Ray intersects upper limit, travels through the cloud layer and exists at the upper limit without exiting at the lower limit. Two or three intersection points.
 	//Two intersection points.
 	distToStart = rayEndIntersect.x;
 	totalDistance = rayEndIntersect.y - distToStart;
@@ -588,7 +588,7 @@ if(mobile){
       }
 
       if(hitsStart && (abs(rayStartIntersect.x - rayStartIntersect.y) > 1.0e-4) ){
-	//Ray points into space but through the cloud layer. Ray exits and reenters the lower limit. 
+	//Ray points into space but through the cloud layer. Ray exits and reenters the lower limit. Four intersection points;
 	//Find total distance in layer and exit limits accordingly.
 	distToStart = rayEndIntersect.x;
 	exit = rayStartIntersect.x;
@@ -612,10 +612,11 @@ if(mobile){
     vec3 color = vec3(0.0);
 
     bool renderClouds = getCloudLayerIntersection(org, dir, distToStart, exit, reenter, totalDistance, reentry);
+
     if(!renderClouds){
+      totalTransmittance = 1.0;
       return color;
     }
-
 
     /*
     //Limits of the ray within the cloud shell
@@ -768,7 +769,13 @@ if(mobile){
     float mu = dot(sunDirection, rayDir);
     //Draw sun
     background += totalTransmittance * vec3(1e4*smoothstep(0.9998, 1.0, mu));
-    color += background * totalTransmittance;
+    
+    vec2 rayPlanetIntersect = sphereIntersections(cameraPos, rayDir, PLANET_RADIUS);
+    
+    bool hitsPlanet = (rayPlanetIntersect.x <= rayPlanetIntersect.y) && rayPlanetIntersect.x > 0.0;
+    if(!hitsPlanet){
+      color += background * totalTransmittance;
+    }
 
     //Why is the returned colour so bright?
     vec3 col = 1.0-exp(-color);
