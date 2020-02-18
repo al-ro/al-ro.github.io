@@ -42,14 +42,14 @@ if(mobile){
   //Time
   var time = 0.0;
   var sun = 0.03;
-  var edges = 0.5;
+  var edges = 0.075;
   var animate = false;
   var cube = true;
   var hd = true;
   var isMouseDown = false;
   //Distance of planet
   var coverage = 0.0;
-  var scale = 0.0;
+  var scale = 0.5;
   var power = 10.0;
   var mainSize = 0.01;
   var detailSize = 0.02;
@@ -173,7 +173,7 @@ if(mobile){
     uniform float exposure;
     uniform sampler2D cloudShapeTexture;
     uniform sampler2D cloudDetailTexture;
-    uniform sampler2D blueNoiseTexture;
+    uniform sampler2D weatherMapTexture;
     uniform sampler2D curlNoiseTexture;
     uniform bool HD;
 
@@ -335,6 +335,23 @@ if(mobile){
       return (first >= 0.0) ? first : second;
     }
 
+    //Return the near and far intersections of an infinite ray and a sphere. 
+    //Assumes sphere at origin. No intersection if result.x > result.y
+    vec2 sphereIntersections(vec3 start, vec3 dir, float radius){
+      float a = dot(dir, dir);
+      float b = 2.0 * dot(dir, start);
+      float c = dot(start, start) - (radius * radius);
+      float d = (b*b) - 4.0*a*c;
+      if (d < 0.0){
+	return vec2(1e5, -1e5);
+      }
+      return vec2((-b - sqrt(d))/(2.0*a), (-b + sqrt(d))/(2.0*a));
+    }
+
+  float getWeatherMap(vec2 p){
+    return texture2D(weatherMapTexture, p).x;
+  }
+
   //Get density and cloud height at sample point
   float clouds(vec3 p, out float cloudHeight, float dist, vec3 org){
 //Get density and cloud height at sample point
@@ -358,11 +375,11 @@ if(mobile){
     //vec2 coverage_ = cos(p.xz / 10000.0);
     float polar = atan(p.y/p.x);
     float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
-    float coverage_ = sin(polar * 1000.0) * cos(azimuth * 1000.0);
-    if(coverage_ <= 0.1){
+    float weather = getWeatherMap(0.000001*(p.xz + 20408.0));//sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    if(weather <= 0.0){
       return 0.0;
     }
-    float shape = coverage+(coverage_)*saturate(getCloudShape(mainSize*p));
+    float shape = coverage+(weather)*saturate(getCloudShape(mainSize*p));
 
     //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
     //Assumes there is no height map data and all clouds default to height 1.0
@@ -381,7 +398,7 @@ if(mobile){
     //p.z = 10.0*texture2D(curlNoiseTexture, p.xz/100.0).r;
     float detailSize_ = detailSize;//100.0/dist;// mainSize * 5.0;
     vec3 curl = 1000.0 * texture2D(curlNoiseTexture, (100.0 + p.xy)/10000.0).rgr;
-    p += curl;
+    //p += curl;
     float detail = getCloudDetail(detailSize_ * p);
     //float detail = getCloudDetail((min(0.04, mainSize * 10.0)) * p, cloudHeight);
     //HZD mentions how inverting the detail noise at the bottom leads to wispy shapes
@@ -394,7 +411,7 @@ if(mobile){
     //Other sources this
     shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
     //Alter density at the bottom and top of the clouds
-    if(edges > 0.0){
+    if(edges >= 0.0){
       shape *= saturate(remap(shape, edges, 0.0, 0.01, 0.0));
     }
     //saturate(remap(edges * shape, 0.0, 0.1, 0.0, 1.0)) * saturate(remap(edges * shape, 0.5, 1.0, 1.0, 0.0));
@@ -411,13 +428,13 @@ if(mobile){
     return (1.0/(4.0 * 3.1415))  * ((1.0 - g * g) / pow(1.0 + g*g - 2.0*g*costh, 1.5));
   }
 
-  float getBlueNoise(vec3 p){
-    return texture2D(blueNoiseTexture, p.xy).x;
+  /*float getBlueNoise(vec3 p){
+    //return texture2D(blueNoiseTexture, p.xy).x;
   }
   float getBlueNoise(vec2 p){
-    return 1.0*texture2D(blueNoiseTexture, p).x;
+    //return 1.0*texture2D(blueNoiseTexture, p).x;
   }
-
+*/
   // From https://www.shadertoy.com/view/4sjBDG
   float numericalMieFit(float costh)
   {
@@ -458,7 +475,7 @@ if(mobile){
 
     //Introduce noise to eliminate banding/layering artefacts
     //p += sunDirection*stepL*hash(dot(p, vec3(12.256, 2.646, 6.356)));
-    p += -sunDirection*stepL*getBlueNoise(gl_FragCoord.xy * 0.03);
+    //p += -sunDirection*stepL*getBlueNoise(gl_FragCoord.xy * 0.03);
 
 
     //Collect total density along light ray
@@ -489,16 +506,118 @@ if(mobile){
     return beersLaw * 2.0 * (1.0-(exp(-stepL*lighRayDen*2.0)));// *  mix(0.05 + 1.5 * pow(min(1.0, dC * 8.5), 0.3 + 5.5 * cloudHeight), 1.0,  clamp(lighRayDen*0.4, 0.0, 1.0));
   }
 
+  //Find the distance to the closest cloud layer intersection, the total distance in the layer and, if applicable, the distances at which the ray exits and re-enters the cloud layer.
+  //Return true if there is an intersection, false otherwise.
+  bool getCloudLayerIntersection(vec3 org, vec3 dir, out float distToStart, out float exit, out float reenter, out float totalDistance, out bool reentry){
+    const float ATM_START = PLANET_RADIUS+CLOUD_START;
+    const float ATM_END = ATM_START+CLOUD_HEIGHT;
+    float cameraHeight = length(org);
+
+    vec2 rayPlanetIntersect = sphereIntersections(org, dir, PLANET_RADIUS);
+    vec2 rayStartIntersect = sphereIntersections(org, dir, ATM_START);
+    vec2 rayEndIntersect = sphereIntersections(org, dir, ATM_END);
+    
+    bool hitsPlanet = (rayPlanetIntersect.x <= rayPlanetIntersect.y) && rayPlanetIntersect.x > 0.0;
+    bool hitsStart = (rayStartIntersect.x <= rayStartIntersect.y) && rayStartIntersect.x > 0.0;
+    bool hitsEnd = (rayEndIntersect.x <= rayEndIntersect.y) && rayEndIntersect.x > 0.0; 
+  
+    if(cameraHeight < ATM_START){
+      //Camera is below cloud layer
+      //0 or 2 intersections
+      //Hits planet when under the cloud layer -> no clouds rendered
+      if(hitsPlanet){
+	return false;
+      }
+      //Ray points through the cloud layer
+      distToStart = rayStartIntersect.y;
+      totalDistance = rayEndIntersect.y - distToStart;
+      reentry = false;
+      return true;
+
+    }else if(cameraHeight > ATM_START && cameraHeight < ATM_END){
+      //Camera is inside cloud layer
+      //1, 2, or 3 intersections
+
+      //Start sampling at camera position
+      distToStart = 0.0;
+      if(hitsPlanet){
+	//Ray points to the ground. Single intersection with lower limit
+	totalDistance = rayStartIntersect.x;
+	reentry = false;
+	return true;
+      }
+      if(!hitsStart || (abs(rayStartIntersect.x - rayStartIntersect.y) < 1.0e-4)){
+	//Ray points straight to space. Single intersection with upper limit
+	totalDistance = rayEndIntersect.y;
+	reentry = false;
+	return true;
+      }
+
+      if(hitsStart && (abs(rayStartIntersect.x - rayStartIntersect.y) > 1.0e-4) ){
+	//Ray points into space but through the cloud layer. Ray exits and reenters the layer. 
+	//Find total distance in layer and exit limits accordingly.
+	exit = rayStartIntersect.x;
+	reenter = rayStartIntersect.y;
+	totalDistance = rayStartIntersect.y - (reenter - exit);
+	reentry = true;	
+	return true;
+      }
+
+    }else{
+      //Camera is above cloud layer
+      //0, 1, 2, 3 or 4 intersections
+      //Doesn't hit layer outer limit or hits it once -> no clouds rendered
+      if(!hitsEnd || (abs(rayEndIntersect.x - rayEndIntersect.y) < 1.0e-4)){
+	return false;
+      }
+      if(hitsPlanet){
+	//Ray points through the cloud layer at the ground. Two intersection points.
+	distToStart = rayEndIntersect.x;
+	totalDistance = rayStartIntersect.x - distToStart;
+	reentry = false;
+	return true;
+      }
+
+      if(!hitsStart || (abs(rayStartIntersect.x - rayStartIntersect.y) < 1.0e-4)){
+	//Ray intersects upper limit, travels through the cloud layer and exists at the upper limit without exiting at the lower limit.
+	//Two intersection points.
+	distToStart = rayEndIntersect.x;
+	totalDistance = rayEndIntersect.y - distToStart;
+	reentry = false;
+	return true;
+      }
+
+      if(hitsStart && (abs(rayStartIntersect.x - rayStartIntersect.y) > 1.0e-4) ){
+	//Ray points into space but through the cloud layer. Ray exits and reenters the lower limit. 
+	//Find total distance in layer and exit limits accordingly.
+	distToStart = rayEndIntersect.x;
+	exit = rayStartIntersect.x;
+	reenter = rayStartIntersect.y;
+	totalDistance = (rayStartIntersect.y - reenter) + (exit - distToStart);
+	reentry = true;	
+	return true;
+      }
+
+    }
+    return false; 
+  }
 
   vec3 skyRay(vec3 org, vec3 dir, vec3 sunDirection, out float totalTransmittance){
 
-    //return 12.5 * vec3(dot(dir, vec3(1.0, 0.0, 0.0)));
-    //The limits of the cloud shell
-    const float ATM_START = PLANET_RADIUS+CLOUD_START;
-    const float ATM_END = ATM_START+CLOUD_HEIGHT;
-
+    float distToStart = 0.0;
+    float exit = -1.0;
+    float reenter = -1.0;
+    float totalDistance = 0.0;
+    bool reentry = false;
     vec3 color = vec3(0.0);
 
+    bool renderClouds = getCloudLayerIntersection(org, dir, distToStart, exit, reenter, totalDistance, reentry);
+    if(!renderClouds){
+      return color;
+    }
+
+
+    /*
     //Limits of the ray within the cloud shell
     //float distToAtmStart = intersectSphere(org, dir, vec3(0.0, 0.0, 0.0), ATM_START);
     float distToAtmStart = sphereIntersect(org, dir, ATM_START);
@@ -529,7 +648,14 @@ if(mobile){
     float step = ceil(distToAtmStart / stepS);
     fractional = step - distToAtmStart;
     //The point at which the ray enters the cloud shell
-    vec3 p = (org + distToAtmStart  * dir);    
+*/
+    float stepS; 
+    if(HD){
+      stepS = totalDistance / float(256); 
+    }else{
+      stepS = totalDistance / float(STEPS_PRIMARY); 
+    }
+    vec3 p = org + distToStart  * dir;    
 
     //Variable to track transmittance along view ray
     totalTransmittance = 1.0;    
@@ -541,12 +667,13 @@ if(mobile){
     float phaseFunction = mix(HenyeyGreenstein(-0.3, mu), HenyeyGreenstein(0.3, mu), 0.7);
     vec2 resolution = vec2(width, height);
 
-    float dist = distToAtmStart;
+    float dist = distToStart;
     //Introduce noise to eliminate banding/layering artefacts
     //dist += stepS*getBlueNoise(fract(p.xz));
 
     //If view direction pointing up
-    if(dir.y > -0.015){
+    //if(dir.y > -0.015){
+    if(true){
       for(int i=0; i < 256; i++){
 	if(!HD){
 	  //Who said you can't have variable length for-loops
@@ -599,6 +726,11 @@ if(mobile){
 	}
 
 	dist += stepS;
+	if(reentry){
+	  if((dist > exit) && (dist < reenter)){
+	    dist = reenter;
+	  }
+	}
 	p = org+dir*dist;
       }
     }
@@ -811,7 +943,7 @@ var tex2 = gl.createTexture();
 loadTexture(gl, tex2, 'https://al-ro.github.io/projects/clouds/dualCloudDetail.png', 1);
 gl.activeTexture(gl.TEXTURE2);
 var tex3 = gl.createTexture();
-loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/blueNoise.png', 2);
+loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/weatherMap.png', 2);
 gl.activeTexture(gl.TEXTURE3);
 var tex4 = gl.createTexture();
 loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png', 3);
@@ -917,7 +1049,7 @@ createCubeMap(tex5);
     var coverageHandle = getUniformLocation(program, 'coverage');
     var shapeTextureHandle = gl.getUniformLocation(program, "cloudShapeTexture");
     var detailTextureHandle = gl.getUniformLocation(program, "cloudDetailTexture");
-    var blueNoiseTextureHandle = gl.getUniformLocation(program, "blueNoiseTexture");
+    var weatherMapTextureHandle = gl.getUniformLocation(program, "weatherMapTexture");
     var curlNoiseTextureHandle = gl.getUniformLocation(program, "curlNoiseTexture");
 
   var viewMatrixHandle = getUniformLocation(program, 'viewMatrix');
@@ -930,7 +1062,7 @@ createCubeMap(tex5);
     gl.activeTexture(gl.TEXTURE1);
     gl.uniform1i(detailTextureHandle, 1);
     gl.activeTexture(gl.TEXTURE2);
-    gl.uniform1i(blueNoiseTextureHandle, 2);
+    gl.uniform1i(weatherMapTextureHandle, 2);
     gl.activeTexture(gl.TEXTURE3);
     gl.uniform1i(curlNoiseTextureHandle, 3);
 
@@ -982,10 +1114,11 @@ function getPos(canvas, evt) {
   }
 
   function onScroll(event){
+    renderFlag = true;
     event.preventDefault();
     scale += event.deltaY;
 
-    scale = Math.min(Math.max(0.0, scale), 5000.0);
+    scale = Math.min(Math.max(0.0, scale), 10000.0);
     gl.useProgram(program);
     gl.uniform1f(scaleHandle, scale);
   }
