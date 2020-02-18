@@ -36,7 +36,7 @@ if(mobile){
   //canvas.width *= 0.5;
   //canvas.height *= 0.5;
 
-  textureSize = 1024;
+  textureSize = 128;
   renderFlag = true;
 
   //Time
