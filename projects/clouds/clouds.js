@@ -49,12 +49,12 @@ if(mobile){
   var isMouseDown = false;
   //Distance of planet
   var coverage = 0.0;
-  var scale = 0.5;
+  var scale = 4000.5;
   var power = 10.0;
-  var mainSize = 0.01;
-  var detailSize = 0.02;
+  var mainSize = 0.02;
+  var detailSize = 0.05;
   var stepSize = 100.0;
-  var detailStrength = 0.5;
+  var detailStrength = 1.0;
   var exposure = 0.5;
   //Thickness of the atmosphere
 
@@ -125,9 +125,10 @@ if(mobile){
     customContainer.appendChild(gui.domElement);
   }
   gui.add(this, 'sun').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(sunHandle, sun); renderFlag = true;});
+  gui.add(this, 'scale').min(0.5).max(10000).step(10.0).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(scaleHandle, scale); renderFlag = true;});
   gui.add(this, 'coverage').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(coverageHandle, coverage); renderFlag = true;});
   gui.add(this, 'power').min(0.0).max(50.0).step(0.1).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power); renderFlag = true;});
-  gui.add(this, 'mainSize').min(0.0).max(0.01).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize); renderFlag = true;});
+  gui.add(this, 'mainSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize); renderFlag = true;});
   gui.add(this, 'edges').min(0.0).max(1.0).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(edgesHandle, edges); renderFlag = true;});
   gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize); renderFlag = true;});
   gui.add(this, 'stepSize').min(0.0).max(1000.0).step(1.0).onChange(function(value){gl.useProgram(program); gl.uniform1f(stepSizeHandle, stepSize); renderFlag = true;});
@@ -375,7 +376,7 @@ if(mobile){
     //vec2 coverage_ = cos(p.xz / 10000.0);
     float polar = atan(p.y/p.x);
     float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
-    float weather = getWeatherMap(0.000001*(p.xz + 20408.0));//sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    float weather = getWeatherMap(p.xz/500000.0);//sin(polar * 1000.0) * cos(azimuth * 1000.0);
     if(weather <= 0.0){
       return 0.0;
     }
@@ -397,8 +398,8 @@ if(mobile){
     //p.xz += time * 100.0;
     //p.z = 10.0*texture2D(curlNoiseTexture, p.xz/100.0).r;
     float detailSize_ = detailSize;//100.0/dist;// mainSize * 5.0;
-    vec3 curl = 1000.0 * texture2D(curlNoiseTexture, (100.0 + p.xy)/10000.0).rgr;
-    //p += curl;
+    vec3 curl = 256.0 * texture2D(curlNoiseTexture, p.xy/10000.0).rgr;
+    p.xz += 2.0*(curl.xy-1.0);
     float detail = getCloudDetail(detailSize_ * p);
     //float detail = getCloudDetail((min(0.04, mainSize * 10.0)) * p, cloudHeight);
     //HZD mentions how inverting the detail noise at the bottom leads to wispy shapes
@@ -534,7 +535,7 @@ if(mobile){
       reentry = false;
       return true;
 
-    }else if(cameraHeight > ATM_START && cameraHeight < ATM_END){
+    }else if(cameraHeight >= ATM_START && cameraHeight <= ATM_END){
       //Camera is inside cloud layer
       //1, 2, or 3 intersections
 
@@ -650,11 +651,16 @@ if(mobile){
     fractional = step - distToAtmStart;
     //The point at which the ray enters the cloud shell
 */
+    const int HD_STEPS = 512;
     float stepS; 
     if(HD){
-      stepS = totalDistance / float(256); 
+      stepS = totalDistance / float(HD_STEPS); 
     }else{
       stepS = totalDistance / float(STEPS_PRIMARY); 
+    }
+    float cameraHeight = length(org);
+    if((cameraHeight > PLANET_RADIUS + CLOUD_START) && (cameraHeight < PLANET_RADIUS + CLOUD_START + CLOUD_HEIGHT)){
+      stepS = 64.0;
     }
     vec3 p = org + distToStart  * dir;    
 
@@ -675,7 +681,7 @@ if(mobile){
     //If view direction pointing up
     //if(dir.y > -0.015){
     if(true){
-      for(int i=0; i < 256; i++){
+      for(int i=0; i < HD_STEPS; i++){
 	if(!HD){
 	  //Who said you can't have variable length for-loops
 	  if(i == STEPS_PRIMARY){break;}
@@ -1133,7 +1139,7 @@ function getPos(canvas, evt) {
   canvas.addEventListener('mousedown', mouseDown);
   canvas.addEventListener('mouseup', mouseUp);
   canvas.addEventListener('mousemove', mouseMove);
-  canvas.addEventListener('wheel', onScroll);
+  //canvas.addEventListener('wheel', onScroll);
 
   function animateSun(dt){
     sun += dt;
