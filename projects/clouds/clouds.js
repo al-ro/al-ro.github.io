@@ -365,9 +365,9 @@ if(mobile){
 
     float polar = atan(p.y/p.x);
     float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
-    float weather = getWeatherMap(p.xz/500000.0);//sin(polar * 1000.0) * cos(azimuth * 1000.0);
-    //float weather = sin(polar * 5000.0) * cos(azimuth * 5000.0);
-    weather = remap(weather, 0.0, 1.0, coverage, 1.0);
+    //float weather = getWeatherMap(p.xz/500000.0);//sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    float weather = sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    //weather = remap(weather, 0.0, 1.0, coverage, 1.0);
     if(weather <= 0.0){
       return 0.0;
     }
@@ -377,7 +377,7 @@ if(mobile){
 
     //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
     //Assumes there is no height map data and all clouds default to height 1.0
-    shape *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.8, 0.9, 1.0, 0.0));
+    shape *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.5, 0.6, 1.0, 0.0));
 
     //Early exit from empty space
     if(shape <= 0.0){
