@@ -41,7 +41,7 @@ if(mobile){
 
   //Time
   var time = 0.0;
-  var edges = 0.1;
+  var densityMultiplier = 0.1;
   var animate = false;
   var cube = true;
   var hd = true;
@@ -139,7 +139,7 @@ if(mobile){
   gui.add(this, 'coverage').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(coverageHandle, coverage); renderFlag = true;});
   gui.add(this, 'power').min(0.0).max(50.0).step(0.1).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power); renderFlag = true;});
   gui.add(this, 'mainSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize); renderFlag = true;});
-  gui.add(this, 'edges').min(0.0).max(1.0).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(edgesHandle, edges); renderFlag = true;});
+  gui.add(this, 'densityMultiplier').min(0.0).max(1.0).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(densityMultiplierHandle, densityMultiplier); renderFlag = true;});
   gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize); renderFlag = true;});
   gui.add(this, 'stepSize').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(stepSizeHandle, stepSize); renderFlag = true;});
   gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailStrengthHandle, detailStrength); renderFlag = true;});
@@ -175,7 +175,7 @@ if(mobile){
     uniform vec2 mouse;
     uniform float time;
     uniform float power;
-    uniform float edges;
+    uniform float densityMultiplier;
     uniform float mainSize;
     uniform float detailSize;
     uniform float stepSize;
@@ -365,8 +365,8 @@ if(mobile){
 
     float polar = atan(p.y/p.x);
     float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
-    //float weather = getWeatherMap(p.xz/500000.0);//sin(polar * 1000.0) * cos(azimuth * 1000.0);
-    float weather = sin(polar * 5000.0) * cos(azimuth * 5000.0);
+    float weather = getWeatherMap(p.xz/500000.0);//sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    //float weather = sin(polar * 5000.0) * cos(azimuth * 5000.0);
     weather = remap(weather, 0.0, 1.0, coverage, 1.0);
     if(weather <= 0.0){
       return 0.0;
@@ -403,13 +403,8 @@ if(mobile){
     //shape = saturate(remap(shape, -(1.0-detail), 1.0, 0.0, 1.0));
     //Other sources this:
     shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
-    
-    //Alter density at the edges of the clouds for wispiness 
-    if(edges >= 0.0){
-      //shape *= saturate(remap(shape, edges, 0.0, 0.01, 0.0));
-    }
 
-    return shape * edges;
+    return shape * densityMultiplier;
   }
 
   float HenyeyGreenstein(float g, float costh){
@@ -962,7 +957,7 @@ createCubeMap(tex5);
     var mouseHandle = getUniformLocation(program, 'mouse');
     var viewHeightHandle = getUniformLocation(program, 'viewHeight');
     var powerHandle = getUniformLocation(program, 'power');
-    var edgesHandle = getUniformLocation(program, 'edges');
+    var densityMultiplierHandle = getUniformLocation(program, 'densityMultiplier');
     var mainSizeHandle = getUniformLocation(program, 'mainSize');
     var hdHandle = getUniformLocation(program, 'HD');
     var detailSizeHandle = getUniformLocation(program, 'detailSize');
@@ -999,7 +994,7 @@ createCubeMap(tex5);
     gl.uniform1i(hdHandle, hd);
     gl.uniform1f(timeHandle, time);
     gl.uniform1f(powerHandle, power);
-    gl.uniform1f(edgesHandle, edges);
+    gl.uniform1f(densityMultiplierHandle, densityMultiplier);
     gl.uniform1f(detailSizeHandle, detailSize);
     gl.uniform1f(stepSizeHandle, stepSize);
     gl.uniform1f(mainSizeHandle, mainSize);
