@@ -41,7 +41,6 @@ if(mobile){
 
   //Time
   var time = 0.0;
-  var sun = 0.03;
   var edges = 0.075;
   var animate = false;
   var cube = true;
@@ -51,13 +50,17 @@ if(mobile){
   var coverage = 0.0;
   var viewHeight = 40.5;
   var power = 10.0;
-  var mainSize = 0.015;
-  var detailSize = 0.05;
+  var mainSize = 0.04;
+  var detailSize = 0.07;
   var stepSize = 0.75;
-  var detailStrength = 1.0;
+  var detailStrength = 0.2;
   var exposure = 0.5;
   //Thickness of the atmosphere
 
+  //Height over horizon in range [0, PI/2.0]
+  var elevation = 0.2;
+  //Rotation around Y axis in range [0, 2*PI]
+  var azimuth = 1.633;
   //Left/right in range [0; 2*PI]
   var yaw = 0.0;//Math.PI/4.0; 
   //Up/down in range [-PI/2; PI/2]
@@ -118,13 +121,20 @@ if(mobile){
     return [xaxis, yaxis, negate(zaxis)];
   }
 
+  function updateSunPosition(){
+    gl.useProgram(program);
+    gl.uniform3f(sunPositionHandle, Math.sin(azimuth), Math.sin(elevation), -Math.cos(azimuth));
+    renderFlag = true;
+  }
+
   //****************** GUI *********************
   var gui = new dat.GUI({ autoPlace: false });
   var customContainer = document.getElementById('gui_container');
   if(!mobile){
     customContainer.appendChild(gui.domElement);
   }
-  gui.add(this, 'sun').min(0.0).max(6.283).step(0.0001).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(sunHandle, sun); renderFlag = true;});
+  gui.add(this, 'elevation').min(-0.1).max(Math.PI/2.0).step(0.01).listen().onChange(function(value){updateSunPosition();});
+  gui.add(this, 'azimuth').min(0.0).max(Math.PI*2.0).step(0.01).listen().onChange(function(value){updateSunPosition();});
   gui.add(this, 'viewHeight').min(0.5).max(10000).step(10.0).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(viewHeightHandle, viewHeight); renderFlag = true;});
   gui.add(this, 'coverage').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(coverageHandle, coverage); renderFlag = true;});
   gui.add(this, 'power').min(0.0).max(50.0).step(0.1).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power); renderFlag = true;});
@@ -164,7 +174,6 @@ if(mobile){
     uniform float height;
     uniform vec2 mouse;
     uniform float time;
-    uniform float sun;
     uniform float power;
     uniform float edges;
     uniform float mainSize;
@@ -179,10 +188,11 @@ if(mobile){
     uniform bool HD;
 
     uniform vec3 cameraPosition;
+    uniform vec3 sunPosition;
     uniform mat3 viewMatrix;
 
-    const int STEPS_PRIMARY = 40;//fast ? 13 : 21;   
-    const int STEPS_LIGHT = 6;//fast ? 7 : 3;
+    const int STEPS_PRIMARY = 40;   
+    const int STEPS_LIGHT = 6;
     const int HD_STEPS = 512;
     const int HD_STEPS_LIGHT = 16;
 
@@ -356,17 +366,18 @@ if(mobile){
     float polar = atan(p.y/p.x);
     float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
     //float weather = getWeatherMap(p.xz/500000.0);//sin(polar * 1000.0) * cos(azimuth * 1000.0);
-    float weather = sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    float weather = sin(polar * 5000.0) * cos(azimuth * 5000.0);
+    weather = remap(weather, 0.0, 1.0, coverage, 1.0);
     if(weather <= 0.0){
       return 0.0;
     }
     
     //Read the cloud shape from the texture based on the weather map data.
-    float shape = coverage+(weather)*saturate(getCloudShape(mainSize*p));
+    float shape = weather * saturate(getCloudShape(mainSize*p));
 
     //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
     //Assumes there is no height map data and all clouds default to height 1.0
-    shape *= saturate(remap(cloudHeight, 0.0, 0.1, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.4, 1.0, 1.0, 0.0));
+    shape *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.8, 0.9, 1.0, 0.0));
 
     //Early exit from empty space
     if(shape <= 0.0){
@@ -374,22 +385,26 @@ if(mobile){
     }
 
     //Carving clouds out of large slabs. Offset sample point by curl noise to avoid pixelation artefacts. Introduces flow like structures on the surface.
-    //Sampling strength (512) and position (combining xz and y) is arbitrary and a result of trial and error.
-    vec2 curl = 512.0 * texture2D(curlNoiseTexture, (0.001*p.y+p.xz)*0.0001).rg;
+    //Sampling strength (512) and position (combining xz and y) are arbitrary from trial and error.
+    vec2 curl = (1.0 - cloudHeight) * 512.0 * texture2D(curlNoiseTexture, (0.001*p.y+p.xz)*0.0001).rg;
 
     //Map from [0; 1] to [-1; 1]
     p.xz += 2.0 * (curl - 1.0);
     float detail = getCloudDetail(detailSize * p);
 
+    //Invert detail noise to subtract from the main shape. Leave the value at the bottom of the cloud to introduce wispy shapes there.
+    detail = mix(detail, 1.0-detail, saturate(cloudHeight * 10.0));
+
     //HZD mentions how inverting the detail noise at the bottom leads to wispy shapes
     //The visual effect of this is not clear
-    detail *= (1.0-shape) * detailStrength;
+    detail *= detailStrength;
 
     //Sebastian Hillaire's code says the following
     //shape = saturate(remap(shape, -(1.0-detail), 1.0, 0.0, 1.0));
     //Other sources this:
     shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
-
+    return shape * 0.1;
+    
     //Alter density at the edges of the clouds for wispiness 
     if(edges >= 0.0){
       shape *= saturate(remap(shape, edges, 0.0, 0.01, 0.0));
@@ -455,7 +470,7 @@ if(mobile){
     }    
 
     //Multiple scattering from Nubis presentation credited to Wrenninge et al. Introduce another weaker Beer-Lambert function when facing away from the sun.
-    float beersLaw = mix(max(exp(-stepL * lighRayDen), exp(-stepL * lighRayDen * 0.25) * 0.75), exp(-stepL * lighRayDen), mu);
+    float beersLaw = mix(max(exp(-stepL * lighRayDen), exp(-stepL * lighRayDen * 0.25) * 1.0), exp(-stepL * lighRayDen), mu);
 
     //Return product of Beer's law and powder effect
     return beersLaw * 2.0 * (1.0-(exp(-stepL*lighRayDen*2.0)));
@@ -620,7 +635,8 @@ if(mobile){
 	//Tinted reflection protype
 	//vec3 ambient = mix(vec3(2.0), 1.7*vec3(0.6, 0.76, 0.95), 1.0-cloudHeight);
 
-	float ambient = mix((0.75), (1.5), cloudHeight);
+	//cloudHeight should be fraction of map data, not of cloud layer
+	float ambient = mix((0.75), (1.0), cloudHeight);
 
 	//Amount of sunlight that reaches the sample point through the cloud
 	vec3 luminance = ambient + sunLight * phaseFunction * lightRay(org, p, phaseFunction, density, mu, sunDirection, cloudHeight, dist);        	
@@ -661,22 +677,21 @@ if(mobile){
     return color;
   }
 
+  float getGlow(float dist, float radius, float intensity){
+    dist = max(dist, 1e-6);
+    return pow(radius/dist, intensity);	
+  }
+
   void main(){
     vec2 resolution = vec2(width, height);
     //Get the default direction of the ray (along the negative z direction)
     vec3 rayDir = rayDirection(90.0, gl_FragCoord.xy);
 
-    //----------------- Define a camera -----------------
-
-    //vec3 cameraPos = vec3(0.0, PLANET_RADIUS + viewHeight, 0.0);
     vec3 cameraPos = cameraPosition;
     cameraPos.y += viewHeight;
 
-    vec3 sunDirection = normalize(vec3(sin(sun), 0.6, -cos(sun)));
-    //sunDirection = normalize(vec3(cos(time), 0.5 + 0.5 * sin(time), sin(time)) );
-    //sunDirection = vec3(cos(time), 0.5 + 0.5 * sin(time), sin(time));
-
-    //---------------------------------------------------
+    vec3 sunDirection = normalize(sunPosition);
+    //normalize(vec3(sin(sun), 0.6, -cos(sun)));
 
     //Transform the ray to point in the correct direction
     rayDir = normalize(viewMatrix * rayDir);
@@ -690,7 +705,8 @@ if(mobile){
 
     float mu = dot(sunDirection, rayDir);
     //Draw sun
-    background += totalTransmittance * vec3(1e4*smoothstep(0.9998, 1.0, mu));
+    //background += totalTransmittance * vec3(1e4*smoothstep(0.9998, 1.0, mu));
+    background += totalTransmittance * getGlow(1.0-mu, 0.00005, 0.6);
     
     vec2 rayPlanetIntersect = sphereIntersections(cameraPos, rayDir, PLANET_RADIUS);
     
@@ -944,7 +960,6 @@ createCubeMap(tex5);
       viewMatrix = lookAt(cameraPosition, viewDirection, upVector);
     //Set uniform handle
     var timeHandle = getUniformLocation(program, 'time');
-    var sunHandle = getUniformLocation(program, 'sun');
     var widthHandle = getUniformLocation(program, 'width');
     var heightHandle = getUniformLocation(program, 'height');
     var mouseHandle = getUniformLocation(program, 'mouse');
@@ -963,10 +978,13 @@ createCubeMap(tex5);
     var weatherMapTextureHandle = gl.getUniformLocation(program, "weatherMapTexture");
     var curlNoiseTextureHandle = gl.getUniformLocation(program, "curlNoiseTexture");
 
-  var viewMatrixHandle = getUniformLocation(program, 'viewMatrix');
-  var cameraPositionHandle = getUniformLocation(program, 'cameraPosition');
-  gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
-  gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+    var viewMatrixHandle = getUniformLocation(program, 'viewMatrix');
+    var cameraPositionHandle = getUniformLocation(program, 'cameraPosition');
+    var sunPositionHandle = getUniformLocation(program, 'sunPosition');
+  
+    gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+    gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
+    gl.uniform3f(sunPositionHandle, Math.sin(azimuth), Math.sin(elevation), Math.cos(azimuth));
 
     gl.activeTexture(gl.TEXTURE0);
     gl.uniform1i(shapeTextureHandle, 0);
@@ -983,7 +1001,6 @@ createCubeMap(tex5);
     gl.uniform1f(viewHeightHandle, viewHeight);
     gl.uniform1i(hdHandle, hd);
     gl.uniform1f(timeHandle, time);
-    gl.uniform1f(sunHandle, sun);
     gl.uniform1f(powerHandle, power);
     gl.uniform1f(edgesHandle, edges);
     gl.uniform1f(detailSizeHandle, detailSize);
@@ -999,7 +1016,7 @@ createCubeMap(tex5);
     var viewMatrixHandle_ = getUniformLocation(cube_program, "viewMatrix");
   }
 
-function getPos(canvas, evt) {
+  function getPos(canvas, evt) {
     var rect = canvas.getBoundingClientRect();
     return {
       x: evt.clientX - rect.left,
@@ -1010,6 +1027,7 @@ function getPos(canvas, evt) {
   function mouseDown(event){
     isMouseDown = true;
   }
+
   function mouseUp(event){
     isMouseDown = false;
   }
@@ -1268,7 +1286,7 @@ var limit = 500;
     moveCamera(dT);
     
     if(animate){
-      animateSun(dT);	
+      //animateSun(dT);	
     }
     lastFrame = thisFrame;
 
