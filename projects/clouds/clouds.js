@@ -41,7 +41,7 @@ if(mobile){
 
   //Time
   var time = 0.0;
-  var edges = 0.075;
+  var edges = 0.1;
   var animate = false;
   var cube = true;
   var hd = true;
@@ -193,7 +193,7 @@ if(mobile){
 
     const int STEPS_PRIMARY = 40;   
     const int STEPS_LIGHT = 6;
-    const int HD_STEPS = 512;
+    const int HD_STEPS = 256;
     const int HD_STEPS_LIGHT = 16;
 
   const float PI = 3.141592;
@@ -403,16 +403,13 @@ if(mobile){
     //shape = saturate(remap(shape, -(1.0-detail), 1.0, 0.0, 1.0));
     //Other sources this:
     shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
-    return shape * 0.1;
     
     //Alter density at the edges of the clouds for wispiness 
     if(edges >= 0.0){
-      shape *= saturate(remap(shape, edges, 0.0, 0.01, 0.0));
+      //shape *= saturate(remap(shape, edges, 0.0, 0.01, 0.0));
     }
 
-    //shape *= saturate(remap(cloudHeight, 0.0, 0.1, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.2, 1.0, 1.0, 0.0));
-
-    return shape;
+    return shape * edges;
   }
 
   float HenyeyGreenstein(float g, float costh){
