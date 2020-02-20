@@ -194,7 +194,7 @@ if(mobile){
     const int STEPS_PRIMARY = 40;   
     const int STEPS_LIGHT = 6;
     const int HD_STEPS = 256;
-    const int HD_STEPS_LIGHT = 16;
+    const int HD_STEPS_LIGHT = 6;
 
   const float PI = 3.141592;
 
@@ -204,8 +204,6 @@ if(mobile){
   const float CLOUD_START = 1500.0;
   const float CLOUD_HEIGHT = 4000.0;
 
-  //const vec3 SUN_POWER = vec3(1.0,0.2,0.1) * 720.;
-  #define SUN_POWER power
   //https://www.geertarien.com/blog/2017/07/30/breakdown-of-the-lookAt-function-in-OpenGL/
   mat3 lookAt(vec3 camera, vec3 targetDir, vec3 up){
     vec3 zaxis = normalize(targetDir);    
@@ -365,8 +363,9 @@ if(mobile){
 
     float polar = atan(p.y/p.x);
     float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
-    //float weather = getWeatherMap(p.xz/500000.0);//sin(polar * 1000.0) * cos(azimuth * 1000.0);
-    float weather = sin(polar * 2000.0) * cos(azimuth * 2000.0);
+    //float weather = 2.0*(getWeatherMap(p.xz/200000.0)-1.0);//sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    float weather = sin(polar * 5000.0) * cos(azimuth * 5000.0);
+    //weather = remap(weather, 0.0, 1.0, 0.0, 0.5);
     weather = remap(weather, 0.0, 1.0, coverage, 1.0);
     if(weather <= 0.0){
       return 0.0;
@@ -377,7 +376,7 @@ if(mobile){
 
     //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
     //Assumes there is no height map data and all clouds default to height 1.0
-    shape *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.7, 0.8, 1.0, 0.0));
+    shape *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.5, 0.9, 1.0, 0.0));
 
     //Early exit from empty space
     if(shape <= 0.0){
@@ -395,13 +394,8 @@ if(mobile){
     //Invert detail noise to subtract from the main shape. Leave the value at the bottom of the cloud to introduce wispy shapes there.
     detail = mix(detail, 1.0-detail, saturate(cloudHeight * 10.0));
 
-    //HZD mentions how inverting the detail noise at the bottom leads to wispy shapes
-    //The visual effect of this is not clear
     detail *= detailStrength;
 
-    //Sebastian Hillaire's code says the following
-    //shape = saturate(remap(shape, -(1.0-detail), 1.0, 0.0, 1.0));
-    //Other sources this:
     shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
 
     return shape * densityMultiplier;
@@ -411,41 +405,9 @@ if(mobile){
     return (1.0/(4.0 * 3.1415))  * ((1.0 - g * g) / pow(1.0 + g*g - 2.0*g*costh, 1.5));
   }
 
-  /*float getBlueNoise(vec3 p){
-    //return texture2D(blueNoiseTexture, p.xy).x;
-  }
-  float getBlueNoise(vec2 p){
-    //return 1.0*texture2D(blueNoiseTexture, p).x;
-  }
-*/
-  // From https://www.shadertoy.com/view/4sjBDG
-  float numericalMieFit(float costh)
-  {
-    // This function was optimized to minimize (delta*delta)/reference in order to capture
-    // the low intensity behavior.
-    float bestParams[10];
-    bestParams[0]=9.805233e-06;
-    bestParams[1]=-6.500000e+01;
-    bestParams[2]=-5.500000e+01;
-    bestParams[3]=8.194068e-01;
-    bestParams[4]=1.388198e-01;
-    bestParams[5]=-8.370334e+01;
-    bestParams[6]=7.810083e+00;
-    bestParams[7]=2.054747e-03;
-    bestParams[8]=2.600563e-02;
-    bestParams[9]=-4.552125e-12;
-
-    float p1 = costh + bestParams[3];
-    vec4 expValues = exp(vec4(bestParams[1] * costh+bestParams[2], bestParams[5] * p1 * p1, bestParams[6] *costh, bestParams[9] *costh));
-
-    vec4 expValWeight= vec4(bestParams[0], bestParams[4], bestParams[7], bestParams[8]);
-
-    return dot(expValues, expValWeight);
-  }
-
   float lightRay(vec3 org, vec3 p, float phaseFunction, float dC, float mu, vec3 sunDirection, float cloudHeight, float dist){
 
-    float lightRayDistance = 600.0;
+    float lightRayDistance = 800.0;
     float stepL = lightRayDistance/float(STEPS_LIGHT);
     if(HD){
       stepL = lightRayDistance/float(HD_STEPS_LIGHT);
@@ -621,7 +583,7 @@ if(mobile){
       //If there is a cloud at the sample point
       if(density > 0.0 ){
 
-	vec3 sunLight = vec3(1) * SUN_POWER;
+	vec3 sunLight = vec3(1) * power;
 
 	//Lighten dark shadows at the bottom of clouds
 	//Tinted reflection protype
