@@ -194,7 +194,7 @@ if(mobile){
     const int STEPS_PRIMARY = 40;   
     const int STEPS_LIGHT = 6;
     const int HD_STEPS = 256;
-    const int HD_STEPS_LIGHT = 6;
+    const int HD_STEPS_LIGHT = 16;
 
   const float PI = 3.141592;
 
