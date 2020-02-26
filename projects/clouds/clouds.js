@@ -36,8 +36,9 @@ if(mobile){
   //canvas.width *= 0.5;
   //canvas.height *= 0.5;
 
-  textureSize = 1024;
-  renderFlag = true;
+  var textureSize = 1024;
+  var renderFlag = true;
+  var EARTH_RADIUS = 6377629.85;
 
   //Time
   var time = 0.0;
@@ -48,7 +49,7 @@ if(mobile){
   var isMouseDown = false;
   //Distance of planet
   var coverage = 0.0;
-  var viewHeight = 40.5;
+  var viewHeight = 10.5;
   var power = 10.0;
   var mainSize = 0.04;
   var detailSize = 0.04;
@@ -65,7 +66,7 @@ if(mobile){
   var yaw = 0.0;//Math.PI/4.0; 
   //Up/down in range [-PI/2; PI/2]
   var pitch = 0.0;//-0.12;
-  var cameraPosition = {x: 0, y: 6300e3, z: 0};
+  var cameraPosition = {x: 0, y: EARTH_RADIUS, z: 0};
   var upVector = {x: 0, y: 1, z: 0};
   var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.0};
   var mouseDelta = {x: 0, y: 0};
@@ -199,7 +200,7 @@ if(mobile){
   const float PI = 3.141592;
 
   // Cloud parameters
-  const float PLANET_RADIUS = 6300e3;
+  const float PLANET_RADIUS = float(`+EARTH_RADIUS+`);
   // From Babic thesis, probably same as HZD
   const float CLOUD_START = 1500.0;
   const float CLOUD_HEIGHT = 4000.0;
@@ -388,7 +389,7 @@ if(mobile){
     vec2 curl = (1.0 - cloudHeight) * 512.0 * texture2D(curlNoiseTexture, (0.001*p.y+p.xz)*0.0001).rg;
 
     //Map from [0; 1] to [-1; 1]
-    p.xz += 2.0 * (curl - 1.0);
+    //p.xz += 2.0 * (curl - 1.0);
     float detail = getCloudDetail(detailSize * p);
 
     //Invert detail noise to subtract from the main shape. Leave the value at the bottom of the cloud to introduce wispy shapes there.
@@ -1199,6 +1200,7 @@ function renderCubeMap(){
     gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, tex5, 0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    //break;
   }
   viewMatrix = vM;
 }
