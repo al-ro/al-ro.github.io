@@ -36,7 +36,19 @@ if(mobile){
   //canvas.width *= 0.5;
   //canvas.height *= 0.5;
 
-  var textureSize = 1024;
+  //The size of the cube map side
+  var cubeMapSize = 1024;
+  //The size of a tile side
+  var tileSize = 256;
+  //Total number of tiles on a single cube map side
+  var tileCount = cubeMapSize / tileSize;
+  //Array for tile data
+  var tilePixels = new Uint8Array(tileSize*tileSize*4);  // opaque red
+  
+  var faceCounter = 0;
+  var xCounter = 0;
+  var yCounter = 0;
+
   var renderFlag = true;
   var EARTH_RADIUS = 6377629.85;
 
@@ -74,6 +86,10 @@ if(mobile){
   var viewMatrix = [{x: 1, y: 0, z: 0}, 
 		    {x: 0, y: 1, z: 0}, 
 		    {x: 0, y: 0, z: 1}];
+  var tileMatrix = [{x: 1, y: 0, z: 0, w: 0}, 
+		    {x: 0, y: 1, z: 0, w: 0}, 
+		    {x: 0, y: 0, z: 1, w: 0},
+		    {x: 0, y: 0, z: 1, w: 1}];
   var isMouseDown = false;
 
   var framebuffer;
@@ -93,6 +109,17 @@ if(mobile){
       array.push(viewMatrix[i].x);
       array.push(viewMatrix[i].y);
       array.push(viewMatrix[i].z);
+    }
+    return array;
+  }
+
+  function getTileMatrixAsArray(){
+    var array = [];
+    for(let i = 0; i < 4; i++){
+      array.push(viewMatrix[i].x);
+      array.push(viewMatrix[i].y);
+      array.push(viewMatrix[i].z);
+      array.push(viewMatrix[i].w);
     }
     return array;
   }
@@ -149,8 +176,8 @@ if(mobile){
   gui.add(this, 'hd').listen().onChange(function(value){gl.useProgram(program); gl.uniform1i(hdHandle, hd); renderFlag = true;});
   gui.add(this, 'cube').onChange(function(value){
     gl.useProgram(program);
-    gl.uniform1f(widthHandle, textureSize);
-    gl.uniform1f(heightHandle, textureSize);
+    gl.uniform1f(widthHandle, tileWidth);
+    gl.uniform1f(heightHandle, tileWidth);
     gl.useProgram(cube_program);
     gl.uniform1f(widthHandle_, canvas.width);
     gl.uniform1f(heightHandle_, canvas.height); renderFlag = true;
@@ -173,6 +200,9 @@ if(mobile){
     uniform float coverage;
     uniform float width;
     uniform float height;
+    uniform float totalWidth;
+    uniform float totalHeight;
+    uniform vec2 tileOffset;
     uniform vec2 mouse;
     uniform float time;
     uniform float power;
@@ -215,8 +245,8 @@ if(mobile){
   }
 
   vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
-    vec2 resolution = vec2(width, height);
-    vec2 xy = fragCoord - resolution.xy / 2.0;
+    vec2 resolution = vec2(totalWidth, totalHeight);
+    vec2 xy = tileOffset+fragCoord - resolution.xy / 2.0;
     float z = (0.5 * resolution.y) / tan(radians(fieldOfView) / 2.0);
     return normalize(vec3(xy, -z));
   }
@@ -730,18 +760,18 @@ void main() {
     canvas.width = w;
     canvas.height = h;
 
-    gl.viewport(0, 0, textureSize, textureSize);
+    gl.viewport(0, 0, tileSize, tileSize);
     
     gl.useProgram(program);
-    gl.uniform1f(widthHandle, textureSize);
-    gl.uniform1f(heightHandle, textureSize);
+    gl.uniform1f(widthHandle, tileSize);
+    gl.uniform1f(heightHandle, tileSize);
     gl.useProgram(cube_program);
     gl.uniform1f(widthHandle_, canvas.width);
     gl.uniform1f(heightHandle_, canvas.height);
     gl.deleteFramebuffer(framebuffer);
     frameBuffer = gl.createFramebuffer();
-    frameBuffer.width = textureSize;
-    frameBuffer.height = textureSize;
+    frameBuffer.width = tileSize;
+    frameBuffer.height = tileSize;
     gl.activeTexture(gl.TEXTURE4);
     gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, frameBuffer.width, frameBuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
@@ -761,8 +791,8 @@ function createCubeMap(texture){
     // Upload the canvas to the cubemap face.
     const level = 0;
     const internalFormat = gl.RGBA;
-    const width = textureSize;
-    const height = textureSize;
+    const width = cubeMapSize;
+    const height = cubeMapSize;
     const format = gl.RGBA;
     const type = gl.UNSIGNED_BYTE;
     const pixel = new Uint8Array([255, 0, 0, 255]);  // opaque red
@@ -772,6 +802,15 @@ function createCubeMap(texture){
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+}
+
+function createTileTexture(texture){
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, tileSize, tileSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return texture;
 }
 
 var imagesLoaded = [false, false, false, false];
@@ -834,6 +873,11 @@ loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png', 3
 gl.activeTexture(gl.TEXTURE5);
 var tex5 = gl.createTexture();
 createCubeMap(tex5);
+
+//Tile 
+gl.activeTexture(gl.TEXTURE6);
+var tileTexture = gl.createTexture();
+createTileTexture(tileTexture);
 
   //Compile shader and combine with source
   function compileShader(shaderSource, shaderType){
@@ -917,6 +961,9 @@ createCubeMap(tex5);
     var timeHandle = getUniformLocation(program, 'time');
     var widthHandle = getUniformLocation(program, 'width');
     var heightHandle = getUniformLocation(program, 'height');
+    var totalWidthHandle = getUniformLocation(program, 'totalWidth');
+    var totalHeightHandle = getUniformLocation(program, 'totalHeight');
+    var tileOffsetHandle = getUniformLocation(program, 'tileOffset');
     var mouseHandle = getUniformLocation(program, 'mouse');
     var viewHeightHandle = getUniformLocation(program, 'viewHeight');
     var powerHandle = getUniformLocation(program, 'power');
@@ -936,7 +983,7 @@ createCubeMap(tex5);
     var viewMatrixHandle = getUniformLocation(program, 'viewMatrix');
     var cameraPositionHandle = getUniformLocation(program, 'cameraPosition');
     var sunPositionHandle = getUniformLocation(program, 'sunPosition');
-  
+
     gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
     gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
     gl.uniform3f(sunPositionHandle, Math.sin(azimuth), Math.sin(elevation), Math.cos(azimuth));
@@ -950,8 +997,11 @@ createCubeMap(tex5);
     gl.activeTexture(gl.TEXTURE3);
     gl.uniform1i(curlNoiseTextureHandle, 3);
 
-    gl.uniform1f(widthHandle, textureSize);
-    gl.uniform1f(heightHandle, textureSize);
+    gl.uniform1f(widthHandle, tileSize);
+    gl.uniform1f(heightHandle, tileSize);
+    gl.uniform1f(totalWidthHandle, cubeMapSize);
+    gl.uniform1f(totalHeightHandle, cubeMapSize);
+    gl.uniform2f(tileOffsetHandle, xCounter*tileSize, yCounter*tileSize);
     gl.uniform2f(mouseHandle, mousePosition.x, mousePosition.y);
     gl.uniform1f(viewHeightHandle, viewHeight);
     gl.uniform1i(hdHandle, hd);
@@ -1034,8 +1084,8 @@ function createAndSetupTexture(gl) {
 gl.activeTexture(gl.TEXTURE4);
 //Create and bind frame buffer
 frameBuffer = gl.createFramebuffer();
-frameBuffer.width = textureSize;
-frameBuffer.height = textureSize;
+frameBuffer.width = tileSize;
+frameBuffer.height = tileSize;
 gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
 
 //Create and bind texture
@@ -1181,34 +1231,71 @@ var lastPos = {x: mousePosition.x, y: mousePosition.y};
 			{x:  0, y: -1, z:  0},
 			{x:  0, y: -1, z:  0}];
 
+function setCounters(){
+  xCounter++;
+  if(xCounter == tileCount){
+    xCounter = 0;
+    yCounter++;
+    if(yCounter == tileCount){
+      yCounter = 0;
+      faceCounter++;
+      if(faceCounter == 6){
+	faceCounter = 0;
+      }
+    }
+  }
+}
+
 function renderCubeMap(){
   gl.useProgram(program);
-  gl.viewport(0, 0, textureSize, textureSize);
+  gl.viewport(0, 0, tileSize, tileSize);
   gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
   gl.activeTexture(gl.TEXTURE0);
   gl.uniform1i(shapeTextureHandle, 0);
   gl.uniform1f(timeHandle, time);
   //gl.useProgram(program);
-  gl.uniform1f(widthHandle, textureSize);
-  gl.uniform1f(heightHandle, textureSize);
+  gl.uniform1f(widthHandle, tileSize);
+  gl.uniform1f(heightHandle, tileSize);
   gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
 
   var vM = viewMatrix;
+  //gl.readPixels();
 
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tileTexture, 0);
+/*
   for(let i = 0; i < 6; i++){
-    viewMatrix = lookAt(cameraPosition, viewDirections[i], upDirections[i]);
-    gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, tex5, 0);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    //break;
+    for(let y = 0; y < tileCount; y++){
+      for(let x = 0; x < tileCount; x++){
+*/
+
+	viewMatrix = lookAt(cameraPosition, viewDirections[faceCounter], upDirections[faceCounter]);
+	gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+	gl.uniform2f(tileOffsetHandle, yCounter*tileSize, xCounter*tileSize);
+
+	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+	gl.activeTexture(gl.TEXTURE6);
+	//gl.bindTexture(gl.TEXTURE_2D, tileTexture);
+	gl.readPixels(0, 0, tileSize, tileSize, gl.RGBA, gl.UNSIGNED_BYTE, tilePixels); 
+
+	gl.activeTexture(gl.TEXTURE5);
+	//gl.bindTexture(gl.TEXTURE_CUBE, tex5);
+
+	gl.texSubImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + faceCounter, 0, yCounter*tileSize, xCounter*tileSize, tileSize, tileSize, gl.RGBA, gl.UNSIGNED_BYTE, tilePixels);
+	setCounters();
+	//break;
+/*
+      }
+    }
   }
+*/
   viewMatrix = vM;
 }
 
 function renderSkyBox(){
 
   if(renderFlag && imagesLoaded[0] && imagesLoaded[1] && imagesLoaded[2] && imagesLoaded[3]){
-    renderFlag = false;
+    //renderFlag = false;
     return true;
   }
   return false;
@@ -1250,8 +1337,8 @@ var limit = 500;
     gl.uniform1f(timeHandle, time);
 
     //gl.useProgram(program);
-    gl.uniform1f(widthHandle, textureSize);
-    gl.uniform1f(heightHandle, textureSize);
+    //gl.uniform1f(widthHandle, tileSize);
+    //gl.uniform1f(heightHandle, tileSize);
 /*
     //Draw a triangle strip connecting vertices 0-4
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
