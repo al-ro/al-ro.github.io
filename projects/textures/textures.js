@@ -17,7 +17,7 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 
 var canvas = document.getElementById("canvas_1");
 
-var WIDTH = 256;
+var WIDTH = 512;
 var HEIGHT = WIDTH;
 
 canvas.width = WIDTH;
@@ -403,7 +403,7 @@ float getTextureForPoint(vec3 p, int type){
 
 void main() {
   //Normalized pixel coordinates (from 0 to 1)
-  float tileSize = 256.0;
+  float tileSize = 512.0;
   float padWidth = 0.0;
   float coreSize = tileSize - 2.0 * padWidth;
   float tileRows = 1.0;
@@ -537,7 +537,19 @@ void main() {
   col.g = texture2D(greyNoiseTexture, (cell+vec2(1.5,0.5))/256.0).r;
   col.b = texture2D(greyNoiseTexture, (cell+vec2(0.5,1.5))/256.0).r;
   col.a = texture2D(greyNoiseTexture, (cell+vec2(1.5,1.5))/256.0).r;
-  gl_FragColor = vec4(col.r, col.g, col.b, 1.0);
+
+  float worley0 = worley(p, NUM_CELLS);
+  float worley1 = worley(p, NUM_CELLS*2.0);
+  float worley2 = worley(p, NUM_CELLS*4.0);
+  float worley3 = worley(p, NUM_CELLS*8.0);
+
+  float FBM0 = worley0 * 0.625 + worley1 * 0.25 + worley2 * 0.125;
+  float FBM1 = worley1 * 0.625 + worley2 * 0.25 + worley3 * 0.125;
+  float FBM2 = worley2 * 0.75 + worley3 * 0.25;
+
+  float res = FBM0 * 0.625 + FBM1 * 0.25 + FBM2 * 0.125;
+  col.rgb = vec3(res);
+  gl_FragColor = vec4(col.rgb, 1.0);
 }
 `;
 
