@@ -1241,6 +1241,7 @@ function setCounters(){
       faceCounter++;
       if(faceCounter == 6){
 	faceCounter = 0;
+	renderFlag = false;
       }
     }
   }
