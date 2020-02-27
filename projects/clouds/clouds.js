@@ -161,8 +161,8 @@ if(mobile){
   if(!mobile){
     customContainer.appendChild(gui.domElement);
   }
-  gui.add(this, 'elevation').min(-0.1).max(Math.PI/2.0).step(0.01).listen().onChange(function(value){updateSunPosition();});
-  gui.add(this, 'azimuth').min(0.0).max(Math.PI*2.0).step(0.01).listen().onChange(function(value){updateSunPosition();});
+  gui.add(this, 'elevation').min(-0.1).max(Math.PI/2.0).step(0.01).listen().onChange(function(value){updateSunPosition(); renderFlag = true;});
+  gui.add(this, 'azimuth').min(0.0).max(Math.PI*2.0).step(0.01).listen().onChange(function(value){updateSunPosition(); renderFlag = true;});
   gui.add(this, 'viewHeight').min(0.5).max(10000).step(10.0).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(viewHeightHandle, viewHeight); renderFlag = true;});
   gui.add(this, 'coverage').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(coverageHandle, coverage); renderFlag = true;});
   gui.add(this, 'power').min(0.0).max(50.0).step(0.1).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power); renderFlag = true;});
@@ -405,7 +405,7 @@ if(mobile){
 
     //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
     //Assumes there is no height map data and all clouds default to height 1.0
-    float height = weather;
+    float height = pow(weather, 2.0);
     //What fraction through the shell is the point situated
     cloudHeight = clamp((atmoHeight-CLOUD_START)/(CLOUD_HEIGHT*height), 0.0, 1.0);
     shape *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, height*0.5, height*0.9, 1.0, 0.0));

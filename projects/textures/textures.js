@@ -401,6 +401,50 @@ float getTextureForPoint(vec3 p, int type){
   return res;
 }
 
+float random(vec2 par){
+  return fract(sin(dot(par.xy,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+vec2 random2(vec2 par){
+  float rand = random(par);
+  return vec2(rand, random(par+rand));
+}
+
+float createCloudMap(vec2 uv){
+  uv = vec2(0.5) - uv;
+  uv *= 8.0;
+  vec2 fl = floor(uv) - 0.5;
+  //The local cell coordinates. uv-fl == frac(uv)
+  vec2 local_uv = fract(uv);
+  vec2 cell;
+  vec2 seed;
+  vec2 index;
+  vec2 pos;
+  float dist = 100000000.0;
+  //For a 3x3 group of cells around the fragment, find the distance from 
+  //the points of each to the current fragment and draw an accumulative glow accordingly.
+  //The local cell is (0,0)
+  for(float j = -1.0; j <= 1.0; j++){
+    for(float k = -1.0; k <= 1.0; k++){
+	cell = vec2(j,k);
+	//Index of the cell
+	index = fl + cell;
+
+	//Cell seed
+	seed = 128.0 * index;
+
+	//Get a random position in the considered cell
+	pos = cell + 0.9 * (random2(seed) - 0.5);
+	float tmp = length(local_uv - pos);
+	float k_ = 1.0;
+	float h = max( k_-abs(tmp-dist), 0.0 )/k_;
+	dist = min( tmp, dist ) - h*h*h*k_*(1.0/6.0);
+	//dist = min(dist, ); 
+    }
+  }
+  return 1.0-dist;
+}
+
 void main() {
   //Normalized pixel coordinates (from 0 to 1)
   float tileSize = 512.0;
@@ -548,7 +592,8 @@ void main() {
   float FBM2 = worley2 * 0.75 + worley3 * 0.25;
 
   float res = FBM0 * 0.625 + FBM1 * 0.25 + FBM2 * 0.125;
-  col.rgb = vec3(worley1);
+  uv = ((gl_FragCoord.xy/resolution.x));
+  col.rgb = vec3(createCloudMap(uv));
   gl_FragColor = vec4(col.rgb, 1.0);
 }
 `;
