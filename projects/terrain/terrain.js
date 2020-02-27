@@ -81,7 +81,7 @@ if(mobile){
   var pitch = -0.12;
   //Camera movement speed
   var speed = 50.0;
-  var cameraPosition = {x: 336, y: 0, z: -742};
+  var cameraPosition = {x: 371, y: 0, z: -706};
   var upVector = {x: 0, y: 1, z: 0};
   var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.0};
   var mouseDelta = {x: 0, y: 0};

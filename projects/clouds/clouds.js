@@ -37,7 +37,7 @@ if(mobile){
   //canvas.height *= 0.5;
 
   //The size of the cube map side
-  var cubeMapSize = 1024;
+  var cubeMapSize = 512;
   //The size of a tile side
   var tileSize = 256;
   //Total number of tiles on a single cube map side
@@ -394,8 +394,8 @@ if(mobile){
 
     float polar = atan(p.y/p.x);
     float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
-    //float weather = 2.0*(getWeatherMap(p.xz/200000.0)-1.0);//sin(polar * 1000.0) * cos(azimuth * 1000.0);
-    float weather = sin(polar * 5000.0) * cos(azimuth * 5000.0);
+    float weather = 2.0*(getWeatherMap(p.xz/20000.0)-1.0);//sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    //float weather = sin(polar * 5000.0) * cos(azimuth * 5000.0);
     //weather = remap(weather, 0.0, 1.0, 0.0, 0.5);
     weather = remap(weather, 0.0, 1.0, coverage, 1.0);
     if(weather <= 0.0){
@@ -736,7 +736,7 @@ vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
 
 void main() {
   vec2 resolution = vec2(width, height);
-  vec3 rayDir = rayDirection(60.0, gl_FragCoord.xy);
+  vec3 rayDir = rayDirection(45.0, gl_FragCoord.xy);
   rayDir = normalize(viewMatrix * rayDir);
   vec3 col = textureCube(skyBox, rayDir).rgb;
   gl_FragColor = vec4(col, 1.0);
@@ -754,8 +754,8 @@ void main() {
       h = w / 1.6;
     }else{
       //Reduce resolution at full screen for better performance
-      w *= 0.8;
-      h *= 0.8;
+      w *= 1.0;
+      h *= 1.0;
     }
     canvas.width = w;
     canvas.height = h;
