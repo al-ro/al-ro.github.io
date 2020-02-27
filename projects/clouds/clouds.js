@@ -37,7 +37,7 @@ if(mobile){
   //canvas.height *= 0.5;
 
   //The size of the cube map side
-  var cubeMapSize = 512;
+  var cubeMapSize = 1024;
   //The size of a tile side
   var tileSize = 256;
   //Total number of tiles on a single cube map side
@@ -389,15 +389,13 @@ if(mobile){
     //Height of point above the ground
     float atmoHeight = length(p - vec3(0.0, 0.0, 0.0)) - PLANET_RADIUS;
   
-    //What fraction through the shell is the point situated
-    cloudHeight = clamp((atmoHeight-CLOUD_START)/(CLOUD_HEIGHT), 0.0, 1.0);
 
     float polar = atan(p.y/p.x);
     float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
-    float weather = 2.0*(getWeatherMap(p.xz/20000.0)-1.0);//sin(polar * 1000.0) * cos(azimuth * 1000.0);
-    //float weather = sin(polar * 5000.0) * cos(azimuth * 5000.0);
+    float weather = 2.0*(getWeatherMap(100.0*vec2(polar, azimuth)))-1.0;//sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    //float weather = sin(polar * 1000.0) * cos(azimuth * 1000.0);
     //weather = remap(weather, 0.0, 1.0, 0.0, 0.5);
-    weather = remap(weather, 0.0, 1.0, coverage, 1.0);
+    weather = remap(0.2*weather, 0.0, 1.0, coverage, 1.0);
     if(weather <= 0.0){
       return 0.0;
     }
@@ -407,7 +405,10 @@ if(mobile){
 
     //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
     //Assumes there is no height map data and all clouds default to height 1.0
-    shape *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, 0.5, 0.9, 1.0, 0.0));
+    float height = weather;
+    //What fraction through the shell is the point situated
+    cloudHeight = clamp((atmoHeight-CLOUD_START)/(CLOUD_HEIGHT*height), 0.0, 1.0);
+    shape *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, height*0.5, height*0.9, 1.0, 0.0));
 
     //Early exit from empty space
     if(shape <= 0.0){
@@ -621,7 +622,7 @@ if(mobile){
 	//vec3 ambient = mix(vec3(2.0), 1.7*vec3(0.6, 0.76, 0.95), 1.0-cloudHeight);
 
 	//cloudHeight should be fraction of map data, not of cloud layer
-	float ambient = mix((0.75), (1.0), cloudHeight);
+	float ambient = mix((0.9), (1.0), cloudHeight);
 
 	//Amount of sunlight that reaches the sample point through the cloud
 	vec3 luminance = ambient + sunLight * phaseFunction * lightRay(org, p, phaseFunction, density, mu, sunDirection, cloudHeight, dist);        	
@@ -700,7 +701,7 @@ if(mobile){
       color += background * totalTransmittance;
     }
 
-    vec3 col = 1.0-exp(-color);
+    vec3 col;// = 1.0-exp(-color);
     col = pow(color, vec3(0.4545));
 
     gl_FragColor = vec4(col, 1.0);

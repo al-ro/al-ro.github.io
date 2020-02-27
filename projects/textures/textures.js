@@ -548,7 +548,7 @@ void main() {
   float FBM2 = worley2 * 0.75 + worley3 * 0.25;
 
   float res = FBM0 * 0.625 + FBM1 * 0.25 + FBM2 * 0.125;
-  col.rgb = vec3(res);
+  col.rgb = vec3(worley1);
   gl_FragColor = vec4(col.rgb, 1.0);
 }
 `;
