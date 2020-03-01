@@ -149,10 +149,17 @@ if(mobile){
     return [xaxis, yaxis, negate(zaxis)];
   }
 
+  function updateClouds(){
+    renderFlag = true;
+    faceCounter = 0;
+    xCounter = 0;
+    yCounter = 0;
+  }
+
   function updateSunPosition(){
     gl.useProgram(program);
     gl.uniform3f(sunPositionHandle, Math.sin(azimuth), Math.sin(elevation), -Math.cos(azimuth));
-    renderFlag = true;
+    updateClouds();
   }
 
   //****************** GUI *********************
@@ -161,26 +168,26 @@ if(mobile){
   if(!mobile){
     customContainer.appendChild(gui.domElement);
   }
-  gui.add(this, 'elevation').min(-0.1).max(Math.PI/2.0).step(0.01).listen().onChange(function(value){updateSunPosition(); renderFlag = true;});
-  gui.add(this, 'azimuth').min(0.0).max(Math.PI*2.0).step(0.01).listen().onChange(function(value){updateSunPosition(); renderFlag = true;});
-  gui.add(this, 'viewHeight').min(0.5).max(10000).step(10.0).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(viewHeightHandle, viewHeight); renderFlag = true;});
-  gui.add(this, 'coverage').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(coverageHandle, coverage); renderFlag = true;});
-  gui.add(this, 'power').min(0.0).max(50.0).step(0.1).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power); renderFlag = true;});
-  gui.add(this, 'mainSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize); renderFlag = true;});
-  gui.add(this, 'densityMultiplier').min(0.0).max(1.0).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(densityMultiplierHandle, densityMultiplier); renderFlag = true;});
-  gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize); renderFlag = true;});
-  gui.add(this, 'stepSize').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(stepSizeHandle, stepSize); renderFlag = true;});
-  gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailStrengthHandle, detailStrength); renderFlag = true;});
-  gui.add(this, 'exposure').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(exposureHandle, exposure); renderFlag = true;});
+  gui.add(this, 'elevation').min(-0.1).max(Math.PI/2.0).step(0.01).listen().onChange(function(value){updateSunPosition(); updateClouds();});
+  gui.add(this, 'azimuth').min(0.0).max(Math.PI*2.0).step(0.01).listen().onChange(function(value){updateSunPosition(); updateClouds();});
+  gui.add(this, 'viewHeight').min(0.5).max(10000).step(10.0).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(viewHeightHandle, viewHeight); updateClouds();});
+  gui.add(this, 'coverage').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(coverageHandle, coverage); updateClouds();});
+  gui.add(this, 'power').min(0.0).max(50.0).step(0.1).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power); updateClouds();});
+  gui.add(this, 'mainSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize); updateClouds();});
+  gui.add(this, 'densityMultiplier').min(0.0).max(1.0).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(densityMultiplierHandle, densityMultiplier); updateClouds();});
+  gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize); updateClouds();});
+  gui.add(this, 'stepSize').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(stepSizeHandle, stepSize); updateClouds();});
+  gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailStrengthHandle, detailStrength); updateClouds();});
+  gui.add(this, 'exposure').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(exposureHandle, exposure); updateClouds();});
   gui.add(this, 'animate');
-  gui.add(this, 'hd').listen().onChange(function(value){gl.useProgram(program); gl.uniform1i(hdHandle, hd); renderFlag = true;});
+  gui.add(this, 'hd').listen().onChange(function(value){gl.useProgram(program); gl.uniform1i(hdHandle, hd); updateClouds();});
   gui.add(this, 'cube').onChange(function(value){
     gl.useProgram(program);
     gl.uniform1f(widthHandle, tileWidth);
     gl.uniform1f(heightHandle, tileWidth);
     gl.useProgram(cube_program);
     gl.uniform1f(widthHandle_, canvas.width);
-    gl.uniform1f(heightHandle_, canvas.height); renderFlag = true;
+    gl.uniform1f(heightHandle_, canvas.height); updateClouds();
 });
 
   gui.close();
@@ -224,8 +231,8 @@ if(mobile){
 
     const int STEPS_PRIMARY = 40;   
     const int STEPS_LIGHT = 6;
-    const int HD_STEPS = 256;
-    const int HD_STEPS_LIGHT = 16;
+    const int HD_STEPS = 512;
+    const int HD_STEPS_LIGHT = 32;
 
   const float PI = 3.141592;
 
@@ -380,7 +387,7 @@ if(mobile){
     }
 
   float getWeatherMap(vec2 p){
-    return texture2D(weatherMapTexture, p).x;
+    return texture2D(weatherMapTexture, abs(p)).x;
   }
 
   //Get density and cloud height at sample point
@@ -392,23 +399,25 @@ if(mobile){
 
     float polar = atan(p.y/p.x);
     float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
-    float weather = 2.0*(getWeatherMap(100.0*vec2(polar, azimuth)))-1.0;//sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    float weather = getWeatherMap(100.0*vec2(polar, azimuth));//sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    float height = 1.0;
+    weather = saturate(weather - 0.5);
+    weather = remap(weather, 0.0, coverage, 0.0, 1.0);
     //float weather = sin(polar * 1000.0) * cos(azimuth * 1000.0);
     //weather = remap(weather, 0.0, 1.0, 0.0, 0.5);
-    weather = remap(0.2*weather, 0.0, 1.0, coverage, 1.0);
+    //weather = remap(0.2*weather, 0.0, 1.0, coverage, 1.0);
     if(weather <= 0.0){
       return 0.0;
     }
     
     //Read the cloud shape from the texture based on the weather map data.
-    float shape = weather * saturate(getCloudShape(mainSize*p));
+    float shape = weather;//remap(weather, saturate(getCloudShape(mainSize*p)), 1.0, 0.0, 1.0);
 
     //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
     //Assumes there is no height map data and all clouds default to height 1.0
-    float height = pow(weather, 2.0);
     //What fraction through the shell is the point situated
     cloudHeight = clamp((atmoHeight-CLOUD_START)/(CLOUD_HEIGHT*height), 0.0, 1.0);
-    shape *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, height*0.5, height*0.9, 1.0, 0.0));
+    shape *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, height*0.2, height, 1.0, 0.0));
 
     //Early exit from empty space
     if(shape <= 0.0){
@@ -1174,7 +1183,7 @@ var lastPos = {x: mousePosition.x, y: mousePosition.y};
   };
 
   function keyUp(e){
-    renderFlag = true;
+    updateClouds();
     if(e.keyCode == 87 || e.keyCode == 38) {
       forward = false;
     }
