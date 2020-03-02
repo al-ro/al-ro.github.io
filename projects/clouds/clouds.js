@@ -60,13 +60,13 @@ if(mobile){
   var hd = true;
   var isMouseDown = false;
   //Distance of planet
-  var coverage = 0.0;
+  var coverage = 0.75;
   var viewHeight = 10.5;
   var power = 10.0;
-  var mainSize = 0.04;
+  var mainSize = 0.01;
   var detailSize = 0.04;
   var stepSize = 0.75;
-  var detailStrength = 0.2;
+  var detailStrength = 0.5;
   var exposure = 0.5;
   //Thickness of the atmosphere
 
@@ -170,7 +170,7 @@ if(mobile){
   }
   gui.add(this, 'elevation').min(-0.1).max(Math.PI/2.0).step(0.01).listen().onChange(function(value){updateSunPosition(); updateClouds();});
   gui.add(this, 'azimuth').min(0.0).max(Math.PI*2.0).step(0.01).listen().onChange(function(value){updateSunPosition(); updateClouds();});
-  gui.add(this, 'viewHeight').min(0.5).max(10000).step(10.0).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(viewHeightHandle, viewHeight); updateClouds();});
+  gui.add(this, 'viewHeight').min(10.0).max(10000).step(10.0).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(viewHeightHandle, viewHeight); updateClouds();});
   gui.add(this, 'coverage').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(coverageHandle, coverage); updateClouds();});
   gui.add(this, 'power').min(0.0).max(50.0).step(0.1).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power); updateClouds();});
   gui.add(this, 'mainSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize); updateClouds();});
@@ -393,53 +393,62 @@ if(mobile){
   //Get density and cloud height at sample point
   float clouds(vec3 p, out float cloudHeight, float dist, vec3 org){
 
-    //Height of point above the ground
-    float atmoHeight = length(p - vec3(0.0, 0.0, 0.0)) - PLANET_RADIUS;
-  
-
+    //Spherical coordinates of sample point  
     float polar = atan(p.y/p.x);
     float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
-    float weather = getWeatherMap(100.0*vec2(polar, azimuth));//sin(polar * 1000.0) * cos(azimuth * 1000.0);
-    float height = 1.0;
-    weather = saturate(weather - 0.5);
-    weather = remap(weather, 0.0, coverage, 0.0, 1.0);
-    //float weather = sin(polar * 1000.0) * cos(azimuth * 1000.0);
-    //weather = remap(weather, 0.0, 1.0, 0.0, 0.5);
-    //weather = remap(0.2*weather, 0.0, 1.0, coverage, 1.0);
-    if(weather <= 0.0){
+
+    //Sample texture which determines where clouds occur
+    float cloud = saturate(getWeatherMap(100.0*vec2(polar, azimuth)));//sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    //float cloud = 0.5+0.5*(sin(polar * 2000.0) * cos(azimuth * 2000.0));
+
+    //Mix with user defined coverage to transition between overcast and clear sky
+    cloud *= coverage;
+
+    //Sample texture which determines how high clouds reach
+    float height = cloud;
+
+    //If there are no clouds, exit early
+    if(cloud <= 0.0){
       return 0.0;
     }
     
-    //Read the cloud shape from the texture based on the weather map data.
-    float shape = weather;//remap(weather, saturate(getCloudShape(mainSize*p)), 1.0, 0.0, 1.0);
-
-    //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
-    //Assumes there is no height map data and all clouds default to height 1.0
-    //What fraction through the shell is the point situated
+    //Height of point above the ground
+    float atmoHeight = length(p - vec3(0.0, 0.0, 0.0)) - PLANET_RADIUS;
+    //Fractional height within the cloud layer wrt specified height limit
     cloudHeight = clamp((atmoHeight-CLOUD_START)/(CLOUD_HEIGHT*height), 0.0, 1.0);
-    shape *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, height*0.2, height, 1.0, 0.0));
+    //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
+    cloud *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, height*0.2, height, 1.0, 0.0));
+
+    //Get main shape noise
+    float shape = getCloudShape(mainSize*p);
+    //Invert shape noise to subtract from the main cloud. Leave the value at the bottom of the cloud to introduce wispy shapes there.
+    shape = mix(shape, 1.0-shape, saturate(cloudHeight * 10.0));
+    shape *= detailStrength;
+
+    //Carve away density from cloud based on noise.
+    cloud = saturate(remap(cloud, shape, 1.0, 0.0, 1.0));
 
     //Early exit from empty space
-    if(shape <= 0.0){
+    if(cloud <= 0.0){
       return 0.0;    
     }
 
-    //Carving clouds out of large slabs. Offset sample point by curl noise to avoid pixelation artefacts. Introduces flow like structures on the surface.
+    //Offset sample point by curl noise to avoid pixelation artefacts. Introduces flow like structures on the surface.
     //Sampling strength (512) and position (combining xz and y) are arbitrary from trial and error.
-    vec2 curl = (1.0 - cloudHeight) * 512.0 * texture2D(curlNoiseTexture, (0.001*p.y+p.xz)*0.0001).rg;
-
+    vec2 curl = (1.0 - cloudHeight) * 128.0 * texture2D(curlNoiseTexture, (0.01*p.y+p.xz)*0.0001).rg;
     //Map from [0; 1] to [-1; 1]
-    //p.xz += 2.0 * (curl - 1.0);
-    float detail = getCloudDetail(detailSize * p);
+    p.xz += 2.0 * (curl - 1.0);
 
+    //Get detail shape noise
+    float detail = getCloudDetail(detailSize * p);
     //Invert detail noise to subtract from the main shape. Leave the value at the bottom of the cloud to introduce wispy shapes there.
     detail = mix(detail, 1.0-detail, saturate(cloudHeight * 10.0));
-
     detail *= detailStrength;
 
-    shape = saturate(remap(shape, detail, 1.0, 0.0, 1.0));
+    //Carve away detail based on the noise
+    cloud = saturate(remap(cloud, detail, 1.0, 0.0, 1.0));
 
-    return shape * densityMultiplier;
+    return cloud * densityMultiplier;
   }
 
   float HenyeyGreenstein(float g, float costh){
@@ -448,7 +457,7 @@ if(mobile){
 
   float lightRay(vec3 org, vec3 p, float phaseFunction, float dC, float mu, vec3 sunDirection, float cloudHeight, float dist){
 
-    float lightRayDistance = 800.0;
+    float lightRayDistance = 600.0;
     float stepL = lightRayDistance/float(STEPS_LIGHT);
     if(HD){
       stepL = lightRayDistance/float(HD_STEPS_LIGHT);
@@ -631,7 +640,7 @@ if(mobile){
 	//vec3 ambient = mix(vec3(2.0), 1.7*vec3(0.6, 0.76, 0.95), 1.0-cloudHeight);
 
 	//cloudHeight should be fraction of map data, not of cloud layer
-	float ambient = mix((0.9), (1.0), cloudHeight);
+	float ambient = mix((1.0), (1.25), cloudHeight);
 
 	//Amount of sunlight that reaches the sample point through the cloud
 	vec3 luminance = ambient + sunLight * phaseFunction * lightRay(org, p, phaseFunction, density, mu, sunDirection, cloudHeight, dist);        	
@@ -746,7 +755,7 @@ vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
 
 void main() {
   vec2 resolution = vec2(width, height);
-  vec3 rayDir = rayDirection(45.0, gl_FragCoord.xy);
+  vec3 rayDir = rayDirection(60.0, gl_FragCoord.xy);
   rayDir = normalize(viewMatrix * rayDir);
   vec3 col = textureCube(skyBox, rayDir).rgb;
   gl_FragColor = vec4(col, 1.0);
