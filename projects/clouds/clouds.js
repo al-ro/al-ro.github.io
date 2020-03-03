@@ -82,13 +82,13 @@ if(mobile){
   var hd = true;
   var isMouseDown = false;
   //Distance of planet
-  var coverage = 0.75;
+  var coverage = 0.7;
   var viewHeight = 10.5;
   var power = 10.0;
   var mainSize = 0.01;
   var detailSize = 0.03;
   var stepSize = 0.75;
-  var detailStrength = 0.3;
+  var detailStrength = 0.4;
   var exposure = 0.5;
   //Thickness of the atmosphere
 
