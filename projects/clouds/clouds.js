@@ -39,11 +39,33 @@ if(mobile){
   //The size of the cube map side
   var cubeMapSize = 1024;
   //The size of a tile side
-  var tileSize = 256;
+  var tileSize = 128;
   //Total number of tiles on a single cube map side
   var tileCount = cubeMapSize / tileSize;
+  var totalTiles = tileCount * tileCount * 6;
   //Array for tile data
-  var tilePixels = new Uint8Array(tileSize*tileSize*4);  // opaque red
+  var tilePixels = new Uint8Array(tileSize*tileSize*4);
+
+  var tileRenderFlags = [];
+  var tileDirections = [];
+  //Hold tuple [order, value]
+  var tileIndices = [];
+  var tileCounter = 0;
+
+  //https://www.khronos.org/opengl/wiki/Cubemap_Texture
+  var viewDirections = [{x:  1, y:  0, z:  0},
+			{x: -1, y:  0, z:  0},
+			{x:  0, y:  1, z:  0},
+			{x:  0, y: -1, z:  0},
+			{x:  0, y:  0, z:  1},
+			{x:  0, y:  0, z: -1}];
+
+  var upDirections =   [{x:  0, y: -1, z:  0},
+			{x:  0, y: -1, z:  0},
+			{x:  0, y:  0, z:  1},
+			{x:  0, y:  0, z:  -1},
+			{x:  0, y: -1, z:  0},
+			{x:  0, y: -1, z:  0}];
   
   var faceCounter = 0;
   var xCounter = 0;
@@ -71,7 +93,7 @@ if(mobile){
   //Thickness of the atmosphere
 
   //Height over horizon in range [0, PI/2.0]
-  var elevation = 0.2;
+  var elevation = 0.5;
   //Rotation around Y axis in range [0, 2*PI]
   var azimuth = 1.633;
   //Left/right in range [0; 2*PI]
@@ -129,6 +151,10 @@ if(mobile){
     return {x: v.x/length, y: v.y/length, z: v.z/length};
   }
 
+  function dot(a, b){
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+  }
+
   function cross(a, b){
     return {x: a.y * b.z - a.z * b.y,
 	    y: a.z * b.x - a.x * b.z,
@@ -149,8 +175,53 @@ if(mobile){
     return [xaxis, yaxis, negate(zaxis)];
   }
 
+  function compareTiles(a, b) {
+    return b[1] - a[1];
+  }
+  //Set default tile ordering
+  for(let i = 0; i < totalTiles; i++){
+    let x = i % tileCount;
+    let y = Math.floor(i/tileCount) % tileCount;
+    let f = Math.floor(i / (tileCount * tileCount));
+    let view = viewDirections[f];
+    let up = upDirections[f];
+    let right = normalize(cross(view, up));
+    let halfDimensions = cubeMapSize * 0.5;
+    let bottomLeft = {x: halfDimensions * view.x - halfDimensions * right.x, y: halfDimensions * view.y - halfDimensions * right.y, z: halfDimensions * view.z - halfDimensions * right.z};
+    bottomLeft.x -= halfDimensions * up.x;
+    bottomLeft.y -= halfDimensions * up.y;
+    bottomLeft.z -= halfDimensions * up.z;
+
+    bottomLeft.x += right.x * tileSize * 0.5;
+    bottomLeft.y += right.y * tileSize * 0.5;
+    bottomLeft.z += right.z * tileSize * 0.5;
+
+    bottomLeft.x += up.x * tileSize * 0.5;
+    bottomLeft.y += up.y * tileSize * 0.5;
+    bottomLeft.z += up.z * tileSize * 0.5;
+
+    bottomLeft.x += right.x * tileSize * y;
+    bottomLeft.y += right.y * tileSize * y;
+    bottomLeft.z += right.z * tileSize * y;
+
+    bottomLeft.x += up.x * tileSize * x;
+    bottomLeft.y += up.y * tileSize * x;
+    bottomLeft.z += up.z * tileSize * x;
+
+    bottomLeft = normalize(bottomLeft);
+    tileDirections.push(bottomLeft);
+
+    tileIndices.push([i, i]);
+  }
+
+  for(let i = 0; i < totalTiles; i++){
+    tileIndices[i][1] =  dot(normalize(viewDirection), tileDirections[i]);
+  }
+  tileIndices.sort(compareTiles);
+
   function updateClouds(){
     renderFlag = true;
+    tileCounter = 0;
     faceCounter = 0;
     xCounter = 0;
     yCounter = 0;
@@ -240,7 +311,7 @@ if(mobile){
   const float PLANET_RADIUS = float(`+EARTH_RADIUS+`);
   // From Babic thesis, probably same as HZD
   const float CLOUD_START = 1500.0;
-  const float CLOUD_HEIGHT = 4000.0;
+  const float CLOUD_HEIGHT = 6000.0;
 
   //https://www.geertarien.com/blog/2017/07/30/breakdown-of-the-lookAt-function-in-OpenGL/
   mat3 lookAt(vec3 camera, vec3 targetDir, vec3 up){
@@ -404,13 +475,13 @@ if(mobile){
     //Mix with user defined coverage to transition between overcast and clear sky
     cloud *= coverage;
 
-    //Sample texture which determines how high clouds reach
-    float height = cloud;
-
     //If there are no clouds, exit early
     if(cloud <= 0.0){
       return 0.0;
     }
+
+    //Sample texture which determines how high clouds reach
+    float height = cloud;
     
     //Height of point above the ground
     float atmoHeight = length(p - vec3(0.0, 0.0, 0.0)) - PLANET_RADIUS;
@@ -640,7 +711,7 @@ if(mobile){
 	//vec3 ambient = mix(vec3(2.0), 1.7*vec3(0.6, 0.76, 0.95), 1.0-cloudHeight);
 
 	//cloudHeight should be fraction of map data, not of cloud layer
-	float ambient = mix((1.0), (1.25), cloudHeight);
+	float ambient = mix((1.2), (1.5), cloudHeight);
 
 	//Amount of sunlight that reaches the sample point through the cloud
 	vec3 luminance = ambient + sunLight * phaseFunction * lightRay(org, p, phaseFunction, density, mu, sunDirection, cloudHeight, dist);        	
@@ -723,6 +794,13 @@ if(mobile){
     col = pow(color, vec3(0.4545));
 
     gl_FragColor = vec4(col, 1.0);
+/*
+  if(stepSize > 0.9){
+    gl_FragColor = vec4(1,0,0,1);
+  }else{
+    gl_FragColor = vec4(0,0,0,1);
+  }
+*/
   }
   `;
   
@@ -755,7 +833,7 @@ vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
 
 void main() {
   vec2 resolution = vec2(width, height);
-  vec3 rayDir = rayDirection(60.0, gl_FragCoord.xy);
+  vec3 rayDir = rayDirection(45.0, gl_FragCoord.xy);
   rayDir = normalize(viewMatrix * rayDir);
   vec3 col = textureCube(skyBox, rayDir).rgb;
   gl_FragColor = vec4(col, 1.0);
@@ -975,7 +1053,7 @@ createTileTexture(tileTexture);
         0 		// how many bytes inside the buffer to start from
     );
 
-      viewMatrix = lookAt(cameraPosition, viewDirection, upVector);
+    viewMatrix = lookAt(cameraPosition, viewDirection, upVector);
     //Set uniform handle
     var timeHandle = getUniformLocation(program, 'time');
     var widthHandle = getUniformLocation(program, 'width');
@@ -1152,6 +1230,7 @@ var lastPos = {x: mousePosition.x, y: mousePosition.y};
   function mouseMove(event){
     if(isMouseDown){
       var pos = getPos(canvas, event);
+      tileCounter = 0;
       mouseDelta.x = lastPos.x - pos.x;
       mouseDelta.y = lastPos.y - pos.y;
       
@@ -1235,38 +1314,32 @@ var lastPos = {x: mousePosition.x, y: mousePosition.y};
     }
   }
 
-  //https://stackoverflow.com/questions/11685608/convention-of-faces-in-opengl-cubemapping/11694336#11694336
-  var viewDirections = [{x:  1, y:  0, z:  0},
-			{x: -1, y:  0, z:  0},
-			{x:  0, y:  1, z:  0},
-			{x:  0, y: -1, z:  0},
-			{x:  0, y:  0, z:  1},
-			{x:  0, y:  0, z: -1}];
-
-  var upDirections =   [{x:  0, y: -1, z:  0},
-			{x:  0, y: -1, z:  0},
-			{x:  0, y:  0, z:  1},
-			{x:  0, y:  0, z:  -1},
-			{x:  0, y: -1, z:  0},
-			{x:  0, y: -1, z:  0}];
-
+var start;
 function setCounters(){
-  xCounter++;
-  if(xCounter == tileCount){
-    xCounter = 0;
-    yCounter++;
-    if(yCounter == tileCount){
-      yCounter = 0;
-      faceCounter++;
-      if(faceCounter == 6){
-	faceCounter = 0;
-	renderFlag = false;
-      }
-    }
+  if(tileCounter == 0){
+    start = Date.now();
   }
+  let tileIndex = tileIndices[tileCounter][0];
+  if(tileCounter == (totalTiles-1)){
+    faceCounter = 0;
+    renderFlag = false;
+    console.log("Render time: " + (Date.now() - start)/1000 + " s");
+  }
+  tileCounter = (tileCounter + 1) % totalTiles;
 }
 
 function renderCubeMap(){
+  let tileIndex = tileIndices[tileCounter][0];
+  let mu = dot(tileDirections[tileIndex], normalize(cameraPosition));
+  if(mu < 0){ 
+    setCounters(); 
+    return;
+  }
+  //console.log(tileIndices[0][1]);
+  xCounter = tileIndex % tileCount;
+  yCounter = Math.floor(tileIndex/tileCount) % tileCount;
+  faceCounter = Math.floor(tileIndex / (tileCount * tileCount));
+  //console.log(tileCounter + " Render tile: " + tileIndex, "Face: " + faceCounter);
   gl.useProgram(program);
   gl.viewport(0, 0, tileSize, tileSize);
   gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
@@ -1277,38 +1350,26 @@ function renderCubeMap(){
   gl.uniform1f(widthHandle, tileSize);
   gl.uniform1f(heightHandle, tileSize);
   gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
-
+ 
   var vM = viewMatrix;
-  //gl.readPixels();
 
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tileTexture, 0);
-/*
-  for(let i = 0; i < 6; i++){
-    for(let y = 0; y < tileCount; y++){
-      for(let x = 0; x < tileCount; x++){
-*/
 
-	viewMatrix = lookAt(cameraPosition, viewDirections[faceCounter], upDirections[faceCounter]);
-	gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
-	gl.uniform2f(tileOffsetHandle, yCounter*tileSize, xCounter*tileSize);
+  viewMatrix = lookAt(cameraPosition, viewDirections[faceCounter], upDirections[faceCounter]);
+  gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
+  gl.uniform2f(tileOffsetHandle, yCounter*tileSize, xCounter*tileSize);
 
-	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-	gl.activeTexture(gl.TEXTURE6);
-	//gl.bindTexture(gl.TEXTURE_2D, tileTexture);
-	gl.readPixels(0, 0, tileSize, tileSize, gl.RGBA, gl.UNSIGNED_BYTE, tilePixels); 
+  gl.activeTexture(gl.TEXTURE6);
+  //gl.bindTexture(gl.TEXTURE_2D, tileTexture);
+  gl.readPixels(0, 0, tileSize, tileSize, gl.RGBA, gl.UNSIGNED_BYTE, tilePixels); 
 
-	gl.activeTexture(gl.TEXTURE5);
-	//gl.bindTexture(gl.TEXTURE_CUBE, tex5);
+  gl.activeTexture(gl.TEXTURE5);
+  //gl.bindTexture(gl.TEXTURE_CUBE, tex5);
 
-	gl.texSubImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + faceCounter, 0, yCounter*tileSize, xCounter*tileSize, tileSize, tileSize, gl.RGBA, gl.UNSIGNED_BYTE, tilePixels);
-	setCounters();
-	//break;
-/*
-      }
-    }
-  }
-*/
+  gl.texSubImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + faceCounter, 0, yCounter*tileSize, xCounter*tileSize, tileSize, tileSize, gl.RGBA, gl.UNSIGNED_BYTE, tilePixels);
+  setCounters();
   viewMatrix = vM;
 }
 
@@ -1320,17 +1381,25 @@ function renderSkyBox(){
   }
   return false;
 }
+function sortTiles(){
+  for(let i = 0; i < totalTiles; i++){
+    let idx = tileIndices[i][0];
+    tileIndices[i][1] = dot(normalize(viewDirection), tileDirections[idx]);
+  }
+  tileIndices.sort(compareTiles);
+}
 
 var counter = 0;
 var limit = 500;
-  //************** Draw **************
-  var lastFrame = Date.now();
-  var thisFrame;
-  
+//************** Draw **************
+var lastFrame = Date.now();
+var thisFrame;
+
   //renderCubeMap();
   function draw(){
     stats.begin();
     if(renderSkyBox()){
+      sortTiles();
       renderCubeMap();
     }
     
