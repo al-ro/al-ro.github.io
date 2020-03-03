@@ -39,7 +39,7 @@ if(mobile){
   //The size of the cube map side
   var cubeMapSize = 1024;
   //The size of a tile side
-  var tileSize = 128;
+  var tileSize = 256;
   //Total number of tiles on a single cube map side
   var tileCount = cubeMapSize / tileSize;
   var totalTiles = tileCount * tileCount * 6;
@@ -76,7 +76,7 @@ if(mobile){
 
   //Time
   var time = 0.0;
-  var densityMultiplier = 0.1;
+  var densityMultiplier = 0.05;
   var animate = false;
   var cube = true;
   var hd = true;
@@ -86,9 +86,9 @@ if(mobile){
   var viewHeight = 10.5;
   var power = 10.0;
   var mainSize = 0.01;
-  var detailSize = 0.04;
+  var detailSize = 0.03;
   var stepSize = 0.75;
-  var detailStrength = 0.5;
+  var detailStrength = 0.3;
   var exposure = 0.5;
   //Thickness of the atmosphere
 
@@ -1332,8 +1332,8 @@ function renderCubeMap(){
   let tileIndex = tileIndices[tileCounter][0];
   let mu = dot(tileDirections[tileIndex], normalize(cameraPosition));
   if(mu < 0){ 
-    setCounters(); 
-    return;
+    //setCounters(); 
+    //return;
   }
   //console.log(tileIndices[0][1]);
   xCounter = tileIndex % tileCount;
