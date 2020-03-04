@@ -39,7 +39,7 @@ if(mobile){
   //The size of the cube map side
   var cubeMapSize = 1024;
   //The size of a tile side
-  var tileSize = 256;
+  var tileSize = 128;
   //Total number of tiles on a single cube map side
   var tileCount = cubeMapSize / tileSize;
   var totalTiles = tileCount * tileCount * 6;
