@@ -87,7 +87,8 @@ if(mobile){
   var power = 10.0;
   var mainSize = 0.01;
   var detailSize = 0.03;
-  var stepSize = 0.75;
+  var tempVar = 1.0;
+  var tempVar2 = 0.0;
   var detailStrength = 0.4;
   var exposure = 0.5;
   //Thickness of the atmosphere
@@ -247,7 +248,8 @@ if(mobile){
   gui.add(this, 'mainSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize); updateClouds();});
   gui.add(this, 'densityMultiplier').min(0.0).max(1.0).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(densityMultiplierHandle, densityMultiplier); updateClouds();});
   gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize); updateClouds();});
-  gui.add(this, 'stepSize').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(stepSizeHandle, stepSize); updateClouds();});
+  gui.add(this, 'tempVar').min(0.0).max(10.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(tempVarHandle, tempVar); updateClouds();});
+  gui.add(this, 'tempVar2').min(0.0).max(10.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(tempVar2Handle, tempVar2); updateClouds();});
   gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailStrengthHandle, detailStrength); updateClouds();});
   gui.add(this, 'exposure').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(exposureHandle, exposure); updateClouds();});
   gui.add(this, 'animate');
@@ -287,7 +289,8 @@ if(mobile){
     uniform float densityMultiplier;
     uniform float mainSize;
     uniform float detailSize;
-    uniform float stepSize;
+    uniform float tempVar;
+    uniform float tempVar2;
     uniform float detailStrength;
     uniform float exposure;
     uniform sampler2D cloudShapeTexture;
@@ -528,7 +531,7 @@ if(mobile){
 
   float lightRay(vec3 org, vec3 p, float phaseFunction, float dC, float mu, vec3 sunDirection, float cloudHeight, float dist){
 
-    float lightRayDistance = 600.0;
+    float lightRayDistance = 5000.0;
     float stepL = lightRayDistance/float(STEPS_LIGHT);
     if(HD){
       stepL = lightRayDistance/float(HD_STEPS_LIGHT);
@@ -541,7 +544,7 @@ if(mobile){
       if(!HD){
 	if(j == STEPS_LIGHT){break;}
       }
-      lighRayDen += clouds(p + sunDirection * float(j) * stepL, cloudHeight, dist, org);
+      lighRayDen += 0.5*clouds(p + sunDirection * float(j) * stepL, cloudHeight, dist, org);
     }    
 
     //Multiple scattering from Nubis presentation credited to Wrenninge et al. Introduce another weaker Beer-Lambert function when facing away from the sun.
@@ -701,6 +704,14 @@ if(mobile){
       //Get density and cloud height at sample point
       float density = clouds(p, cloudHeight, dist, org);
 
+      float sigmaS = 1.0;
+      float sigmaA = 0.0;
+
+      float sigmaE = sigmaS + sigmaA;
+
+      float sampleSigmaS = sigmaS * density;
+      float sampleSigmaE = sigmaE * density;
+
       //If there is a cloud at the sample point
       if(density > 0.0 ){
 
@@ -711,20 +722,20 @@ if(mobile){
 	//vec3 ambient = mix(vec3(2.0), 1.7*vec3(0.6, 0.76, 0.95), 1.0-cloudHeight);
 
 	//cloudHeight should be fraction of map data, not of cloud layer
-	float ambient = mix((1.2), (1.5), cloudHeight);
+	float ambient = mix((0.8), (1.0), cloudHeight);
 
 	//Amount of sunlight that reaches the sample point through the cloud
 	vec3 luminance = ambient + sunLight * phaseFunction * lightRay(org, p, phaseFunction, density, mu, sunDirection, cloudHeight, dist);        	
 
 	//Scale light contribution by density of the cloud
-	luminance *= density;
+	luminance *= sampleSigmaS;
 
-	float transmittance = exp(-density * stepS);
+	float transmittance = exp(-sampleSigmaE * stepS);
 
 	//Better energy conserving integration
 	//"From Physically based sky, atmosphere and cloud rendering in Frostbite" 5.6
 	//by Sebastian Hillaire
-	color += totalTransmittance * (luminance - luminance * transmittance) / density; 
+	color += totalTransmittance * (luminance - luminance * transmittance) / sampleSigmaE; 
 
 	//Attenuate the amount of light that reaches the camera.
 	totalTransmittance *= transmittance;  
@@ -795,7 +806,7 @@ if(mobile){
 
     gl_FragColor = vec4(col, 1.0);
 /*
-  if(stepSize > 0.9){
+  if(tempVar > 0.9){
     gl_FragColor = vec4(1,0,0,1);
   }else{
     gl_FragColor = vec4(0,0,0,1);
@@ -1068,7 +1079,8 @@ createTileTexture(tileTexture);
     var mainSizeHandle = getUniformLocation(program, 'mainSize');
     var hdHandle = getUniformLocation(program, 'HD');
     var detailSizeHandle = getUniformLocation(program, 'detailSize');
-    var stepSizeHandle = getUniformLocation(program, 'stepSize');
+    var tempVarHandle = getUniformLocation(program, 'tempVar');
+    var tempVar2Handle = getUniformLocation(program, 'tempVar2');
     var detailStrengthHandle = getUniformLocation(program, 'detailStrength');
     var exposureHandle = getUniformLocation(program, 'exposure');
     var coverageHandle = getUniformLocation(program, 'coverage');
@@ -1106,7 +1118,8 @@ createTileTexture(tileTexture);
     gl.uniform1f(powerHandle, power);
     gl.uniform1f(densityMultiplierHandle, densityMultiplier);
     gl.uniform1f(detailSizeHandle, detailSize);
-    gl.uniform1f(stepSizeHandle, stepSize);
+    gl.uniform1f(tempVarHandle, tempVar);
+    gl.uniform1f(tempVar2Handle, tempVar2);
     gl.uniform1f(mainSizeHandle, mainSize);
     gl.uniform1f(detailStrengthHandle, detailStrength);
     gl.uniform1f(exposureHandle, exposure);
