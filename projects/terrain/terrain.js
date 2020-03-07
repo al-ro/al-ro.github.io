@@ -485,11 +485,11 @@ if(mobile){
       if(dist == MAX_DIST){dist = 4000.0;}
       if(abs(rayDir.y) < 0.0001){rayDir.y = 0.0001;}
       //Rate of fade
-      float b = 0.014;
+      float b = 0.012;
       float fogAmount = 1.0 * exp(-rayOri.y*b) * (1.0-exp(-dist*rayDir.y*b))/rayDir.y;
       float sunAmount = max( dot( rayDir, sunDir ), 0.0 );
-      vec3  fogColour  = mix( vec3(0.5,0.6,0.7), vec3(1.0), pow(sunAmount, 8.0) );
-      return mix(rgb, fogColour, fogAmount);
+      vec3  fogColor  = mix( vec3(0.5,0.6,0.7), vec3(1.0), pow(sunAmount, 8.0) );
+      return mix(rgb, fogColor, clamp(fogAmount, 0.0, 1.0));
     }
 
     float getGlow(float dist, float radius, float intensity){

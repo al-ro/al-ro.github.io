@@ -76,7 +76,7 @@ if(mobile){
 
   //Time
   var time = 0.0;
-  var densityMultiplier = 0.05;
+  var densityMultiplier = 0.1;
   var animate = false;
   var cube = true;
   var hd = true;
@@ -89,7 +89,7 @@ if(mobile){
   var detailSize = 0.03;
   var tempVar = 1.0;
   var tempVar2 = 0.0;
-  var detailStrength = 0.4;
+  var detailStrength = 0.6;
   var exposure = 0.5;
   //Thickness of the atmosphere
 
@@ -305,7 +305,7 @@ if(mobile){
 
     const int STEPS_PRIMARY = 40;   
     const int STEPS_LIGHT = 6;
-    const int HD_STEPS = 512;
+    const int HD_STEPS = 800;
     const int HD_STEPS_LIGHT = 32;
 
   const float PI = 3.141592;
@@ -467,6 +467,10 @@ if(mobile){
   //Get density and cloud height at sample point
   float clouds(vec3 p, out float cloudHeight, float dist, vec3 org){
 
+    float nearThreshold =  60000.0;
+    float farThreshold = 200000.0;
+    float distanceMultiplier = 1.0-saturate((dist-nearThreshold)/farThreshold);
+
     //Spherical coordinates of sample point  
     float polar = atan(p.y/p.x);
     float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
@@ -476,7 +480,11 @@ if(mobile){
     //float cloud = 0.5+0.5*(sin(polar * 2000.0) * cos(azimuth * 2000.0));
 
     //Mix with user defined coverage to transition between overcast and clear sky
-    cloud *= coverage;
+    cloud *= coverage * distanceMultiplier;
+
+    nearThreshold = 35000.0;
+    farThreshold =  40000.0;
+    distanceMultiplier = 1.0-saturate((dist-nearThreshold)/farThreshold);
 
     //If there are no clouds, exit early
     if(cloud <= 0.0){
@@ -513,14 +521,17 @@ if(mobile){
     //Map from [0; 1] to [-1; 1]
     p.xz += 2.0 * (curl - 1.0);
 
-    //Get detail shape noise
-    float detail = getCloudDetail(detailSize * p);
-    //Invert detail noise to subtract from the main shape. Leave the value at the bottom of the cloud to introduce wispy shapes there.
-    detail = mix(detail, 1.0-detail, saturate(cloudHeight * 10.0));
-    detail *= detailStrength;
+    if(dist < farThreshold){
 
-    //Carve away detail based on the noise
-    cloud = saturate(remap(cloud, detail, 1.0, 0.0, 1.0));
+      //Get detail shape noise
+      float detail = getCloudDetail(detailSize * p);
+      //Invert detail noise to subtract from the main shape. Leave the value at the bottom of the cloud to introduce wispy shapes there.
+      detail = mix(detail, 1.0-detail, saturate(cloudHeight * 10.0));
+      detail *= detailStrength * distanceMultiplier;
+
+      //Carve away detail based on the noise
+      cloud = saturate(remap(cloud, detail, 1.0, 0.0, 1.0));
+    }
 
     return cloud * densityMultiplier;
   }
@@ -650,7 +661,7 @@ if(mobile){
     return false; 
   }
 
-  vec3 skyRay(vec3 org, vec3 dir, vec3 sunDirection, out float totalTransmittance){
+  vec3 skyRay(vec3 org, vec3 dir, vec3 sunDirection, out float totalTransmittance, out float depth){
 
     //Variable to track transmittance along view ray. Assume clear sky and attenuate light when encountering clouds.
     totalTransmittance = 1.0;
@@ -661,6 +672,8 @@ if(mobile){
     float reenter = -1.0;
     float totalDistance = 0.0;
     bool reentry = false;
+
+    bool recordDepth = true;
 
     //Default to black
     vec3 color = vec3(0.0);
@@ -714,7 +727,7 @@ if(mobile){
 
       //If there is a cloud at the sample point
       if(density > 0.0 ){
-
+ 
 	vec3 sunLight = vec3(1) * power;
 
 	//Lighten dark shadows at the bottom of clouds
@@ -722,7 +735,7 @@ if(mobile){
 	//vec3 ambient = mix(vec3(2.0), 1.7*vec3(0.6, 0.76, 0.95), 1.0-cloudHeight);
 
 	//cloudHeight should be fraction of map data, not of cloud layer
-	float ambient = mix((0.8), (1.0), cloudHeight);
+	float ambient = mix((1.0), (1.2), cloudHeight);
 
 	//Amount of sunlight that reaches the sample point through the cloud
 	vec3 luminance = ambient + sunLight * phaseFunction * lightRay(org, p, phaseFunction, density, mu, sunDirection, cloudHeight, dist);        	
@@ -739,6 +752,13 @@ if(mobile){
 
 	//Attenuate the amount of light that reaches the camera.
 	totalTransmittance *= transmittance;  
+
+	if(recordDepth){
+	  if(totalTransmittance < 0.7){
+	    recordDepth = false;
+	    depth = dist;
+	  }
+	}
 
 	//If ray combined transmittance is close to 0, nothing beyond this sample 
 	//point is visible, so break early.
@@ -783,8 +803,9 @@ if(mobile){
     rayDir = normalize(viewMatrix * rayDir);
     vec3 color = vec3(0.0);
 
+    float depth = 1.0;
     float totalTransmittance;
-    color = exposure * skyRay(cameraPos, rayDir, sunDirection, totalTransmittance); 
+    color = exposure * skyRay(cameraPos, rayDir, sunDirection, totalTransmittance, depth); 
     vec3 background = mix(vec3(1.0), vec3(0.0, 0.0, 1.0), 0.5+0.5*rayDir.y);
     float weight = smoothstep(-0.2, 0.1, rayDir.y);
     background =  mix(vec3(0.75, 0.87, 0.93), vec3(0.12, 0.29, 0.55), weight);
@@ -800,6 +821,11 @@ if(mobile){
     if(!hitsPlanet){
       color += background * totalTransmittance;
     }
+
+    float depthMultiplier = 5e-6;
+    color = mix(color, background, saturate(1.0-exp(-depth*depthMultiplier)));
+  
+    //color = mix(color, vec3(0,0,1), depth);//clamp(depth, 0.0, 1.0));
 
     vec3 col;// = 1.0-exp(-color);
     col = pow(color, vec3(0.4545));
