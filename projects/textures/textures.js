@@ -17,7 +17,7 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 
 var canvas = document.getElementById("canvas_1");
 
-var WIDTH = 512;
+var WIDTH = 2048;
 var HEIGHT = WIDTH;
 
 canvas.width = WIDTH;
@@ -447,10 +447,10 @@ float createCloudMap(vec2 uv){
 
 void main() {
   //Normalized pixel coordinates (from 0 to 1)
-  float tileSize = 512.0;
-  float padWidth = 0.0;
+  float tileSize = 128.0;
+  float padWidth = 1.0;
   float coreSize = tileSize - 2.0 * padWidth;
-  float tileRows = 1.0;
+  float tileRows = 12.0;
   float tileCount = tileRows * tileRows;
   vec2 tile = floor((gl_FragCoord.xy - 0.5) / tileSize);
 
@@ -573,28 +573,7 @@ void main() {
   col.b = 0.0;
   col.a = 1.0;
 */
-  uv = (gl_FragCoord.xy) / resolution;
-  vec2 cell = floor(gl_FragCoord.xy);
-  //cell.y = 1.0 - cell.y;
-
-  col.r = texture2D(greyNoiseTexture, (cell+vec2(0.5,0.5))/256.0).r;
-  col.g = texture2D(greyNoiseTexture, (cell+vec2(1.5,0.5))/256.0).r;
-  col.b = texture2D(greyNoiseTexture, (cell+vec2(0.5,1.5))/256.0).r;
-  col.a = texture2D(greyNoiseTexture, (cell+vec2(1.5,1.5))/256.0).r;
-
-  float worley0 = worley(p, NUM_CELLS);
-  float worley1 = worley(p, NUM_CELLS*2.0);
-  float worley2 = worley(p, NUM_CELLS*4.0);
-  float worley3 = worley(p, NUM_CELLS*8.0);
-
-  float FBM0 = worley0 * 0.625 + worley1 * 0.25 + worley2 * 0.125;
-  float FBM1 = worley1 * 0.625 + worley2 * 0.25 + worley3 * 0.125;
-  float FBM2 = worley2 * 0.75 + worley3 * 0.25;
-
-  float res = FBM0 * 0.625 + FBM1 * 0.25 + FBM2 * 0.125;
-  uv = ((gl_FragCoord.xy/resolution.x));
-  col.rgb = vec3(createCloudMap(uv));
-  gl_FragColor = vec4(col.rgb, 1.0);
+  gl_FragColor = vec4(col);
 }
 `;
 
@@ -855,7 +834,7 @@ function step(){
   //Draw a triangle strip connecting vertices 0-4
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 */
-  requestAnimationFrame(step);
+  //requestAnimationFrame(step);
 }
 
 step();

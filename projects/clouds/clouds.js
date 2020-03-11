@@ -306,7 +306,7 @@ if(mobile){
     const int STEPS_PRIMARY = 40;   
     const int STEPS_LIGHT = 6;
     const int HD_STEPS = 800;
-    const int HD_STEPS_LIGHT = 32;
+    const int HD_STEPS_LIGHT = 30;
 
   const float PI = 3.141592;
 
@@ -465,7 +465,7 @@ if(mobile){
   }
 
   //Get density and cloud height at sample point
-  float clouds(vec3 p, out float cloudHeight, float dist, vec3 org){
+  float clouds(vec3 p, out float cloudHeight, float dist, vec3 org, bool detail){
 
     float nearThreshold =  60000.0;
     float farThreshold = 200000.0;
@@ -501,6 +501,11 @@ if(mobile){
     //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
     cloud *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, height*0.2, height, 1.0, 0.0));
 
+      //Offset sample point by curl noise to avoid pixelation artefacts. Introduces flow like structures on the surface.
+      //Sampling strength (512) and position (combining xz and y) are arbitrary from trial and error.
+      vec2 curl = (saturate(remap(cloudHeight, 0.0, 0.25, 1.0, 0.0))) * 450.0 * texture2D(curlNoiseTexture, (p.y+p.xz)*0.00001).rg;
+      //Map from [0; 1] to [-1; 1]
+      p.xz += 2.0*(curl - 1.0);
     //Get main shape noise
     float shape = getCloudShape(mainSize*p);
     //Invert shape noise to subtract from the main cloud. Leave the value at the bottom of the cloud to introduce wispy shapes there.
@@ -515,24 +520,20 @@ if(mobile){
       return 0.0;    
     }
 
-    //Offset sample point by curl noise to avoid pixelation artefacts. Introduces flow like structures on the surface.
-    //Sampling strength (512) and position (combining xz and y) are arbitrary from trial and error.
-    vec2 curl = (1.0 - cloudHeight) * 128.0 * texture2D(curlNoiseTexture, (0.01*p.y+p.xz)*0.0001).rg;
-    //Map from [0; 1] to [-1; 1]
-    p.xz += 2.0 * (curl - 1.0);
+    if(detail){
 
-    if(dist < farThreshold){
+      if(dist < farThreshold){
 
-      //Get detail shape noise
-      float detail = getCloudDetail(detailSize * p);
-      //Invert detail noise to subtract from the main shape. Leave the value at the bottom of the cloud to introduce wispy shapes there.
-      detail = mix(detail, 1.0-detail, saturate(cloudHeight * 10.0));
-      detail *= detailStrength * distanceMultiplier;
+	//Get detail shape noise
+	float detail = getCloudDetail(detailSize * p);
+	//Invert detail noise to subtract from the main shape. Leave the value at the bottom of the cloud to introduce wispy shapes there.
+	detail = mix(detail, 1.0-detail, saturate(cloudHeight * 10.0));
+	detail *= detailStrength * distanceMultiplier;
 
-      //Carve away detail based on the noise
-      cloud = saturate(remap(cloud, detail, 1.0, 0.0, 1.0));
+	//Carve away detail based on the noise
+	cloud = saturate(remap(cloud, detail, 1.0, 0.0, 1.0));
+      }
     }
-
     return cloud * densityMultiplier;
   }
 
@@ -542,27 +543,31 @@ if(mobile){
 
   float lightRay(vec3 org, vec3 p, float phaseFunction, float dC, float mu, vec3 sunDirection, float cloudHeight, float dist){
 
-    float lightRayDistance = 5000.0;
+    float lightRayDistance = 2000.0;
     float stepL = lightRayDistance/float(STEPS_LIGHT);
     if(HD){
       stepL = lightRayDistance/float(HD_STEPS_LIGHT);
     }
 
-    float lighRayDen = 0.0;    
+    float lightRayDensity = 0.0;    
 
     //Collect total density along light ray
     for(int j=0; j<HD_STEPS_LIGHT; j++){
       if(!HD){
 	if(j == STEPS_LIGHT){break;}
       }
-      lighRayDen += 0.5*clouds(p + sunDirection * float(j) * stepL, cloudHeight, dist, org);
+      bool sampleDetail = true;
+      if(lightRayDensity > 0.3){
+	sampleDetail = false;
+      }
+      lightRayDensity += 0.5*clouds(p + sunDirection * float(j) * stepL, cloudHeight, dist, org, sampleDetail);
     }    
 
     //Multiple scattering from Nubis presentation credited to Wrenninge et al. Introduce another weaker Beer-Lambert function when facing away from the sun.
-    float beersLaw = mix(max(exp(-stepL * lighRayDen), exp(-stepL * lighRayDen * 0.25) * 1.0), exp(-stepL * lighRayDen), mu);
+    float beersLaw = mix(max(exp(-stepL * lightRayDensity), exp(-stepL * lightRayDensity * 0.25) * 1.0), exp(-stepL * lightRayDensity), mu);
 
     //Return product of Beer's law and powder effect
-    return beersLaw * 2.0 * (1.0-(exp(-stepL*lighRayDen*2.0)));
+    return beersLaw * 2.0 * (1.0-(exp(-stepL*lightRayDensity*2.0)));
   }
 
   //Find the distance to the closest cloud layer intersection, the total distance in the layer and, if applicable, the distances at which the ray exits and re-enters the cloud layer.
@@ -715,7 +720,7 @@ if(mobile){
       float cloudHeight;
 
       //Get density and cloud height at sample point
-      float density = clouds(p, cloudHeight, dist, org);
+      float density = clouds(p, cloudHeight, dist, org, true);
 
       float sigmaS = 1.0;
       float sigmaA = 0.0;
@@ -738,7 +743,7 @@ if(mobile){
 	float ambient = mix((1.0), (1.2), cloudHeight);
 
 	//Amount of sunlight that reaches the sample point through the cloud
-	vec3 luminance = ambient + sunLight * phaseFunction * lightRay(org, p, phaseFunction, density, mu, sunDirection, cloudHeight, dist);        	
+	vec3 luminance = ambient + sunLight * phaseFunction * lightRay(org, p, phaseFunction, density, mu, sunDirection, cloudHeight, dist);
 
 	//Scale light contribution by density of the cloud
 	luminance *= sampleSigmaS;
