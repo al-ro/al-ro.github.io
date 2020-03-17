@@ -17,7 +17,7 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 
 var canvas = document.getElementById("canvas_1");
 
-var WIDTH = 2048;
+var WIDTH = 512;
 var HEIGHT = WIDTH;
 
 canvas.width = WIDTH;
@@ -446,11 +446,14 @@ float createCloudMap(vec2 uv){
 }
 
 void main() {
+  bool atlas = false;
+  vec3 col = vec3(0);
+  if(atlas){
   //Normalized pixel coordinates (from 0 to 1)
-  float tileSize = 128.0;
+  float tileSize = 512.0;
   float padWidth = 1.0;
   float coreSize = tileSize - 2.0 * padWidth;
-  float tileRows = 12.0;
+  float tileRows = 2.0;
   float tileCount = tileRows * tileRows;
   vec2 tile = floor((gl_FragCoord.xy - 0.5) / tileSize);
 
@@ -504,7 +507,6 @@ void main() {
   vec3 p = p_;
   p.z /= (tileRows*tileRows);
 
-  vec4 col = vec4(0,0,0,1);
   //Get Perlin-Worley noise for level l
   float worleyPerlinNoise = getTextureForPoint(p, 0);
   //Get Worley noise for level l
@@ -521,7 +523,7 @@ void main() {
   col.g = saturate(remap(worleyPerlinNoise, worleyNoise, 1.0, 0.0, 1.0));
 
   //Show erroneous values as red
-  if((col.x > 1.0) || (col.x < 0.0)){ col = vec4(1,0,0,1); }
+  if((col.x > 1.0) || (col.x < 0.0)){ col = vec3(1,0,0); }
 
   //Boundary cells
   if(padCell){
@@ -543,37 +545,36 @@ void main() {
   }
   //Unused cells
   if(gl_FragCoord.x > tileRows * tileSize || gl_FragCoord.y > tileRows * tileSize){
-    col = vec4(0,0,0,1);
+    col = vec3(0);
   }
-  vec3 position = vec3(gl_FragCoord.xy/256.0, 0.0);
-/*
-  //position.xy += time * 0.1;
-  float freq = 15.0;
+}else{
+  vec3 position = vec3(0.5*gl_FragCoord.xy/resolution.xy, 0.5);
+  float freq = 8.0;
   float delta = 0.01 * freq;
   float noise = getPerlinNoise(position, freq);
+
   float noise_xp = getPerlinNoise(position + vec3(delta, 0.0, 0.0), freq);
   float noise_xn = getPerlinNoise(position + vec3(-delta,0.0, 0.0), freq);
+  float a = (noise_xp - noise_xn) / (2.0 * delta);
+
   float noise_yp = getPerlinNoise(position + vec3(0.0, delta, 0.0), freq);
   float noise_yn = getPerlinNoise(position + vec3(0.0,-delta, 0.0), freq);
-*/
-/*
-  noise = noise * 0.25 + 0.5;
-  noise_xp = noise_xp * 0.25 + 0.5;
-  noise_yp = noise_yp * 0.25 + 0.5;
-  noise_xn = noise_xn * 0.25 + 0.5;
-  noise_yn = noise_yn * 0.25 + 0.5;
-*/
-/*
-  float grad_x = noise_xp - noise;
-  float grad_y = noise_yp - noise;
-  //grad_x = grad_x * 0.5 + 0.5;
-  //grad_y = grad_y * 0.5 + 0.5;
-  col.r = grad_x * 0.5 + 0.5;
-  col.g = grad_y * 0.5 + 0.5;
-  col.b = 0.0;
-  col.a = 1.0;
-*/
-  gl_FragColor = vec4(col);
+  float b = (noise_yp - noise_yn) / (2.0 * delta);
+
+  vec2 curl = vec2(b, -a);
+  vec2 uv = gl_FragCoord.xy / resolution;
+  vec2 pos = uv;
+  float scale = 20.0;
+  vec2 centre = scale * vec2(0.5);
+  pos *= scale;
+  pos += 1.0*curl;
+  pos += sin(pos.y*2.0) * vec2(time,0);
+  pos.x = mod(pos.x, scale);
+  float cloud = smoothstep(0.2*scale, 0.0, length(pos-centre));
+  col = vec3(cloud);
+
+}
+  gl_FragColor = vec4(col, 1.0);
 }
 `;
 
@@ -612,12 +613,7 @@ void main(){
 
 function loadTexture(gl, texture, url) {
   gl.bindTexture(gl.TEXTURE_2D, texture);
-
-  // Because images have to be download over the internet
-  // they might take a moment until they are ready.
-  // Until then put a single pixel in the texture so we can
-  // use it immediately. When the image has finished downloading
-  // we'll update the texture with the contents of the image.
+  
   const internalFormat = gl.RGBA;
   const width_ = 1;
   const height_ = 1;
@@ -834,7 +830,7 @@ function step(){
   //Draw a triangle strip connecting vertices 0-4
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 */
-  //requestAnimationFrame(step);
+  requestAnimationFrame(step);
 }
 
 step();
