@@ -249,7 +249,7 @@ if(mobile){
   gui.add(this, 'densityMultiplier').min(0.0).max(1.0).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(densityMultiplierHandle, densityMultiplier); updateClouds();});
   gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize); updateClouds();});
   gui.add(this, 'tempVar').min(0.0).max(10.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(tempVarHandle, tempVar); updateClouds();});
-  gui.add(this, 'tempVar2').min(0.0).max(10.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(tempVar2Handle, tempVar2); updateClouds();});
+  gui.add(this, 'tempVar2').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(tempVar2Handle, tempVar2); updateClouds();});
   gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailStrengthHandle, detailStrength); updateClouds();});
   gui.add(this, 'exposure').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(exposureHandle, exposure); updateClouds();});
   gui.add(this, 'animate');
@@ -501,11 +501,6 @@ if(mobile){
     //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
     cloud *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, height*0.2, height, 1.0, 0.0));
 
-      //Offset sample point by curl noise to avoid pixelation artefacts. Introduces flow like structures on the surface.
-      //Sampling strength (512) and position (combining xz and y) are arbitrary from trial and error.
-      vec2 curl = (saturate(remap(cloudHeight, 0.0, 0.25, 1.0, 0.0))) * 450.0 * texture2D(curlNoiseTexture, (p.y+p.xz)*0.00001).rg;
-      //Map from [0; 1] to [-1; 1]
-      p.xz += 2.0*(curl - 1.0);
     //Get main shape noise
     float shape = getCloudShape(mainSize*p);
     //Invert shape noise to subtract from the main cloud. Leave the value at the bottom of the cloud to introduce wispy shapes there.
@@ -521,6 +516,12 @@ if(mobile){
     }
 
     if(detail){
+
+      //Offset sample point by curl noise to avoid pixelation artefacts. Introduces flow like structures on the surface.
+      //Sampling strength (512) and position (combining xz and y) are arbitrary from trial and error.
+      vec2 curl = (1.0 - cloudHeight) * 128.0 * texture2D(curlNoiseTexture, (0.01*p.y+p.xz)*0.0001).rg;
+      //Map from [0; 1] to [-1; 1]
+      p.xz += 2.0 * (curl - 1.0);
 
       if(dist < farThreshold){
 
@@ -560,14 +561,16 @@ if(mobile){
       if(lightRayDensity > 0.3){
 	sampleDetail = false;
       }
-      lightRayDensity += 0.5*clouds(p + sunDirection * float(j) * stepL, cloudHeight, dist, org, sampleDetail);
-    }    
+      lightRayDensity += mix(1.0, 0.5, mu) * clouds(p + sunDirection * float(j) * stepL, cloudHeight, dist, org, sampleDetail);
+    }
 
-    //Multiple scattering from Nubis presentation credited to Wrenninge et al. Introduce another weaker Beer-Lambert function when facing away from the sun.
-    float beersLaw = mix(max(exp(-stepL * lightRayDensity), exp(-stepL * lightRayDensity * 0.25) * 1.0), exp(-stepL * lightRayDensity), mu);
-
+    //Multiple scattering from Nubis presentation credited to Wrenninge et al. Introduce another weaker Beer-Lambert function 
+    float beersLaw = max(exp(-stepL * lightRayDensity), exp(-stepL * lightRayDensity * 0.25) * 0.75);//, exp(-stepL * lightRayDensity);
+    if(tempVar < 0.5){
+      return beersLaw;
+    }
     //Return product of Beer's law and powder effect
-    return beersLaw * 2.0 * (1.0-(exp(-stepL*lightRayDensity*2.0)));
+    return mix(beersLaw * 2.0 * (1.0-(exp(-stepL*lightRayDensity*2.0))), beersLaw, mu);
   }
 
   //Find the distance to the closest cloud layer intersection, the total distance in the layer and, if applicable, the distances at which the ray exits and re-enters the cloud layer.
@@ -828,7 +831,7 @@ if(mobile){
     }
 
     float depthMultiplier = 5e-6;
-    color = mix(color, background, saturate(1.0-exp(-depth*depthMultiplier)));
+    //color = mix(color, background, saturate(1.0-exp(-depth*depthMultiplier)));
   
     //color = mix(color, vec3(0,0,1), depth);//clamp(depth, 0.0, 1.0));
 
