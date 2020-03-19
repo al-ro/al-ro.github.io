@@ -39,7 +39,7 @@ if(mobile){
   //The size of the cube map side
   var cubeMapSize = 1024;
   //The size of a tile side
-  var tileSize = 128;
+  var tileSize = 1024;
   //Total number of tiles on a single cube map side
   var tileCount = cubeMapSize / tileSize;
   var totalTiles = tileCount * tileCount * 6;
@@ -72,7 +72,8 @@ if(mobile){
   var yCounter = 0;
 
   var renderFlag = true;
-  var EARTH_RADIUS = 6377629.85;
+  //var EARTH_RADIUS = 6377629.85;
+  var EARTH_RADIUS = 155000.0;
 
   //Time
   var time = 0.0;
@@ -85,8 +86,8 @@ if(mobile){
   var coverage = 0.7;
   var viewHeight = 10.5;
   var power = 10.0;
-  var mainSize = 0.01;
-  var detailSize = 0.03;
+  var mainSize = 0.05;
+  var detailSize = 0.08;
   var tempVar = 1.0;
   var tempVar2 = 0.0;
   var detailStrength = 0.6;
@@ -305,8 +306,8 @@ if(mobile){
 
     const int STEPS_PRIMARY = 40;   
     const int STEPS_LIGHT = 6;
-    const int HD_STEPS = 800;
-    const int HD_STEPS_LIGHT = 30;
+    const int HD_STEPS = 256;
+    const int HD_STEPS_LIGHT = 16;
 
   const float PI = 3.141592;
 
@@ -314,7 +315,7 @@ if(mobile){
   const float PLANET_RADIUS = float(`+EARTH_RADIUS+`);
   // From Babic thesis, probably same as HZD
   const float CLOUD_START = 1500.0;
-  const float CLOUD_HEIGHT = 6000.0;
+  const float CLOUD_HEIGHT = 4000.0;
 
   //https://www.geertarien.com/blog/2017/07/30/breakdown-of-the-lookAt-function-in-OpenGL/
   mat3 lookAt(vec3 camera, vec3 targetDir, vec3 up){
@@ -408,45 +409,6 @@ if(mobile){
     return mix(data.x, data.y, f);
   }
 
-
-  //Return first intersection in front of the camera
-  float intersectSphere(vec3 origin, vec3 dir, vec3 spherePos, float sphereRad){
-    vec3 oc = origin - spherePos;
-    float b = 2.0 * dot(dir, oc);
-    float c = dot(oc, oc) - sphereRad*sphereRad;
-    float disc = b * b - 4.0 * c;
-    if (disc < 0.0){
-      return -1.0;
-    }
-    float q = (-b + ((b < 0.0) ? -sqrt(disc) : sqrt(disc))) / 2.0;
-    float t0 = q;
-    float t1 = c / q;
-    if (t0 > t1) {
-      float temp = t0;
-      t0 = t1;
-      t1 = temp;
-    }
-    if (t1 < 0.0){
-      return -1.0;
-    }
-
-    return (t0 < 0.0) ? t1 : t0;
-  }
-    //Return the near and far intersections of an infinite ray and a sphere. 
-    //Assumes sphere at origin. No intersection if result.x > result.y
-    float sphereIntersect(vec3 start, vec3 dir, float radius){
-      float a = dot(dir, dir);
-      float b = 2.0 * dot(dir, start);
-      float c = dot(start, start) - (radius * radius);
-      float d = (b*b) - 4.0*a*c;
-      if (d < 0.0){
-	return -10.0;//vec2(1e5, -1e5);
-      }
-      float first = (-b - sqrt(d))/(2.0*a);
-      float second = (-b + sqrt(d))/(2.0*a);
-      return (first >= 0.0) ? first : second;
-    }
-
     //Return the near and far intersections of an infinite ray and a sphere. 
     //Assumes sphere at origin. No intersection if result.x > result.y
     vec2 sphereIntersections(vec3 start, vec3 dir, float radius){
@@ -466,7 +428,6 @@ if(mobile){
 
   //Get density and cloud height at sample point
   float clouds(vec3 p, out float cloudHeight, float dist, vec3 org, bool detail){
-
     float nearThreshold =  60000.0;
     float farThreshold = 200000.0;
     float distanceMultiplier = 1.0-saturate((dist-nearThreshold)/farThreshold);
@@ -476,11 +437,11 @@ if(mobile){
     float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
 
     //Sample texture which determines where clouds occur
-    float cloud = saturate(getWeatherMap(100.0*vec2(polar, azimuth)));//sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    float cloud = saturate(getWeatherMap(7.0*vec2(polar, azimuth)));//sin(polar * 1000.0) * cos(azimuth * 1000.0);
     //float cloud = 0.5+0.5*(sin(polar * 2000.0) * cos(azimuth * 2000.0));
 
     //Mix with user defined coverage to transition between overcast and clear sky
-    cloud *= coverage * distanceMultiplier;
+    cloud *= coverage;// * distanceMultiplier;
 
     nearThreshold = 35000.0;
     farThreshold =  40000.0;
@@ -523,17 +484,17 @@ if(mobile){
       //Map from [0; 1] to [-1; 1]
       p.xz += 2.0 * (curl - 1.0);
 
-      if(dist < farThreshold){
+      //if(dist < farThreshold){
 
 	//Get detail shape noise
 	float detail = getCloudDetail(detailSize * p);
 	//Invert detail noise to subtract from the main shape. Leave the value at the bottom of the cloud to introduce wispy shapes there.
 	detail = mix(detail, 1.0-detail, saturate(cloudHeight * 10.0));
-	detail *= detailStrength * distanceMultiplier;
+	detail *= detailStrength * 0.5;// * distanceMultiplier;
 
 	//Carve away detail based on the noise
 	cloud = saturate(remap(cloud, detail, 1.0, 0.0, 1.0));
-      }
+      //}
     }
     return cloud * densityMultiplier;
   }
@@ -544,7 +505,7 @@ if(mobile){
 
   float lightRay(vec3 org, vec3 p, float phaseFunction, float dC, float mu, vec3 sunDirection, float cloudHeight, float dist){
 
-    float lightRayDistance = 2000.0;
+    float lightRayDistance = 800.0;
     float stepL = lightRayDistance/float(STEPS_LIGHT);
     if(HD){
       stepL = lightRayDistance/float(HD_STEPS_LIGHT);
@@ -561,15 +522,14 @@ if(mobile){
       if(lightRayDensity > 0.3){
 	sampleDetail = false;
       }
+      //Reduce density of clouds when looking towards the sun for more luminous clouds
       lightRayDensity += mix(1.0, 0.5, mu) * clouds(p + sunDirection * float(j) * stepL, cloudHeight, dist, org, sampleDetail);
     }
 
     //Multiple scattering from Nubis presentation credited to Wrenninge et al. Introduce another weaker Beer-Lambert function 
-    float beersLaw = max(exp(-stepL * lightRayDensity), exp(-stepL * lightRayDensity * 0.25) * 0.75);//, exp(-stepL * lightRayDensity);
-    if(tempVar < 0.5){
-      return beersLaw;
-    }
-    //Return product of Beer's law and powder effect
+    float beersLaw = max(exp(-stepL * lightRayDensity), exp(-stepL * lightRayDensity * 0.2) * 0.75);//, exp(-stepL * lightRayDensity);
+
+    //Return product of Beer's law and powder effect depending on the view direction angle with the light
     return mix(beersLaw * 2.0 * (1.0-(exp(-stepL*lightRayDensity*2.0))), beersLaw, mu);
   }
 
@@ -688,6 +648,9 @@ if(mobile){
 
     //Set ray parameters in the cloud layer.
     bool renderClouds = getCloudLayerIntersection(org, dir, distToStart, exit, reenter, totalDistance, reentry);
+    if(distToStart > tempVar){
+      //return vec3(1);
+    }
 
     if(!renderClouds){
       return color;
