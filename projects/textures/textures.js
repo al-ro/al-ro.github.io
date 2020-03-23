@@ -446,7 +446,7 @@ float createCloudMap(vec2 uv){
 }
 
 void main() {
-  bool atlas = false;
+  bool atlas = true;
   vec3 col = vec3(0);
   if(atlas){
   //Normalized pixel coordinates (from 0 to 1)
