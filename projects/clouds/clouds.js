@@ -39,7 +39,7 @@ if(mobile){
   //The size of the cube map side
   var cubeMapSize = 1024;
   //The size of a tile side
-  var tileSize = 1024;
+  var tileSize = 256;
   //Total number of tiles on a single cube map side
   var tileCount = cubeMapSize / tileSize;
   var totalTiles = tileCount * tileCount * 6;
@@ -75,6 +75,8 @@ if(mobile){
   //var EARTH_RADIUS = 6377629.85;
   var EARTH_RADIUS = 155000.0;
 
+  var iteration = 0;
+
   //Time
   var time = 0.0;
   var densityMultiplier = 0.1;
@@ -89,7 +91,7 @@ if(mobile){
   var mainSize = 0.05;
   var detailSize = 0.08;
   var tempVar = 1.0;
-  var tempVar2 = 0.0;
+  var tempVar2 = 5.0;
   var detailStrength = 0.6;
   var exposure = 0.5;
   //Thickness of the atmosphere
@@ -227,6 +229,7 @@ if(mobile){
     faceCounter = 0;
     xCounter = 0;
     yCounter = 0;
+    iteration = 0.0;
   }
 
   function updateSunPosition(){
@@ -250,7 +253,7 @@ if(mobile){
   gui.add(this, 'densityMultiplier').min(0.0).max(1.0).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(densityMultiplierHandle, densityMultiplier); updateClouds();});
   gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize); updateClouds();});
   gui.add(this, 'tempVar').min(0.0).max(10.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(tempVarHandle, tempVar); updateClouds();});
-  gui.add(this, 'tempVar2').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(tempVar2Handle, tempVar2); updateClouds();});
+  gui.add(this, 'tempVar2').min(0.0).max(20.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(tempVar2Handle, tempVar2); updateClouds();});
   gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailStrengthHandle, detailStrength); updateClouds();});
   gui.add(this, 'exposure').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(exposureHandle, exposure); updateClouds();});
   gui.add(this, 'animate');
@@ -298,15 +301,20 @@ if(mobile){
     uniform sampler2D cloudDetailTexture;
     uniform sampler2D weatherMapTexture;
     uniform sampler2D curlNoiseTexture;
+    uniform sampler2D blueNoiseTexture;
     uniform bool HD;
 
     uniform vec3 cameraPosition;
     uniform vec3 sunPosition;
     uniform mat3 viewMatrix;
 
+    uniform float iteration;
+
+    uniform samplerCube skyBox;
+
     const int STEPS_PRIMARY = 40;   
     const int STEPS_LIGHT = 6;
-    const int HD_STEPS = 256;
+    const int HD_STEPS = 64;
     const int HD_STEPS_LIGHT = 16;
 
   const float PI = 3.141592;
@@ -426,6 +434,10 @@ if(mobile){
     return texture2D(weatherMapTexture, abs(p)).x;
   }
 
+  float getBlueNoise(vec2 p){
+    return (2.0*texture2D(blueNoiseTexture, p+fract(time)).x)-1.0;
+  }
+
   //Get density and cloud height at sample point
   float clouds(vec3 p, out float cloudHeight, float dist, vec3 org, bool detail){
     float nearThreshold =  60000.0;
@@ -437,7 +449,7 @@ if(mobile){
     float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
 
     //Sample texture which determines where clouds occur
-    float cloud = saturate(getWeatherMap(7.0*vec2(polar, azimuth)));//sin(polar * 1000.0) * cos(azimuth * 1000.0);
+    float cloud = saturate(getWeatherMap(tempVar2*vec2(polar, azimuth)));//sin(polar * 1000.0) * cos(azimuth * 1000.0);
     //float cloud = 0.5+0.5*(sin(polar * 2000.0) * cos(azimuth * 2000.0));
 
     //Mix with user defined coverage to transition between overcast and clear sky
@@ -739,7 +751,7 @@ if(mobile){
 	}
       }
 
-      dist += stepS;
+      dist += stepS+stepS*getBlueNoise(p.xz*0.01);
       if(reentry){
 	//Skip over section of ray outside the cloud layer and set sampling point at the reentry.
 	if((dist > exit) && (dist < reenter)){
@@ -784,7 +796,7 @@ if(mobile){
     float mu = dot(sunDirection, rayDir);
     //Draw sun
     //background += totalTransmittance * vec3(1e4*smoothstep(0.9998, 1.0, mu));
-    background += totalTransmittance * getGlow(1.0-mu, 0.00005, 0.6);
+    //background += totalTransmittance * getGlow(1.0-mu, 0.00005, 0.6);
     
     vec2 rayPlanetIntersect = sphereIntersections(cameraPos, rayDir, PLANET_RADIUS);
     
@@ -801,7 +813,14 @@ if(mobile){
     vec3 col;// = 1.0-exp(-color);
     col = pow(color, vec3(0.4545));
 
-    gl_FragColor = vec4(col, 1.0);
+    vec3 colOld = textureCube(skyBox, rayDir).rgb;
+      gl_FragColor = vec4(col, 1.0);
+    if(iteration > 1.0){
+	gl_FragColor = vec4(mix(col, colOld, 0.95), 1.0); 
+    }else{
+      gl_FragColor = vec4(col, 1.0);
+    }
+
 /*
   if(tempVar > 0.9){
     gl_FragColor = vec4(1,0,0,1);
@@ -877,7 +896,7 @@ void main() {
     frameBuffer = gl.createFramebuffer();
     frameBuffer.width = tileSize;
     frameBuffer.height = tileSize;
-    gl.activeTexture(gl.TEXTURE4);
+    gl.activeTexture(gl.TEXTURE6);
     gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, frameBuffer.width, frameBuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
     //Assign texture as framebuffer colour attachment
@@ -973,6 +992,10 @@ loadTexture(gl, tex3, 'https://al-ro.github.io/projects/clouds/weatherMap.png', 
 gl.activeTexture(gl.TEXTURE3);
 var tex4 = gl.createTexture();
 loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/curlNoise.png', 3);
+
+gl.activeTexture(gl.TEXTURE4);
+var tex4 = gl.createTexture();
+loadTexture(gl, tex4, 'https://al-ro.github.io/projects/clouds/blueNoise.png');
 
 //Cubemap
 gl.activeTexture(gl.TEXTURE5);
@@ -1085,10 +1108,14 @@ createTileTexture(tileTexture);
     var detailTextureHandle = gl.getUniformLocation(program, "cloudDetailTexture");
     var weatherMapTextureHandle = gl.getUniformLocation(program, "weatherMapTexture");
     var curlNoiseTextureHandle = gl.getUniformLocation(program, "curlNoiseTexture");
+    var blueNoiseTextureHandle = gl.getUniformLocation(program, "blueNoiseTexture");
+    var iterationHandle = gl.getUniformLocation(program, "iteration");
 
     var viewMatrixHandle = getUniformLocation(program, 'viewMatrix');
     var cameraPositionHandle = getUniformLocation(program, 'cameraPosition');
     var sunPositionHandle = getUniformLocation(program, 'sunPosition');
+
+    var skyBoxHandle_ = gl.getUniformLocation(program, "skyBox");
 
     gl.uniformMatrix3fv(viewMatrixHandle, false, getViewMatrixAsArray());
     gl.uniform3f(cameraPositionHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
@@ -1102,6 +1129,9 @@ createTileTexture(tileTexture);
     gl.uniform1i(weatherMapTextureHandle, 2);
     gl.activeTexture(gl.TEXTURE3);
     gl.uniform1i(curlNoiseTextureHandle, 3);
+
+    gl.activeTexture(gl.TEXTURE4);
+    gl.uniform1i(blueNoiseTextureHandle, 4);
 
     gl.uniform1f(widthHandle, tileSize);
     gl.uniform1f(heightHandle, tileSize);
@@ -1121,6 +1151,7 @@ createTileTexture(tileTexture);
     gl.uniform1f(detailStrengthHandle, detailStrength);
     gl.uniform1f(exposureHandle, exposure);
     gl.uniform1f(coverageHandle, coverage);
+    gl.uniform1f(iterationHandle, iteration);
 
     var skyBoxHandle = gl.getUniformLocation(cube_program, "skyBox");
     var widthHandle_ = getUniformLocation(cube_program, 'width');
@@ -1188,7 +1219,7 @@ function createAndSetupTexture(gl) {
 
   return texture;
 }
-gl.activeTexture(gl.TEXTURE4);
+gl.activeTexture(gl.TEXTURE6);
 //Create and bind frame buffer
 frameBuffer = gl.createFramebuffer();
 frameBuffer.width = tileSize;
@@ -1326,18 +1357,20 @@ var lastPos = {x: mousePosition.x, y: mousePosition.y};
 
 var start;
 function setCounters(){
-  if(tileCounter == 0){
+  if(tileCounter == 0 && iteration == 1.0){
     start = Date.now();
   }
   let tileIndex = tileIndices[tileCounter][0];
   if(tileCounter == (totalTiles-1)){
     faceCounter = 0;
-    renderFlag = false;
-    console.log("Render time: " + (Date.now() - start)/1000 + " s");
+    iteration = 2.0;
+      if(iteration > 10.0){
+      renderFlag = false;
+      console.log("Render time: " + (Date.now() - start)/1000 + " s");
+    }
   }
   tileCounter = (tileCounter + 1) % totalTiles;
 }
-
 function renderCubeMap(){
   let tileIndex = tileIndices[tileCounter][0];
   let mu = dot(tileDirections[tileIndex], normalize(cameraPosition));
@@ -1355,7 +1388,9 @@ function renderCubeMap(){
   gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
   gl.activeTexture(gl.TEXTURE0);
   gl.uniform1i(shapeTextureHandle, 0);
+  gl.uniform1i(skyBoxHandle_, 5);  // texture unit 0
   gl.uniform1f(timeHandle, time);
+  gl.uniform1f(iterationHandle, iteration);
   //gl.useProgram(program);
   gl.uniform1f(widthHandle, tileSize);
   gl.uniform1f(heightHandle, tileSize);
