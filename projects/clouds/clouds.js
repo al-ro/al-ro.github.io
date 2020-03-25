@@ -75,7 +75,8 @@ if(mobile){
   //var EARTH_RADIUS = 6377629.85;
   var EARTH_RADIUS = 155000.0;
 
-  var iteration = 0;
+  var iteration = 1;
+  var ITERATION_LIMIT = 16.0;
 
   //Time
   var time = 0.0;
@@ -92,7 +93,7 @@ if(mobile){
   var detailSize = 0.08;
   var tempVar = 1.0;
   var tempVar2 = 5.0;
-  var detailStrength = 0.6;
+  var detailStrength = 0.5;
   var exposure = 0.5;
   //Thickness of the atmosphere
 
@@ -229,7 +230,7 @@ if(mobile){
     faceCounter = 0;
     xCounter = 0;
     yCounter = 0;
-    iteration = 0.0;
+    iteration = 1.0;
   }
 
   function updateSunPosition(){
@@ -315,9 +316,11 @@ if(mobile){
     const int STEPS_PRIMARY = 40;   
     const int STEPS_LIGHT = 6;
     const int HD_STEPS = 64;
-    const int HD_STEPS_LIGHT = 16;
+    const int HD_STEPS_LIGHT = 6;
 
   const float PI = 3.141592;
+
+  const float iterationLimit = float(` + ITERATION_LIMIT + `);
 
   // Cloud parameters
   const float PLANET_RADIUS = float(`+EARTH_RADIUS+`);
@@ -535,7 +538,7 @@ if(mobile){
 	sampleDetail = false;
       }
       //Reduce density of clouds when looking towards the sun for more luminous clouds
-      lightRayDensity += mix(1.0, 0.5, mu) * clouds(p + sunDirection * float(j) * stepL, cloudHeight, dist, org, sampleDetail);
+      lightRayDensity += mix(1.0, 0.5, mu) * clouds(p + sunDirection * float(j) * stepL + stepL * getBlueNoise(gl_FragCoord.xy/64.0), cloudHeight, dist, org, sampleDetail);
     }
 
     //Multiple scattering from Nubis presentation credited to Wrenninge et al. Introduce another weaker Beer-Lambert function 
@@ -751,7 +754,7 @@ if(mobile){
 	}
       }
 
-      dist += stepS+stepS*getBlueNoise(p.xz*0.01);
+      dist += stepS+stepS*0.5*getBlueNoise(gl_FragCoord.xy/1024.0);
       if(reentry){
 	//Skip over section of ray outside the cloud layer and set sampling point at the reentry.
 	if((dist > exit) && (dist < reenter)){
@@ -813,12 +816,12 @@ if(mobile){
     vec3 col;// = 1.0-exp(-color);
     col = pow(color, vec3(0.4545));
 
-    vec3 colOld = textureCube(skyBox, rayDir).rgb;
-      gl_FragColor = vec4(col, 1.0);
+    vec4 oldCol = textureCube(skyBox, rayDir).rgba;
+      //gl_FragColor = vec4(col, totalTransmittance);
     if(iteration > 1.0){
-	gl_FragColor = vec4(mix(col, colOld, 0.95), 1.0); 
+	  gl_FragColor = mix(vec4(col, totalTransmittance), oldCol, 0.5 + mix(0.0, 0.45, iteration/iterationLimit)); 
     }else{
-      gl_FragColor = vec4(col, 1.0);
+      gl_FragColor = vec4(col, totalTransmittance);
     }
 
 /*
@@ -1363,8 +1366,9 @@ function setCounters(){
   let tileIndex = tileIndices[tileCounter][0];
   if(tileCounter == (totalTiles-1)){
     faceCounter = 0;
-    iteration = 2.0;
-      if(iteration > 10.0){
+    console.log("Iteration: ", iteration);
+    iteration += 1;
+      if(iteration > ITERATION_LIMIT){
       renderFlag = false;
       console.log("Render time: " + (Date.now() - start)/1000 + " s");
     }
