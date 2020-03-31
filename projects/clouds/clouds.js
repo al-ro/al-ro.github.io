@@ -76,7 +76,7 @@ if(mobile){
   var EARTH_RADIUS = 155000.0;
 
   var iteration = 1;
-  var ITERATION_LIMIT = 16.0;
+  var ITERATION_LIMIT = 1.0;
 
   //Time
   var time = 0.0;
@@ -315,7 +315,7 @@ if(mobile){
 
     const int STEPS_PRIMARY = 40;   
     const int STEPS_LIGHT = 6;
-    const int HD_STEPS = 64;
+    const int HD_STEPS = 380;
     const int HD_STEPS_LIGHT = 6;
 
   const float PI = 3.141592;
@@ -538,7 +538,8 @@ if(mobile){
 	sampleDetail = false;
       }
       //Reduce density of clouds when looking towards the sun for more luminous clouds
-      lightRayDensity += mix(1.0, 0.5, mu) * clouds(p + sunDirection * float(j) * stepL + stepL * getBlueNoise(gl_FragCoord.xy/64.0), cloudHeight, dist, org, sampleDetail);
+      lightRayDensity += mix(1.0, 0.5, mu) * clouds(p + sunDirection * float(j) * stepL, cloudHeight, dist, org, sampleDetail);
+      //lightRayDensity += mix(1.0, 0.5, mu) * clouds(p + sunDirection * float(j) * stepL + stepL * getBlueNoise(gl_FragCoord.xy/64.0), cloudHeight, dist, org, sampleDetail);
     }
 
     //Multiple scattering from Nubis presentation credited to Wrenninge et al. Introduce another weaker Beer-Lambert function 
@@ -559,7 +560,7 @@ if(mobile){
     vec2 rayStartIntersect = sphereIntersections(org, dir, ATM_START);
     vec2 rayEndIntersect = sphereIntersections(org, dir, ATM_END);
     
-    bool hitsPlanet = (rayPlanetIntersect.x <= rayPlanetIntersect.y) && rayPlanetIntersect.x > 0.0;
+    bool hitsPlanet = false;//(rayPlanetIntersect.x <= rayPlanetIntersect.y) && rayPlanetIntersect.x > 0.0;
     bool hitsStart = (rayStartIntersect.x <= rayStartIntersect.y) && rayStartIntersect.x > 0.0;
     bool hitsEnd = (rayEndIntersect.x <= rayEndIntersect.y) && rayEndIntersect.x > 0.0; 
   
@@ -754,7 +755,8 @@ if(mobile){
 	}
       }
 
-      dist += stepS+stepS*0.5*getBlueNoise(gl_FragCoord.xy/1024.0);
+      dist += stepS;
+      //dist += stepS+stepS*0.5*getBlueNoise(gl_FragCoord.xy/1024.0);
       if(reentry){
 	//Skip over section of ray outside the cloud layer and set sampling point at the reentry.
 	if((dist > exit) && (dist < reenter)){
@@ -774,6 +776,34 @@ if(mobile){
     return pow(radius/dist, intensity);	
   }
 
+  const vec3 skyColour = 0.5 * vec3(0.09, 0.33, 0.81);
+  //Darken sky when looking up
+  vec3 getSkyColour(vec3 rayDir){
+    return mix(skyColour, 0.2*skyColour, rayDir.y);
+  }
+
+  //https://iquilezles.org/www/articles/fog/fog.htm
+  vec3 applyFog(vec3 rgb, vec3 rayOri, vec3 rayDir, vec3 sunDir){
+    //Make horizon more hazy
+    float dist = 4000.0;
+    if(abs(rayDir.y) < 0.0001){rayDir.y = 0.0001;}
+    //Rate of fade
+    float b = 0.2;
+    float fogAmount = pow(1.0-rayDir.y, 4.0);//1.0 * exp(-rayOri.y*b) * (1.0-exp(-dist*rayDir.y*b))/rayDir.y;
+    float sunAmount = max( dot( rayDir, sunDir ), 0.0 );
+    vec3 fogColor  = mix( vec3(0.5,0.6,0.7), vec3(1.0), pow(sunAmount, 16.0) );
+    return mix(rgb, fogColor, clamp(fogAmount, 0.0, 1.0));
+  }
+
+    vec3 ACESFilm(vec3 x){
+      float a = 2.51;
+      float b = 0.03;
+      float c = 2.43;
+      float d = 0.59;
+      float e = 0.14;
+      return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
+    }
+  
   void main(){
     vec2 resolution = vec2(width, height);
     //Get the default direction of the ray (along the negative z direction)
@@ -787,26 +817,27 @@ if(mobile){
 
     //Transform the ray to point in the correct direction
     rayDir = normalize(viewMatrix * rayDir);
-    vec3 color = vec3(0.0);
+    vec3 colour = vec3(0.0);
 
     float depth = 1.0;
     float totalTransmittance;
-    color = exposure * skyRay(cameraPos, rayDir, sunDirection, totalTransmittance, depth); 
+    colour = exposure * skyRay(cameraPos, rayDir, sunDirection, totalTransmittance, depth); 
     vec3 background = mix(vec3(1.0), vec3(0.0, 0.0, 1.0), 0.5+0.5*rayDir.y);
     float weight = smoothstep(-0.2, 0.1, rayDir.y);
-    background =  mix(vec3(0.75, 0.87, 0.93), vec3(0.12, 0.29, 0.55), weight);
+    background =  getSkyColour(rayDir);//mix(vec3(0.75, 0.87, 0.93), vec3(0.12, 0.29, 0.55), weight);
 
     float mu = dot(sunDirection, rayDir);
     //Draw sun
     //background += totalTransmittance * vec3(1e4*smoothstep(0.9998, 1.0, mu));
-    //background += totalTransmittance * getGlow(1.0-mu, 0.00005, 0.6);
+    background += totalTransmittance * getGlow(1.0-mu, 0.000015, 0.9);
+    background += applyFog(background, vec3(0.0, viewHeight, 0.0), rayDir, sunDirection);
     
     vec2 rayPlanetIntersect = sphereIntersections(cameraPos, rayDir, PLANET_RADIUS);
     
     bool hitsPlanet = (rayPlanetIntersect.x <= rayPlanetIntersect.y) && rayPlanetIntersect.x > 0.0;
-    if(!hitsPlanet){
-      color += background * totalTransmittance;
-    }
+    //if(!hitsPlanet){
+      colour += background * totalTransmittance;
+    //}
 
     float depthMultiplier = 5e-6;
     //color = mix(color, background, saturate(1.0-exp(-depth*depthMultiplier)));
@@ -814,7 +845,9 @@ if(mobile){
     //color = mix(color, vec3(0,0,1), depth);//clamp(depth, 0.0, 1.0));
 
     vec3 col;// = 1.0-exp(-color);
-    col = pow(color, vec3(0.4545));
+
+    col = ACESFilm(colour);
+    col = pow(colour, vec3(0.4545));
 
     vec4 oldCol = textureCube(skyBox, rayDir).rgba;
       //gl_FragColor = vec4(col, totalTransmittance);
