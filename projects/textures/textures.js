@@ -343,13 +343,12 @@ float getPerlinNoise(vec3 pos, float frequency){
   float sum = 0.0;
   float weightSum = 0.0;
   float weight = 1.0;
-  for(int oct = 0; oct < 1; oct++){
+  for(int oct = 0; oct < 3; oct++){
 
     vec3 p = pos * frequency;
     //Hillaire says that the 3D version of tileable perlin noise in GLM is broken
     //Use 4D noise with w component set to 0 as in example code
     float val = 0.5 + 0.5 * glmPerlin(vec4(p, 0.0), vec4(frequency));
-    return val;
     sum += val * weight;
     weightSum += weight;
 
@@ -574,6 +573,11 @@ void main() {
   col = vec3(cloud);
 
 }
+  vec2 uv = gl_FragCoord.xy / resolution;
+  vec3 p = vec3(uv, 0.0);
+  const float frequency = 10.0;
+  float perlinNoise = getPerlinNoise(p, frequency);
+  col = vec3(perlinNoise);
   gl_FragColor = vec4(col, 1.0);
 }
 `;
