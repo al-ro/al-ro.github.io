@@ -76,7 +76,7 @@ if(mobile){
   var EARTH_RADIUS = 155000.0;
 
   var iteration = 1;
-  var ITERATION_LIMIT = 1.0;
+  var ITERATION_LIMIT = 16.0;
 
   //Time
   var time = 0.0;
@@ -89,10 +89,10 @@ if(mobile){
   var coverage = 0.7;
   var viewHeight = 10.5;
   var power = 10.0;
-  var mainSize = 0.05;
+  var mainSize = 0.023;
   var detailSize = 0.08;
   var tempVar = 1.0;
-  var tempVar2 = 5.0;
+  var tempVar2 = 3.0;
   var detailStrength = 0.5;
   var exposure = 0.5;
   //Thickness of the atmosphere
@@ -560,7 +560,7 @@ if(mobile){
     vec2 rayStartIntersect = sphereIntersections(org, dir, ATM_START);
     vec2 rayEndIntersect = sphereIntersections(org, dir, ATM_END);
     
-    bool hitsPlanet = false;//(rayPlanetIntersect.x <= rayPlanetIntersect.y) && rayPlanetIntersect.x > 0.0;
+    bool hitsPlanet = (rayPlanetIntersect.x <= rayPlanetIntersect.y) && rayPlanetIntersect.x > 0.0;
     bool hitsStart = (rayStartIntersect.x <= rayStartIntersect.y) && rayStartIntersect.x > 0.0;
     bool hitsEnd = (rayEndIntersect.x <= rayEndIntersect.y) && rayEndIntersect.x > 0.0; 
   
@@ -776,34 +776,6 @@ if(mobile){
     return pow(radius/dist, intensity);	
   }
 
-  const vec3 skyColour = 0.5 * vec3(0.09, 0.33, 0.81);
-  //Darken sky when looking up
-  vec3 getSkyColour(vec3 rayDir){
-    return mix(skyColour, 0.2*skyColour, rayDir.y);
-  }
-
-  //https://iquilezles.org/www/articles/fog/fog.htm
-  vec3 applyFog(vec3 rgb, vec3 rayOri, vec3 rayDir, vec3 sunDir){
-    //Make horizon more hazy
-    float dist = 4000.0;
-    if(abs(rayDir.y) < 0.0001){rayDir.y = 0.0001;}
-    //Rate of fade
-    float b = 0.2;
-    float fogAmount = pow(1.0-rayDir.y, 4.0);//1.0 * exp(-rayOri.y*b) * (1.0-exp(-dist*rayDir.y*b))/rayDir.y;
-    float sunAmount = max( dot( rayDir, sunDir ), 0.0 );
-    vec3 fogColor  = mix( vec3(0.5,0.6,0.7), vec3(1.0), pow(sunAmount, 16.0) );
-    return mix(rgb, fogColor, clamp(fogAmount, 0.0, 1.0));
-  }
-
-    vec3 ACESFilm(vec3 x){
-      float a = 2.51;
-      float b = 0.03;
-      float c = 2.43;
-      float d = 0.59;
-      float e = 0.14;
-      return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
-    }
-  
   void main(){
     vec2 resolution = vec2(width, height);
     //Get the default direction of the ray (along the negative z direction)
@@ -817,27 +789,26 @@ if(mobile){
 
     //Transform the ray to point in the correct direction
     rayDir = normalize(viewMatrix * rayDir);
-    vec3 colour = vec3(0.0);
+    vec3 color = vec3(0.0);
 
     float depth = 1.0;
     float totalTransmittance;
-    colour = exposure * skyRay(cameraPos, rayDir, sunDirection, totalTransmittance, depth); 
+    color = exposure * skyRay(cameraPos, rayDir, sunDirection, totalTransmittance, depth); 
     vec3 background = mix(vec3(1.0), vec3(0.0, 0.0, 1.0), 0.5+0.5*rayDir.y);
     float weight = smoothstep(-0.2, 0.1, rayDir.y);
-    background =  getSkyColour(rayDir);//mix(vec3(0.75, 0.87, 0.93), vec3(0.12, 0.29, 0.55), weight);
+    background =  mix(vec3(0.75, 0.87, 0.93), vec3(0.12, 0.29, 0.55), weight);
 
     float mu = dot(sunDirection, rayDir);
     //Draw sun
     //background += totalTransmittance * vec3(1e4*smoothstep(0.9998, 1.0, mu));
-    background += totalTransmittance * getGlow(1.0-mu, 0.000015, 0.9);
-    background += applyFog(background, vec3(0.0, viewHeight, 0.0), rayDir, sunDirection);
+    background += totalTransmittance * getGlow(1.0-mu, 0.00005, 0.6);
     
     vec2 rayPlanetIntersect = sphereIntersections(cameraPos, rayDir, PLANET_RADIUS);
     
     bool hitsPlanet = (rayPlanetIntersect.x <= rayPlanetIntersect.y) && rayPlanetIntersect.x > 0.0;
-    //if(!hitsPlanet){
-      colour += background * totalTransmittance;
-    //}
+    if(!hitsPlanet){
+      color += background * totalTransmittance;
+    }
 
     float depthMultiplier = 5e-6;
     //color = mix(color, background, saturate(1.0-exp(-depth*depthMultiplier)));
@@ -845,9 +816,7 @@ if(mobile){
     //color = mix(color, vec3(0,0,1), depth);//clamp(depth, 0.0, 1.0));
 
     vec3 col;// = 1.0-exp(-color);
-
-    col = ACESFilm(colour);
-    col = pow(colour, vec3(0.4545));
+    col = pow(color, vec3(0.4545));
 
     vec4 oldCol = textureCube(skyBox, rayDir).rgba;
       //gl_FragColor = vec4(col, totalTransmittance);
