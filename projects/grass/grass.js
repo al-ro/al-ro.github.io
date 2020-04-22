@@ -262,7 +262,7 @@ var groundGeometry = new THREE.PlaneBufferGeometry(width, width, resolution, res
 groundGeometry.addAttribute('basePosition', groundBaseGeometry.getAttribute("position"));
 groundGeometry.lookAt(new THREE.Vector3(0,1,0));
 groundGeometry.verticesNeedUpdate = true;
-var groundMaterial = new THREE.MeshPhongMaterial({color: 0x000300});
+var groundMaterial = new THREE.MeshPhongMaterial({color: 0x000900});
 
 var sharedPrefix = `
   uniform sampler2D noiseTexture;
@@ -526,7 +526,7 @@ var grassFragmentSource = `
     col = pow(col, vec3(0.4545));
   
     //Add a shadow towards root
-    col = mix(vec3(0.0, 0.1, 0.0), col, frc);
+    col = mix(vec3(0.0, 0.2, 0.0), col, frc);
   
     gl_FragColor = vec4(col, 1.0);
   }
