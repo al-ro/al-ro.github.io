@@ -53,10 +53,10 @@ var azimuth = 0.6;
 var fogFade = 0.005;
 
 //Lighting variables for grass
-var ambientStrength = 0.6;
-var translucencyStrength = 1.4;
+var ambientStrength = 0.4;
+var translucencyStrength = 1.5;
 var specularStrength = 0.5;
-var diffuseStrength = 2.2;
+var diffuseStrength = 1.5;
 var shininess = 256;
 var sunColour = new THREE.Vector3(1.0, 1.0, 1.0);
 var specularColour = new THREE.Vector3(1.0, 1.0, 1.0);
