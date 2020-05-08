@@ -17,7 +17,7 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 
 var canvas = document.getElementById("canvas_1");
 
-var WIDTH = 512;
+var WIDTH = 256;
 var HEIGHT = WIDTH;
 
 canvas.width = WIDTH;
@@ -449,10 +449,10 @@ void main() {
   vec3 col = vec3(0);
   if(atlas){
   //Normalized pixel coordinates (from 0 to 1)
-  float tileSize = 512.0;
+  float tileSize = 34.0;
   float padWidth = 1.0;
   float coreSize = tileSize - 2.0 * padWidth;
-  float tileRows = 2.0;
+  float tileRows = 6.0;
   float tileCount = tileRows * tileRows;
   vec2 tile = floor((gl_FragCoord.xy - 0.5) / tileSize);
 
@@ -577,7 +577,7 @@ void main() {
   vec3 p = vec3(uv, 0.0);
   const float frequency = 10.0;
   float perlinNoise = getPerlinNoise(p, frequency);
-  col = vec3(perlinNoise);
+  //col = vec3(perlinNoise);
   gl_FragColor = vec4(col, 1.0);
 }
 `;

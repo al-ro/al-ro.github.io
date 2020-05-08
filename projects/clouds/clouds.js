@@ -86,14 +86,15 @@ if(mobile){
   var hd = true;
   var isMouseDown = false;
   //Distance of planet
-  var coverage = 0.7;
+  var coverage = 0.8;
   var viewHeight = 10.5;
   var power = 10.0;
-  var mainSize = 0.023;
-  var detailSize = 0.08;
+  var mainSize = 0.02;
+  var mainStrength = 0.8;
+  var detailSize = 0.06;
+  var detailStrength = 0.25;
   var tempVar = 1.0;
   var tempVar2 = 3.0;
-  var detailStrength = 0.5;
   var exposure = 0.5;
   //Thickness of the atmosphere
 
@@ -250,12 +251,13 @@ if(mobile){
   gui.add(this, 'viewHeight').min(10.0).max(10000).step(10.0).listen().onChange(function(value){gl.useProgram(program); gl.uniform1f(viewHeightHandle, viewHeight); updateClouds();});
   gui.add(this, 'coverage').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(coverageHandle, coverage); updateClouds();});
   gui.add(this, 'power').min(0.0).max(50.0).step(0.1).onChange(function(value){gl.useProgram(program); gl.uniform1f(powerHandle, power); updateClouds();});
-  gui.add(this, 'mainSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize); updateClouds();});
   gui.add(this, 'densityMultiplier').min(0.0).max(1.0).step(0.001).onChange(function(value){gl.useProgram(program); gl.uniform1f(densityMultiplierHandle, densityMultiplier); updateClouds();});
+  gui.add(this, 'mainSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainSizeHandle, mainSize); updateClouds();});
+  gui.add(this, 'mainStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(mainStrengthHandle, mainStrength); updateClouds();});
   gui.add(this, 'detailSize').min(0.0).max(0.1).step(0.000001).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailSizeHandle, detailSize); updateClouds();});
+  gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailStrengthHandle, detailStrength); updateClouds();});
   gui.add(this, 'tempVar').min(0.0).max(10.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(tempVarHandle, tempVar); updateClouds();});
   gui.add(this, 'tempVar2').min(0.0).max(20.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(tempVar2Handle, tempVar2); updateClouds();});
-  gui.add(this, 'detailStrength').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(detailStrengthHandle, detailStrength); updateClouds();});
   gui.add(this, 'exposure').min(0.0).max(1.0).step(0.01).onChange(function(value){gl.useProgram(program); gl.uniform1f(exposureHandle, exposure); updateClouds();});
   gui.add(this, 'animate');
   gui.add(this, 'hd').listen().onChange(function(value){gl.useProgram(program); gl.uniform1i(hdHandle, hd); updateClouds();});
@@ -297,6 +299,7 @@ if(mobile){
     uniform float tempVar;
     uniform float tempVar2;
     uniform float detailStrength;
+    uniform float mainStrength;
     uniform float exposure;
     uniform sampler2D cloudShapeTexture;
     uniform sampler2D cloudDetailTexture;
@@ -481,7 +484,7 @@ if(mobile){
     float shape = getCloudShape(mainSize*p);
     //Invert shape noise to subtract from the main cloud. Leave the value at the bottom of the cloud to introduce wispy shapes there.
     shape = mix(shape, 1.0-shape, saturate(cloudHeight * 10.0));
-    shape *= detailStrength;
+    shape *= mainStrength;
 
     //Carve away density from cloud based on noise.
     cloud = saturate(remap(cloud, shape, 1.0, 0.0, 1.0));
@@ -505,7 +508,7 @@ if(mobile){
 	float detail = getCloudDetail(detailSize * p);
 	//Invert detail noise to subtract from the main shape. Leave the value at the bottom of the cloud to introduce wispy shapes there.
 	detail = mix(detail, 1.0-detail, saturate(cloudHeight * 10.0));
-	detail *= detailStrength * 0.5;// * distanceMultiplier;
+	detail *= detailStrength;// * distanceMultiplier;
 
 	//Carve away detail based on the noise
 	cloud = saturate(remap(cloud, detail, 1.0, 0.0, 1.0));
@@ -1107,6 +1110,7 @@ createTileTexture(tileTexture);
     var tempVarHandle = getUniformLocation(program, 'tempVar');
     var tempVar2Handle = getUniformLocation(program, 'tempVar2');
     var detailStrengthHandle = getUniformLocation(program, 'detailStrength');
+    var mainStrengthHandle = getUniformLocation(program, 'mainStrength');
     var exposureHandle = getUniformLocation(program, 'exposure');
     var coverageHandle = getUniformLocation(program, 'coverage');
     var shapeTextureHandle = gl.getUniformLocation(program, "cloudShapeTexture");
@@ -1154,6 +1158,7 @@ createTileTexture(tileTexture);
     gl.uniform1f(tempVar2Handle, tempVar2);
     gl.uniform1f(mainSizeHandle, mainSize);
     gl.uniform1f(detailStrengthHandle, detailStrength);
+    gl.uniform1f(mainStrengthHandle, mainStrength);
     gl.uniform1f(exposureHandle, exposure);
     gl.uniform1f(coverageHandle, coverage);
     gl.uniform1f(iterationHandle, iteration);

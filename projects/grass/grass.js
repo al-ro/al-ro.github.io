@@ -48,12 +48,12 @@ if(mobile){
 //Height over horizon in range [0, PI/2.0]
 var elevation = 0.2;
 //Rotation around Y axis in range [0, 2*PI]
-var azimuth = 0.6;
+var azimuth = 0.4;
 
 var fogFade = 0.005;
 
 //Lighting variables for grass
-var ambientStrength = 0.4;
+var ambientStrength = 0.7;
 var translucencyStrength = 1.5;
 var specularStrength = 0.5;
 var diffuseStrength = 1.5;
@@ -167,7 +167,7 @@ const backgroundMaterial = new THREE.ShaderMaterial({
     uniform float fogFade;
     uniform float fov;
     
-    const vec3 skyColour = 0.4 * vec3(0.02, 0.2, 0.9);
+    const vec3 skyColour = 0.65 * vec3(0.09, 0.33, 0.81);
     //Darken sky when looking up
     vec3 getSkyColour(vec3 rayDir){
       return mix(0.35*skyColour, skyColour, pow(1.0-rayDir.y, 4.0));

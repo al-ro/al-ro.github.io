@@ -191,7 +191,7 @@ if(mobile){
     const int normalLimit = 9;
     const int cameraLimit = 2;
 
-    const vec3 skyColour = 0.3 * vec3(0.09, 0.33, 0.81);
+    const vec3 skyColour = 0.65 * vec3(0.09, 0.33, 0.81);
     const vec3 sunLightColour = vec3(1);
     const vec3 sunColour = vec3(1.0, 1.0, 0.8);
     const vec3 specularColour = vec3(1);
