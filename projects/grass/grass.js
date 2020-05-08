@@ -84,7 +84,7 @@ var camera = new THREE.PerspectiveCamera(FOV, canvas.clientWidth/canvas.clientHe
 
 camera.position.set(-60, 10, 60);
 if(mobile){
-  camera.position.set(-40, 5, 40);
+  camera.position.set(-40, 10, 40);
 }
 camera.lookAt(new THREE.Vector3(0,0,0));
 
