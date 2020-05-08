@@ -1,6 +1,6 @@
 //Update of
 //https://al-ro.github.io/projects/grass-old
-//Added lighting, translucency and movement on an infinite rounded world
+//Added lighting, translucency and movement on an infinite world
 
 //Based on:
 //"Realistic real-time grass rendering" by Eddie Lee, 2010
