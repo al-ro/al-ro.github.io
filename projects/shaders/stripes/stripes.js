@@ -30,9 +30,7 @@ vec2 resolution = vec2(width, height);
 
 uniform float time;
 
-const float PI = 3.14;
-float amplitude = 0.9;
-float frequency = 0.4;
+#define AA
 
 vec2 rotatePosition(vec2 pos, vec2 centre, float angle) {
   float sinAngle = sin(angle);
@@ -46,50 +44,71 @@ vec2 rotatePosition(vec2 pos, vec2 centre, float angle) {
 }
 
 void main(){
-    
-  //Normalized pixel coordinates (from 0 to 1)
-  vec2 uv = gl_FragCoord.xy/resolution;
-  
-  //The ratio of the width and height of the screen
-  float widthHeightRatio = resolution.x/resolution.y;
 
-  //Repetition of stripe unit
-  float tilingFactor = 20.0;
-  
-  vec2 pos = vec2(uv.x, uv.y);
-
-  //Adjust vertical pos to make the width of the stripes 
-  //transform uniformly regardless of orientation
-  pos.y /= widthHeightRatio;
+  const float PI = 3.14;
+  float amplitude = 0.9;
+  float frequency = 0.4;
   
   //Centre of the screen
   vec2 centre = vec2(0.5, 0.5);
-  //Adjust centre to match the pos transform
-  centre.y /= widthHeightRatio;
   
-  //Rotate pos around centre by specified radians
+  //Repetition of stripe unit
+  float tilingFactor = 15.0;
+  
   float angle = -PI/4.0;
-  pos = rotatePosition(pos, centre, angle);
-  
-  //Move frame along rotated y direction
-  pos.y -= 0.35*time;
-
-  vec2 position = vec2(pos.x, pos.y) * tilingFactor;
-  position.x += amplitude * sin(frequency * position.y);
   
   vec3 col_1 = vec3(1.0, 0.2, 0.2);
-  vec3 col_2 = vec3(1.0, 1.64, 0.0);  
+  vec3 col_2 = vec3(1.0, 1.64, 0.0);    
   vec3 col_3 = vec3(0.5, 1.0, 0.5);
   vec3 col_4 = vec3(0.2, 0.7, 1.0);
-  vec3 col; 
-
-  //Set stripe colours
-  int value = int(floor(fract(position.x) * 4.0));
-  if(value == 0){col = col_1;}
- 	if(value == 1){col = col_2;}
-	if(value == 2){col = col_3;}
-	if(value == 3){col = col_4;}
-	
+  
+  vec3 col = vec3(0);
+  
+  vec2 fC = gl_FragCoord.xy;
+  
+  #ifdef AA
+  for(int i = -1; i <= 1; i++) {
+    for(int j = -1; j <= 1; j++) {
+  
+      fC = gl_FragCoord.xy+vec2(i,j)/3.0;
+      
+      #endif
+      
+      //Normalized pixel coordinates (from 0 to 1)
+      vec2 uv = fC/resolution.xy;
+      
+      //The ratio of the width and height of the screen
+      float widthHeightRatio = resolution.x/resolution.y;
+      
+      //Adjust vertical pos to make the width of the stripes 
+      //transform uniformly regardless of orientation
+      uv.y /= widthHeightRatio;
+      
+      //Rotate pos around centre by specified radians
+      uv = rotatePosition(uv, centre, angle);
+      
+      //Move frame along rotated y direction
+      uv.y -= 0.35*time;
+      
+      vec2 position = uv * tilingFactor;
+      position.x += amplitude * sin(frequency * position.y);
+      
+      //Set stripe colours
+      int value = int(floor(fract(position.x) * 4.0));
+      
+      if(value == 0){col += col_1;}
+      if(value == 1){col += col_2;}
+      if(value == 2){col += col_3;}
+      if(value == 3){col += col_4;}
+      
+      #ifdef AA
+    }
+  }
+  
+  col /= 9.0;
+  
+  #endif
+  
   //Fragment colour
   gl_FragColor = vec4(col,1.0);
 }
