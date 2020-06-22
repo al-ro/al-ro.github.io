@@ -36,16 +36,16 @@ for(let i = 0; i < numCubes; i++){
   rotations.push({x: scale*x_, y: scale*y_, z: scale*z_});
 }
 // Initialize the GL context
-var gl = canvas.getContext('webgl', {
+var gl = canvas.getContext('webgl2', {
   //premultipliedAlpha: false
 });
 if(!gl){
-  console.error("Unable to initialize WebGL.");
+  console.error("Unable to initialize WebGL 2.");
 }
 
-const ext = gl.getExtension("OES_texture_float");
+const ext = gl.getExtension("EXT_color_buffer_float");
 if (!ext) {
-  console.log("Could not load OES_texture_float");
+  console.log("need EXT_color_buffer_float");
 }
 
 //4 vertices per face
@@ -184,17 +184,17 @@ function lookAt(camera, targetDir, up){
 
 //************** Shader sources **************
 
-var vertexSource = `
+var vertexSource = `#version 300 es
 //Attributes get optimised out when not used. Looking for the attribute location will then return -1.
-  attribute vec3 position;
-  attribute vec4 vertexColour;
-  attribute vec3 vertexNormal;
+  in vec3 position;
+  in vec4 vertexColour;
+  in vec3 vertexNormal;
   uniform mat4 modelMatrix;
   uniform mat4 normalMatrix;
   uniform mat4 viewMatrix;
   uniform mat4 projectionMatrix;
-  varying vec3 vCol;
-  varying vec3 vNorm;
+  out vec3 vCol;
+  out vec3 vNorm;
   void main(){
     vCol = vec3(1,0,0);//vertexColour.rgb;
     vertexColour.rgb;
@@ -207,12 +207,16 @@ var vertexSource = `
   }
 `;
 
-var fragmentSource = `
+var fragmentSource = `#version 300 es
   precision highp float;
   
-  varying vec3 vCol;
-  varying vec3 vNorm;
-   
+  in vec3 vCol;
+  in vec3 vNorm;
+  layout(location=0) out vec4 fragColour;
+  
+  uniform float width;
+  uniform float height;
+  
   uniform float colour;
   
   void main(){
@@ -223,76 +227,62 @@ var fragmentSource = `
     vec3 c;
 
     if( colour == 1.0){
-      c = vec3(1.0, 0.3, 0.3);
+      c = vec3(0.1, 1.0, 1.0);
     }else if (colour == 2.0){
-      c = vec3(1.0, 1.0, 0.3);
+      c = vec3(1.0, 1.1, 0.3);
     }else{
-      c = vec3(0.5, 1.0, 0.5);
+      c = vec3(0.5, 0.5, 0.5);
     }
-  
-    //c = vec3(0.5);//
 
     vec3 col = c * 0.5 + diff * c;
-    float alpha = 0.5;
-
-    float w = abs(gl_FragCoord.z);
-    w =  1.0;//min(1.0, max(0.01, 3e3*pow(1.0-w,2.0)));
+    float alpha = 1.;
 
     //Output to screen
-    gl_FragColor = vec4(alpha*col*w, alpha);
+    fragColour = vec4(alpha*col, alpha);
   }
 `;
 
 //****************** Alpha shaders ******************
 
-var alphaFragmentSource = `
+var alphaFragmentSource = `#version 300 es
   precision highp float;
+
+  layout(location=0) out vec4 fragColour;
   
   void main(){
-    float alpha = 0.5;
+    float alpha = 1.;
 
     //Output to screen
-    gl_FragColor = vec4(alpha);
+    fragColour = vec4(alpha);
   }
 `;
 
 //****************** Combine shaders ******************
 
-var combineVertexSource = `
+var combineVertexSource = `#version 300 es
   
-  attribute vec2 pos;
+  in vec2 pos;
   
   void main() { 
     gl_Position = vec4(pos, 0.0, 1.0);
   }
 `;
 
-var combineFragmentSource = `
+var combineFragmentSource = `#version 300 es
   
   precision highp float;
   
+  out vec4 fragColour;
   uniform sampler2D srcData0;
   uniform sampler2D srcData1;
-  uniform float width;
-  uniform float height;
   
-  //http://www.iquilezles.org/www/articles/checkerfiltering/checkerfiltering.htm
-  bool isEven(vec2 position){
-    vec2 s = sign(fract(position.xy*0.5)-0.5);
-    return (0.5 - 0.5*s.x*s.y) > 0.5;
-  }
   void main() {
-    vec2 resolution = vec2(width, height);
-    vec4 srcColour = texture2D(srcData0, gl_FragCoord.xy/resolution).rgba;
-    float srcAlpha = texture2D(srcData1, gl_FragCoord.xy/resolution).r;
-    float tile = 0.9;
-    if(isEven(gl_FragCoord.xy * 0.01)){
-      tile = 0.5;
-    }
-    vec3 col = vec3(0.3*tile,0.5*tile,0.9*tile);
+    vec4 srcColour = texelFetch(srcData0, ivec2(gl_FragCoord.xy), 0).rgba;
+    float srcAlpha = texelFetch(srcData1, ivec2(gl_FragCoord.xy), 0).r;
+    vec3 col = vec3(0);
     vec3 data = srcColour.rgb/srcColour.a;
-    //gl_FragColor = vec4(data + col*srcAlpha , 1.0);
-    gl_FragColor = vec4(data * (1.0-srcAlpha) + col * (srcAlpha), 1.0);
+    fragColour = vec4(col * srcAlpha + data , 1.0);
+    //fragColour = vec4(col * srcAlpha + data * (1.0-srcAlpha), 1.0);
   }
 `;
 
@@ -311,6 +301,8 @@ function onWindowResize(){
   canvas.height = h;
 
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  gl.uniform1f(widthHandle, canvas.width);
+  gl.uniform1f(heightHandle, canvas.height);
 }
 
 
@@ -444,7 +436,7 @@ framebuffer.height = canvas.height;
 gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
 
 var targetTexture0 = createAndSetupTexture(gl);
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, framebuffer.width, framebuffer.height, 0, gl.RGBA, gl.FLOAT, null);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, framebuffer.width, framebuffer.height, 0, gl.RGBA, gl.FLOAT, null);
 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture0, 0);
 
 var alphaFramebuffer = gl.createFramebuffer();
@@ -453,7 +445,7 @@ alphaFramebuffer.height = canvas.height;
 gl.bindFramebuffer(gl.FRAMEBUFFER, alphaFramebuffer);
 var targetTexture1 = createAndSetupTexture(gl);
 //var pixel = new Float32Array([1.0, 1.0, 1.0, 1.0]);
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, alphaFramebuffer.width, alphaFramebuffer.height, 0, gl.RGBA, gl.FLOAT, null);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, alphaFramebuffer.width, alphaFramebuffer.height, 0, gl.RGBA, gl.FLOAT, null);
 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture1, 0);
 
 //Set uniform handle
@@ -498,8 +490,8 @@ gl.vertexAttribPointer(combinePositionHandle,
     );
 var srcLocation0 = gl.getUniformLocation(combine_program, 'srcData0');
 var srcLocation1 = gl.getUniformLocation(combine_program, 'srcData1');
-var widthHandle = getUniformLocation(combine_program, 'width');
-var heightHandle = getUniformLocation(combine_program, 'height');
+var widthHandle = getUniformLocation(program, 'width');
+var heightHandle = getUniformLocation(program, 'height');
 gl.uniform1f(widthHandle, canvas.width);
 gl.uniform1f(heightHandle, canvas.height);
 
