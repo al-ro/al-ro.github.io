@@ -88,7 +88,7 @@ void main(){
 
   //To rotate layers
   mat2 rotation = mat2(cos(rotationAngle), -sin(rotationAngle), 
-		       sin(rotationAngle),  cos(rotationAngle));
+      sin(rotationAngle),  cos(rotationAngle));
   vec3 col = vec3(0);
   vec3 tone;
 
@@ -109,20 +109,19 @@ void main(){
     local_uv = uv - fl - 0.5;
 
 
-    //For a 3x3 group of cells around the fragment, find the distance from 
-    //the points of each to the current fragment and draw an accumulative glow accordingly.
-    //The local cell is (0,0)
+    //For a 3x3 group of cells around the fragment, find the 
+    //distance from the points of each to the current fragment 
+    //and draw an accumulative glow accordingly
     for(float j = -1.0; j <= 1.0; j++){
       for(float k = -1.0; k <= 1.0; k++){
 	cell = vec2(j,k);
 
-	//Index of the cell
 	index = fl + cell;
 
 	//Cell seed
 	seed = 128.0 * i + index;
 
-	//Get a random position in the considered cell
+	//Get a random position in relation to the considered cell
 	pos = cell + 0.9 * (random2(seed) - 0.5);
 
 	//Get a random phase
@@ -133,15 +132,18 @@ void main(){
 	//Get distance to the generated point, fade distant points
 	//and make glow radius pulse in time
 	size = (0.1 + 0.5 + 0.5 * sin(phase * t)) * depth;
-	glow = size * getGlow(length(local_uv-pos), 0.09, 2.0);
+	glow = size * getGlow(length(local_uv-pos), 0.07, 2.5);
 	//Add white core and glow
-	col += 5.0 * vec3(0.02 * glow) + tone * glow;
+	col += 3.0 * vec3(0.02 * glow) + tone * glow;
       }
     }
   }
 
   //Tone mapping
   col = 1.0 - exp(-col);
+
+  //Gamma
+  col = pow(col, vec3(0.4545));
 
   //Output to screen
   gl_FragColor = vec4(col,1.0);

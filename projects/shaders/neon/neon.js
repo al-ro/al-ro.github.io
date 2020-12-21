@@ -44,8 +44,8 @@ vec2 points[POINT_COUNT];
 const float speed = -0.5;
 const float len = 0.25;
 const float scale = 0.012;
-float intensity = 0.8;
-float radius = 0.03;
+float intensity = 1.3;
+float radius = 0.015;
 
 //https://www.shadertoy.com/view/MlKcDD
 //Signed distance to a quadratic bezier
@@ -143,7 +143,8 @@ void main(){
   vec2 pos = centre - uv;
   pos.y /= widthHeightRatio;
   //Shift upwards to centre heart
-  pos.y += 0.01;
+  pos.y += 0.02;
+  float scale = 0.000015 * height;
 
   float t = time;
 
@@ -156,7 +157,7 @@ void main(){
   //White core
   col += 10.0*vec3(smoothstep(0.003, 0.001, dist));
   //Pink glow
-  col += glow * vec3(0.94,0.14,0.4);
+  col += glow * vec3(1.0,0.05,0.3);
 
   //Get second segment
   dist = getSegment(t, pos, 3.4);
@@ -165,10 +166,13 @@ void main(){
   //White core
   col += 10.0*vec3(smoothstep(0.003, 0.001, dist));
   //Blue glow
-  col += glow * vec3(0.2,0.6,1.0);
+  col += glow * vec3(0.1,0.4,1.0);
 
   //Tone mapping
   col = 1.0 - exp(-col);
+
+  //Gamma
+  col = pow(col, vec3(0.4545));
 
   //Output to screen
   gl_FragColor = vec4(col,1.0);

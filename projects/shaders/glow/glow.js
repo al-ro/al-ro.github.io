@@ -41,15 +41,14 @@ float getWaveGlow(vec2 pos, float radius, float intensity, float speed, float am
 }
 
 void main(){
-
   vec2 uv = gl_FragCoord.xy/resolution.xy;
   float widthHeightRatio = resolution.x/resolution.y;
   vec2 centre = vec2(0.5, 0.5);
   vec2 pos = centre - uv;
   pos.y /= widthHeightRatio;
 
-  float intensity = 1.0;
-  float radius = 0.03;
+  float intensity = 1.5;
+  float radius = 0.02;
 
   vec3 col = vec3(0.0);
   float dist = 0.0;
@@ -65,8 +64,11 @@ void main(){
   dist = getWaveGlow(pos, radius*0.5, intensity, -5.0, 0.018, 4.0, 1.0);
   col += dist * (vec3(0.1) + 0.5 + 0.5*cos(time+vec3(0,2,4)));
 
-  //Tone map function discussed in the comments of https://www.shadertoy.com/view/3s3GDn
+  //Tone mapping function to stop the sharp cutoff of values above 1, leading to smooth uniform fade
   col = 1.0 - exp(-col);
+
+  //Gamma
+  col = pow(col, vec3(0.4545));
 
   // Output to screen
   gl_FragColor = vec4(col, 1.0);
