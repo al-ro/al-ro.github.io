@@ -60,7 +60,6 @@ float getGlow(float dist, float radius, float intensity){
 }
 
 void main(){
-
   vec2 uv = gl_FragCoord.xy/resolution.xy;
   float widthHeightRatio = resolution.x/resolution.y;
   vec2 centre;
@@ -97,8 +96,8 @@ void main(){
   pos = anchor - uv;
   pos.y /= widthHeightRatio;
   dist = length(pos);
-  glow = getGlow(dist, 0.35, 1.9);
-  col += glow * vec3(0.7,0.6,1.0);
+  glow = getGlow(dist, 0.25, 3.5);
+  col += glow * vec3(0.6,0.4,1.0);
 
   for(int i = 0; i < layers; i++){
 
@@ -117,7 +116,7 @@ void main(){
     //Rotate shapes
     rotationAngle = 3.14 * sin(depth + fract(t) * 6.28) + float(i);
     rotation = mat2(cos(rotationAngle), -sin(rotationAngle), 
-		    sin(rotationAngle),  cos(rotationAngle));
+	sin(rotationAngle),  cos(rotationAngle));
 
     pos *= rotation;
 
@@ -147,11 +146,15 @@ void main(){
     //Glow according to angle value
     col += glow * mix(green, purple, angle);
   }
+
   //Tone mapping
   col = 1.0 - exp(-col);
 
+  //Gamma
+  col = pow(col, vec3(0.4545));
+
   //Output to screen
-  gl_FragColor = vec4(col,1.0);
+  gl_FragColor = vec4(col, 1.0);
 }
 `;
 
