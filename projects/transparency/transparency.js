@@ -218,7 +218,7 @@ var fragmentSource = `
   void main(){
   
     vec3 lightDirection = normalize(vec3(100, 50, 200));
-    float diff = max(dot(normalize(vNorm), lightDirection), 0.0);
+    float diff = dot(normalize(vNorm), lightDirection);
   
     vec3 c;
 
@@ -232,8 +232,8 @@ var fragmentSource = `
   
     //c = vec3(0.5);//
 
-    vec3 col = c * 0.5 + diff * c;
-    float alpha = 0.5;
+    vec3 col = c * 0.95 + diff * c;
+    float alpha = 0.15;
 
     float w = abs(gl_FragCoord.z);
     w =  1.0;//min(1.0, max(0.01, 3e3*pow(1.0-w,2.0)));
@@ -249,7 +249,7 @@ var alphaFragmentSource = `
   precision highp float;
   
   void main(){
-    float alpha = 0.5;
+    float alpha = 0.15;
 
     //Output to screen
     gl_FragColor = vec4(alpha);
@@ -613,7 +613,7 @@ function draw(){
       0 			// how many bytes inside the buffer to start from
       );
 
-  gl.clearColor(0, 0, 0, 1.0);  // Clear to black, fully opaque
+  gl.clearColor(0, 0, 0, 0);  // Clear to black, fully opaque
   gl.clearDepth(1.0);                 // Clear everything
   gl.disable(gl.DEPTH_TEST);           // Enable depth testing
 
