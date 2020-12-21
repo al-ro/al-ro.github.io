@@ -48,67 +48,70 @@ void main(){
   const float PI = 3.14;
   float amplitude = 0.9;
   float frequency = 0.4;
-  
+
   //Centre of the screen
   vec2 centre = vec2(0.5, 0.5);
-  
+
   //Repetition of stripe unit
   float tilingFactor = 15.0;
-  
+
   float angle = -PI/4.0;
-  
-  vec3 col_1 = vec3(1.0, 0.2, 0.2);
-  vec3 col_2 = vec3(1.0, 1.64, 0.0);    
-  vec3 col_3 = vec3(0.5, 1.0, 0.5);
-  vec3 col_4 = vec3(0.2, 0.7, 1.0);
-  
+
+  vec3 col_1 = vec3(1.0, 0.05, 0.05);
+  vec3 col_2 = vec3(1.0, 1.0, 0.0);    
+  vec3 col_3 = vec3(0.2, 1.0, 0.2);
+  vec3 col_4 = vec3(0.1, 0.45, 1.0);
+
   vec3 col = vec3(0);
-  
+
   vec2 fC = gl_FragCoord.xy;
-  
-  #ifdef AA
+
+#ifdef AA
   for(int i = -1; i <= 1; i++) {
     for(int j = -1; j <= 1; j++) {
-  
+
       fC = gl_FragCoord.xy+vec2(i,j)/3.0;
-      
-      #endif
-      
+
+#endif
+
       //Normalized pixel coordinates (from 0 to 1)
       vec2 uv = fC/resolution.xy;
-      
+
       //The ratio of the width and height of the screen
       float widthHeightRatio = resolution.x/resolution.y;
-      
+
       //Adjust vertical pos to make the width of the stripes 
       //transform uniformly regardless of orientation
       uv.y /= widthHeightRatio;
-      
+
       //Rotate pos around centre by specified radians
       uv = rotatePosition(uv, centre, angle);
-      
+
       //Move frame along rotated y direction
       uv.y -= 0.35*time;
-      
+
       vec2 position = uv * tilingFactor;
       position.x += amplitude * sin(frequency * position.y);
-      
+
       //Set stripe colours
       int value = int(floor(fract(position.x) * 4.0));
-      
+
       if(value == 0){col += col_1;}
       if(value == 1){col += col_2;}
       if(value == 2){col += col_3;}
       if(value == 3){col += col_4;}
-      
-      #ifdef AA
+
+#ifdef AA
     }
   }
-  
+
   col /= 9.0;
-  
-  #endif
-  
+
+#endif
+
+  //Gamma
+  col = pow(col, vec3(0.4545));
+
   //Fragment colour
   gl_FragColor = vec4(col,1.0);
 }
