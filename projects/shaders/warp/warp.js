@@ -71,6 +71,9 @@ void main(){
   
   col /= 9.0;
   #endif
+
+  //Gamma
+  col = pow(col, vec3(0.4545));
   
   //Fragment colour
   gl_FragColor = vec4(col,1.0);
