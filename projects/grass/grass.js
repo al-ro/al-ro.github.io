@@ -365,6 +365,9 @@ var grassVertexSource = sharedPrefix + `
   varying vec3 vPosition;
   varying float frc;
   varying float idx;
+
+  const float PI = 3.1415;
+  const float TWO_PI = 2.0 * PI;
   
   //https://www.geeks3d.com/20141201/how-to-rotate-a-vertex-by-a-quaternion-in-glsl/
   vec3 rotateVectorByQuaternion(vec3 v, vec4 q){
@@ -407,10 +410,15 @@ var grassVertexSource = sharedPrefix + `
   
     pos.y = getYPosition(vec2(pos.x+delta*posX, pos.z+delta*posZ));
   
-    //Wind is sine waves in time
-    float noise = sin(0.1 * pos.x + time);
+    //Position of the blade in the visible patch [0->1]
+    vec2 fractionalPos = 0.5 + offset.xz / width;
+    //To make it seamless, make it a multiple of 2*PI
+    fractionalPos *= TWO_PI;
+
+    //Wind is sine waves in time. 
+    float noise = sin(fractionalPos.x + time);
     float halfAngle = noise * 0.1;
-    noise = 0.5 + 0.5 * cos(0.05 * pos.x + 0.25 * time);
+    noise = 0.5 + 0.5 * cos(fractionalPos.y + 0.25 * time);
     halfAngle -= noise * 0.2;
   
     direction = normalize(vec4(sin(halfAngle), 0.0, -sin(halfAngle), cos(halfAngle)));
