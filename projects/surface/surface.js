@@ -30,9 +30,9 @@ updateCameraPosition(mouseDelta);
 var  vertices = [];
 var  uv = [];
 
-const ratio = 4.0;
+const ratio = 2.0;
 
-const height = 40;
+const height = 50;
 const width = height * ratio;
 
 for(let j = 0; j < height; j++){
@@ -43,7 +43,7 @@ for(let j = 0; j < height; j++){
 }
 
 var modelMatrix = m4.create();
-modelMatrix = m4.scale(modelMatrix, 2.0, 1.0, ratio); 
+modelMatrix = m4.scale(modelMatrix, 3.0, 1.0, 3.0*ratio); 
 
 var  indices = [];
 for (var y = 0; y < height-1; y++) {
@@ -109,7 +109,7 @@ var vertexSource = `
 
   varying vec2 uv;
 
-  float waveSpeed = 0.2;
+  float waveSpeed = 0.1;
 
   const float angle = 3.14;
 
@@ -155,7 +155,7 @@ var vertexSource = `
   }
  
   void main(){ 
-    vec3 noise = vec3(0, 0.05*fbm(10.0*position.xz, 3), 0);
+    vec3 noise = vec3(0, 0.15*fbm(10.0*position.xz, 9), 0);
     vec4 pos = projectionMatrix * viewMatrix * modelMatrix * vec4(position + noise, 1.0);
     uv = vertexCoordinate;
     gl_Position = pos;
@@ -171,7 +171,7 @@ var fragmentSource = `
 
     float col = 0.5 + 0.5 * sin(uv.x * 200.0);
   
-    gl_FragColor = vec4(vec3(pow(col, 3.0)), 1.0);
+    gl_FragColor = vec4(vec3(pow(col, 16.0)), 1.0);
   }
 `;
 
