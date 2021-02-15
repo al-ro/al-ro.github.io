@@ -20,6 +20,8 @@ var wave_height = 0.6;
 var scale = 2.0;
 var line_spacing = 200.0;
 var line_width = 45.0;
+var lines = true;
+var wireframe = false;
 
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
@@ -29,6 +31,8 @@ gui.add(this, 'wave_height').min(0.0).max(1).step(0.01);
 gui.add(this, 'scale').min(0.0).max(16.0).step(0.01);
 gui.add(this, 'line_spacing').min(0.00001).max(1000.0).step(0.1);
 gui.add(this, 'line_width').min(1.0).max(512.0).step(1.0);
+gui.add(this, 'lines').onChange(function(value){ lines = value;});
+gui.add(this, 'wireframe').onChange(function(value){ wireframe = value;});
 gui.close();
 
 // Mouse
@@ -186,6 +190,7 @@ var fragmentSource = `
   precision highp float;
   uniform float lineSpacing;
   uniform float lineWidth;
+  uniform bool wireframe;
 
   varying vec2 uv;
   
@@ -193,7 +198,11 @@ var fragmentSource = `
 
     float col = 0.5 + 0.5 * sin(uv.x * lineSpacing);
   
-    gl_FragColor = vec4(vec3(pow(col, lineWidth)), 1.0);
+    if(wireframe){
+      gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    }else{
+      gl_FragColor = vec4(vec3(pow(col, lineWidth)), 1.0);
+    }
   }
 `;
 
@@ -336,6 +345,7 @@ var waveSpeedHandle = gl.getUniformLocation(program, 'waveSpeed');
 var scaleHandle = gl.getUniformLocation(program, 'scale');
 var lineSpacingHandle = gl.getUniformLocation(program, 'lineSpacing');
 var lineWidthHandle = gl.getUniformLocation(program, 'lineWidth');
+var wireframeHandle = gl.getUniformLocation(program, 'wireframe');
 
 var lastFrame = Date.now();
 var thisFrame;
@@ -450,7 +460,14 @@ function draw(){
 
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  gl.drawElements(gl.TRIANGLES, 2*3*(width-1)*(height-1), gl.UNSIGNED_SHORT, 0);
+  if(lines){
+    gl.uniform1f(wireframeHandle, 0);
+    gl.drawElements(gl.TRIANGLES, 2*3*(width-1)*(height-1), gl.UNSIGNED_SHORT, 0);
+  }
+  if(wireframe){
+    gl.uniform1f(wireframeHandle, 1);
+    gl.drawElements(gl.LINES, 2*3*(width-1)*(height-1), gl.UNSIGNED_SHORT, 0);
+  }
   requestAnimationFrame(draw);
 }
 
