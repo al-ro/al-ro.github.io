@@ -76,6 +76,9 @@ var  uv = [];
 const ratio = 2.0;
 
 const height = 128;
+if(mobile){
+  height = 64;
+}
 const width = height * ratio;
 
 for(let j = 0; j < height; j++){
