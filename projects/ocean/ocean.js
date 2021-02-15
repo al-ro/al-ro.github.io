@@ -30,9 +30,9 @@ updateCameraPosition(mouseDelta);
 var  vertices = [];
 var  uv = [];
 
-const ratio = 1.0;
+const ratio = 2.0;
 
-const height = 256;
+const height = 50;
 const width = height * ratio;
 
 for(let j = 0; j < height; j++){
@@ -155,7 +155,7 @@ var vertexSource = `
   }
  
   void main(){ 
-    vec3 noise = vec3(0, 0.12*fbm(10.0*position.xz, 9), 0);
+    vec3 noise = vec3(0, 0.15*fbm(10.0*position.xz, 9), 0);
     vec4 pos = projectionMatrix * viewMatrix * modelMatrix * vec4(position + noise, 1.0);
     uv = vertexCoordinate;
     gl_Position = pos;
@@ -164,8 +164,100 @@ var vertexSource = `
 
 var fragmentSource = `
   precision highp float;
+const vec3 skyColour = vec3(0.09, 0.33, 0.81);
+const vec3 sunLightColour = vec3(1);
+const vec3 sunColour = sunLightColour;
+
+float specularStrength = 100.0;
+float shininess = 2048.0;
+const vec3 specularColour = sunLightColour;
+
+//In a circle of 2*PI
+const float sunLocation = 0.0;
+//0: horizon, 1: zenith
+const float sunHeight = 0.35;
+
+const float diffuseStrength = 0.2;
+const vec3 diffuseColour = diffuseStrength * vec3(0.05,0.45,0.65);
+
+float ambientStrength = 0.5;
+vec3 ambientColour = 0.5 * diffuseColour;
+
+vec3 scatterColour = vec3(0.05, 0.8, 0.7);
+float power = 8.0;
+float scale = 0.4;
+float distortion = 0.2;
+float scatterStrength = 0.3;
+
+float HEIGHT = 10.0;
 
   varying vec2 uv;
+
+float saturate(float x){
+	return clamp(x, 0.0, 1.0);
+}
+
+//https://learnopengl.com/PBR/Theory
+float fresnelSchlick(vec3 cameraPos, vec3 position, vec3 normal){
+    float cosTheta = dot(normal, normalize(cameraPos - position));
+	float F0 = 0.02;
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+//Return colour of surface fragment based on light information.
+vec3 shading(vec3 cameraPos, vec3 position, vec3 normal, vec3 rayDir, vec3 lightDirection){
+    
+	vec3 result = vec3(0.0); 
+    
+	vec3 halfwayDir = normalize(lightDirection - rayDir);  
+	float spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
+
+	//Colour of light sharply reflected into the camera.
+	vec3 specular = spec * specularColour * sunLightColour; 
+	
+	//How much a fragment faces the sun.
+	float sun = max(dot(normal, lightDirection), 0.0);
+    //Main sunlight contribution.
+    vec3 sunLight = sun * sunLightColour;
+    
+    //How much the fragment faces up.
+    float sky = max(dot(normal, vec3(0,1,0)), 0.0);
+    //Sky light. A blue light from directly above.
+	vec3 skyLight = sky * skyColour;
+    
+    //Combine light
+    result += 0.1 * sunLight;
+    result += 0.1 * skyLight;
+    
+    //Sample point height in the wave.
+    float heightFraction = (position.y + HEIGHT) / (2.0 * HEIGHT);
+    
+    //Lighten the water when looking towards the horizon and darken it straight down.
+    vec3 col = mix(ambientColour, 0.5*scatterColour, pow(0.5+0.5*rayDir.y, 2.0));
+    
+    //Light and material interaction.
+    result *= diffuseColour;
+    result += ambientStrength * col + specularStrength * specular;
+    
+    //Fake subsurface scattering based on light direction and surface normal.
+    //https://www.alanzucconi.com/2017/08/30/fast-subsurface-scattering-1/
+    vec3 h = normalize(-lightDirection + normal * distortion);
+	float vDotH = pow(saturate(dot(rayDir, -h)), power) * scale;
+    
+/*
+    //Scattering in stronger closer to the camera and higher in the wave.
+    result += 	scatterStrength * pow((1.0-dist/MAX_DIST), 4.0) * 
+        		heightFraction * vDotH * scatterColour;
+*/
+    
+    //Reflection of the sky.
+    vec3 reflectedDir = normalize(reflect(rayDir, normal));
+    vec3 reflectedCol = vec3(1);//getSkyColour(reflectedDir);
+    float fresnel = saturate(fresnelSchlick(cameraPos, position, normal));
+   	result = mix(result, reflectedCol, 0.45*fresnel);
+
+    return result;
+}
   
   void main(){
 
