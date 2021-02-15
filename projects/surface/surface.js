@@ -135,7 +135,7 @@ var vertexSource = `
   uniform float waveHeight;
   uniform float scale;
 
-  const float angle = 3.14;
+  const float angle = 0.0;
 
   const float s = sin(angle);
   const float c = cos(angle);
