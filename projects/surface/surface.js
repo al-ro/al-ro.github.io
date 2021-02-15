@@ -30,7 +30,9 @@ var lines = true;
 var wireframe = false;
 
 if(mobile){
-
+  limit = 3;
+  line_spacing = 100.0;
+  line_width = 35;
 }
 
 // Mouse
