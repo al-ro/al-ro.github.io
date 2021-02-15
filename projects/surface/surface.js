@@ -28,9 +28,9 @@ var isMouseDown = false;
 
 var lastPos = {x: mousePosition.x, y: mousePosition.y};
 // Camera
-var yaw = Math.PI/2.0;
 var pitch = 0.0;
-var dist = 1.5;
+var yaw = 1.42;
+var dist = 1.51;
 var cameraPosition = {x: 1, y: 0, z: 1};
 updateCameraPosition(mouseDelta);
 
@@ -49,7 +49,11 @@ gui.add(this, 'yaw').min(0.0).max(6.28).step(0.01).listen().onChange(function(va
 gui.add(this, 'dist').min(0.0).max(5.0).step(0.01);
 gui.close();
 
-
+const stats = new Stats();
+stats.showPanel(0);
+stats.domElement.style.position = 'relative';
+stats.domElement.style.bottom = '48px';
+document.getElementById('cc_1').appendChild(stats.domElement);
 
 var  vertices = [];
 var  uv = [];
@@ -450,6 +454,7 @@ function setCamera(time){
 }
 
 function draw(){
+  stats.begin();
 
   //Update time
   thisFrame = Date.now();
@@ -482,6 +487,7 @@ function draw(){
     gl.uniform1f(wireframeHandle, 1);
     gl.drawElements(gl.LINES, 2*3*(width-1)*(height-1), gl.UNSIGNED_SHORT, 0);
   }
+  stats.end();
   requestAnimationFrame(draw);
 }
 
