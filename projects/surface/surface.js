@@ -13,6 +13,24 @@ if(!gl){
   console.error("Unable to initialize WebGL.");
 }
 
+// GUI
+
+var wave_speed = 0.02;
+var wave_height = 0.6;
+var scale = 2.0;
+var line_spacing = 200.0;
+var line_width = 45.0;
+
+var gui = new dat.GUI({ autoPlace: false });
+var customContainer = document.getElementById('gui_container');
+customContainer.appendChild(gui.domElement);
+gui.add(this, 'wave_speed').min(0.0).max(2).step(0.01);
+gui.add(this, 'wave_height').min(0.0).max(1).step(0.01);
+gui.add(this, 'scale').min(0.0).max(16.0).step(0.01);
+gui.add(this, 'line_spacing').min(0.00001).max(1000.0).step(0.1);
+gui.add(this, 'line_width').min(1.0).max(512.0).step(1.0);
+gui.close();
+
 // Mouse
 var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.0};
 var mouseDelta = {x: 0, y: 0};
@@ -109,7 +127,9 @@ var vertexSource = `
 
   varying vec2 uv;
 
-  float waveSpeed = 0.1;
+  uniform float waveSpeed;
+  uniform float waveHeight;
+  uniform float scale;
 
   const float angle = 3.14;
 
@@ -155,7 +175,7 @@ var vertexSource = `
   }
  
   void main(){ 
-    vec3 noise = vec3(0, 0.12*fbm(10.0*position.xz, 9), 0);
+    vec3 noise = vec3(0, waveHeight*fbm(scale*position.xz, 9), 0);
     vec4 pos = projectionMatrix * viewMatrix * modelMatrix * vec4(position + noise, 1.0);
     uv = vertexCoordinate;
     gl_Position = pos;
@@ -164,14 +184,16 @@ var vertexSource = `
 
 var fragmentSource = `
   precision highp float;
+  uniform float lineSpacing;
+  uniform float lineWidth;
 
   varying vec2 uv;
   
   void main(){
 
-    float col = 0.5 + 0.5 * sin(uv.x * 200.0);
+    float col = 0.5 + 0.5 * sin(uv.x * lineSpacing);
   
-    gl_FragColor = vec4(vec3(pow(col, 16.0)), 1.0);
+    gl_FragColor = vec4(vec3(pow(col, lineWidth)), 1.0);
   }
 `;
 
@@ -309,6 +331,12 @@ var noiseTextureHandle = gl.getUniformLocation(program, 'greyNoiseTexture');
   gl.activeTexture(gl.TEXTURE0);
   gl.uniform1i(noiseTextureHandle, 0);
 
+var waveHeightHandle = gl.getUniformLocation(program, 'waveHeight');
+var waveSpeedHandle = gl.getUniformLocation(program, 'waveSpeed');
+var scaleHandle = gl.getUniformLocation(program, 'scale');
+var lineSpacingHandle = gl.getUniformLocation(program, 'lineSpacing');
+var lineWidthHandle = gl.getUniformLocation(program, 'lineWidth');
+
 var lastFrame = Date.now();
 var thisFrame;
 
@@ -412,6 +440,11 @@ function draw(){
   gl.uniformMatrix4fv(projectionMatrixHandle, false, projectionMatrix);
   gl.uniformMatrix4fv(viewMatrixHandle, false, viewMatrix);
   gl.uniformMatrix4fv(modelMatrixHandle, false, modelMatrix);
+  gl.uniform1f(waveSpeedHandle, wave_speed);
+  gl.uniform1f(waveHeightHandle, wave_height);
+  gl.uniform1f(scaleHandle, scale);
+  gl.uniform1f(lineSpacingHandle, line_spacing);
+  gl.uniform1f(lineWidthHandle, line_width);
   gl.clearColor(0, 0, 0, 1);  
   gl.enable(gl.DEPTH_TEST);
 
