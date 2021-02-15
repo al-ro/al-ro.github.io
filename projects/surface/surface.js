@@ -13,13 +13,26 @@ if(!gl){
 
 // GUI
 
-var wave_speed = 0.05;
-var wave_height = 0.1;
-var scale = 4.0;
-var line_spacing = 200.0;
-var line_width = 50.0;
+var wave_speed = 0.04;
+var wave_height = 0.16;
+var scale = 2.74;
+var line_spacing = 193.1;
+var line_width = 72.0;
 var lines = true;
 var wireframe = false;
+
+// Mouse
+var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.0};
+var mouseDelta = {x: 0, y: 0};
+var isMouseDown = false;
+
+var lastPos = {x: mousePosition.x, y: mousePosition.y};
+// Camera
+var yaw = Math.PI/2.0;
+var pitch = 0.0;
+var dist = 1.5;
+var cameraPosition = {x: 1, y: 0, z: 1};
+updateCameraPosition(mouseDelta);
 
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
@@ -31,21 +44,12 @@ gui.add(this, 'line_spacing').min(0.00001).max(1000.0).step(0.1);
 gui.add(this, 'line_width').min(1.0).max(512.0).step(1.0);
 gui.add(this, 'lines').onChange(function(value){ lines = value;});
 gui.add(this, 'wireframe').onChange(function(value){ wireframe = value;});
+gui.add(this, 'pitch').min(-Math.PI/2.0).max(Math.PI/2.0).step(0.01).listen().onChange(function(value){updatePitchAndYaw()});
+gui.add(this, 'yaw').min(0.0).max(6.28).step(0.01).listen().onChange(function(value){updatePitchAndYaw()});
+gui.add(this, 'dist').min(0.0).max(5.0).step(0.01);
 gui.close();
 
-// Mouse
-var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.0};
-var mouseDelta = {x: 0, y: 0};
-var isMouseDown = false;
 
-var lastPos = {x: mousePosition.x, y: mousePosition.y};
-
-// Camera
-var yaw = Math.PI/2.0;
-var pitch = 0.0;
-var dist = 1.5;
-var cameraPosition = {x: 1, y: 0, z: 1};
-updateCameraPosition(mouseDelta);
 
 var  vertices = [];
 var  uv = [];
@@ -168,7 +172,7 @@ var vertexSource = `
     for(int i = 0; i < 9; i++){ 
         if(i == limit){break;}
 
-       	res += noised(freq*(pos+time*(waveSpeed*float(9-i+1))))*amp;
+       	res += noised(freq*(pos+vec2(0.0, time*(waveSpeed*float(9-i+1)))))*amp;
 
         freq *= 1.75;
         amp *= 0.5;
@@ -376,6 +380,13 @@ function mouseUp(event){
 
 function getCameraPosition(){
   return [dist*cameraPosition.x, dist*cameraPosition.y, dist*cameraPosition.z];
+}
+
+function updatePitchAndYaw(){
+  cameraPosition.x = Math.sin(yaw);
+  cameraPosition.z = Math.cos(yaw);
+  cameraPosition.y = -Math.sin(pitch);
+  cameraPosition = normalize(cameraPosition);
 }
 
 function updateCameraPosition(delta){
