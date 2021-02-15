@@ -1,6 +1,13 @@
 // Canvas
 var canvas = document.getElementById("canvas_1");
 
+const mobile = ( navigator.userAgent.match(/Android/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+);
+
 //canvas.width = canvas.clientWidth;
 //canvas.height = canvas.width/1.6;
 
@@ -17,10 +24,14 @@ var wave_speed = 0.04;
 var wave_height = 0.16;
 var scale = 2.74;
 var line_spacing = 193.1;
-var line_width = 72.0;
-var limit = 3.0;
+var line_width = 55.0;
+var limit = 4.0;
 var lines = true;
 var wireframe = false;
+
+if(mobile){
+
+}
 
 // Mouse
 var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.0};
