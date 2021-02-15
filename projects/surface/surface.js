@@ -1,13 +1,11 @@
 // Canvas
 var canvas = document.getElementById("canvas_1");
 
-canvas.width = canvas.clientWidth;
-canvas.height = canvas.width/1.6;
+//canvas.width = canvas.clientWidth;
+//canvas.height = canvas.width/1.6;
 
 // Initialize the GL context
-var gl = canvas.getContext('webgl', {
-  //premultipliedAlpha: false
-});
+var gl = canvas.getContext('webgl', {antialias: true});
 
 if(!gl){
   console.error("Unable to initialize WebGL.");
@@ -15,11 +13,11 @@ if(!gl){
 
 // GUI
 
-var wave_speed = 0.02;
-var wave_height = 0.6;
-var scale = 2.0;
+var wave_speed = 0.05;
+var wave_height = 0.1;
+var scale = 4.0;
 var line_spacing = 200.0;
-var line_width = 45.0;
+var line_width = 50.0;
 var lines = true;
 var wireframe = false;
 
@@ -43,18 +41,18 @@ var isMouseDown = false;
 var lastPos = {x: mousePosition.x, y: mousePosition.y};
 
 // Camera
-var yaw = Math.PI/4.0;
-var pitch = -2.0;
-var dist = 2.0;
+var yaw = Math.PI/2.0;
+var pitch = 0.0;
+var dist = 1.5;
 var cameraPosition = {x: 1, y: 0, z: 1};
 updateCameraPosition(mouseDelta);
 
 var  vertices = [];
 var  uv = [];
 
-const ratio = 1.0;
+const ratio = 2.0;
 
-const height = 256;
+const height = 128;
 const width = height * ratio;
 
 for(let j = 0; j < height; j++){
@@ -65,7 +63,9 @@ for(let j = 0; j < height; j++){
 }
 
 var modelMatrix = m4.create();
-modelMatrix = m4.scale(modelMatrix, 3.0, 1.0, 3.0*ratio); 
+modelMatrix = m4.zRotate(modelMatrix, Math.PI/2.0); 
+modelMatrix = m4.scale(modelMatrix, 1.0, 1.0, 1.0*ratio); 
+modelMatrix = m4.translate(modelMatrix, 0.0, 0.0, -0.25); 
 
 var  indices = [];
 for (var y = 0; y < height-1; y++) {
@@ -76,7 +76,7 @@ for (var y = 0; y < height-1; y++) {
 }
 
 // Time
-var time = 0.0;
+var time = 10.0;
 
 function getViewMatrixAsArray(){
   var array = [];
@@ -179,8 +179,11 @@ var vertexSource = `
   }
  
   void main(){ 
-    vec3 noise = vec3(0, waveHeight*fbm(scale*position.xz, 9), 0);
-    vec4 pos = projectionMatrix * viewMatrix * modelMatrix * vec4(position + noise, 1.0);
+    float noiseH = waveHeight*fbm(scale*position.xz, 3);
+    vec3 offset = vec3(noiseH, 0.0, 0.0);
+    //float noiseV = waveHeight*fbm(scale*(position.xz+offset.xz), 3);
+    //offset.y += noiseV;
+    vec4 pos = projectionMatrix * viewMatrix * modelMatrix * vec4(position + offset, 1.0);
     uv = vertexCoordinate;
     gl_Position = pos;
   }
@@ -201,7 +204,7 @@ var fragmentSource = `
     if(wireframe){
       gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
     }else{
-      gl_FragColor = vec4(vec3(pow(col, lineWidth)), 1.0);
+      gl_FragColor = vec4(vec3(0.5*pow(col, lineWidth)), 1.0);
     }
   }
 `;
@@ -257,7 +260,7 @@ loadTexture(gl, tex1, 'https://al-ro.github.io/images/terrain/greyNoise.png');
 window.addEventListener('resize', onWindowResize, false);
 
 function onWindowResize(){
-  var w = canvas.clientWidth;
+/*  var w = canvas.clientWidth;
   var h = canvas.clientHeight;
   if(!isInFullscreen()){
     h = w / 1.6;
@@ -265,7 +268,7 @@ function onWindowResize(){
   canvas.width = w;
   canvas.height = h;
 
-  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);*/
 }
 
 //Compile shader and combine with source
