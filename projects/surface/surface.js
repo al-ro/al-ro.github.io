@@ -190,7 +190,8 @@ var vertexSource = `
     for(int i = 0; i < 9; i++){ 
         if(i == int(limit)){break;}
 
-       	res += noised(freq*(pos+vec2(0.0, time*(waveSpeed*float(9-i+1)))))*amp;
+	vec2 offset = time*(waveSpeed*float(9-i+1)) * vec2(0.2*(0.5+0.5*sin(0.2*time)), 1);
+       	res += noised(freq*(pos+offset))*amp;
 
         freq *= 1.75;
         amp *= 0.5;
