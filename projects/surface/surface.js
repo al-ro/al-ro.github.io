@@ -181,8 +181,8 @@ var vertexSource = `
   void main(){ 
     float noiseH = waveHeight*fbm(scale*position.xz, 3);
     vec3 offset = vec3(noiseH, 0.0, 0.0);
-    //float noiseV = waveHeight*fbm(scale*(position.xz+offset.xz), 3);
-    //offset.y += noiseV;
+    float noiseV = waveHeight*fbm(scale*(position.xz+offset.xz), 3);
+    offset.y += noiseV;
     vec4 pos = projectionMatrix * viewMatrix * modelMatrix * vec4(position + offset, 1.0);
     uv = vertexCoordinate;
     gl_Position = pos;
