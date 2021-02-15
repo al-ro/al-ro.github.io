@@ -18,6 +18,7 @@ var wave_height = 0.16;
 var scale = 2.74;
 var line_spacing = 193.1;
 var line_width = 72.0;
+var limit = 3.0;
 var lines = true;
 var wireframe = false;
 
@@ -37,6 +38,7 @@ updateCameraPosition(mouseDelta);
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
+gui.add(this, 'limit').min(1).max(9).step(1);
 gui.add(this, 'wave_speed').min(0.0).max(2).step(0.01);
 gui.add(this, 'wave_height').min(0.0).max(1).step(0.01);
 gui.add(this, 'scale').min(0.0).max(16.0).step(0.01);
@@ -142,6 +144,7 @@ var vertexSource = `
   uniform float waveSpeed;
   uniform float waveHeight;
   uniform float scale;
+  uniform float limit;
 
   const float angle = 0.0;
 
@@ -168,13 +171,13 @@ var vertexSource = `
   }
 
 
- float fbm(vec2 pos, int limit){
+ float fbm(vec2 pos){
     float res = 0.0;
     float freq = 1.0;
     float amp = 1.0;
     
     for(int i = 0; i < 9; i++){ 
-        if(i == limit){break;}
+        if(i == int(limit)){break;}
 
        	res += noised(freq*(pos+vec2(0.0, time*(waveSpeed*float(9-i+1)))))*amp;
 
@@ -187,9 +190,9 @@ var vertexSource = `
   }
  
   void main(){ 
-    float noiseH = waveHeight*fbm(scale*position.xz, 3);
+    float noiseH = waveHeight*fbm(scale*position.xz);
     vec3 offset = vec3(noiseH, 0.0, 0.0);
-    float noiseV = waveHeight*fbm(scale*(position.xz+offset.xz), 3);
+    float noiseV = waveHeight*fbm(scale*(position.xz+offset.xz));
     offset.y += noiseV;
     vec4 pos = projectionMatrix * viewMatrix * modelMatrix * vec4(position + offset, 1.0);
     uv = vertexCoordinate;
@@ -354,6 +357,7 @@ var noiseTextureHandle = gl.getUniformLocation(program, 'greyNoiseTexture');
 var waveHeightHandle = gl.getUniformLocation(program, 'waveHeight');
 var waveSpeedHandle = gl.getUniformLocation(program, 'waveSpeed');
 var scaleHandle = gl.getUniformLocation(program, 'scale');
+var limitHandle = gl.getUniformLocation(program, 'limit');
 var lineSpacingHandle = gl.getUniformLocation(program, 'lineSpacing');
 var lineWidthHandle = gl.getUniformLocation(program, 'lineWidth');
 var wireframeHandle = gl.getUniformLocation(program, 'wireframe');
@@ -472,6 +476,7 @@ function draw(){
   gl.uniform1f(waveSpeedHandle, wave_speed);
   gl.uniform1f(waveHeightHandle, wave_height);
   gl.uniform1f(scaleHandle, scale);
+  gl.uniform1f(limitHandle, limit);
   gl.uniform1f(lineSpacingHandle, line_spacing);
   gl.uniform1f(lineWidthHandle, line_width);
   gl.clearColor(0, 0, 0, 1);  
