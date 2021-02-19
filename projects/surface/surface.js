@@ -26,6 +26,8 @@ var scale = 2.74;
 var line_spacing = 193.1;
 var line_width = 55.0;
 var limit = 4.0;
+var radius = 0.5;
+var strength = 5.0;
 var lines = true;
 var wireframe = false;
 
@@ -52,6 +54,8 @@ var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
 gui.add(this, 'limit').min(1).max(9).step(1);
+gui.add(this, 'radius').min(0).max(1).step(0.01);
+gui.add(this, 'strength').min(0).max(10).step(0.01);
 gui.add(this, 'wave_speed').min(0.0).max(2).step(0.01);
 gui.add(this, 'wave_height').min(0.0).max(1).step(0.01);
 gui.add(this, 'scale').min(0.0).max(16.0).step(0.01);
@@ -59,9 +63,9 @@ gui.add(this, 'line_spacing').min(0.00001).max(1000.0).step(0.1);
 gui.add(this, 'line_width').min(1.0).max(512.0).step(1.0);
 gui.add(this, 'lines').onChange(function(value){ lines = value;});
 gui.add(this, 'wireframe').onChange(function(value){ wireframe = value;});
-gui.add(this, 'pitch').min(-Math.PI/2.0).max(Math.PI/2.0).step(0.01).listen().onChange(function(value){updatePitchAndYaw()});
-gui.add(this, 'yaw').min(0.0).max(6.28).step(0.01).listen().onChange(function(value){updatePitchAndYaw()});
-gui.add(this, 'dist').min(0.0).max(5.0).step(0.01);
+//gui.add(this, 'pitch').min(-Math.PI/2.0).max(Math.PI/2.0).step(0.01).listen().onChange(function(value){updatePitchAndYaw()});
+//gui.add(this, 'yaw').min(0.0).max(6.28).step(0.01).listen().onChange(function(value){updatePitchAndYaw()});
+//gui.add(this, 'dist').min(0.0).max(5.0).step(0.01);
 gui.close();
 
 const stats = new Stats();
@@ -152,6 +156,8 @@ var vertexSource = `
   uniform mat4 modelMatrix;
   uniform mat4 viewMatrix;
   uniform mat4 projectionMatrix;
+  uniform mat4 inverseViewMatrix;
+  uniform mat4 inverseProjectionMatrix;
   
   uniform sampler2D greyNoiseTexture;
 
@@ -161,6 +167,10 @@ var vertexSource = `
   uniform float waveHeight;
   uniform float scale;
   uniform float limit;
+  uniform float strength;
+  uniform float radius;
+  uniform vec2 mousePos;
+  uniform vec3 cameraPos;
 
   const float angle = 0.0;
 
@@ -205,13 +215,42 @@ var vertexSource = `
     }
 	return res;
   }
+  
+  //Assume normalised vectors.
+  float getPlaneIntersection(vec3 org, vec3 ray, vec3 planePoint, vec3 normal){
+      float denom = dot(normal, ray); 
+      if (denom > 1e-6) { 
+          vec3 p0l0 = planePoint - org; 
+          float t = dot(p0l0, normal) / denom; 
+          return t; 
+      } 
+   
+      return 0.0; 
+  }
  
   void main(){ 
     float noiseH = waveHeight*fbm(scale*position.xz);
     vec3 offset = vec3(noiseH, 0.0, 0.0);
     float noiseV = waveHeight*fbm(scale*(position.xz+offset.xz));
     offset.y += noiseV;
-    vec4 pos = projectionMatrix * viewMatrix * modelMatrix * vec4(position + offset, 1.0);
+    
+    float x = 2.0 * mousePos.x - 1.0;
+    float y = 2.0 * mousePos.y - 1.0;
+    float z = 1.0;
+    vec3 ray_nds = vec3(x, y, z);
+    vec4 ray_clip = vec4(ray_nds.xy, -1.0, 1.0);
+    vec4 ray_eye = inverseProjectionMatrix * ray_clip;
+    ray_eye = vec4(ray_eye.xy, -1.0, 0.0);
+    vec3 ray = (inverseViewMatrix * ray_eye).xyz;
+    ray = normalize(ray);
+    
+    float t = getPlaneIntersection(cameraPos, ray, (modelMatrix * vec4(position, 1.0)).xyz, vec3(-1.0, 0.0, 0.0));
+    float distance = 0.0;
+    if(t > 0.0){
+      distance = radius-(min(radius, length((cameraPos + ray * t) - (modelMatrix * vec4(position, 1.0)).xyz)));
+    }
+
+    vec4 pos = projectionMatrix * viewMatrix * modelMatrix * vec4(position + offset + offset * strength * distance, 1.0);
     uv = vertexCoordinate;
     gl_Position = pos;
   }
@@ -366,6 +405,8 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
 var timeHandle = getUniformLocation(program, 'time');
 var projectionMatrixHandle = getUniformLocation(program, 'projectionMatrix');
 var viewMatrixHandle = getUniformLocation(program, 'viewMatrix');
+var invProjectionMatrixHandle = getUniformLocation(program, 'inverseProjectionMatrix');
+var invViewMatrixHandle = getUniformLocation(program, 'inverseViewMatrix');
 var modelMatrixHandle = getUniformLocation(program, 'modelMatrix');
 var noiseTextureHandle = gl.getUniformLocation(program, 'greyNoiseTexture');
   gl.activeTexture(gl.TEXTURE0);
@@ -375,9 +416,13 @@ var waveHeightHandle = gl.getUniformLocation(program, 'waveHeight');
 var waveSpeedHandle = gl.getUniformLocation(program, 'waveSpeed');
 var scaleHandle = gl.getUniformLocation(program, 'scale');
 var limitHandle = gl.getUniformLocation(program, 'limit');
+var radiusHandle = gl.getUniformLocation(program, 'radius');
+var strengthHandle = gl.getUniformLocation(program, 'strength');
 var lineSpacingHandle = gl.getUniformLocation(program, 'lineSpacing');
 var lineWidthHandle = gl.getUniformLocation(program, 'lineWidth');
 var wireframeHandle = gl.getUniformLocation(program, 'wireframe');
+var mousePosHandle = gl.getUniformLocation(program, 'mousePos');
+var cameraPosHandle = gl.getUniformLocation(program, 'cameraPos');
 
 var lastFrame = Date.now();
 var thisFrame;
@@ -392,9 +437,9 @@ function getPos(canvas, evt){
 
 function mouseDown(event){
   isMouseDown = true;
-  var pos = getPos(canvas, event);
-  lastPos.x = pos.x;
-  lastPos.y = pos.y;
+  //var pos = getPos(canvas, event);
+  //lastPos.x = pos.x;
+  //lastPos.y = pos.y;
 }
 
 function mouseUp(event){
@@ -415,28 +460,34 @@ function updatePitchAndYaw(){
 }
 
 function updateCameraPosition(delta){
-  var yawChange = (delta.x * 0.01) % (2.0 * Math.PI);
-  yaw += yawChange;
+  //var yawChange = (delta.x * 0.01) % (2.0 * Math.PI);
+  //yaw += yawChange;
   cameraPosition.x = Math.sin(yaw);
   cameraPosition.z = Math.cos(yaw);
   cameraPosition = normalize(cameraPosition);
-  yawChange = (delta.y * 0.01) % (2.0 * Math.PI);
-  pitch += yawChange;
+  //yawChange = (delta.y * 0.01) % (2.0 * Math.PI);
+  //pitch += yawChange;
   pitch = Math.max(-Math.PI/2.0, Math.min(Math.PI/2.0, pitch));
   cameraPosition.y = -Math.sin(pitch);
   cameraPosition = normalize(cameraPosition);
 }
 
 function mouseMove(event){
-  if(isMouseDown){
-    var pos = getPos(canvas, event);
-    mouseDelta.x = lastPos.x - pos.x;
-    mouseDelta.y = lastPos.y - pos.y;
+  //if(isMouseDown){
 
-    updateCameraPosition(mouseDelta);
-    lastPos.x = pos.x;
-    lastPos.y = pos.y;
-  }
+  var rect = canvas.getBoundingClientRect();
+  lastPos.x = (event.clientX - rect.left) / rect.width;
+  lastPos.y = (event.clientY - rect.top) / rect.height;
+/*
+  var pos = getPos(canvas, event);
+  mouseDelta.x = lastPos.x - pos.x;
+  mouseDelta.y = lastPos.y - pos.y;
+
+  updateCameraPosition(mouseDelta);
+  lastPos.x = pos.x;
+  lastPos.y = pos.y;
+  //}
+*/
 }
 
 function onScroll(event){
@@ -448,10 +499,12 @@ function onScroll(event){
 canvas.addEventListener('mousedown', mouseDown);
 canvas.addEventListener('mouseup', mouseUp);
 canvas.addEventListener('mousemove', mouseMove);
-canvas.addEventListener('wheel', onScroll);
+//canvas.addEventListener('wheel', onScroll);
 
 var projectionMatrix;
 var viewMatrix;
+var inverseProjectionMatrix = m4.create();
+var inverseViewMatrix = m4.create();
 
 function setCamera(time){
   const fieldOfView = 45 * Math.PI / 180;   // in radians
@@ -475,6 +528,7 @@ function setCamera(time){
 }
 
 function draw(){
+  //console.log(lastPos);
   stats.begin();
 
   //Update time
@@ -486,16 +540,25 @@ function draw(){
 
   gl.useProgram(program);
 
+  m4.invert(inverseProjectionMatrix, projectionMatrix);
+  m4.invert(inverseViewMatrix, viewMatrix);
+
   gl.uniform1f(timeHandle, time);
   gl.uniformMatrix4fv(projectionMatrixHandle, false, projectionMatrix);
   gl.uniformMatrix4fv(viewMatrixHandle, false, viewMatrix);
+  gl.uniformMatrix4fv(invProjectionMatrixHandle, false, inverseProjectionMatrix);
+  gl.uniformMatrix4fv(invViewMatrixHandle, false, inverseViewMatrix);
   gl.uniformMatrix4fv(modelMatrixHandle, false, modelMatrix);
   gl.uniform1f(waveSpeedHandle, wave_speed);
   gl.uniform1f(waveHeightHandle, wave_height);
   gl.uniform1f(scaleHandle, scale);
   gl.uniform1f(limitHandle, limit);
+  gl.uniform1f(radiusHandle, radius);
+  gl.uniform1f(strengthHandle, strength);
   gl.uniform1f(lineSpacingHandle, line_spacing);
   gl.uniform1f(lineWidthHandle, line_width);
+  gl.uniform2f(mousePosHandle, lastPos.x, 1.0-lastPos.y);
+  gl.uniform3f(cameraPosHandle, cameraPosition.x, cameraPosition.y, cameraPosition.z);
   gl.clearColor(0, 0, 0, 1);  
   gl.enable(gl.DEPTH_TEST);
 
