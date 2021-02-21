@@ -324,26 +324,33 @@ function fadeIn(f){
    wave_height = mix(wave_height_d, mix(wave_height_min_i, wave_height_max_i, mousePosition.x), f);
 }
 
-function mouseMove(event){
+function mouseMove(evt){
   mouseOn = true;
   let rect = canvas.getBoundingClientRect();
-  mousePosition.x = (event.clientX - rect.left) / rect.width;
-  mousePosition.y = (event.clientY - rect.top) / rect.height;
+  mousePosition.x = (evt.clientX - rect.left) / rect.width;
+  mousePosition.y = (evt.clientY - rect.top) / rect.height;
 
 }
 
-function mouseLeave(event){
+function mouseLeave(evt){
   mouseOn = false;
 }
 
-function mouseEnter(event){
+function mouseEnter(evt){
   mouseOn = true;
+}
+
+function touchMove(evt) {
+  var touches = evt.changedTouches;
+  let rect = canvas.getBoundingClientRect();
+  mousePosition.x = (touches[0].pageX - rect.left) / rect.width;
+  mousePosition.y = (touches[0].pageY - rect.top) / rect.height;
 }
 
 canvas.addEventListener('mousemove', mouseMove);
 canvas.addEventListener('mouseleave', mouseLeave);
 canvas.addEventListener('mouseenter', mouseEnter);
-canvas.addEventListener('touchmove', mouseMove);
+canvas.addEventListener('touchmove', touchMove);
 canvas.addEventListener('touchend', mouseLeave);
 canvas.addEventListener('touchstart', mouseEnter);
 
