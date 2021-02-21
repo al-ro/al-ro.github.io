@@ -42,7 +42,7 @@ var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.0};
 var mouseDelta = {x: 0, y: 0};
 var isMouseDown = false;
 
-var lastPos = {x: mousePosition.x, y: mousePosition.y};
+var lastPos = {x: 1.0, y: 1.0};
 // Camera
 var pitch = 0.0;
 var yaw = 1.42;
@@ -54,10 +54,10 @@ var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
 gui.add(this, 'limit').min(1).max(9).step(1);
-gui.add(this, 'radius').min(0).max(1).step(0.01);
-gui.add(this, 'strength').min(0).max(10).step(0.01);
-gui.add(this, 'wave_speed').min(0.0).max(2).step(0.01);
-gui.add(this, 'wave_height').min(0.0).max(1).step(0.01);
+//gui.add(this, 'radius').min(0).max(1).step(0.01);
+//gui.add(this, 'strength').min(0).max(10).step(0.01);
+gui.add(this, 'wave_speed').min(0.0).max(2).step(0.01).listen();
+gui.add(this, 'wave_height').min(0.0).max(1).step(0.01).listen();
 gui.add(this, 'scale').min(0.0).max(16.0).step(0.01);
 gui.add(this, 'line_spacing').min(0.00001).max(1000.0).step(0.1);
 gui.add(this, 'line_width').min(1.0).max(512.0).step(1.0);
@@ -205,7 +205,7 @@ var vertexSource = `
     for(int i = 0; i < 9; i++){ 
         if(i == int(limit)){break;}
 
-	float offset = time*(waveSpeed*float(9-i+1));
+	float offset = time;
        	res += noised(freq*(pos+offset))*amp;
 
         freq *= 1.75;
@@ -233,7 +233,7 @@ var vertexSource = `
     vec3 offset = vec3(noiseH, 0.0, 0.0);
     float noiseV = waveHeight*fbm(scale*(position.xz+offset.xz));
     offset.y += noiseV;
-    
+   /* 
     float x = 2.0 * mousePos.x - 1.0;
     float y = 2.0 * mousePos.y - 1.0;
     float z = 1.0;
@@ -249,8 +249,8 @@ var vertexSource = `
     if(t > 0.0){
       distance = radius-(min(radius, length((cameraPos + ray * t) - (modelMatrix * vec4(position, 1.0)).xyz)));
     }
-
-    vec4 pos = projectionMatrix * viewMatrix * modelMatrix * vec4(position + offset + offset * strength * distance, 1.0);
+*/
+    vec4 pos = projectionMatrix * viewMatrix * modelMatrix * vec4(position + offset, 1.0);
     uv = vertexCoordinate;
     gl_Position = pos;
   }
@@ -478,6 +478,9 @@ function mouseMove(event){
   var rect = canvas.getBoundingClientRect();
   lastPos.x = (event.clientX - rect.left) / rect.width;
   lastPos.y = (event.clientY - rect.top) / rect.height;
+
+  //wave_speed *= lastPos.x;
+  //wave_height *= lastPos.y;
 /*
   var pos = getPos(canvas, event);
   mouseDelta.x = lastPos.x - pos.x;
@@ -533,7 +536,7 @@ function draw(){
 
   //Update time
   thisFrame = Date.now();
-  time += (thisFrame - lastFrame)/1000;	
+  time += 25.0 * wave_speed * (0.2 + lastPos.x) * (thisFrame - lastFrame)/1000;	
   lastFrame = thisFrame;
 
   setCamera(time); 
@@ -550,11 +553,13 @@ function draw(){
   gl.uniformMatrix4fv(invViewMatrixHandle, false, inverseViewMatrix);
   gl.uniformMatrix4fv(modelMatrixHandle, false, modelMatrix);
   gl.uniform1f(waveSpeedHandle, wave_speed);
-  gl.uniform1f(waveHeightHandle, wave_height);
+  gl.uniform1f(waveHeightHandle, wave_height * lastPos.y);
   gl.uniform1f(scaleHandle, scale);
   gl.uniform1f(limitHandle, limit);
+/*
   gl.uniform1f(radiusHandle, radius);
   gl.uniform1f(strengthHandle, strength);
+*/
   gl.uniform1f(lineSpacingHandle, line_spacing);
   gl.uniform1f(lineWidthHandle, line_width);
   gl.uniform2f(mousePosHandle, lastPos.x, 1.0-lastPos.y);
