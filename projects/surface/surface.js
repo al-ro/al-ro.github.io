@@ -343,9 +343,9 @@ function mouseEnter(event){
 canvas.addEventListener('mousemove', mouseMove);
 canvas.addEventListener('mouseleave', mouseLeave);
 canvas.addEventListener('mouseenter', mouseEnter);
-canvas.addEventListener('touchmove', mouseMove, {passive: true});
+canvas.addEventListener('touchmove', mouseMove);
 canvas.addEventListener('touchend', mouseLeave);
-canvas.addEventListener('touchstart', mouseEnter, {passive: true});
+canvas.addEventListener('touchstart', mouseEnter);
 
 function getModelMatrix(){
   var modelMatrix = m4.create();
