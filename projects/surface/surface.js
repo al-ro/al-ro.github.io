@@ -20,7 +20,7 @@ if(!gl){
 
 // GUI
 
-var framesToFade = 60.0;
+var framesToFade = 30.0;
 var wave_speed_d = 0.008;
 var wave_speed_min_i = 0.013;
 var wave_speed_max_i = 0.021;
@@ -37,6 +37,7 @@ var radius = 0.5;
 var strength = 5.0;
 var lines = true;
 var wireframe = false;
+var scaleZ = 2.0;
 
 var mouseOn = false;
 
@@ -59,27 +60,30 @@ var dist = 1.51;
 var cameraPosition = {x: 1, y: 0, z: 1};
 updateCameraPosition(mouseDelta);
 
-var gui = new dat.GUI({ autoPlace: false , width: 400});
+var gui = new dat.GUI({ autoPlace: false , width: 300});
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
 gui.add(this, 'framesToFade').min(1).max(200).step(1);
 gui.add(this, 'limit').min(1).max(9).step(1);
 //gui.add(this, 'radius').min(0).max(1).step(0.01);
 //gui.add(this, 'strength').min(0).max(10).step(0.01);
+/*
 gui.add(this, 'wave_speed_d').min(0.0).max(0.05).step(0.001).listen();
 gui.add(this, 'wave_speed_min_i').min(0.0).max(0.05).step(0.001).listen();
 gui.add(this, 'wave_speed_max_i').min(0.0).max(0.05).step(0.001).listen();
 gui.add(this, 'wave_height_d').min(0.0).max(0.5).step(0.001).listen();
 gui.add(this, 'wave_height_min_i').min(0.0).max(0.5).step(0.001).listen();
 gui.add(this, 'wave_height_max_i').min(0.0).max(0.5).step(0.001).listen();
+*/
 gui.add(this, 'scale').min(0.0).max(16.0).step(0.01);
 gui.add(this, 'line_spacing').min(0.00001).max(1000.0).step(0.1);
 gui.add(this, 'line_width').min(1.0).max(512.0).step(1.0);
 gui.add(this, 'lines').onChange(function(value){ lines = value;});
 gui.add(this, 'wireframe').onChange(function(value){ wireframe = value;});
-//gui.add(this, 'pitch').min(-Math.PI/2.0).max(Math.PI/2.0).step(0.01).listen().onChange(function(value){updatePitchAndYaw()});
-//gui.add(this, 'yaw').min(0.0).max(6.28).step(0.01).listen().onChange(function(value){updatePitchAndYaw()});
-//gui.add(this, 'dist').min(0.0).max(5.0).step(0.01);
+gui.add(this, 'scaleZ').min(0.1).max(5.0).step(0.01);
+gui.add(this, 'pitch').min(-Math.PI/2.0).max(Math.PI/2.0).step(0.01).listen().onChange(function(value){updatePitchAndYaw()});
+gui.add(this, 'yaw').min(0.0).max(6.28).step(0.01).listen().onChange(function(value){updatePitchAndYaw()});
+gui.add(this, 'dist').min(0.0).max(5.0).step(0.01);
 gui.close();
 
 const stats = new Stats();
@@ -102,14 +106,10 @@ const width = height * ratio;
 for(let j = 0; j < height; j++){
   for(let i = 0; i < width; i++){
     vertices.push(i/width-0.5, 0.0, j/height-0.5);
-    uv.push(i/width, j/width);
+    uv.push(i/width, j/height);
   }
 }
 
-var modelMatrix = m4.create();
-modelMatrix = m4.zRotate(modelMatrix, Math.PI/2.0); 
-modelMatrix = m4.scale(modelMatrix, 1.0, 1.0, 1.0*ratio); 
-modelMatrix = m4.translate(modelMatrix, 0.0, 0.0, -0.25); 
 
 var  indices = [];
 for (var y = 0; y < height-1; y++) {
@@ -570,6 +570,14 @@ function setCamera(time){
   viewMatrix = m4.inverse(cameraMatrix);
 }
 
+function getModelMatrix(){
+  var modelMatrix = m4.create();
+  modelMatrix = m4.zRotate(modelMatrix, Math.PI/2.0); 
+  modelMatrix = m4.scale(modelMatrix, 1.0, 1.0, scaleZ); 
+  modelMatrix = m4.translate(modelMatrix, 0.0, 0.0, 0.0); 
+  return modelMatrix;
+}
+
 var frame = 0;
 
 function draw(){
@@ -602,7 +610,7 @@ function draw(){
   gl.uniformMatrix4fv(viewMatrixHandle, false, viewMatrix);
   gl.uniformMatrix4fv(invProjectionMatrixHandle, false, inverseProjectionMatrix);
   gl.uniformMatrix4fv(invViewMatrixHandle, false, inverseViewMatrix);
-  gl.uniformMatrix4fv(modelMatrixHandle, false, modelMatrix);
+  gl.uniformMatrix4fv(modelMatrixHandle, false, getModelMatrix());
   gl.uniform1f(waveSpeedHandle, wave_speed);
   gl.uniform1f(waveHeightHandle, wave_height);
   gl.uniform1f(scaleHandle, scale);
