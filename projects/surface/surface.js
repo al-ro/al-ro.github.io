@@ -20,7 +20,7 @@ if(!gl){
 
 // GUI
 
-var wave_speed = 0.04;
+var wave_speed = 0.02;
 var wave_height = 0.16;
 var scale = 2.74;
 var line_spacing = 193.1;
@@ -205,7 +205,7 @@ var vertexSource = `
     for(int i = 0; i < 9; i++){ 
         if(i == int(limit)){break;}
 
-	float offset = time;
+	float offset = time * float(int(limit)-i);
        	res += noised(freq*(pos+offset))*amp;
 
         freq *= 1.75;
