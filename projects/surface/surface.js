@@ -38,7 +38,7 @@ var strength = 5.0;
 var lines = true;
 var wireframe = false;
 var scaleZ = 2.0;
-var translateZ = -0.25;
+var translateZ = -0.09;
 
 var mouseOn = false;
 
@@ -55,9 +55,9 @@ var isMouseDown = false;
 
 var lastPos = {x: 0.5, y: 0.5};
 // Camera
-var pitch = 0.0;
-var yaw = 1.42;
-var dist = 1.51;
+var pitch = 0.16;
+var yaw = 1.26;
+var dist = 1.79;
 var cameraPosition = {x: 1, y: 0, z: 1};
 updateCameraPosition(mouseDelta);
 
