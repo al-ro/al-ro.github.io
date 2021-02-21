@@ -321,7 +321,7 @@ function mix(x, y, a){
 
 function fadeIn(f){
    wave_speed = mix(wave_speed_d, mix(wave_speed_min_i, wave_speed_max_i, mousePosition.x), f);
-   wave_height = mix(wave_height_d, mix(wave_height_min_i, wave_height_max_i, mousePosition.x), f);
+   wave_height = mix(wave_height_d, mix(wave_height_min_i, wave_height_max_i, mousePosition.y), f);
 }
 
 function mouseMove(evt){
