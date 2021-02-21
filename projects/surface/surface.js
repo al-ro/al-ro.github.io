@@ -20,6 +20,7 @@ if(!gl){
 
 // GUI
 
+var framesToFade = 60.0;
 var wave_speed_d = 0.008;
 var wave_speed_min_i = 0.013;
 var wave_speed_max_i = 0.021;
@@ -61,6 +62,7 @@ updateCameraPosition(mouseDelta);
 var gui = new dat.GUI({ autoPlace: false , width: 400});
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
+gui.add(this, 'framesToFade').min(1).max(200).step(1);
 gui.add(this, 'limit').min(1).max(9).step(1);
 //gui.add(this, 'radius').min(0).max(1).step(0.01);
 //gui.add(this, 'strength').min(0).max(10).step(0.01);
@@ -494,8 +496,8 @@ function mouseMove(event){
   var rect = canvas.getBoundingClientRect();
   lastPos.x = (event.clientX - rect.left) / rect.width;
   lastPos.y = (event.clientY - rect.top) / rect.height;
-  wave_speed = mix(wave_speed_min_i, wave_speed_max_i, lastPos.x);
-  wave_height = mix(wave_height_min_i, wave_height_max_i, lastPos.y);
+  //wave_speed = mix(wave_speed_min_i, wave_speed_max_i, lastPos.x);
+  //wave_height = mix(wave_height_min_i, wave_height_max_i, lastPos.y);
 
   //wave_speed *= lastPos.x;
   //wave_height *= lastPos.y;
@@ -511,17 +513,22 @@ function mouseMove(event){
 */
 }
 
+function fadeIn(f){
+   wave_speed = mix(wave_speed_d, mix(wave_speed_min_i, wave_speed_max_i, lastPos.x), f);
+   wave_height = mix(wave_height_d, mix(wave_height_min_i, wave_height_max_i, lastPos.x), f);
+}
+
 function mouseLeave(event){
   mouseOn = false;
-  lastPos.x = 0.5;
-  lastPos.y = 0.5;
-  wave_speed = wave_speed_d;
-  wave_height = wave_height_d;
+  //lastPos.x = 0.5;
+  //lastPos.y = 0.5;
+  //wave_speed = wave_speed_d;
+  //wave_height = wave_height_d;
 }
 function mouseEnter(event){
   mouseOn = true;
-  wave_speed = mix(wave_speed_min_i, wave_speed_max_i, lastPos.x);
-  wave_height = mix(wave_height_min_i, wave_height_max_i, lastPos.y);
+  //wave_speed = mix(wave_speed_min_i, wave_speed_max_i, lastPos.x);
+  //wave_height = mix(wave_height_min_i, wave_height_max_i, lastPos.y);
 }
 
 function onScroll(event){
@@ -563,9 +570,20 @@ function setCamera(time){
   viewMatrix = m4.inverse(cameraMatrix);
 }
 
+var frame = 0;
+
 function draw(){
   //console.log(lastPos);
   stats.begin();
+
+  if(mouseOn){
+    frame = Math.min(framesToFade, frame + 1.0);
+  }else{
+    frame = Math.max(0, frame - 1.0);
+  }
+  f = frame/framesToFade;
+  //console.log(wave_speed);
+  fadeIn(f);
 
   //Update time
   thisFrame = Date.now();
@@ -578,11 +596,6 @@ function draw(){
 
   m4.invert(inverseProjectionMatrix, projectionMatrix);
   m4.invert(inverseViewMatrix, viewMatrix);
-
-  if(!mouseOn){
-    wave_speed = wave_speed_d;
-    wave_height = wave_height_d;
-  }
 
   gl.uniform1f(timeHandle, time);
   gl.uniformMatrix4fv(projectionMatrixHandle, false, projectionMatrix);
