@@ -42,7 +42,7 @@ var mousePosition = {x: canvas.width/2.0, y: canvas.height/2.0};
 var mouseDelta = {x: 0, y: 0};
 var isMouseDown = false;
 
-var lastPos = {x: 1.0, y: 1.0};
+var lastPos = {x: 0.5, y: 0.5};
 // Camera
 var pitch = 0.0;
 var yaw = 1.42;
@@ -492,6 +492,16 @@ function mouseMove(event){
   //}
 */
 }
+function mouseLeave(event){
+  lastPos.x = 0.5;
+  lastPos.y = 0.5;
+  wave_speed = 0.01;
+  wave_height = 0.16;
+}
+function mouseEnter(event){
+  wave_speed = 0.04;
+  wave_height = 0.25;
+}
 
 function onScroll(event){
   event.preventDefault();
@@ -502,6 +512,8 @@ function onScroll(event){
 canvas.addEventListener('mousedown', mouseDown);
 canvas.addEventListener('mouseup', mouseUp);
 canvas.addEventListener('mousemove', mouseMove);
+canvas.addEventListener('mouseleave', mouseLeave);
+canvas.addEventListener('mouseenter', mouseEnter);
 //canvas.addEventListener('wheel', onScroll);
 
 var projectionMatrix;
