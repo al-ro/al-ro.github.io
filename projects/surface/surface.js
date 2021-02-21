@@ -20,6 +20,12 @@ if(!gl){
 
 // GUI
 
+var wave_speed_d = 0.02;
+var wave_height_d = 0.16;
+var wave_speed_min_i = 0.02;
+var wave_height_min_i = 0.16;
+var wave_speed_max_i = 0.02;
+var wave_height_max_i = 0.16;
 var wave_speed = 0.02;
 var wave_height = 0.16;
 var scale = 2.74;
@@ -30,6 +36,8 @@ var radius = 0.5;
 var strength = 5.0;
 var lines = true;
 var wireframe = false;
+
+var mouseOn = false;
 
 if(mobile){
   limit = 3;
@@ -50,14 +58,18 @@ var dist = 1.51;
 var cameraPosition = {x: 1, y: 0, z: 1};
 updateCameraPosition(mouseDelta);
 
-var gui = new dat.GUI({ autoPlace: false });
+var gui = new dat.GUI({ autoPlace: false , width: 400});
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
 gui.add(this, 'limit').min(1).max(9).step(1);
 //gui.add(this, 'radius').min(0).max(1).step(0.01);
 //gui.add(this, 'strength').min(0).max(10).step(0.01);
-gui.add(this, 'wave_speed').min(0.0).max(2).step(0.01).listen();
-gui.add(this, 'wave_height').min(0.0).max(1).step(0.01).listen();
+gui.add(this, 'wave_speed_d').min(0.0).max(0.1).step(0.01).listen();
+gui.add(this, 'wave_speed_min_i').min(0.0).max(0.1).step(0.01).listen();
+gui.add(this, 'wave_speed_max_i').min(0.0).max(0.1).step(0.01).listen();
+gui.add(this, 'wave_height_d').min(0.0).max(0.5).step(0.01).listen();
+gui.add(this, 'wave_height_min_i').min(0.0).max(0.5).step(0.01).listen();
+gui.add(this, 'wave_height_max_i').min(0.0).max(0.5).step(0.01).listen();
 gui.add(this, 'scale').min(0.0).max(16.0).step(0.01);
 gui.add(this, 'line_spacing').min(0.00001).max(1000.0).step(0.1);
 gui.add(this, 'line_width').min(1.0).max(512.0).step(1.0);
@@ -472,12 +484,18 @@ function updateCameraPosition(delta){
   cameraPosition = normalize(cameraPosition);
 }
 
-function mouseMove(event){
-  //if(isMouseDown){
+function mix(x, y, a){
+  return x * (1.0-a) + y * a;
+}
 
+function mouseMove(event){
+  mouseOn = true;
+  //if(isMouseDown){
   var rect = canvas.getBoundingClientRect();
   lastPos.x = (event.clientX - rect.left) / rect.width;
   lastPos.y = (event.clientY - rect.top) / rect.height;
+  wave_speed = mix(wave_speed_min_i, wave_speed_max_i, lastPos.x);
+  wave_height = mix(wave_height_min_i, wave_height_max_i, lastPos.y);
 
   //wave_speed *= lastPos.x;
   //wave_height *= lastPos.y;
@@ -492,15 +510,18 @@ function mouseMove(event){
   //}
 */
 }
+
 function mouseLeave(event){
+  mouseOn = false;
   lastPos.x = 0.5;
   lastPos.y = 0.5;
-  wave_speed = 0.01;
-  wave_height = 0.16;
+  wave_speed = wave_speed_d;
+  wave_height = wave_height_d;
 }
 function mouseEnter(event){
-  wave_speed = 0.04;
-  wave_height = 0.25;
+  mouseOn = true;
+  wave_speed = mix(wave_speed_min_i, wave_speed_max_i, lastPos.x);
+  wave_height = mix(wave_height_min_i, wave_height_max_i, lastPos.y);
 }
 
 function onScroll(event){
@@ -548,7 +569,7 @@ function draw(){
 
   //Update time
   thisFrame = Date.now();
-  time += 25.0 * wave_speed * (0.2 + lastPos.x) * (thisFrame - lastFrame)/1000;	
+  time += 25.0 * wave_speed * (thisFrame - lastFrame)/1000;	
   lastFrame = thisFrame;
 
   setCamera(time); 
@@ -558,6 +579,11 @@ function draw(){
   m4.invert(inverseProjectionMatrix, projectionMatrix);
   m4.invert(inverseViewMatrix, viewMatrix);
 
+  if(!mouseOn){
+    wave_speed = wave_speed_d;
+    wave_height = wave_height_d;
+  }
+
   gl.uniform1f(timeHandle, time);
   gl.uniformMatrix4fv(projectionMatrixHandle, false, projectionMatrix);
   gl.uniformMatrix4fv(viewMatrixHandle, false, viewMatrix);
@@ -565,7 +591,7 @@ function draw(){
   gl.uniformMatrix4fv(invViewMatrixHandle, false, inverseViewMatrix);
   gl.uniformMatrix4fv(modelMatrixHandle, false, modelMatrix);
   gl.uniform1f(waveSpeedHandle, wave_speed);
-  gl.uniform1f(waveHeightHandle, wave_height * lastPos.y);
+  gl.uniform1f(waveHeightHandle, wave_height);
   gl.uniform1f(scaleHandle, scale);
   gl.uniform1f(limitHandle, limit);
 /*
