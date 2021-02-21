@@ -38,6 +38,7 @@ var strength = 5.0;
 var lines = true;
 var wireframe = false;
 var scaleZ = 2.0;
+var translateZ = -0.25;
 
 var mouseOn = false;
 
@@ -81,6 +82,7 @@ gui.add(this, 'line_width').min(1.0).max(512.0).step(1.0);
 gui.add(this, 'lines').onChange(function(value){ lines = value;});
 gui.add(this, 'wireframe').onChange(function(value){ wireframe = value;});
 gui.add(this, 'scaleZ').min(0.1).max(5.0).step(0.01);
+gui.add(this, 'translateZ').min(-0.5).max(0.5).step(0.01);
 gui.add(this, 'pitch').min(-Math.PI/2.0).max(Math.PI/2.0).step(0.01).listen().onChange(function(value){updatePitchAndYaw()});
 gui.add(this, 'yaw').min(0.0).max(6.28).step(0.01).listen().onChange(function(value){updatePitchAndYaw()});
 gui.add(this, 'dist').min(0.0).max(5.0).step(0.01);
@@ -574,7 +576,7 @@ function getModelMatrix(){
   var modelMatrix = m4.create();
   modelMatrix = m4.zRotate(modelMatrix, Math.PI/2.0); 
   modelMatrix = m4.scale(modelMatrix, 1.0, 1.0, scaleZ); 
-  modelMatrix = m4.translate(modelMatrix, 0.0, 0.0, 0.0); 
+  modelMatrix = m4.translate(modelMatrix, 0.0, 0.0, translateZ); 
   return modelMatrix;
 }
 
