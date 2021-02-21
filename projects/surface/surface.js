@@ -8,6 +8,14 @@ const mobile = ( navigator.userAgent.match(/Android/i)
 // Canvas
 var canvas = document.getElementById("canvas_1");
 
+if(mobile){
+  canvas.width = 1440;
+  canvas.height = 900;
+}else{
+  canvas.width = 2880;
+  canvas.height = 1800;
+}
+
 // Initialize the GL context
 var gl = canvas.getContext('webgl', {antialias: true});
 
@@ -27,26 +35,12 @@ const wave_height_min_i = 0.126;
 const wave_height_max_i = 0.178;
 var wave_speed = 0.02;
 var wave_height = 0.16;
-const scale = 3.52;
-const line_spacing = 193.0;
-const line_width = 55.0;
-const limit = 3.0;
 
 const ratio = 2.0;
 const scaleZ = 2.0;
 const translateZ = -0.09;
 
 var mouseOn = false;
-
-if(mobile){
-  line_spacing = 100.0;
-  line_width = 25;
-  //canvas.width = 1440;
-  //canvas.height = 900;
-}else{
-  canvas.width = 2880;
-  canvas.height = 1800;
-}
 
 // Geometry
 var  vertices = [];
@@ -93,26 +87,6 @@ var viewMatrix;
 function normalize(v){
   var length = Math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
   return {x: v.x/length, y: v.y/length, z: v.z/length};
-}
-
-function cross(a, b){
-  return {
-    x: a.y * b.z - a.z * b.y,
-    y: a.z * b.x - a.x * b.z,
-    z: a.x * b.y - a.y * b.x
-  }; 
-}
-
-function negate(a){
-  return {x: -a.x, y: -a.y, z: -a.z};
-}
-
-function lookAt(camera, targetDir, up){
-  var zaxis = normalize(targetDir);    
-  var xaxis = normalize(cross(zaxis, up));
-  var yaxis = cross(xaxis, zaxis);
-
-  return [xaxis, yaxis, negate(zaxis)];
 }
 
 function getCameraPosition(){
@@ -218,10 +192,13 @@ var vertexSource = `
   }
 `;
 
+var lineSpacing =  mobile ? `100.0` : `193.0`;
+var lineWidth =  mobile ? `25.0` : `55.0`;
+
 var fragmentSource = `
   precision highp float;
-  const float lineSpacing = 193.0;
-  const float lineWidth = 55.0;
+  const float lineSpacing = ` + lineSpacing + `;
+  const float lineWidth = ` + lineWidth + `;
 
   varying vec2 uv;
   
