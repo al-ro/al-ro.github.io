@@ -41,8 +41,8 @@ var mouseOn = false;
 if(mobile){
   line_spacing = 100.0;
   line_width = 25;
-  canvas.width = 1440;
-  canvas.height = 900;
+  //canvas.width = 1440;
+  //canvas.height = 900;
 }else{
   canvas.width = 2880;
   canvas.height = 1800;
