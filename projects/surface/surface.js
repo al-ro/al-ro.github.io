@@ -20,18 +20,18 @@ if(!gl){
 
 // GUI
 
-var wave_speed_d = 0.02;
-var wave_height_d = 0.16;
-var wave_speed_min_i = 0.02;
-var wave_height_min_i = 0.16;
-var wave_speed_max_i = 0.02;
-var wave_height_max_i = 0.16;
+var wave_speed_d = 0.008;
+var wave_speed_min_i = 0.013;
+var wave_speed_max_i = 0.021;
+var wave_height_d = 0.094;
+var wave_height_min_i = 0.126;
+var wave_height_max_i = 0.178;
 var wave_speed = 0.02;
 var wave_height = 0.16;
-var scale = 2.74;
-var line_spacing = 193.1;
-var line_width = 55.0;
-var limit = 4.0;
+var scale = 3.52;
+var line_spacing = 193.0;
+var line_width = 133.0;
+var limit = 3.0;
 var radius = 0.5;
 var strength = 5.0;
 var lines = true;
