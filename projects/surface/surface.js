@@ -162,7 +162,6 @@ var vertexSource = `
 
   }
 
-
  float fbm(vec2 pos){
     float res = 0.0;
     float freq = 1.0;
