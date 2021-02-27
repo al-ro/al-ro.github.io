@@ -27,9 +27,9 @@ if(!gl){
 var time = 10.0;
 
 const framesToFade = 30.0;
-const wave_speed_d = 0.008;
-const wave_speed_min_i = 0.013;
-const wave_speed_max_i = 0.021;
+const wave_speed_d = 0.001;
+const wave_speed_min_i = 0.0015;
+const wave_speed_max_i = 0.002;
 const wave_height_d = 0.094;
 const wave_height_min_i = 0.126;
 const wave_height_max_i = 0.178;
@@ -118,6 +118,86 @@ function setCamera(){
 }
 
 //************** Shader sources **************
+
+var noiseVertexSource = `
+  
+  attribute vec2 position;
+  
+  void main() { 
+    gl_Position = vec4(position, 0.0, 1.0);
+  }
+`;
+
+var noiseFragmentSource = `
+  precision highp float;
+
+  uniform vec2 resolution;
+  uniform float scale;
+
+  vec4 taylorInvSqrt(vec4 r){
+  	return 1.79284291400159-0.85373472095314*r;
+  }
+  
+  vec4 mod289(vec4 x){
+      return x-floor(x*(1.0/289.0))*289.0;
+  }
+  
+  vec4 permute(vec4 x){
+      return mod289(((x*34.0)+1.0)*x);
+  }
+  
+  vec2 fade(vec2 t){
+      return (t * t * t) * (t * (t * 6.0 - 15.0) + 10.0);
+  }
+
+  float perlin(vec2 Position, vec2 rep){
+    vec4 Pi = floor(vec4(Position.x, Position.y, Position.x, Position.y)) + vec4(0.0, 0.0, 1.0, 1.0);
+    vec4 Pf = fract(vec4(Position.x, Position.y, Position.x, Position.y)) - vec4(0.0, 0.0, 1.0, 1.0);
+    Pi = mod(Pi, vec4(rep.x, rep.y, rep.x, rep.y)); // To create noise with explicit period
+    Pi = mod(Pi, vec4(289)); // To avoid truncation effects in permutation
+    vec4 ix = vec4(Pi.x, Pi.z, Pi.x, Pi.z);
+    vec4 iy = vec4(Pi.y, Pi.y, Pi.w, Pi.w);
+    vec4 fx = vec4(Pf.x, Pf.z, Pf.x, Pf.z);
+    vec4 fy = vec4(Pf.y, Pf.y, Pf.w, Pf.w);
+  
+    vec4 i = permute(permute(ix) + iy);
+  
+    vec4 gx = float(2) * fract(i / float(41)) - float(1);
+    vec4 gy = abs(gx) - float(0.5);
+    vec4 tx = floor(gx + float(0.5));
+    gx = gx - tx;
+  
+    vec2 g00 = vec2(gx.x, gy.x);
+    vec2 g10 = vec2(gx.y, gy.y);
+    vec2 g01 = vec2(gx.z, gy.z);
+    vec2 g11 = vec2(gx.w, gy.w);
+  
+    vec4 norm = taylorInvSqrt(vec4(dot(g00, g00), dot(g01, g01), dot(g10, g10), dot(g11, g11)));
+    g00 *= norm.x;
+    g01 *= norm.y;
+    g10 *= norm.z;
+    g11 *= norm.w;
+  
+    float n00 = dot(g00, vec2(fx.x, fy.x));
+    float n10 = dot(g10, vec2(fx.y, fy.y));
+    float n01 = dot(g01, vec2(fx.z, fy.z));
+    float n11 = dot(g11, vec2(fx.w, fy.w));
+  
+    vec2 fade_xy = fade(vec2(Pf.x, Pf.y));
+    vec2 n_x = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
+    float n_xy = mix(n_x.x, n_x.y, fade_xy.y);
+    return float(2.3) * n_xy;
+  }
+
+  void main(){
+    vec2 uv = gl_FragCoord.xy/resolution;
+    float noise = perlin(scale*uv, vec2(scale));
+    gl_FragColor = vec4(vec3(0.5+0.5*noise), 1.0);
+  }
+`;
+
+
+
 var vertexSource = `
   precision highp float;
   attribute vec3 position;
@@ -129,13 +209,13 @@ var vertexSource = `
   uniform mat4 viewMatrix;
   uniform mat4 projectionMatrix;
   
-  uniform sampler2D greyNoiseTexture;
+  uniform sampler2D perlinNoiseTexture;
 
   uniform float time;
   uniform float waveSpeed;
   uniform float waveHeight;
 
-  const float scale = 3.52;
+  const float scale = 0.2;
   const int limit = 3;
 
   const float angle = 0.0;
@@ -144,39 +224,27 @@ var vertexSource = `
   const float c = cos(angle);
   const mat2 rotation = mat2(c, s, -s, c);
 
-  //By iq
-  float noised(vec2 x){
-
-    vec2 f = fract(x);
-    vec2 u = f*f*(3.0-2.0*f);
-
-    vec2 p = floor(x);
-    float a = texture2D(greyNoiseTexture, (p+vec2(0.5,0.5))/256.0).x;
-    float b = texture2D(greyNoiseTexture, (p+vec2(1.5,0.5))/256.0).x;
-    float c = texture2D(greyNoiseTexture, (p+vec2(0.5,1.5))/256.0).x;
-    float d = texture2D(greyNoiseTexture, (p+vec2(1.5,1.5))/256.0).x;
-
-    float res = (a+(b-a)*u.x+(c-a)*u.y+(a-b-c+d)*u.x*u.y);
-    res = res - 0.5;
-    return res;
-
+  float getPerlinNoise(vec2 p){
+    return 2.0*texture2D(perlinNoiseTexture, p).x-1.0;
   }
 
- float fbm(vec2 pos){
+  float fbm(vec2 pos){
     float res = 0.0;
     float freq = 1.0;
     float amp = 1.0;
+    float ampSum = 0.0;
     
     for(int i = 0; i < limit; i++){ 
 	float offset = time * float(limit-i);
-       	res += noised(freq*(pos+offset)) * amp;
+       	res += getPerlinNoise(freq*(pos+offset)) * amp;
+	ampSum += amp;
 
-        freq *= 1.75;
+        freq *= 2.0;
         amp *= 0.5;
         
         pos *= rotation;
     }
-    return res;
+    return res/ampSum;
   }
   
   void main(){ 
@@ -196,6 +264,7 @@ var lineWidth =  mobile ? `25.0` : `55.0`;
 
 var fragmentSource = `
   precision highp float;
+  uniform sampler2D perlinNoiseTexture;
   const float lineSpacing = ` + lineSpacing + `;
   const float lineWidth = ` + lineWidth + `;
 
@@ -208,37 +277,18 @@ var fragmentSource = `
 `;
 
 //************** Utility functions **************
-function loadTexture(gl, texture, url) {
+function createAndSetupTexture(gl) {
+  var texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
 
-  const internalFormat = gl.RGBA;
-  const width_ = 1;
-  const height_ = 1;
-  const border = 0;
-  const srcFormat = gl.RGBA;
-  const srcType = gl.UNSIGNED_BYTE;
-  const pixel = new Uint8Array([255, 0, 0, 255]);  // opaque blue
-  gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, width_, height_, border, srcFormat, srcType, pixel);
-
-  const image = new Image();
-  image.onload = function() {
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, srcFormat, srcType, image);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  };
-  image.crossOrigin = "";
-  image.src = url;
+  // Set up texture so we can render any size
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
   return texture;
 }
-
-gl.activeTexture(gl.TEXTURE0);
-var noiseTexture = gl.createTexture();
-
-//https://shadertoyunofficial.wordpress.com/2019/07/23/shadertoy-media-files/
-loadTexture(gl, noiseTexture, 'https://al-ro.github.io/images/terrain/greyNoise.png');
 
 //Compile shader and combine with source
 function compileShader(shaderSource, shaderType){
@@ -272,14 +322,71 @@ function getUniformLocation(program, name) {
 //************** Create shaders **************
 
 //Create vertex and fragment shaders
+var noiseVertexShader = compileShader(noiseVertexSource, gl.VERTEX_SHADER);
+var noiseFragmentShader = compileShader(noiseFragmentSource, gl.FRAGMENT_SHADER);
+
 var vertexShader = compileShader(vertexSource, gl.VERTEX_SHADER);
 var fragmentShader = compileShader(fragmentSource, gl.FRAGMENT_SHADER);
 
 //Create shader programs
+var noiseProgram = gl.createProgram();
+gl.attachShader(noiseProgram, noiseVertexShader);
+gl.attachShader(noiseProgram, noiseFragmentShader);
+gl.linkProgram(noiseProgram);
+gl.useProgram(noiseProgram);
+
+//Set up rectangle covering entire canvas 
+var quadVertices = new Float32Array([
+    -1.0,  1.0, // top left
+    -1.0, -1.0, // bottom left
+     1.0,  1.0, // top right
+     1.0, -1.0, // bottom right
+]);
+
+//Create vertex buffer
+const noiseVertexDataBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, noiseVertexDataBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quadVertices), gl.STATIC_DRAW);
+
+var noisePositionHandle = getAttribLocation(noiseProgram, 'position');
+// Layout of our data in the vertex buffer
+gl.vertexAttribPointer(noisePositionHandle, 2, gl.FLOAT, false, 2*4, 0);
+gl.enableVertexAttribArray(positionHandle);
+
+var noiseScaleHandle = gl.getUniformLocation(noiseProgram, 'scale');
+var noiseResolutionHandle = gl.getUniformLocation(noiseProgram, 'resolution');
+
+//Create and bind frame buffer
+var noiseTexSize = 256;
+var framebuffer = gl.createFramebuffer();
+framebuffer.width = noiseTexSize;
+framebuffer.height = noiseTexSize;
+gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+
+//Create texture
+var perlinTexture = createAndSetupTexture(gl);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, framebuffer.width, framebuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+//Attach texture to frame buffer
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, perlinTexture, 0);
+
+//Draw noise to framebuffer
+gl.useProgram(noiseProgram);
+
+gl.uniform1f(noiseScaleHandle, 16.0);
+gl.uniform2f(noiseResolutionHandle, noiseTexSize, noiseTexSize);
+
+gl.viewport(0, 0, noiseTexSize, noiseTexSize); 
+gl.clearColor(0, 0, 0, 1);  
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+//Fabric rendering
 var program = gl.createProgram();
 gl.attachShader(program, vertexShader);
 gl.attachShader(program, fragmentShader);
 gl.linkProgram(program);
+gl.useProgram(program);
 
 //Create vertex buffer
 const vertexDataBuffer = gl.createBuffer();
@@ -308,7 +415,7 @@ var timeHandle = getUniformLocation(program, 'time');
 var projectionMatrixHandle = getUniformLocation(program, 'projectionMatrix');
 var viewMatrixHandle = getUniformLocation(program, 'viewMatrix');
 var modelMatrixHandle = getUniformLocation(program, 'modelMatrix');
-var noiseTextureHandle = gl.getUniformLocation(program, 'greyNoiseTexture');
+var noiseTextureHandle = gl.getUniformLocation(program, 'perlinNoiseTexture');
 
 var waveHeightHandle = gl.getUniformLocation(program, 'waveHeight');
 var waveSpeedHandle = gl.getUniformLocation(program, 'waveSpeed');
@@ -364,6 +471,8 @@ function getModelMatrix(){
 setCamera(); 
 
 gl.useProgram(program);
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_2D, perlinTexture);
 gl.uniform1i(noiseTextureHandle, 0);
 gl.uniformMatrix4fv(projectionMatrixHandle, false, projectionMatrix);
 gl.uniformMatrix4fv(viewMatrixHandle, false, viewMatrix);
@@ -388,6 +497,11 @@ function draw(){
   lastFrame = thisFrame;
 
   gl.useProgram(program);
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height); 
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.uniform1i(noiseTextureHandle, 0);
+  gl.bindTexture(gl.TEXTURE_2D, perlinTexture);
 
   gl.uniform1f(timeHandle, time);
   gl.uniform1f(waveSpeedHandle, wave_speed);
