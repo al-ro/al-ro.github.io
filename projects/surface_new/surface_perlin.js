@@ -26,15 +26,36 @@ if(!gl){
 // Main variables
 var time = 10.0;
 
-const framesToFade = 30.0;
-const wave_speed_d = 0.75*0.001;
-const wave_speed_min_i = 0.5*0.0015;
-const wave_speed_max_i = 0.5*0.002;
-const wave_height_d = 0.094;
-const wave_height_min_i = 0.126;
-const wave_height_max_i = 0.178;
+var framesToFade = 30.0;
+var wave_speed_d = 0.001;
+var wave_speed_min_i = 0.0013;
+var wave_speed_max_i = 0.0021;
+var wave_height_d = 0.094;
+var wave_height_min_i = 0.126;
+var wave_height_max_i = 0.178;
 var wave_speed = 0.02;
 var wave_height = 0.16;
+
+var scale = 0.3;
+
+var gui = new dat.GUI({ autoPlace: false , width: 300});
+var customContainer = document.getElementById('gui_container');
+customContainer.appendChild(gui.domElement);
+
+gui.add(this, 'wave_speed_d').min(0.0).max(0.02).step(0.0001).listen();
+gui.add(this, 'wave_speed_min_i').min(0.0).max(0.02).step(0.0001).listen();
+gui.add(this, 'wave_speed_max_i').min(0.0).max(0.02).step(0.0001).listen();
+gui.add(this, 'wave_height_d').min(0.0).max(0.5).step(0.0001).listen();
+gui.add(this, 'wave_height_min_i').min(0.0).max(0.5).step(0.0001).listen();
+gui.add(this, 'wave_height_max_i').min(0.0).max(0.5).step(0.0001).listen();
+
+gui.add(this, 'scale').min(0.01).max(1.0).step(0.001);
+gui.close();
+const stats = new Stats();
+stats.showPanel(0);
+stats.domElement.style.position = 'relative';
+stats.domElement.style.bottom = '48px';
+document.getElementById('cc_1').appendChild(stats.domElement);
 
 const ratio = 2.0;
 const scaleZ = 2.0;
@@ -215,7 +236,7 @@ var vertexSource = `
   uniform float waveSpeed;
   uniform float waveHeight;
 
-  const float scale = 0.1;
+  uniform float scale;
   const int limit = 3;
 
   const float angle = 0.0;
@@ -373,7 +394,7 @@ gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, per
 //Draw noise to framebuffer
 gl.useProgram(noiseProgram);
 
-gl.uniform1f(noiseScaleHandle, 16.0);
+gl.uniform1f(noiseScaleHandle, 8.0);
 gl.uniform2f(noiseResolutionHandle, noiseTexSize, noiseTexSize);
 
 gl.viewport(0, 0, noiseTexSize, noiseTexSize); 
@@ -412,6 +433,7 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
 
 // Set uniform handle
 var timeHandle = getUniformLocation(program, 'time');
+var scaleHandle = getUniformLocation(program, 'scale');
 var projectionMatrixHandle = getUniformLocation(program, 'projectionMatrix');
 var viewMatrixHandle = getUniformLocation(program, 'viewMatrix');
 var modelMatrixHandle = getUniformLocation(program, 'modelMatrix');
@@ -483,7 +505,7 @@ var lastFrame = Date.now();
 var thisFrame;
 
 function draw(){
-
+  stats.begin();
   if(mouseOn){
     frame = Math.min(framesToFade, frame + 1.0);
   }else{
@@ -504,6 +526,7 @@ function draw(){
   gl.bindTexture(gl.TEXTURE_2D, perlinTexture);
 
   gl.uniform1f(timeHandle, time);
+  gl.uniform1f(scaleHandle, scale);
   gl.uniform1f(waveSpeedHandle, wave_speed);
   gl.uniform1f(waveHeightHandle, wave_height);
 
@@ -513,6 +536,7 @@ function draw(){
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.drawElements(gl.TRIANGLES, elementCount, gl.UNSIGNED_SHORT, 0);
   requestAnimationFrame(draw);
+  stats.end();
 }
 
 draw();
