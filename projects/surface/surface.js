@@ -351,7 +351,7 @@ gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quadVertices), gl.STATIC_DRAW);
 var noisePositionHandle = getAttribLocation(noiseProgram, 'position');
 // Layout of our data in the vertex buffer
 gl.vertexAttribPointer(noisePositionHandle, 2, gl.FLOAT, false, 2*4, 0);
-gl.enableVertexAttribArray(positionHandle);
+gl.enableVertexAttribArray(noisePositionHandle);
 
 var noiseScaleHandle = gl.getUniformLocation(noiseProgram, 'scale');
 var noiseResolutionHandle = gl.getUniformLocation(noiseProgram, 'resolution');
