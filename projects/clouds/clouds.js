@@ -329,7 +329,10 @@ if(mobile){
   const float PLANET_RADIUS = float(`+EARTH_RADIUS+`);
   // From Babic thesis, probably same as HZD
   const float CLOUD_START = 1500.0;
-  const float CLOUD_HEIGHT = 4000.0;
+  const float CLOUD_HEIGHT = 6000.0;
+  const float cloudStart = 1500.0;
+  const float cloudHeight = 6000.0;
+  const float cloudEnd = cloudStart+cloudHeight;
 
   //https://www.geertarien.com/blog/2017/07/30/breakdown-of-the-lookAt-function-in-OpenGL/
   mat3 lookAt(vec3 camera, vec3 targetDir, vec3 up){
@@ -443,115 +446,220 @@ if(mobile){
   float getBlueNoise(vec2 p){
     return (2.0*texture2D(blueNoiseTexture, p+fract(time)).x)-1.0;
   }
+float getNoise(vec3 pos, float speed){
+    return 0.5+0.5*(getCloudShape(pos));
+}
 
-  //Get density and cloud height at sample point
-  float clouds(vec3 p, out float cloudHeight, float dist, vec3 org, bool detail){
-    float nearThreshold =  60000.0;
-    float farThreshold = 200000.0;
-    float distanceMultiplier = 1.0-saturate((dist-nearThreshold)/farThreshold);
+//Read cloud map.
+float getCloudMap(vec3 p){
+    //p.y *= 0.5;
+    return 1.0*getNoise(0.001*p, 0.0)*getNoise(0.0005*p, 0.0);
+}
 
-    //Spherical coordinates of sample point  
-    float polar = atan(p.y/p.x);
-    float azimuth = atan(sqrt(p.x * p.x + p.y * p.y)/p.z);
 
-    //Sample texture which determines where clouds occur
-    float cloud = saturate(getWeatherMap(tempVar2*vec2(polar, azimuth)));//sin(polar * 1000.0) * cos(azimuth * 1000.0);
-    //float cloud = 0.5+0.5*(sin(polar * 2000.0) * cos(azimuth * 2000.0));
+float clouds(vec3 p, out float cloudHeight, bool sampleDetail){
 
-    //Mix with user defined coverage to transition between overcast and clear sky
-    cloud *= coverage;// * distanceMultiplier;
+    cloudHeight = saturate((p.y - cloudStart)/(cloudEnd-cloudStart));
 
-    nearThreshold = 35000.0;
-    farThreshold =  40000.0;
-    distanceMultiplier = 1.0-saturate((dist-nearThreshold)/farThreshold);
+    float clouds = getCloudMap(p);
+    if(clouds <= 1e-4){return 0.0;}
 
-    //If there are no clouds, exit early
-    if(cloud <= 0.0){
-      return 0.0;
+    //Round top and bottom edges
+    clouds *= saturate(remap(cloudHeight, 0.95, 1.0, 1.0, 0.0)) 
+            * saturate(remap(cloudHeight, 0.0, 0.1, 0.0, 1.0));
+    //Subtract coarse noise
+    clouds = saturate(remap(clouds, mainStrength*getNoise(mainSize*p, 0.0), 1.0, 0.0, 1.0));
+    if(sampleDetail){
+        //Subtract fine noise
+        clouds = saturate(remap(clouds, detailStrength*getNoise(detailSize*p, 0.0), 1.0, 0.0, 1.0));
     }
+    return clouds * densityMultiplier;
+}
 
-    //Sample texture which determines how high clouds reach
-    float height = cloud;
-    
-    //Height of point above the ground
-    float atmoHeight = length(p - vec3(0.0, 0.0, 0.0)) - PLANET_RADIUS;
-    //Fractional height within the cloud layer wrt specified height limit
-    cloudHeight = clamp((atmoHeight-CLOUD_START)/(CLOUD_HEIGHT*height), 0.0, 1.0);
-    //Round the bottom and top of the clouds. From "Real-time rendering of volumetric clouds". 
-    cloud *= saturate(remap(cloudHeight, 0.1, 0.2, 0.0, 1.0)) * saturate(remap(cloudHeight, height*0.2, height, 1.0, 0.0));
 
-    //Get main shape noise
-    float shape = getCloudShape(mainSize*p);
-    //Invert shape noise to subtract from the main cloud. Leave the value at the bottom of the cloud to introduce wispy shapes there.
-    shape = mix(shape, 1.0-shape, saturate(cloudHeight * 10.0));
-    shape *= mainStrength;
-
-    //Carve away density from cloud based on noise.
-    cloud = saturate(remap(cloud, shape, 1.0, 0.0, 1.0));
-
-    //Early exit from empty space
-    if(cloud <= 0.0){
-      return 0.0;    
-    }
-
-    if(detail){
-
-      //Offset sample point by curl noise to avoid pixelation artefacts. Introduces flow like structures on the surface.
-      //Sampling strength (512) and position (combining xz and y) are arbitrary from trial and error.
-      vec2 curl = (1.0 - cloudHeight) * 128.0 * texture2D(curlNoiseTexture, (0.01*p.y+p.xz)*0.0001).rg;
-      //Map from [0; 1] to [-1; 1]
-      p.xz += 2.0 * (curl - 1.0);
-
-      //if(dist < farThreshold){
-
-	//Get detail shape noise
-	float detail = getCloudDetail(detailSize * p);
-	//Invert detail noise to subtract from the main shape. Leave the value at the bottom of the cloud to introduce wispy shapes there.
-	detail = mix(detail, 1.0-detail, saturate(cloudHeight * 10.0));
-	detail *= detailStrength;// * distanceMultiplier;
-
-	//Carve away detail based on the noise
-	cloud = saturate(remap(cloud, detail, 1.0, 0.0, 1.0));
-      //}
-    }
-    return cloud * densityMultiplier;
-  }
-
-  float HenyeyGreenstein(float g, float costh){
+float HenyeyGreenstein(float g, float costh){
     return (1.0/(4.0 * 3.1415))  * ((1.0 - g * g) / pow(1.0 + g*g - 2.0*g*costh, 1.5));
-  }
+}
 
-  float lightRay(vec3 org, vec3 p, float phaseFunction, float dC, float mu, vec3 sunDirection, float cloudHeight, float dist){
+//https://twitter.com/FewesW/status/1364629939568451587/photo/1
+float multipleOctaves(float extinction, float mu, float stepL){
 
-    float lightRayDistance = 800.0;
-    float stepL = lightRayDistance/float(STEPS_LIGHT);
-    if(HD){
-      stepL = lightRayDistance/float(HD_STEPS_LIGHT);
+    float luminance = 0.0;
+    const float octaves = 4.0;
+    
+    //Attenuation
+    float a = 1.0;
+    //Contribution
+    float b = 1.0;
+    //Phase attenuation
+    float c = 1.0;
+    
+    float phase;
+    
+    for(float i = 0.0; i < octaves; i++){
+        //Two-lobed HG
+        phase = mix(HenyeyGreenstein(-0.1*c, mu), HenyeyGreenstein(0.3*c, mu), 0.7);
+        luminance += b * phase * exp(-stepL * extinction * a);
+        //Lower is brighter
+        a *= 0.18;
+        //Higher is brighter
+        b *= 0.5;
+        c *= 0.5;
+    }
+    return luminance;
+}
+
+//Get the amount of light that reaches a sample point.
+float lightRay(vec3 org, vec3 p, float phaseFunction, float mu, vec3 sunDirection,
+           float offset){
+
+    float lightRayDistance = 1000.0;
+    float distToStart = 0.0;
+
+    getCloudIntersection(p, vec3(0,1,0), distToStart, lightRayDistance);
+    bool renderClouds = getCloudLayerIntersection(org, dir, distToStart, exit, reenter, totalDistance, reentry);
+
+    float stepL = min(1000.0, lightRayDistance/float(STEPS_LIGHT));
+
+    if(isinf(stepL)){
+        stepL = 1000.0;
     }
 
-    float lightRayDensity = 0.0;    
+    float lightRayDensity = 0.0;
 
-    //Collect total density along light ray
-    for(int j=0; j<HD_STEPS_LIGHT; j++){
-      if(!HD){
-	if(j == STEPS_LIGHT){break;}
-      }
-      bool sampleDetail = true;
-      if(lightRayDensity > 0.3){
-	sampleDetail = false;
-      }
-      //Reduce density of clouds when looking towards the sun for more luminous clouds
-      lightRayDensity += mix(1.0, 0.5, mu) * clouds(p + sunDirection * float(j) * stepL, cloudHeight, dist, org, sampleDetail);
-      //lightRayDensity += mix(1.0, 0.5, mu) * clouds(p + sunDirection * float(j) * stepL + stepL * getBlueNoise(gl_FragCoord.xy/64.0), cloudHeight, dist, org, sampleDetail);
+    float cloudHeight = 0.0;
+    
+    float occlusion = 0.0;
+
+    //Collect total density along light ray.
+    for(int j = 0; j < STEPS_LIGHT; j++){
+
+        bool sampleDetail = true;
+
+        //Reduce density of clouds when looking towards the sun for more luminous clouds.
+        lightRayDensity += clouds(p + sunDirection * float(j) * stepL, cloudHeight, sampleDetail);
+        occlusion += 0.5*clouds(p + vec3(0,1,0) * float(j) * stepL, cloudHeight, sampleDetail);
     }
 
-    //Multiple scattering from Nubis presentation credited to Wrenninge et al. Introduce another weaker Beer-Lambert function 
-    float beersLaw = max(exp(-stepL * lightRayDensity), exp(-stepL * lightRayDensity * 0.2) * 0.75);//, exp(-stepL * lightRayDensity);
-
-    //Return product of Beer's law and powder effect depending on the view direction angle with the light
+    float beersLaw = max(0.0, multipleOctaves(occlusion + lightRayDensity , mu, stepL));
+    //Return product of Beer's law and powder effect depending on the 
+    //view direction angle with the light direction.
     return mix(beersLaw * 2.0 * (1.0-(exp(-stepL*lightRayDensity*2.0))), beersLaw, mu);
-  }
+}
 
+//Get the colour along the main view ray.
+vec3 mainRay(vec3 org, vec3 dir, vec3 sunDirection, 
+         out float totalTransmittance, float mu, vec3 sunLightColour, float offset,
+         inout float d){
+
+    //Variable to track transmittance along view ray. 
+    //Assume clear sky and attenuate light when encountering clouds.
+    totalTransmittance = 1.0;
+
+    //Default to black.
+    vec3 colour = vec3(0.0);
+
+    //The distance at which to start ray marching.
+    float distToStart = 0.0;
+
+    //The length of the intersection.
+    float totalDistance = 0.0;
+
+    //Determine if ray intersects bounding volume.
+    //Set ray parameters in the cloud layer.
+    bool renderClouds = getCloudIntersection(org, dir, distToStart, totalDistance);
+
+    if(!renderClouds){
+        return colour;
+    }
+
+    //Sampling step size.
+    float stepS = 750.0;//totalDistance / float(STEPS_PRIMARY); 
+
+    //Offset the starting point by blue noise.
+    distToStart += stepS * offset;
+
+    //Track distance to sample point.
+    float dist = distToStart;
+
+    //Initialise sampling point.
+    vec3 p = org + dist * dir;
+
+    //Combine backward and forward scattering to have details in all directions.
+    float phaseFunction = mix(HenyeyGreenstein(-0.3, mu), HenyeyGreenstein(0.3, mu), 0.7);
+
+    vec3 sunLight = sunLightColour * power;
+
+    for(int i = 0; i < STEPS_PRIMARY; i++){
+    
+        if(i > 32){
+            stepS = 2000.0;
+        }
+        
+        if(i > 63){
+            stepS = 4000.0;
+        }
+
+        //Normalised height for shaping and ambient lighting weighting.
+        float cloudHeight;
+
+        //Get density and cloud height at sample point
+        float density = clouds(p, cloudHeight, true);
+
+        //Scattering and absorption coefficients.
+        float sigmaS = 1.0;
+        float sigmaA = 0.0;
+
+        //Extinction coefficient.
+        float sigmaE = sigmaS + sigmaA;
+
+        float sampleSigmaS = sigmaS * density;
+        float sampleSigmaE = sigmaE * density;
+
+        //If there is a cloud at the sample point.
+        if(density > 0.0 ){
+
+            d = min(dist, d);
+            //Constant lighting factor based on the height of the sample point.
+            vec3 ambient = sunLightColour * mix((0.4), (1.0), cloudHeight);
+
+            //Amount of sunlight that reaches the sample point through the cloud 
+            //is the combination of ambient light and attenuated direct light.
+            vec3 luminance = 0.2*ambient + 
+                sunLight * phaseFunction * lightRay(org, p, phaseFunction, mu, sunDirection,
+                                                   offset);
+
+            //Scale light contribution by density of the cloud.
+            luminance *= sampleSigmaS;
+
+            //Beer-Lambert.
+            float transmittance = exp(-sampleSigmaE * stepS);
+
+            //Better energy conserving integration
+            //"From Physically based sky, atmosphere and cloud rendering in Frostbite" 5.6
+            //by Sebastian Hillaire.
+            colour += 
+                totalTransmittance * (luminance - luminance * transmittance) / sampleSigmaE; 
+
+            //Attenuate the amount of light that reaches the camera.
+            totalTransmittance *= transmittance;  
+
+            //If ray combined transmittance is close to 0, nothing beyond this sample 
+            //point is visible, so break early.
+            if(totalTransmittance <= 0.001 || isinf(totalTransmittance)){
+                totalTransmittance = 0.0;
+                break;
+            }
+        }
+
+        dist += stepS;
+
+        //Step along ray.
+        p = org + dir * dist;
+    }
+
+    return colour;
+}
   //Find the distance to the closest cloud layer intersection, the total distance in the layer and, if applicable, the distances at which the ray exits and re-enters the cloud layer.
   //Return true if there is an intersection, false otherwise.
   bool getCloudLayerIntersection(vec3 org, vec3 dir, out float distToStart, out float exit, out float reenter, out float totalDistance, out bool reentry){
