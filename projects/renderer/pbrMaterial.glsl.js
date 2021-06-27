@@ -1,10 +1,7 @@
 function getVertexSource(parameters){ 
 
   //TODO:
-  // properties
   // albedo vec3
-  // lights
-  // PBR
   // IBL
   // Sidedness from gltf
   // Transparency pipeline
