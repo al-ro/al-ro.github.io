@@ -11,7 +11,7 @@ import {loadTexture} from "./texture.js"
 import {Mesh} from "./mesh.js";
 import {canvas, gl} from "./canvas.js";
 import {GLTFLoader} from "./GLTFLoader.js";
-import {Downloader} from "./Downloader.js";
+import {Downloader} from "./downloader.js";
 
 const stats = new Stats();
 stats.showPanel(0);
