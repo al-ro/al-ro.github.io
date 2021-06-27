@@ -1,6 +1,6 @@
 import {gl} from "./canvas.js"
 import {Material} from './material.js'
-import {getVertexSource, getFragmentSource} from './TextureMaterial.glsl.js'
+import {getVertexSource, getFragmentSource} from './textureMaterial.glsl.js'
 
 export class TextureMaterial extends Material{
 

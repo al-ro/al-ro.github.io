@@ -1,6 +1,6 @@
 import {gl} from "./canvas.js"
 import {Material} from './material.js'
-import {getVertexSource, getFragmentSource} from './PBRMaterial.glsl.js'
+import {getVertexSource, getFragmentSource} from './pbrMaterial.glsl.js'
 
 export class PBRMaterial extends Material{
 
