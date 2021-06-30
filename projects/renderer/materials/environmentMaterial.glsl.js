@@ -1,0 +1,43 @@
+function getVertexSource(parameters){ 
+
+  var vertexSource = `
+  
+  attribute vec3 position;
+  attribute vec2 uv;
+
+  void main(){ 
+    gl_Position = vec4(position, 1.0);
+  }
+  `;
+
+  return vertexSource;
+}
+
+function getFragmentSource(){
+   
+  var fragmentSource = `
+    precision highp float;
+  
+    uniform float fov;
+    uniform vec2 resolution;
+    uniform mat4 cameraMatrix;
+  
+    vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
+      vec2 xy = fragCoord - resolution.xy / 2.0;
+      float z = (0.5 * resolution.y) / tan(fieldOfView / 2.0);
+      return normalize(vec3(xy, -z));
+    }
+
+    uniform samplerCube cubeMap;
+  
+    void main(){ 
+      vec3 rayDirection = normalize(cameraMatrix * vec4(rayDirection(fov, gl_FragCoord.xy), 0.0)).rgb;
+      vec3 col = textureCube(cubeMap, normalize(rayDirection*vec3(-1,1,1))).rgb;
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `;
+
+  return fragmentSource;
+}
+
+export {getVertexSource, getFragmentSource};

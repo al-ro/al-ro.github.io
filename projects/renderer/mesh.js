@@ -55,16 +55,16 @@ export class Mesh{
     this.material.bindParameters(camera, this.geometry, time);
     if(this.geometry.hasIndices){
       if(this.geometry.instanced){
-	extINS.drawElementsInstancedANGLE(gl.TRIANGLES, 
+	extINS.drawElementsInstancedANGLE(this.geometry.primitiveType, 
 					  this.geometry.length, 
 					  gl.UNSIGNED_SHORT, 
 					  0, 
 					  this.geometry.instances);
       }else{
-	gl.drawElements(gl.TRIANGLES, this.geometry.length, this.geometry.indexType, 0);
+	gl.drawElements(this.geometry.primitiveType, this.geometry.length, this.geometry.indexType, 0);
       }
     }else{
-      gl.drawArrays(gl.TRIANGLES, 0, this.geometry.length);
+      gl.drawArrays(this.geometry.primitiveType, 0, this.geometry.length);
     }
     this.unbindVAO();
   }

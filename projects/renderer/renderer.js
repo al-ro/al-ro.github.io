@@ -2,16 +2,19 @@ import {Camera} from "./camera.js"
 import {Controls} from "./controls.js"
 import {Program} from "./program.js"
 import {Geometry} from "./geometry.js"
-import {NormalMaterial} from "./normalMaterial.js"
-import {PBRMaterial} from "./pbrMaterial.js"
-import {LambertMaterial} from "./lambertMaterial.js"
-import {UVMaterial} from "./uvMaterial.js"
-import {TextureMaterial} from "./textureMaterial.js"
-import {loadTexture} from "./texture.js"
+import {NormalMaterial} from "./materials/normalMaterial.js"
+import {PBRMaterial} from "./materials/pbrMaterial.js"
+import {LambertMaterial} from "./materials/lambertMaterial.js"
+import {UVMaterial} from "./materials/uvMaterial.js"
+import {TextureMaterial} from "./materials/textureMaterial.js"
+import {EnvironmentMaterial} from "./materials/environmentMaterial.js"
+import {loadTexture, createAndSetupCubemap} from "./texture.js"
 import {Mesh} from "./mesh.js";
 import {canvas, gl} from "./canvas.js";
 import {GLTFLoader} from "./GLTFLoader.js";
 import {Downloader} from "./downloader.js";
+import {loadHDR} from "./hdrpng.js";
+import {getScreenspaceQuad} from "./screenspace.js";
 
 const stats = new Stats();
 stats.showPanel(0);
@@ -42,6 +45,12 @@ switch(model){
   case "fox":
     path  = "./gltf/fox/Fox.gltf";
     break;
+  case "corridor":
+    path  = "./gltf/corridor/scene.gltf";
+    break;
+  case "jedifighter":
+    path  = "./gltf/jedifighter/scene.gltf";
+    break;
   default:
     path = "./gltf/duck/Duck.gltf";
 }
@@ -64,7 +73,7 @@ var up = [0, 1, 0];
 var fov = 45 * Math.PI / 180;
 var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 var zNear = 0.001;
-var zFar = 100.0;
+var zFar = 1000.0;
 
 var camera = new Camera(pitch, yaw, dist, [0, 0, 0], up, fov, aspect, zNear, zFar);
 var controls = new Controls(camera);
@@ -352,6 +361,9 @@ function loadGLTF(){
       modelMatrix = m4.xRotate(modelMatrix, rotate[0]); 
       modelMatrix = m4.scale(modelMatrix, scale[0], scale[1], scale[2]);
 
+      if(node.hasOwnProperty("matrix") && node.matrix){
+        modelMatrix = node.matrix;
+      }
       g.setModelMatrix(modelMatrix);
 
       let min = m4.transformVector(modelMatrix, gltfMesh.vertices.min);
@@ -394,6 +406,7 @@ function loadGLTF(){
         emissiveTexture = textures[emissiveTextureID];
       }
 
+      //let material = new TextureMaterial(albedoTexture);
       let material = new PBRMaterial({albedoTexture: albedoTexture, normalTexture: normalTexture, emissiveTexture: emissiveTexture, propertiesTexture: occlusionRoughMetalTexture});
       let mesh = new Mesh(g, material);
 
@@ -412,7 +425,7 @@ function loadGLTF(){
   readyToRender = true;
 }
 
-
+/*
 
 var geometry = new Geometry({vertices: vertices, length: 36, indices: indices, normals: vertexNormals, uvs: vertexUVs});
 
@@ -435,7 +448,7 @@ geometry.setNormalMatrix(normalMatrix);
 var cube;// = new Mesh(geometry, material);
 
 var mesh;
-
+*/
 var lastFrame = Date.now();
 var thisFrame;
 
@@ -444,6 +457,8 @@ function setCameraMatrices(){
   camera.setCameraMatrix(); 
   camera.setViewMatrix();
 }
+let environmentMaterial = new EnvironmentMaterial(createAndSetupCubemap("./defaultResources/uv_grid.jpg"));
+let environmentMesh = new Mesh(getScreenspaceQuad(), environmentMaterial);  
 
 function draw(){
 
@@ -484,6 +499,11 @@ function draw(){
   geometries[i].setNormalMatrix(normalMatrix);
   }
    */
+
+
+  gl.depthMask(false);
+  environmentMesh.render(camera, time);
+  gl.depthMask(true);
 
   for(let i = 0; i < meshes.length; i++){
     if(meshes[i] != null){

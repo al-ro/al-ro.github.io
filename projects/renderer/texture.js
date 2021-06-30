@@ -13,6 +13,35 @@ function createAndSetupTexture() {
   return texture;
 }
 
+function createAndSetupCubemap(url) {
+  let cubeMapSize = 1;
+  var texture = gl.createTexture();
+  for(let i = 0; i < 6; i++){
+    const target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + i;
+
+    const level = 0;
+    const internalFormat = gl.RGBA;
+    const width = cubeMapSize;
+    const height = cubeMapSize;
+    const format = gl.RGBA;
+    const type = gl.UNSIGNED_BYTE;
+    const pixel = new Uint8Array([0,0,0, 255]);
+    const image = new Image();
+    image.onload = function() {
+      gl.texImage2D(target, level, internalFormat, format, type, image);
+    };
+
+    image.src = url;
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+    gl.texImage2D(target, level, internalFormat, width, height, 0, format, type, pixel);
+  }
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  return texture;
+}
+
 
 //
 // Initialize a texture and load an image.
@@ -70,4 +99,4 @@ function isPowerOf2(value) {
   return (value & (value - 1)) == 0;
 }
 
-export {loadTexture, createAndSetupTexture}
+export {loadTexture, createAndSetupTexture, createAndSetupCubemap}

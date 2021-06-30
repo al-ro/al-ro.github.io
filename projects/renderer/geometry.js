@@ -25,6 +25,7 @@ export class Geometry{
   hasTangents = false;
 
   indexType = gl.UNSIGNED_SHORT;
+  primitiveType = gl.TRIANGLES;
 
   vertices;
   indices;
@@ -49,7 +50,7 @@ export class Geometry{
   idBuffer;
 
   modelMatrix = m4.create();
-  normalMatrix = m4.create();
+  normalMatrix;
 
   constructor(geometryData){
 
@@ -75,6 +76,10 @@ export class Geometry{
     }else{
       console.log("GEOMETRY NOT INDEXED. VERTEX COUNT: ", this.vertices.length/3);
       this.length = this.vertices.length/3;
+    }
+
+    if(geometryData.hasOwnProperty("primitiveType") && geometryData.primitiveType != null){
+      this.primitiveType = geometryData.primitiveType;
     }
 
     if(geometryData.hasOwnProperty("normals") && geometryData.normals){

@@ -14,6 +14,12 @@ export class Program{
     gl.attachShader(this.program, this.vertexShader);
     gl.attachShader(this.program, this.fragmentShader);
     gl.linkProgram(this.program);
+    gl.validateProgram(this.program);
+
+    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)){
+      var info = gl.getProgramInfoLog(this.program);
+      console.error('Could not compile WebGL program.\n', info);
+    }
   }
 
   //https://codepen.io/jlfwong/pen/GqmroZ

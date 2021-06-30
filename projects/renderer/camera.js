@@ -111,6 +111,10 @@ export class Camera{
   setTarget(target){
     this.target = target;
   }
+
+  getFOV(){
+    return this.fov;
+  }
   
 }
 
