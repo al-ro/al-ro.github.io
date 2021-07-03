@@ -7,7 +7,6 @@ export class Material{
   attributeHandles = {};
 
   program;
-  pipeline;
 
   constructor(){}
 
@@ -17,7 +16,7 @@ export class Material{
     //console.log("Material defined with: ");
     //console.log(definePrefix);
 
-    let vertexSource = this.getVertexShaderSource(parameters);
+    let vertexSource = this.getVertexShaderSource();
     vertexSource = definePrefix + vertexSource;
     //console.log(fragmentSource);
 

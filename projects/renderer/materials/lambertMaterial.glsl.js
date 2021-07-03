@@ -57,7 +57,7 @@ function getFragmentSource(){
     varying vec3 vNormal;
   
     void main(){ 
-      float d = clamp(dot(normalize(vNormal), vec3(0,1,0)), 0.0, 1.0);
+      float d = clamp(0.1+dot(normalize(vNormal), normalize(vec3(1,1,1))), 0.0, 1.0);
       vec3 col = vec3(d); 
       gl_FragColor = vec4(col, 1.0);
     }

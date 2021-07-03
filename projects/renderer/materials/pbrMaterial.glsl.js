@@ -1,4 +1,4 @@
-function getVertexSource(parameters){ 
+function getVertexSource(){ 
 
   //TODO:
   // albedo vec3
@@ -86,7 +86,6 @@ function getVertexSource(parameters){
     tbn = mat3(T, B, N);
 #endif 
 
-    vPosition = position;
     vec4 pos;
 
 #ifdef INSTANCED
@@ -96,6 +95,9 @@ function getVertexSource(parameters){
 #else
     pos = modelMatrix * vec4(position, 1.0);
 #endif
+
+    vPosition = pos.rgb;
+    vPosition = vec3((modelMatrix * vec4(position, 1.0)));
 
     pos = projectionMatrix * viewMatrix * pos;
     gl_Position = pos;
@@ -299,9 +301,9 @@ function getFragmentSource(){
     vec3 kS = F;
     vec3 kD = 1.0-kS;
     kD *= 1.0 - metal;	
-    vec3 irradiance = vec3(0.4);
+    vec3 irradiance = kD * vec3(0.15);
     vec3 diffuse    = irradiance * albedo;
-    vec3 ambient  = kD * diffuse;
+    vec3 ambient  = diffuse;
 
     // Combine direct and IBL lighting
     return ao * ambient + I;
@@ -370,21 +372,22 @@ function getFragmentSource(){
 
 #ifdef HAS_EMISSIVE_TEXTURE
     vec4 emissiveData = texture2D(emissiveTexture, vUV);
+    vec3 emissiveCol = pow(emissiveData.rgb, vec3(2.2));
     if(emissiveData.a > 0.0){
-      col += 0.15*emissiveData.rgb;
+      col += emissiveCol.rgb;
     }
 #endif
     col.rgb = ACESFilm(col.rgb);
     col.rgb = pow(col.rgb, vec3(0.4545));
 
-
+//#define DEBUG
 #ifdef DEBUG
 #ifdef HAS_PROPERTIES_TEXTURE
     vec3 data_ = texture2D(propertiesTexture, vUV).rgb;
     float ao = data_.r;
     float roughness = data_.g;
     float metal = data_.b;
-    col = vec3(ao);
+    col = vec3(0.5+0.5*-viewDirection);
 #endif
 #endif
 

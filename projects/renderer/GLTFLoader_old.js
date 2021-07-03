@@ -128,38 +128,6 @@ class GLTFLoader{
     }
   }
 
-  getModelTransform(n){
-
-    let modelMatrix = m4.create();
-
-    if(n.hasOwnProperty("matrix") && n.matrix){
-      modelMatrix = n.matrix;
-    }else{
-
-      let translate = [0 ,0, 0];
-      let rotate = [0, 0, 0];
-      let scale = [1, 1, 1];
-
-      if(n.hasOwnProperty("rotation") && n.rotation){
-	rotate = quaternionToEuler(n.rotation);
-      }
-      if(n.hasOwnProperty("scale") && n.scale){
-	scale = n.scale;
-      }
-      if(n.hasOwnProperty("translation") && n.translation){
-	translate = n.translation;
-      }
-
-      modelMatrix = m4.translate(modelMatrix, translate[0], translate[1], translate[2]); 
-
-      modelMatrix = m4.zRotate(modelMatrix, rotate[2]);
-      modelMatrix = m4.yRotate(modelMatrix, rotate[1]);
-      modelMatrix = m4.xRotate(modelMatrix, rotate[0]); 
-      modelMatrix = m4.scale(modelMatrix, scale[0], scale[1], scale[2]);
-    }
-
-    return modelMatrix;
-  }
 
   //
   processNode(n, parents){
@@ -175,23 +143,24 @@ class GLTFLoader{
 
     //Handle Mesh
     if(n.mesh != undefined){
+      let rotations = [];
+      let scales = [];
+      let translations = [];
+      let matrices = [];
 
-      let modelMatrix = this.getModelTransform(n); 
-
-      if(parents && parents.length > 0){
-        for(let p = parents.length-1; p >= 0; p--){
-          let parentNode = this.json.nodes[parents[p]];
-          if(parentNode){
-	    let parentModelMatrix = this.getModelTransform(parentNode); 
-	    modelMatrix = m4.multiply(parentModelMatrix, modelMatrix);
-          }
-        }
+      for(let p = 0; p < parents.length; p++){
+	let parentNode = this.json.nodes[parents[p]];
+	rotations.push(parentNode.rotation || null);
+	scales.push(parentNode.scale || null);
+	translations.push(parentNode.translation || null);
+	matrices.push(parentNode.matrix || null);
       }
-
       let m = {
 		name: 		(n.name) ? n.name : "untitled",
-		matrix:		modelMatrix || null,
-		parents:	parents || null,
+		rotations:	rotations.concat(n.rotation || null),
+		scales:		scales.concat(n.scale || null),
+		translations:	translations.concat(n.translation || null),
+		matrices:	matrices.concat(n.matrix || null),
 		meshes:		this.processMesh(n.mesh)
       };
 
