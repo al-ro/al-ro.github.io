@@ -57,7 +57,7 @@ export class Mesh{
       if(this.geometry.instanced){
 	extINS.drawElementsInstancedANGLE(this.geometry.primitiveType, 
 					  this.geometry.length, 
-					  gl.UNSIGNED_SHORT, 
+					  thiis.geometry.indexType, 
 					  0, 
 					  this.geometry.instances);
       }else{

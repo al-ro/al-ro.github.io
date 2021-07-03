@@ -26,7 +26,7 @@ export class PBRMaterial extends Material{
 
   // In the absence of a base colour texture, use a vec3 uniform
   // Either this or a texture must be supplied
-  albedo;
+  albedo = [1,0,0];
 
   // --------- Textures ----------
 
@@ -133,8 +133,8 @@ export class PBRMaterial extends Material{
     }
   }
 
-  getVertexShaderSource(parameters){
-    return getVertexSource(parameters);
+  getVertexShaderSource(){
+    return getVertexSource();
   }
 
   getFragmentShaderSource(){
@@ -213,6 +213,8 @@ export class PBRMaterial extends Material{
       gl.activeTexture(gl.TEXTURE0 + this.albedoTextureUnit);
       gl.bindTexture(gl.TEXTURE_2D, this.albedoTexture);
       gl.uniform1i(this.albedoTextureHandle, this.albedoTextureUnit);
+    }else{
+      gl.uniform3fv(this.albedoHandle, this.albedo);
     }
 
     if(this.hasNormalTexture){
