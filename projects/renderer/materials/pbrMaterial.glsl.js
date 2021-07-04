@@ -311,7 +311,7 @@ function getFragmentSource(){
     #else
     float ao = 1.0;
     #endif
-    ao = 1.0;
+    //ao = 1.0;
 
     vec3 I = vec3(0);
     vec3 radiance = vec3(1);
