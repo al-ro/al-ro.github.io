@@ -58,7 +58,7 @@ export class PBRMaterial extends Material{
   // This texture is independent from the environment and is computed
   // and stored once any pbrMaterial is used
   // Mandatory
-  brdfTexture;
+  brdfIntegrationMapTexture;
 
   // --------- PBR uniform handles ----------
 
@@ -80,10 +80,14 @@ export class PBRMaterial extends Material{
   hasEmissiveTexture = false;
   hasPropertiesTexture = false;
 
+  brdfTextureUnit;
+  environmentTextureUnit;
   albedoTextureUnit;
   normalTextureUnit;
   emissiveTextureUnit;
   propertiesTextureUnit;
+
+  environment;
 
   textureUnits = 0;
 
@@ -92,6 +96,12 @@ export class PBRMaterial extends Material{
     super();
 
     this.textureUnits = 0;
+
+    this.brdfTextureUnit = this.textureUnits;
+    this.textureUnits++;
+
+    this.environmentTextureUnit = this.textureUnits;
+    this.textureUnits++;
 
     if(parameters.hasOwnProperty("albedoTexture") && parameters.albedoTexture){
       this.albedoTexture = parameters.albedoTexture;
@@ -117,7 +127,13 @@ export class PBRMaterial extends Material{
     }
 
     if(parameters.hasOwnProperty("environment") && parameters.environment){
-      let shMatrices = parameters.environment.getSHMatrices();
+
+      this.environment = parameters.environment;
+
+      this.brdfIntegrationMapTexture = this.environment.getBRDFIntegrationMap();
+      this.environmentTexture = this.environment.getCubeMap();
+
+      let shMatrices = this.environment.getSHMatrices();
       this.shRedMatrix = shMatrices.red;
       this.shGrnMatrix = shMatrices.green;
       this.shBluMatrix = shMatrices.blue;
@@ -193,8 +209,8 @@ export class PBRMaterial extends Material{
     }
 
     this.timeHandle = this.program.getOptionalUniformLocation('time'); 
-    this.environmentTextureHandle = this.program.getUniformLocation('environmentTexture');
-    this.brdfTextureHandle = this.program.getUniformLocation('brdfTexture');
+    this.environmentTextureHandle = this.program.getUniformLocation('cubeMap');
+    this.brdfTextureHandle = this.program.getUniformLocation('brdfInteggrationMapTexture');
   }
 
   getInstanceParameterHandles(){
@@ -210,11 +226,27 @@ export class PBRMaterial extends Material{
     gl.uniformMatrix4fv(this.normalMatrixHandle, false, geometry.getNormalMatrix());
     gl.uniformMatrix4fv(this.modelMatrixHandle, false, geometry.getModelMatrix());
 
+    this.brdfIntegrationMapTexture = this.environment.getBRDFIntegrationMap();
+    this.environmentTexture = this.environment.getCubeMap();
+
+    let shMatrices = this.environment.getSHMatrices();
+    this.shRedMatrix = shMatrices.red;
+    this.shGrnMatrix = shMatrices.green;
+    this.shBluMatrix = shMatrices.blue;
+
     gl.uniformMatrix4fv(this.shRedMatrixHandle, false, this.shRedMatrix);
     gl.uniformMatrix4fv(this.shGrnMatrixHandle, false, this.shGrnMatrix);
     gl.uniformMatrix4fv(this.shBluMatrixHandle, false, this.shBluMatrix);
 
     gl.uniform3fv(this.cameraPositionHandle, camera.position);
+
+    gl.activeTexture(gl.TEXTURE0 + this.brdfTextureUnit);
+    gl.bindTexture(gl.TEXTURE_2D, this.brdfIntegrationMapTexture);
+    gl.uniform1i(this.brdfTextureHandle, this.brdfTextureUnit);
+
+    gl.activeTexture(gl.TEXTURE0 + this.environmentTextureUnit);
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.environmentTexture);
+    gl.uniform1i(this.environmentTextureHandle, this.environmentTextureUnit);
 
     if(this.hasAlbedoTexture){
       gl.activeTexture(gl.TEXTURE0 + this.albedoTextureUnit);

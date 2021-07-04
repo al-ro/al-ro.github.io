@@ -53,12 +53,7 @@ function getFragmentSource(){
 
     #define PI 3.14159
 
-    vec3 inv_gamma(vec3 col){
-      return pow(col, vec3(2.2));
-    }
-
     vec3 getRadiance(vec3 dir){
-      // Assume textures are gamma corrected. Undo for lighting calculations.
       return textureCube(cubeMap, dir*vec3(-1,1,1)).rgb;
     }
 

@@ -130,6 +130,9 @@ function getFragmentSource(){
   varying vec2 vUV;
 #endif
 
+  uniform sampler2D brdfIntegrationMapTexture;
+  uniform samplerCube cubeMap;
+
 #ifdef HAS_ALBEDO_TEXTURE
   uniform sampler2D albedoTexture;
 #else
@@ -185,6 +188,28 @@ function getFragmentSource(){
 
     return vec3(r, g, b);
   }
+
+  vec2 getBRDFIntegrationMap(vec2 texCoord){
+    texCoord = clamp(texCoord, 1e-5, 0.99);
+    return texture2D(brdfIntegrationMapTexture, texCoord).rg;
+  }
+
+  // Get two prefiltered roughness environment maps and linearly interpolate
+  // between them to get the roughness data needed.
+  vec3 getEnvironment(vec3 rayDir, float roughness){
+
+    //There are 5 levels of roughness (0.0, 0.25, 0.5, 0.75, 1.0)
+    float level1 = 3.0 + floor(roughness * 5.0);
+    float level2 = level1 + 1.0;
+    level2 = min(level2, 5.0);
+
+    float f = fract(roughness * 5.0);
+
+    rayDir *= vec3(-1,1,1);
+
+    return mix(textureCube(cubeMap, rayDir, level1).rgb, textureCube(cubeMap, rayDir, level2).rgb, f);
+  }
+
 
   //---------------------------- PBR ----------------------------
 
@@ -286,6 +311,7 @@ function getFragmentSource(){
     #else
     float ao = 1.0;
     #endif
+    ao = 1.0;
 
     vec3 I = vec3(0);
     vec3 radiance = vec3(1);
@@ -307,8 +333,8 @@ function getFragmentSource(){
     lightDir = normalize(vec3(sin(time), 0.5, cos(time)));
 
     I +=  BRDF(normal, -rayDir, lightDir, albedo, metal, roughness, F0) 
-      * radiance 
-      * dot_c(normal, lightDir);
+	* radiance 
+	* dot_c(normal, lightDir);
 
     // Find ambient diffuse IBL component
 
@@ -318,7 +344,15 @@ function getFragmentSource(){
     kD *= 1.0 - metal;	
     vec3 irradiance = 0.75 * getSHIrradiance(normal);
     vec3 diffuse = irradiance * albedo;
-    vec3 ambient = kD * diffuse;
+
+    vec3 R;
+    R = reflect(rayDir, normal);
+
+    vec3 prefilteredColor = getEnvironment(R, roughness);   
+    vec2 envBRDF  = getBRDFIntegrationMap(vec2(dot_c(normal, -rayDir), roughness));
+    vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+
+    vec3 ambient  = kD * diffuse + specular;
 
     // Combine direct and IBL lighting
     return ao * ambient + I;
@@ -403,6 +437,7 @@ function getFragmentSource(){
     float roughness = data_.g;
     float metal = data_.b;
     col = vec3(0.5+0.5*-viewDirection);
+    col = vec3(texture2D(brdfIntegrationMapTexture, gl_FragCoord.xy/1024.0).rg, 0.0);
 #endif
 #endif
 
