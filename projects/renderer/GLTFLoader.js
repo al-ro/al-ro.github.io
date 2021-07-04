@@ -25,9 +25,7 @@ class GLTFLoader{
   constructor(){
     this.json = null;
     this.skeletons = [];
-    // VAOs
     this.meshes = [];
-    // Renderable, references back to mesh
     this.nodes = [];	
   }
 
@@ -99,29 +97,27 @@ class GLTFLoader{
     }
 
     let sceneNodes = this.json.scenes[sceneNum].nodes;
-    // Save a tuple of node and parent node
-    let nStack = [];
-    let node;
-    let idx;
-    let i;
+    //Stores a tuple of each node and an array of all its ancestors
+    let nodeStack = [];
 
     //Setup Initial Stack
-    for(i=0; i < sceneNodes.length; i++){
-      nStack.push([sceneNodes[i], []]);
+    for(let i=0; i < sceneNodes.length; i++){
+      nodeStack.push([sceneNodes[i], []]);
     }
     
     //Process Stack of nodes, check for children to add to stack
     //Save node transformations in meshes
-    while(nStack.length > 0){
-      let tuple = nStack.pop();
-      idx = tuple[0];
+    while(nodeStack.length > 0){
+      let tuple = nodeStack.pop();
+      let idx = tuple[0];
       let parents = tuple[1];
-      node = this.json.nodes[idx];
+      let node = this.json.nodes[idx];
     
       //Add More Nodes to the stack
       if(node.children != undefined){
-        for(i=0; i < node.children.length; i++){
-          nStack.push([node.children[i], parents.concat([idx])]);
+        for(let i=0; i < node.children.length; i++){
+	  //Add child node with current node added to the parent list
+          nodeStack.push([node.children[i], parents.concat([idx])]);
         }
       }
       this.processNode(node, parents);
@@ -131,9 +127,12 @@ class GLTFLoader{
   getModelTransform(n){
 
     let modelMatrix = m4.create();
-
+    
+    //When matrix has been given, use it over TRS
     if(n.hasOwnProperty("matrix") && n.matrix){
+
       modelMatrix = n.matrix;
+
     }else{
 
       let translate = [0 ,0, 0];
@@ -176,13 +175,15 @@ class GLTFLoader{
     //Handle Mesh
     if(n.mesh != undefined){
 
+      //Apply local transform
       let modelMatrix = this.getModelTransform(n); 
 
       if(parents && parents.length > 0){
+	//Loop over all parents and apply transformations in reverse order w.r.t. local transform
         for(let p = parents.length-1; p >= 0; p--){
           let parentNode = this.json.nodes[parents[p]];
           if(parentNode){
-	    let parentModelMatrix = this.getModelTransform(parentNode); 
+	    let parentModelMatrix = this.getModelTransform(parentNode);
 	    modelMatrix = m4.multiply(parentModelMatrix, modelMatrix);
           }
         }
@@ -196,7 +197,7 @@ class GLTFLoader{
       };
 
       if(n.skin != undefined){
-	m.skeleton = this.processSkin(n.skin);
+	//m.skeleton = this.processSkin(n.skin);
       }
 
       this.nodes.push(m);
@@ -218,9 +219,9 @@ class GLTFLoader{
       //p.targets = Morph Targets
 
       //.....................................
-      //Alias for primative element
+      //Alias for primitive element
       let p;
-      //Alias for primative's attributes
+      //Alias for primitive's attributes
       let a;	
       let itm;
       let mesh = [];

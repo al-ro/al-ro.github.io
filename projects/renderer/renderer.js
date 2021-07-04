@@ -7,13 +7,14 @@ import {PBRMaterial} from "./materials/pbrMaterial.js"
 import {LambertMaterial} from "./materials/lambertMaterial.js"
 import {UVMaterial} from "./materials/uvMaterial.js"
 import {TextureMaterial} from "./materials/textureMaterial.js"
-import {EnvironmentMaterial} from "./materials/environmentMaterial.js"
+import {Environment} from "./environment.js"
 import {loadTexture, createAndSetupCubemap} from "./texture.js"
 import {Mesh} from "./mesh.js";
 import {canvas, gl} from "./canvas.js";
 import {GLTFLoader} from "./GLTFLoader.js";
 import {Downloader} from "./downloader.js";
 import {getScreenspaceQuad} from "./screenspace.js";
+import {getSphericalHarmonicsMatrices} from "./iblUtils.js";
 
 const stats = new Stats();
 stats.showPanel(0);
@@ -49,6 +50,9 @@ switch(model){
     break;
   case "jedifighter":
     path  = "./gltf/jedifighter/scene.gltf";
+    break;
+  case "spheres":
+    path  = "./gltf/spheres/MetalRoughSpheres.gltf";
     break;
   default:
     path = "./gltf/duck/Duck.gltf";
@@ -97,6 +101,14 @@ var textures = [];
 
 var minExtent = [10000, 10000, 10000];
 var maxExtent = [-10000, -10000, -10000];
+
+//let cubeMap = createAndSetupCubemap();
+//let environmentMaterial = new EnvironmentMaterial(cubeMap);
+//let environmentMesh = new Mesh(getScreenspaceQuad(), environmentMaterial);  
+
+let environment = new Environment("./defaultResources/uv_grid.jpg");
+
+//let shMatrices = getSphericalHarmonicsMatrices(cubeMap);
 
 function loadGLTF(){
 
@@ -188,7 +200,7 @@ function loadGLTF(){
       }
 
       //let material = new TextureMaterial(albedoTexture);
-      let material = new PBRMaterial({albedoTexture: albedoTexture, normalTexture: normalTexture, emissiveTexture: emissiveTexture, propertiesTexture: occlusionRoughMetalTexture});
+      let material = new PBRMaterial({albedoTexture: albedoTexture, normalTexture: normalTexture, emissiveTexture: emissiveTexture, propertiesTexture: occlusionRoughMetalTexture, environment: environment});
       let mesh = new Mesh(g, material);
       meshes.push(mesh);
     }
@@ -213,9 +225,6 @@ function setCameraMatrices(){
   camera.setCameraMatrix(); 
   camera.setViewMatrix();
 }
-let environmentMaterial = new EnvironmentMaterial(createAndSetupCubemap("./defaultResources/uv_grid.jpg"));
-let environmentMesh = new Mesh(getScreenspaceQuad(), environmentMaterial);  
-
 
 var path = './environment/1k.hdr';
 
@@ -246,8 +255,7 @@ function draw(){
   gl.enable(gl.CULL_FACE);
   gl.cullFace(gl.BACK);
 
-  gl.depthMask(false);
-  environmentMesh.render(camera, time);
+  environment.render(camera, time);
 
   gl.depthMask(true);
 

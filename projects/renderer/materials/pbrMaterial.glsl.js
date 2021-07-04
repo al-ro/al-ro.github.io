@@ -10,7 +10,7 @@ function getVertexSource(){
 
   var vertexSource = `
 
-    attribute vec3 position;
+  attribute vec3 position;
 
 #ifdef INSTANCED 
   attribute vec4 orientation;
@@ -112,7 +112,7 @@ function getFragmentSource(){
   var fragmentSource = `
 #extension GL_OES_standard_derivatives : enable
 
-    precision highp float;
+  precision highp float;
 
 #define PI 3.14159
 #define TWO_PI (2.0 * PI)
@@ -155,6 +155,10 @@ function getFragmentSource(){
   uniform float roughness;
 #endif
 
+  uniform mat4 shRedMatrix;
+  uniform mat4 shGrnMatrix;
+  uniform mat4 shBluMatrix;
+
   // Normal mapping will lead to an impossible surface where the view ray and normal dot product
   // is negative. Using PBR, this leads to negative radiance and black artefacts at detail 
   // fringes. See "Microfacet-based Normal Mapping for Robust Monte Carlo Path Tracing" by 
@@ -169,6 +173,17 @@ function getFragmentSource(){
 
   float saturate(float x){
     return max(0.0, min(x, 1.0));
+  }
+
+  vec3 getSHIrradiance(vec3 normal){
+
+    vec4 n = vec4(normal, 1.0);
+ 
+    float r = dot(n, shRedMatrix * n);
+    float g = dot(n, shGrnMatrix * n);
+    float b = dot(n, shBluMatrix * n);
+
+    return vec3(r, g, b);
   }
 
   //---------------------------- PBR ----------------------------
@@ -301,9 +316,9 @@ function getFragmentSource(){
     vec3 kS = F;
     vec3 kD = 1.0-kS;
     kD *= 1.0 - metal;	
-    vec3 irradiance = kD * vec3(0.15);
-    vec3 diffuse    = irradiance * albedo;
-    vec3 ambient  = diffuse;
+    vec3 irradiance = 0.75 * getSHIrradiance(normal);
+    vec3 diffuse = irradiance * albedo;
+    vec3 ambient = kD * diffuse;
 
     // Combine direct and IBL lighting
     return ao * ambient + I;
