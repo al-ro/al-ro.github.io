@@ -13,12 +13,12 @@ function createAndSetupTexture() {
   return texture;
 }
 
-function createAndSetupCubemap(url) {
+function createAndSetupCubemap() {
   let cubeMapSize = 1;
 
   var texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
-  
+ 
   for(let i = 0; i < 6; i++){
     const target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + i;
 
@@ -29,15 +29,9 @@ function createAndSetupCubemap(url) {
     const format = gl.RGBA;
     const type = gl.UNSIGNED_BYTE;
 
-    const pixel = new Uint8Array([64, 64, 128, 255]);
+    const pixel = new Uint8Array([64, 100, 128, 255]);
     gl.texImage2D(target, level, internalFormat, width, height, 0, format, type, pixel);
 
-    const image = new Image();
-    image.onload = function() {
-      gl.texImage2D(target, level, internalFormat, format, type, image);
-    };
-
-    image.src = url;
   }
 
   gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -70,8 +64,7 @@ function loadTexture(url) {
   const srcType = gl.UNSIGNED_BYTE;
   const pixel = new Uint8Array([128, 128, 128, 255]);  // opaque blue
   gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-      width, height, border, srcFormat, srcType,
-      pixel);
+		width, height, border, srcFormat, srcType, pixel);
 
   const image = new Image();
   image.onload = function() {

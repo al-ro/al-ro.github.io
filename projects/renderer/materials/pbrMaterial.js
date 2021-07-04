@@ -116,6 +116,13 @@ export class PBRMaterial extends Material{
       this.emissiveTexture = parameters.emissiveTexture;
     }
 
+    if(parameters.hasOwnProperty("environment") && parameters.environment){
+      let shMatrices = parameters.environment.getSHMatrices();
+      this.shRedMatrix = shMatrices.red;
+      this.shGrnMatrix = shMatrices.green;
+      this.shBluMatrix = shMatrices.blue;
+    }
+
     if(parameters.hasOwnProperty("propertiesTexture") && parameters.propertiesTexture){
       this.hasPropertiesTexture = true;
       this.propertiesTextureUnit = this.textureUnits;
