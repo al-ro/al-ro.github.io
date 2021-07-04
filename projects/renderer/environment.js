@@ -3,7 +3,7 @@ import {createAndSetupCubemap} from "./texture.js"
 import {EnvironmentMaterial} from "./materials/environmentMaterial.js"
 import {Mesh} from "./mesh.js";
 import {getScreenspaceQuad} from "./screenspace.js";
-import {getSphericalHarmonicsMatrices} from "./iblUtils.js";
+import {getSphericalHarmonicsMatrices, getBRDFIntegrationMap} from "./iblUtils.js";
 
 class Environment{
   // Type of the file passed in
@@ -23,6 +23,8 @@ class Environment{
 
   shMatrices;
 
+  brdfIntegrationMap;
+
   loadFlags = [false, false, false, false, false];
 
   constructor(path){
@@ -38,6 +40,7 @@ class Environment{
 
     this.shMatrices = {red: this.shRedMatrix, green: this.shGrnMatrix, blue: this.shBluMatrix};
     this.setupCubemap(path);
+    this.setupBRDFIntegrationMap();
   }
 
   cubeMapReady(){
@@ -73,6 +76,9 @@ class Environment{
 	const format = gl.RGBA;
 	const type = gl.UNSIGNED_BYTE;
 	gl.texImage2D(target, level, internalFormat, format, type, image);
+	gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
 	obj.updateFace(i, obj);
       }
@@ -86,12 +92,20 @@ class Environment{
     this.shMatrices = getSphericalHarmonicsMatrices(this.cubeMap);
   }
 
+  setupBRDFIntegrationMap(){
+    this.brdfIntegrationMap = getBRDFIntegrationMap();
+  }
+
   getSHMatrices(){
     return this.shMatrices;
   }
   
   getCubeMap(){
     return this.cubeMap;
+  }
+
+  getBRDFIntegrationMap(){
+    return this.brdfIntegrationMap;
   }
 
   render(camera, time){
