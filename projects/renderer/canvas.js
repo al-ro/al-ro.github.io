@@ -37,4 +37,10 @@ const extDFD = gl.getExtension("OES_standard_derivatives");
 if (!extDFD) {
   console.error("Could not load OES_standard_derivatives. No fallback.");
 }
+
+const extLOD = gl.getExtension("EXT_shader_texture_lod");
+if (!extDFD) {
+  console.error("Could not load EXT_shader_texture_lod. No fallback.");
+}
+
 export {canvas, gl, canvasMultiplier, extVAO, extINS, extDFD}

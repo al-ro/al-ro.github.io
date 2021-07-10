@@ -84,33 +84,47 @@ function getSphericalHarmonicsMatrices(cubeMap){
 
 function getCubeMapConvolution(cubeMap){
 
+  //https://www.khronos.org/opengl/wiki/Cubemap_Texture
+  var viewDirections = [{x:  1, y:  0, z:  0},
+			{x: -1, y:  0, z:  0},
+			{x:  0, y:  1, z:  0},
+			{x:  0, y: -1, z:  0},
+			{x:  0, y:  0, z:  1},
+			{x:  0, y:  0, z: -1}];
+
+  var upDirections =   [{x:  0, y: -1, z:  0},
+			{x:  0, y: -1, z:  0},
+			{x:  0, y:  0, z:  1},
+			{x:  0, y:  0, z:  -1},
+			{x:  0, y: -1, z:  0},
+			{x:  0, y: -1, z:  0}];
+
   // For each cubemap mipmap level, run a convolution based on roughness
   // Copy result into cubemap faces
   
   let texture = createAndSetupTexture();
 
-  let size;
+  let size = 512;
 
   let convolutionMaterial = new ConvolutionMaterial(cubeMap);
   let mesh = new Mesh(getScreenspaceQuad(), convolutionMaterial);
 
+  // Create a 1024x1024 framebuffer and render into it using the BRDF integration material
   let frameBuffer = gl.createFramebuffer();
 
   for(let level = 0; level < 6; level++){
-    
     let roughness = 0.2 * level;
     convolutionMaterial.roughness = roughness;
-    
     size = 1024 / Math.pow(2, level);
     gl.viewport(0, 0, size, size);
-
     gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
-    
     for(let face = 0; face < 6; face++){
   
+      //let viewMatrix = lookAt(cameraPosition, viewDirections[faceCounter], upDirections[faceCounter]);
       let cameraMatrix = m4.lookAt([0, 0, 0], viewDirections[face], upDirections[face]);
 
-      convolutionMaterial.setCameraMatrix(cameraMatrix);
+      convolutionMaterial.cameraMatrix = cameraMatrix;
+      console.log(cameraMatrix);
 
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -125,7 +139,18 @@ function getCubeMapConvolution(cubeMap){
       gl.copyTexSubImage2D(target, level, 0, 0, 0, 0, size, size);
     }
   }
+  //gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0. gl.TEXTURE_CUBE_MAP_POSITIVE_X, cubeMap, 0);
 
+  /*
+  let data = new Uint8Array(4*size*size);
+  gl.readPixels(0, 0, size, size, gl.RGBA, gl.UNSIGNED_BYTE, data);
+
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 1, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+  //gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
+*/
   gl.deleteFramebuffer(frameBuffer);
 
   return cubeMap;

@@ -248,12 +248,17 @@ function draw(){
   setCameraMatrices(); 
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
   gl.clearColor(0, 0, 0, 0);
   gl.clearDepth(1.0);
   gl.enable(gl.DEPTH_TEST);
   gl.enable(gl.CULL_FACE);
   gl.cullFace(gl.BACK);
+
+  if(environment.needsUpdate()){
+    environment.generateIBLData();
+  }
 
   environment.render(camera, time);
 

@@ -110,6 +110,7 @@ function getVertexSource(){
 function getFragmentSource(){
 
   var fragmentSource = `
+#extension GL_EXT_shader_texture_lod : enable
 #extension GL_OES_standard_derivatives : enable
 
   precision highp float;
@@ -186,7 +187,7 @@ function getFragmentSource(){
     float g = dot(n, shGrnMatrix * n);
     float b = dot(n, shBluMatrix * n);
 
-    return vec3(r, g, b);
+    return pow(vec3(r, g, b), vec3(2.2));
   }
 
   vec2 getBRDFIntegrationMap(vec2 texCoord){
@@ -198,16 +199,17 @@ function getFragmentSource(){
   // between them to get the roughness data needed.
   vec3 getEnvironment(vec3 rayDir, float roughness){
 
-    //There are 5 levels of roughness (0.0, 0.25, 0.5, 0.75, 1.0)
-    float level1 = 3.0 + floor(roughness * 5.0);
+    //There are 6 levels of roughness (0.0, 0.2, 0.4, 0.6, 1.0)
+    float level1 = floor(roughness * 6.0);
     float level2 = level1 + 1.0;
-    level2 = min(level2, 5.0);
+    level2 = min(level2, 6.0);
 
-    float f = fract(roughness * 5.0);
+    float f = fract(roughness);
 
     rayDir *= vec3(-1,1,1);
 
-    return mix(textureCube(cubeMap, rayDir, level1).rgb, textureCube(cubeMap, rayDir, level2).rgb, f);
+    vec3 col = mix(textureCubeLodEXT(cubeMap, rayDir, level1).rgb, textureCubeLodEXT(cubeMap, rayDir, level2).rgb, f);
+    return col;//pow(col, vec3(2.2));
   }
 
 
@@ -311,7 +313,9 @@ function getFragmentSource(){
     #else
     float ao = 1.0;
     #endif
-    //ao = 1.0;
+    
+      ao = 1.0;
+    
 
     vec3 I = vec3(0);
     vec3 radiance = vec3(1);
@@ -340,9 +344,9 @@ function getFragmentSource(){
 
     vec3 F = fresnelSchlickRoughness(dot_c(normal, -rayDir), F0, roughness);
     vec3 kS = F;
-    vec3 kD = 1.0-kS;
+    vec3 kD = clamp(1.0-kS, 0.0, 1.0);
     kD *= 1.0 - metal;	
-    vec3 irradiance = 0.75 * getSHIrradiance(normal);
+    vec3 irradiance = getSHIrradiance(normal);
     vec3 diffuse = irradiance * albedo;
 
     vec3 R;
@@ -355,7 +359,7 @@ function getFragmentSource(){
     vec3 ambient  = kD * diffuse + specular;
 
     // Combine direct and IBL lighting
-    return ao * ambient + I;
+    return 0.5 * ao * ambient + I;
   }
 
   //https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
@@ -436,8 +440,8 @@ function getFragmentSource(){
     float ao = data_.r;
     float roughness = data_.g;
     float metal = data_.b;
-    col = vec3(0.5+0.5*-viewDirection);
-    col = vec3(texture2D(brdfIntegrationMapTexture, gl_FragCoord.xy/1024.0).rg, 0.0);
+    col = vec3(roughness);
+    //col = vec3(texture2D(brdfIntegrationMapTexture, gl_FragCoord.xy/256.0).rg, 0.0);
 #endif
 #endif
 
