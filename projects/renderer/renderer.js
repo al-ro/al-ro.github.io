@@ -62,9 +62,9 @@ var workingDirectory = path.substring(0, path.lastIndexOf("/") + 1);
 var p = Downloader.start([{name:"Test",type:"gltf", file: path}]).then(function(){
     console.log("Downloader Complete");
     setTimeout(loadGLTF, 50);
-  }).catch(function(error){
-    console.error("error",error);
-  });
+    }).catch(function(error){
+      console.error("error",error);
+      });
 
 var yaw = Math.PI/4.0;
 var pitch = 0.0;
@@ -106,7 +106,15 @@ var maxExtent = [-10000, -10000, -10000];
 //let environmentMaterial = new EnvironmentMaterial(cubeMap);
 //let environmentMesh = new Mesh(getScreenspaceQuad(), environmentMaterial);  
 
-let environment = new Environment("./defaultResources/uv_grid.jpg");
+var path = './environmentMaps/1k.hdr';
+
+var myHDR = new HDRImage();
+myHDR.src = path;
+myHDR.onload = function() {
+  console.log(">>>>> loading done");
+}
+//let environment = new Environment({path: "./defaultResources/uv_grid.jpg", type: "cubemap"});
+let environment = new Environment({path: "./environmentMaps/1k.hdr", type: "hdr"});
 
 //let shMatrices = getSphericalHarmonicsMatrices(cubeMap);
 
@@ -214,10 +222,10 @@ function loadGLTF(){
 
   console.log(minExtent);
   console.log(maxExtent);
-  
+
   let centre = [(maxExtent[0] + minExtent[0])/2.0, (maxExtent[1] + minExtent[1])/2.0, (maxExtent[2] + minExtent[2])/2.0,]
 
-  console.log(centre);
+    console.log(centre);
   camera.setTarget(centre);
 
   readyToRender = true;
@@ -232,13 +240,6 @@ function setCameraMatrices(){
   camera.setViewMatrix();
 }
 
-var path = './environment/1k.hdr';
-
-var myHDR = new HDRImage();
-myHDR.src = path;
-myHDR.onload = function() {
-  console.log(">>>>> loading done");
-}
 
 function draw(){
 

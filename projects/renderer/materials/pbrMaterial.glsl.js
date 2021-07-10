@@ -10,7 +10,7 @@ function getVertexSource(){
 
   var vertexSource = `
 
-  attribute vec3 position;
+    attribute vec3 position;
 
 #ifdef INSTANCED 
   attribute vec4 orientation;
@@ -113,7 +113,7 @@ function getFragmentSource(){
 #extension GL_EXT_shader_texture_lod : enable
 #extension GL_OES_standard_derivatives : enable
 
-  precision highp float;
+    precision highp float;
 
 #define PI 3.14159
 #define TWO_PI (2.0 * PI)
@@ -122,7 +122,7 @@ function getFragmentSource(){
 #ifdef HAS_NORMALS
   varying vec3 vNormal;
 #endif
-  
+
   uniform float time;
   uniform vec3 cameraPosition;
   varying vec3 vPosition;
@@ -186,12 +186,13 @@ function getFragmentSource(){
   vec3 getSHIrradiance(vec3 normal){
 
     vec4 n = vec4(normal, 1.0);
- 
+
     float r = dot(n, shRedMatrix * n);
     float g = dot(n, shGrnMatrix * n);
     float b = dot(n, shBluMatrix * n);
 
-    return pow(vec3(r, g, b), vec3(2.2));
+    //return pow(vec3(r, g, b), vec3(2.2));
+    return vec3(r, g, b);
   }
 
   vec2 getBRDFIntegrationMap(vec2 texCoord){
@@ -210,6 +211,7 @@ function getFragmentSource(){
     rayDir *= vec3(-1,1,1);
 
     vec3 col = textureCubeLodEXT(cubeMap, rayDir, level).rgb;
+    //return pow(col, vec3(2.2));
     return col;
   }
 
@@ -288,9 +290,9 @@ function getFragmentSource(){
     //In Filament it combines the geometry term and the denominator
     float V;
 
-      D = distribution(n, h, roughness);
-      G = smiths(n, viewDir, lightDir, roughness);
-      V = G / max(0.0001, (4.0 * dot_c(lightDir, n) * dot_c(viewDir, n)));
+    D = distribution(n, h, roughness);
+    G = smiths(n, viewDir, lightDir, roughness);
+    V = G / max(0.0001, (4.0 * dot_c(lightDir, n) * dot_c(viewDir, n)));
 
 
 
@@ -306,25 +308,25 @@ function getFragmentSource(){
 
   vec3 getIrradiance(vec3 rayDir, vec3 normal, vec3 albedo){
 
-    #ifdef HAS_PROPERTIES_TEXTURE
+#ifdef HAS_PROPERTIES_TEXTURE
     vec3 data = texture2D(propertiesTexture, vUV).rgb;
     float roughness = data.g;
     float metal = data.b; 
-    #endif 
+#endif 
 
     float ao = 1.0;
 
-    #ifdef HAS_AO_TEXTURE
+#ifdef HAS_AO_TEXTURE
     ao = texture2D(aoTexture, vUV).r;
-    #else
+#else
 
-    #ifdef HAS_PROPERTIES_TEXTURE
-    #ifdef AO_IN_PROPERTIES_TEXTURE
+#ifdef HAS_PROPERTIES_TEXTURE
+#ifdef AO_IN_PROPERTIES_TEXTURE
     ao = data.r;
-    #endif
-    #endif
+#endif
+#endif
 
-    #endif
+#endif
 
     vec3 I = vec3(0);
     vec3 radiance = vec3(1);
@@ -346,8 +348,8 @@ function getFragmentSource(){
     lightDir = normalize(vec3(sin(time), 0.5, cos(time)));
 
     I +=  BRDF(normal, -rayDir, lightDir, albedo, metal, roughness, F0) 
-	* radiance 
-	* dot_c(normal, lightDir);
+      * radiance 
+      * dot_c(normal, lightDir);
 
     // Find ambient diffuse IBL component
 
@@ -442,7 +444,7 @@ function getFragmentSource(){
     col.rgb = ACESFilm(col.rgb);
     col.rgb = pow(col.rgb, vec3(0.4545));
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
     float ao = 1.0;
 #ifdef HAS_PROPERTIES_TEXTURE
@@ -452,17 +454,17 @@ function getFragmentSource(){
 
     //col = vec3(texture2D(brdfIntegrationMapTexture, gl_FragCoord.xy/256.0).rg, 0.0);
 #endif
-    #ifdef HAS_AO_TEXTURE
+#ifdef HAS_AO_TEXTURE
     ao = texture2D(aoTexture, vUV).r;
-    #else
+#else
 
-    #ifdef HAS_PROPERTIES_TEXTURE
-    #ifdef AO_IN_PROPERTIES_TEXTURE
+#ifdef HAS_PROPERTIES_TEXTURE
+#ifdef AO_IN_PROPERTIES_TEXTURE
     ao = data.r;
-    #endif
-    #endif
+#endif
+#endif
 
-    #endif
+#endif
     col = vec3(roughness);
 #endif
 
