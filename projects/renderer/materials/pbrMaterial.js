@@ -38,11 +38,14 @@ export class PBRMaterial extends Material{
   normalTexture;
 
   // Combined texture of:
-  //	metal		r
+  // 	ao		r
   //	roughness	g
-  //	ao		b
+  //	metal		b
   // Optional
   propertiesTexture;
+
+  // Ambient occlusion may have a separate texture or use the red channel of properties
+  aoTexture;
 
   // Optional
   emissiveTexture;
@@ -65,6 +68,7 @@ export class PBRMaterial extends Material{
   albedoTextureHandle;
   normalTextureHandle;
   propertiesTextureHandle;
+  aoTextureHandle;
   emissiveTextureHandle;
 
   environmentTextureHandle;
@@ -79,6 +83,8 @@ export class PBRMaterial extends Material{
   hasNormalTexture = false;
   hasEmissiveTexture = false;
   hasPropertiesTexture = false;
+  hasAO = false;
+  hasAOTexture = false;
 
   brdfTextureUnit;
   environmentTextureUnit;
@@ -86,6 +92,7 @@ export class PBRMaterial extends Material{
   normalTextureUnit;
   emissiveTextureUnit;
   propertiesTextureUnit;
+  aoTextureUnit;
 
   environment;
 
@@ -154,6 +161,18 @@ export class PBRMaterial extends Material{
 	this.metal = parameters.metal;
       }
     }
+
+    if(parameters.hasOwnProperty("aoTexture") && parameters.aoTexture){
+      this.hasAO = true;
+      if(parameters.aoTexture == this.propertiesTexture){
+	this.hasAOTexture = false;
+      }else{
+	this.hasAOTexture = true;
+	this.aoTextureUnit = this.textureUnits;
+	this.textureUnits++;
+	this.aoTexture = parameters.aoTexture;
+      }
+    }
   }
 
   getVertexShaderSource(){
@@ -206,6 +225,10 @@ export class PBRMaterial extends Material{
     }else{
       this.metalHandle = this.program.getOptionalUniformLocation('metal'); 
       this.roughnessHandle = this.program.getOptionalUniformLocation('roughness'); 
+    }
+
+    if(this.hasAOTexture){
+      this.aoTextureHandle = this.program.getOptionalUniformLocation('aoTexture');
     }
 
     this.timeHandle = this.program.getOptionalUniformLocation('time'); 
@@ -275,6 +298,11 @@ export class PBRMaterial extends Material{
     }else{
       gl.uniform1f(this.metalHandle, this.metal);
       gl.uniform1f(this.roughnessHandle, this.roughness);
+    }
+    if(this.hasAOTexture){
+      gl.activeTexture(gl.TEXTURE0 + this.aoTextureUnit);
+      gl.bindTexture(gl.TEXTURE_2D, this.aoTexture);
+      gl.uniform1i(this.aoTextureHandle, this.aoTextureUnit);
     }
   }
 

@@ -25,7 +25,7 @@ class Environment{
 
   brdfIntegrationMap;
 
-  loadFlags = [false, false, false, false, false];
+  loadFlags = [false, false, false, false, false, false];
 
   constructor(path){
 
@@ -54,7 +54,7 @@ class Environment{
 
     this.calculateSHMatrices();
     this.convoluteCubeMap();
-    this.loadFlags = [false, false, false, false, false];
+    this.loadFlags = [false, false, false, false, false, false];
   }
 
   updateFace = function(i, obj){

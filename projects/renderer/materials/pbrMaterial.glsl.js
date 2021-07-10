@@ -159,6 +159,10 @@ function getFragmentSource(){
   uniform float roughness;
 #endif
 
+#ifdef HAS_AO_TEXTURE
+  uniform sampler2D aoTexture;
+#endif
+
   uniform mat4 shRedMatrix;
   uniform mat4 shGrnMatrix;
   uniform mat4 shBluMatrix;
@@ -199,17 +203,14 @@ function getFragmentSource(){
   // between them to get the roughness data needed.
   vec3 getEnvironment(vec3 rayDir, float roughness){
 
-    //There are 6 levels of roughness (0.0, 0.2, 0.4, 0.6, 1.0)
-    float level1 = floor(roughness * 6.0);
-    float level2 = level1 + 1.0;
-    level2 = min(level2, 6.0);
-
-    float f = fract(roughness);
+    //There are 6 levels of roughness (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+    float level = roughness * 5.0;
+    level = max(0.0, min(level, 5.0));
 
     rayDir *= vec3(-1,1,1);
 
-    vec3 col = mix(textureCubeLodEXT(cubeMap, rayDir, level1).rgb, textureCubeLodEXT(cubeMap, rayDir, level2).rgb, f);
-    return col;//pow(col, vec3(2.2));
+    vec3 col = textureCubeLodEXT(cubeMap, rayDir, level).rgb;
+    return col;
   }
 
 
@@ -307,15 +308,23 @@ function getFragmentSource(){
 
     #ifdef HAS_PROPERTIES_TEXTURE
     vec3 data = texture2D(propertiesTexture, vUV).rgb;
-    float ao = data.r;
-    float roughness = data.g*data.g;
-    float metal = data.b;
-    #else
+    float roughness = data.g;
+    float metal = data.b; 
+    #endif 
+
     float ao = 1.0;
+
+    #ifdef HAS_AO_TEXTURE
+    ao = texture2D(aoTexture, vUV).r;
+    #else
+
+    #ifdef HAS_PROPERTIES_TEXTURE
+    #ifdef AO_IN_PROPERTIES_TEXTURE
+    ao = data.r;
     #endif
-    
-      ao = 1.0;
-    
+    #endif
+
+    #endif
 
     vec3 I = vec3(0);
     vec3 radiance = vec3(1);
@@ -359,7 +368,7 @@ function getFragmentSource(){
     vec3 ambient  = kD * diffuse + specular;
 
     // Combine direct and IBL lighting
-    return 0.5 * ao * ambient + I;
+    return ao * ambient + I;
   }
 
   //https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
@@ -435,14 +444,26 @@ function getFragmentSource(){
 
 //#define DEBUG
 #ifdef DEBUG
+    float ao = 1.0;
 #ifdef HAS_PROPERTIES_TEXTURE
     vec3 data_ = texture2D(propertiesTexture, vUV).rgb;
-    float ao = data_.r;
     float roughness = data_.g;
     float metal = data_.b;
-    col = vec3(roughness);
+
     //col = vec3(texture2D(brdfIntegrationMapTexture, gl_FragCoord.xy/256.0).rg, 0.0);
 #endif
+    #ifdef HAS_AO_TEXTURE
+    ao = texture2D(aoTexture, vUV).r;
+    #else
+
+    #ifdef HAS_PROPERTIES_TEXTURE
+    #ifdef AO_IN_PROPERTIES_TEXTURE
+    ao = data.r;
+    #endif
+    #endif
+
+    #endif
+    col = vec3(roughness);
 #endif
 
     gl_FragColor = vec4(col, alpha);
