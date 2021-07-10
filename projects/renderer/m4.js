@@ -373,8 +373,7 @@ invert: function(out, a) {
   },
 
   lookAt: function(cameraPosition, target, up) {
-    var zAxis = m4.normalize(
-        m4.subtractVectors(cameraPosition, target));
+    var zAxis = m4.normalize(m4.subtractVectors(cameraPosition, target));
     var xAxis = m4.normalize(m4.cross(up, zAxis));
     var yAxis = m4.normalize(m4.cross(zAxis, xAxis));
 

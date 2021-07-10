@@ -16,6 +16,8 @@ function getVertexSource(parameters){
 function getFragmentSource(){
    
   var fragmentSource = `
+#extension GL_EXT_shader_texture_lod : enable
+
     precision highp float;
   
     uniform float fov;
@@ -32,7 +34,7 @@ function getFragmentSource(){
   
     void main(){ 
       vec3 rayDirection = normalize(cameraMatrix * vec4(rayDirection(fov, gl_FragCoord.xy), 0.0)).rgb;
-      vec3 col = textureCube(cubeMap, normalize(rayDirection*vec3(-1,1,1))).rgb;
+      vec3 col = textureCubeLodEXT(cubeMap, normalize(rayDirection*vec3(-1,1,1)), 0.0).rgb;
       gl_FragColor = vec4(col, 1.0);
     }
   `;

@@ -51,7 +51,7 @@ export class Mesh{
 
   render(camera, time){
     gl.useProgram(this.material.getProgram().program);
-    this.bindVAO();
+    this.bindVAO(); 
     this.material.bindParameters(camera, this.geometry, time);
     if(this.geometry.hasIndices){
       if(this.geometry.instanced){

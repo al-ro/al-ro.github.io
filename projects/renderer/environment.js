@@ -3,7 +3,7 @@ import {createAndSetupCubemap} from "./texture.js"
 import {EnvironmentMaterial} from "./materials/environmentMaterial.js"
 import {Mesh} from "./mesh.js";
 import {getScreenspaceQuad} from "./screenspace.js";
-import {getSphericalHarmonicsMatrices, getBRDFIntegrationMap} from "./iblUtils.js";
+import {getSphericalHarmonicsMatrices, getBRDFIntegrationMap, getCubeMapConvolution} from "./iblUtils.js";
 
 class Environment{
   // Type of the file passed in
@@ -43,25 +43,31 @@ class Environment{
     this.setupBRDFIntegrationMap();
   }
 
-  cubeMapReady(){
+  generateIBLData(){
+    gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeMap);
-    gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
 
     this.calculateSHMatrices();
+    this.convoluteCubeMap();
+    this.loadFlags = [false, false, false, false, false];
   }
 
   updateFace = function(i, obj){
     obj.loadFlags[i] = true;
-    if(this.loadFlags.every(function(x){return x;})){
-      obj.cubeMapReady();
-    }
+  }
+
+  needsUpdate(){
+    return this.loadFlags.every(function(x){return x;});
   }
 
   setupCubemap(path){
 
+    gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeMap);
 
     let obj = this;
@@ -76,12 +82,13 @@ class Environment{
 	const format = gl.RGBA;
 	const type = gl.UNSIGNED_BYTE;
 	gl.texImage2D(target, level, internalFormat, format, type, image);
-	gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
 	obj.updateFace(i, obj);
       }
+      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
       image.src = path;
     }
@@ -90,6 +97,10 @@ class Environment{
 
   calculateSHMatrices(){
     this.shMatrices = getSphericalHarmonicsMatrices(this.cubeMap);
+  }
+  
+  convoluteCubeMap(){
+    this.cubeMap = getCubeMapConvolution(this.cubeMap);
   }
 
   setupBRDFIntegrationMap(){
