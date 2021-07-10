@@ -24,7 +24,7 @@ document.getElementById('cc_1').appendChild(stats.domElement);
 
 var path;
 
-var model = "flighthelmet";
+var model = "damagedhelmet";
 
 switch(model){
   case "boombox":
@@ -173,11 +173,13 @@ function loadGLTF(){
       var normalTextureID = 0;
       var emissiveTextureID = 0;
       var occlusionRoughMetalTextureID = 0;
+      var occlusionTextureID = 0;
 
       var albedoTexture = null;
       var normalTexture = null;
       var emissiveTexture = null;
       var occlusionRoughMetalTexture = null;
+      var occlusionTexture = null;
 
       let gltfMaterial = materials[gltfMaterialID];
       let pbrDesc = gltfMaterial.pbrMetallicRoughness;
@@ -190,6 +192,10 @@ function loadGLTF(){
         occlusionRoughMetalTextureID = pbrDesc.metallicRoughnessTexture.index;
         occlusionRoughMetalTexture = textures[occlusionRoughMetalTextureID];
       }
+      if(gltfMaterial.occlusionTexture){
+        occlusionTextureID = gltfMaterial.occlusionTexture.index;
+        occlusionTexture = textures[occlusionTextureID];
+      }
       if(gltfMaterial.normalTexture){
         normalTextureID = gltfMaterial.normalTexture.index;
         normalTexture = textures[normalTextureID];
@@ -200,7 +206,7 @@ function loadGLTF(){
       }
 
       //let material = new TextureMaterial(albedoTexture);
-      let material = new PBRMaterial({albedoTexture: albedoTexture, normalTexture: normalTexture, emissiveTexture: emissiveTexture, propertiesTexture: occlusionRoughMetalTexture, environment: environment});
+      let material = new PBRMaterial({albedoTexture: albedoTexture, normalTexture: normalTexture, emissiveTexture: emissiveTexture, propertiesTexture: occlusionRoughMetalTexture, aoTexture: occlusionTexture, environment: environment});
       let mesh = new Mesh(g, material);
       meshes.push(mesh);
     }
