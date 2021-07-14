@@ -24,7 +24,7 @@ document.getElementById('cc_1').appendChild(stats.domElement);
 
 var path;
 
-var model = "damagedhelmet";
+var model = "flighthelmet";
 
 switch(model){
   case "boombox":
@@ -106,15 +106,23 @@ var maxExtent = [-10000, -10000, -10000];
 //let environmentMaterial = new EnvironmentMaterial(cubeMap);
 //let environmentMesh = new Mesh(getScreenspaceQuad(), environmentMaterial);  
 
+//var path = './environmentMaps/dikhololo_night_1k.hdr';
+//var path = './environmentMaps/venice_sunset_1k.hdr';
+//var path = './environmentMaps/venice_sunrise_1k.hdr';
+//var path = './environmentMaps/san_giuseppe_bridge_1k.hdr';
+//var path = './environmentMaps/spruit_sunrise_1k.hdr';
+//var path = './environmentMaps/studio_small_03_1k.hdr';
+//var path = './environmentMaps/cape_hill_1k.hdr';
 var path = './environmentMaps/1k.hdr';
 
+/*
 var myHDR = new HDRImage();
 myHDR.src = path;
 myHDR.onload = function() {
   console.log(">>>>> loading done");
-}
+}*/
 //let environment = new Environment({path: "./defaultResources/uv_grid.jpg", type: "cubemap"});
-let environment = new Environment({path: "./environmentMaps/1k.hdr", type: "hdr"});
+let environment = new Environment({path: path, type: "hdr", camera: camera});
 
 //let shMatrices = getSphericalHarmonicsMatrices(cubeMap);
 
@@ -266,6 +274,8 @@ function draw(){
   if(environment.needsUpdate()){
     environment.generateIBLData();
   }
+
+  camera.exposure = 2.0*(0.5+0.5*Math.sin(time));
 
   environment.render(camera, time);
 

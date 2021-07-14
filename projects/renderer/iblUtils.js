@@ -47,14 +47,15 @@ function getSphericalHarmonicsMatrices(cubeMap){
   let texture = gl.createTexture();
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4, 3, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4, 3, 0, gl.RGBA, gl.FLOAT, null);
 
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
   mesh.render(null, 0);
 
-  var pixels = new Uint8Array(3*4*4);
-  gl.readPixels(0, 0, 4, 3, gl.RGBA, gl.UNSIGNED_BYTE, pixels); 
+  var pixels = new Float32Array(3*4*4);
+  gl.readPixels(0, 0, 4, 3, gl.RGBA, gl.FLOAT, pixels); 
+  console.log(pixels);
 
   gl.deleteFramebuffer(frameBuffer);
 
@@ -63,7 +64,7 @@ function getSphericalHarmonicsMatrices(cubeMap){
     for(let column = 0; column < 4; column++){
       for(let row = 0; row < 4; row++){
         let idx = mat * 16 + column * 4 + row;
-        matrix.push(pixels[idx]/255);
+        matrix.push(pixels[idx]);
       }
     }
     switch(mat) {
@@ -85,7 +86,7 @@ function getSphericalHarmonicsMatrices(cubeMap){
   return {red: shRedMatrix, green: shGrnMatrix, blue: shBluMatrix};
 }
 
-function convertToCubeMap(sphericalTexture, cubeMap){
+function convertToCubeMap(sphericalTexture, cubeMap, camera){
 
   let texture = createAndSetupTexture();
 
@@ -107,15 +108,16 @@ function convertToCubeMap(sphericalTexture, cubeMap){
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.FLOAT, null);
 
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
-    mesh.render(null, 0);
+    mesh.render(camera, 0);
+  
     var target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + face;
 
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
-    gl.texImage2D(target, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texImage2D(target, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.FLOAT, null);
     gl.copyTexSubImage2D(target, 0, 0, 0, 0, 0, size, size);
   }
 
@@ -138,7 +140,7 @@ function getCubeMapConvolution(cubeMap){
 
   let frameBuffer = gl.createFramebuffer();
 
-  for(let level = 0; level < 6; level++){
+  for(let level = 1; level < 6; level++){
 
     let roughness = 0.2 * level;
     convolutionMaterial.roughness = roughness;
@@ -156,7 +158,7 @@ function getCubeMapConvolution(cubeMap){
 
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.FLOAT, null);
 
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
