@@ -17,6 +17,8 @@ class Environment{
 
   hdr;
 
+  camera;
+
   environmentMaterial;
   environmentMesh;
 
@@ -35,6 +37,7 @@ class Environment{
   constructor(parameters){
 
     let path = parameters.path;
+    this.camera = parameters.camera;
 
     if(!path){
       console.error("Environment must be created with a file path. Parameter: ", parameters);
@@ -127,8 +130,8 @@ class Environment{
       let texture = createAndSetupTexture();
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1024, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE, obj.HDR.dataRGBE);
-      convertToCubeMap(texture, obj.cubeMap);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1024, 512, 0, gl.RGB, gl.FLOAT, obj.HDR.dataFloat);
+      convertToCubeMap(texture, obj.cubeMap, obj.camera);
       obj.hdrLoaded = true;
     }
     this.HDR.src = path;

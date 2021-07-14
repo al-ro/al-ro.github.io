@@ -123,6 +123,7 @@ function getFragmentSource(){
   varying vec3 vNormal;
 #endif
 
+  uniform float exposure;
   uniform float time;
   uniform vec3 cameraPosition;
   varying vec3 vPosition;
@@ -178,6 +179,9 @@ function getFragmentSource(){
   float dot_c(vec3 a, vec3 b){
     return max(dot(a, b), minDot);
   }
+  float dot_c(vec4 a, vec4 b){
+    return max(dot(a, b), minDot);
+  }
 
   float saturate(float x){
     return max(0.0, min(x, 1.0));
@@ -191,8 +195,7 @@ function getFragmentSource(){
     float g = dot(n, shGrnMatrix * n);
     float b = dot(n, shBluMatrix * n);
 
-    //return pow(vec3(r, g, b), vec3(2.2));
-    return vec3(r, g, b);
+    return max(vec3(r, g, b), vec3(0));
   }
 
   vec2 getBRDFIntegrationMap(vec2 texCoord){
@@ -208,10 +211,9 @@ function getFragmentSource(){
     float level = roughness * 5.0;
     level = max(0.0, min(level, 5.0));
 
-    rayDir *= vec3(-1,1,1);
+    //rayDir *= vec3(-1,1,1);
 
     vec3 col = textureCubeLodEXT(cubeMap, rayDir, level).rgb;
-    //return pow(col, vec3(2.2));
     return col;
   }
 
@@ -266,7 +268,7 @@ function getFragmentSource(){
 
   //Cook-Torrance BRDF
   vec3 BRDF(vec3 n, vec3 viewDir, vec3 lightDir, vec3 albedo, float metalness, 
-      float roughness, vec3 F0){
+      float roughness, vec3 F0, vec3 energyCompensation){
 
     vec3 h = normalize(viewDir + lightDir);
     float cosTheta = dot_c(h, viewDir);
@@ -294,10 +296,10 @@ function getFragmentSource(){
     G = smiths(n, viewDir, lightDir, roughness);
     V = G / max(0.0001, (4.0 * dot_c(lightDir, n) * dot_c(viewDir, n)));
 
-
-
     //Specular reflectance
     vec3 specular = D * F * V;
+
+    specular *= energyCompensation;
 
     //Combine diffuse and specular
     vec3 kD = (1.0 - F) * (1.0 - metalness);
@@ -347,7 +349,11 @@ function getFragmentSource(){
     // Find direct lighting for all sources
     lightDir = normalize(vec3(sin(time), 0.5, cos(time)));
 
-    I +=  BRDF(normal, -rayDir, lightDir, albedo, metal, roughness, F0) 
+    vec2 envBRDF  = getBRDFIntegrationMap(vec2(dot_c(normal, -rayDir), roughness));
+    //https://google.github.io/filament/Filament.html#materialsystem/improvingthebrdfs/energylossinspecularreflectance
+    vec3 energyCompensation = 1.0 + F0 * (1.0 / envBRDF.x - 1.0);
+
+    I +=  BRDF(normal, -rayDir, lightDir, albedo, metal, roughness, F0, energyCompensation) 
       * radiance 
       * dot_c(normal, lightDir);
 
@@ -357,20 +363,22 @@ function getFragmentSource(){
     vec3 kS = F;
     vec3 kD = clamp(1.0-kS, 0.0, 1.0);
     kD *= 1.0 - metal;	
-    vec3 irradiance = getSHIrradiance(normal);
+    vec3 irradiance = 0.5 * getSHIrradiance(normal);
     vec3 diffuse = irradiance * albedo;
 
     vec3 R;
     R = reflect(rayDir, normal);
 
     vec3 prefilteredColor = getEnvironment(R, roughness);   
-    vec2 envBRDF  = getBRDFIntegrationMap(vec2(dot_c(normal, -rayDir), roughness));
     vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
 
-    vec3 ambient  = kD * diffuse + specular;
+    // Scale the specular lobe to account for multiscattering
+    specular *= energyCompensation;
+
+    vec3 ambient  =  kD * diffuse + specular;
 
     // Combine direct and IBL lighting
-    return ao * ambient + I;
+    return  ao * ambient + I;
   }
 
   //https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
@@ -432,7 +440,7 @@ function getFragmentSource(){
 #endif
 
     vec3 viewDirection = normalize(cameraPosition - vPosition);
-    col.rgb = 0.5*getIrradiance(-viewDirection, normal, col.rgb);
+    col.rgb = getIrradiance(-viewDirection, normal, col.rgb);
 
 #ifdef HAS_EMISSIVE_TEXTURE
     vec4 emissiveData = texture2D(emissiveTexture, vUV);
@@ -441,10 +449,13 @@ function getFragmentSource(){
       col += emissiveCol.rgb;
     }
 #endif
+
+    col *= exposure;  
+
     col.rgb = ACESFilm(col.rgb);
     col.rgb = pow(col.rgb, vec3(0.4545));
 
-    //#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
     float ao = 1.0;
 #ifdef HAS_PROPERTIES_TEXTURE
@@ -466,6 +477,16 @@ function getFragmentSource(){
 
 #endif
     col = vec3(roughness);
+    col = getSHIrradiance(-viewDirection);
+    if(col.r < 0.0){
+      col = vec3(1,0,0);
+    }
+    if(col.g < 0.0){
+      col = vec3(0,1,0);
+    }
+    if(col.b < 0.0){
+      col = vec3(0,0,1);
+    }
 #endif
 
     gl_FragColor = vec4(col, alpha);

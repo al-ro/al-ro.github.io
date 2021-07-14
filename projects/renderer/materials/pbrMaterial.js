@@ -8,6 +8,8 @@ export class PBRMaterial extends Material{
   viewMatrixHandle;
   modelMatrixHandle;
 
+  exposureHandle;
+
   normalMatrixHandle;
 
   // Spherical harmonics (SH) matrices for red, green and blue
@@ -203,6 +205,7 @@ export class PBRMaterial extends Material{
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
     this.normalMatrixHandle = this.program.getUniformLocation('normalMatrix');
     this.cameraPositionHandle = this.program.getUniformLocation('cameraPosition');
+    this.exposureHandle = this.program.getUniformLocation('exposure');
 
     this.shRedMatrixHandle = this.program.getUniformLocation('shRedMatrix');
     this.shGrnMatrixHandle = this.program.getUniformLocation('shGrnMatrix');
@@ -262,6 +265,8 @@ export class PBRMaterial extends Material{
     gl.uniformMatrix4fv(this.shBluMatrixHandle, false, this.shBluMatrix);
 
     gl.uniform3fv(this.cameraPositionHandle, camera.position);
+
+    gl.uniform1f(this.exposureHandle, camera.exposure);
 
     gl.activeTexture(gl.TEXTURE0 + this.brdfTextureUnit);
     gl.bindTexture(gl.TEXTURE_2D, this.brdfIntegrationMapTexture);

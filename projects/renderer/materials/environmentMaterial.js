@@ -5,6 +5,7 @@ import {getVertexSource, getFragmentSource} from './environmentMaterial.glsl.js'
 export class EnvironmentMaterial extends Material{
 
   cameraMatrixHandle;
+  exposureHandle;
 
   cubeMapHandle;
   cubeMap;
@@ -32,12 +33,14 @@ export class EnvironmentMaterial extends Material{
     this.cubeMapHandle = this.program.getUniformLocation('cubeMap');
     this.fovHandle = this.program.getUniformLocation('fov');
     this.resolutionHandle = this.program.getUniformLocation('resolution');
+    this.exposureHandle = this.program.getUniformLocation('exposure');
   }
 
   bindParameters(camera, geometry){
     gl.uniformMatrix4fv(this.cameraMatrixHandle, false, camera.getCameraMatrix());
     gl.uniform1f(this.fovHandle, camera.getFOV());
     gl.uniform2f(this.resolutionHandle, gl.canvas.width, gl.canvas.height);
+    gl.uniform1f(this.exposureHandle, camera.exposure);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeMap);

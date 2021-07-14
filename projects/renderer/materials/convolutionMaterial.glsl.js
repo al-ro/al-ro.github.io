@@ -106,7 +106,10 @@ function getFragmentSource(){
 
 	float NdotL = dot_c(N, L);
 	if(NdotL > 0.0){
-	  prefilteredColor += textureCubeLodEXT(cubeMap, L, 0.0).rgb * NdotL;
+          // The Sun in many HDR scenes is so much brighter than other pixels that we get
+          // firefly artefacts. Since we don't importance sample based on light sources in the
+          // environment map, we clamp the light values at an arbitrary value for the convolution.
+	  prefilteredColor += min(vec3(10.0), textureCubeLodEXT(cubeMap, L, 0.0).rgb) * NdotL;
 	  totalWeight      += NdotL;
 	}
       }

@@ -54,7 +54,7 @@ function getFragmentSource(){
     #define PI 3.14159
 
     vec3 getRadiance(vec3 dir){
-      return textureCube(cubeMap, dir*vec3(-1,1,1)).rgb;
+      return textureCube(cubeMap, dir).rgb;
     }
 
     void main(){

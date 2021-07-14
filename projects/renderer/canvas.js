@@ -43,4 +43,14 @@ if (!extDFD) {
   console.error("Could not load EXT_shader_texture_lod. No fallback.");
 }
 
+const extFPT = gl.getExtension("OES_texture_float");
+if (!extFPT) {
+  console.error("Could not load OES_texture_float. No fallback.");
+}
+
+const extFPTL = gl.getExtension("OES_texture_float_linear");
+if (!extFPT) {
+  console.error("Could not load OES_texture_float_linear. No fallback.");
+}
+
 export {canvas, gl, canvasMultiplier, extVAO, extINS, extDFD}

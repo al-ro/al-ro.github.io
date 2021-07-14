@@ -19,6 +19,8 @@ export class Camera{
   cameraMatrix; 
   viewMatrix; 
 
+  exposure = 1.0;
+
   constructor(pitch, yaw, distance, target, up, fov, aspect, zNear, zFar){
     this.pitch = pitch;
     this.yaw = yaw;
@@ -114,6 +116,10 @@ export class Camera{
 
   getFOV(){
     return this.fov;
+  }
+
+  getExposure(){
+    return this.exposure;
   }
   
 }
