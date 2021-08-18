@@ -1,5 +1,11 @@
 var canvas = document.getElementById("canvas_1");
 
+const enums = {
+  OPAQUE: "opaque",
+  BLEND: "blend",
+  MASK: "mask",
+}
+
 // A factor to multiply the canvas dimensions with. Values > 1.0 give MSAA as the canvas is interpolated with CSS. Values < 1.0 produce lower resolution images stretched across the viewport.
 var canvasMultiplier = 2.0;
 
@@ -53,4 +59,4 @@ if (!extFPT) {
   console.error("Could not load OES_texture_float_linear. No fallback.");
 }
 
-export {canvas, gl, canvasMultiplier, extVAO, extINS, extDFD}
+export {canvas, gl, canvasMultiplier, enums, extVAO, extINS, extDFD}

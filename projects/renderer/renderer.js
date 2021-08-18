@@ -10,11 +10,12 @@ import {TextureMaterial} from "./materials/textureMaterial.js"
 import {Environment} from "./environment.js"
 import {loadTexture, createAndSetupCubemap} from "./texture.js"
 import {Mesh} from "./mesh.js";
-import {canvas, gl} from "./canvas.js";
+import {canvas, gl, enums} from "./canvas.js";
 import {GLTFLoader} from "./GLTFLoader.js";
 import {Downloader} from "./downloader.js";
 import {getScreenspaceQuad} from "./screenspace.js";
 import {getSphericalHarmonicsMatrices} from "./iblUtils.js";
+import {programRepository} from "./programRepository.js"
 
 const stats = new Stats();
 stats.showPanel(0);
@@ -54,6 +55,9 @@ switch(model){
   case "spheres":
     path  = "./gltf/spheres/MetalRoughSpheres.gltf";
     break;
+  case "blend":
+    path  = "./gltf/blend/AlphaBlendModeTest.gltf";
+    break;
   default:
     path = "./gltf/duck/Duck.gltf";
 }
@@ -62,9 +66,7 @@ var workingDirectory = path.substring(0, path.lastIndexOf("/") + 1);
 var p = Downloader.start([{name:"Test",type:"gltf", file: path}]).then(function(){
     console.log("Downloader Complete");
     setTimeout(loadGLTF, 50);
-    }).catch(function(error){
-      console.error("error",error);
-      });
+    }).catch(function(error){ console.error("error",error); });
 
 var yaw = Math.PI/4.0;
 var pitch = 0.0;
@@ -82,6 +84,13 @@ var controls = new Controls(camera);
 //Time
 var time = 0.0;
 
+//************* GUI ***************
+var gui = new dat.GUI({ autoPlace: false });
+var customContainer = document.getElementById('gui_container');
+customContainer.appendChild(gui.domElement);
+gui.add(camera, 'exposure').min(0.0).max(2).step(0.01);
+gui.close();
+
 var gltfNormals;
 var gltfVertices;
 var gltfIndices; 
@@ -93,7 +102,8 @@ var gltfMaterialID;
 var readyToRender = false;
 
 var geometries = [];
-var meshes = [];
+var opaqueMeshes = [];
+var transparentMeshes = [];
 
 var images = [];
 var materials = [];
@@ -109,11 +119,11 @@ var maxExtent = [-10000, -10000, -10000];
 //var path = './environmentMaps/dikhololo_night_1k.hdr';
 //var path = './environmentMaps/venice_sunset_1k.hdr';
 //var path = './environmentMaps/venice_sunrise_1k.hdr';
-//var path = './environmentMaps/san_giuseppe_bridge_1k.hdr';
+var path = './environmentMaps/san_giuseppe_bridge_1k.hdr';
 //var path = './environmentMaps/spruit_sunrise_1k.hdr';
 //var path = './environmentMaps/studio_small_03_1k.hdr';
 //var path = './environmentMaps/cape_hill_1k.hdr';
-var path = './environmentMaps/1k.hdr';
+//var path = './environmentMaps/1k.hdr';
 
 /*
 var myHDR = new HDRImage();
@@ -166,7 +176,7 @@ function loadGLTF(){
 
       let modelMatrix = node.matrix;
 
-      if(model == "boombox"){
+      if(model == "boombox" || model == "car"){
         modelMatrix = m4.scale(modelMatrix, 100, 100, 100);
       }
 
@@ -200,6 +210,30 @@ function loadGLTF(){
       let gltfMaterial = materials[gltfMaterialID];
       let pbrDesc = gltfMaterial.pbrMetallicRoughness;
 
+      if(!pbrDesc){
+        continue;
+      }
+
+      var alphaMode = enums.OPAQUE;
+      var alphaCutoff = 0.5;
+
+      if(gltfMaterial.alphaMode){
+        switch(gltfMaterial.alphaMode){
+          case "BLEND":
+            alphaMode = enums.BLEND;
+            break;
+          case "MASK":
+            alphaMode = enums.MASK;
+            break;
+          default:
+            alphaMode = enums.OPAQUE; 
+        }
+      }
+
+      if(gltfMaterial.alphaCutoff){
+        alphaCutoff = gltfMaterial.alphaCutoff;
+      }
+
       if(pbrDesc.baseColorTexture){
         textureID = pbrDesc.baseColorTexture.index;
         albedoTexture = textures[textureID];
@@ -221,19 +255,26 @@ function loadGLTF(){
         emissiveTexture = textures[emissiveTextureID];
       }
 
-      //let material = new TextureMaterial(albedoTexture);
-      let material = new PBRMaterial({albedoTexture: albedoTexture, normalTexture: normalTexture, emissiveTexture: emissiveTexture, propertiesTexture: occlusionRoughMetalTexture, aoTexture: occlusionTexture, environment: environment});
+      //let material = new NormalMaterial(albedoTexture);
+      let material = new PBRMaterial({albedoTexture: albedoTexture, normalTexture: normalTexture, emissiveTexture: emissiveTexture, propertiesTexture: occlusionRoughMetalTexture, aoTexture: occlusionTexture, environment: environment, alphaMode: alphaMode, alphaCutoff: alphaCutoff});
+
       let mesh = new Mesh(g, material);
-      meshes.push(mesh);
+      if(alphaMode == enums.BLEND){
+        transparentMeshes.push(mesh);
+      }else{
+        opaqueMeshes.push(mesh);
+      }
     }
   }
+
+  console.log(programRepository);
 
   console.log(minExtent);
   console.log(maxExtent);
 
   let centre = [(maxExtent[0] + minExtent[0])/2.0, (maxExtent[1] + minExtent[1])/2.0, (maxExtent[2] + minExtent[2])/2.0,]
 
-    console.log(centre);
+  console.log(centre);
   camera.setTarget(centre);
 
   readyToRender = true;
@@ -275,17 +316,32 @@ function draw(){
     environment.generateIBLData();
   }
 
-  camera.exposure = 2.0*(0.5+0.5*Math.sin(time));
+  //camera.exposure = 2.0*(0.5+0.5*Math.sin(time));
 
   environment.render(camera, time);
 
   gl.depthMask(true);
 
-  for(let i = 0; i < meshes.length; i++){
-    if(meshes[i] != null){
-      meshes[i].render(camera, time);  
+  // Render opaque
+
+  for(let i = 0; i < opaqueMeshes.length; i++){
+    if(opaqueMeshes[i] != null){
+      opaqueMeshes[i].render(camera, time);  
     }
   }
+
+  // Render transparent
+
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  
+  for(let i = 0; i < transparentMeshes.length; i++){
+    if(transparentMeshes[i] != null){
+      transparentMeshes[i].render(camera, time);  
+    }
+  }
+
+  gl.disable(gl.BLEND);
 
   stats.end();
   requestAnimationFrame(draw);
