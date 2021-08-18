@@ -70,6 +70,9 @@ export class Geometry{
     if(geometryData.hasOwnProperty("indices") && geometryData.indices){
       this.hasIndices = true;
       this.indices = geometryData.indices;
+      if(this.indices.BYTES_PER_ELEMENT == 1){
+	this.indexType = gl.UNSIGNED_BYTE;
+      } 
       if(this.indices.BYTES_PER_ELEMENT == 4){
 	this.indexType = gl.UNSIGNED_INT;
       } 

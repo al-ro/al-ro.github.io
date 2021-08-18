@@ -440,6 +440,7 @@ if(mobile){
     }
 
   float getWeatherMap(vec2 p){
+    return 1.0;
     return texture2D(weatherMapTexture, abs(p)).x;
   }
 
@@ -468,6 +469,7 @@ float clouds(vec3 p, out float cloudHeight, bool sampleDetail){
     clouds *= saturate(remap(cloudHeight, 0.95, 1.0, 1.0, 0.0)) 
             * saturate(remap(cloudHeight, 0.0, 0.1, 0.0, 1.0));
     //Subtract coarse noise
+    return mainStrength * getNoise(mainSize*p, 0.0)*densityMultiplier;
     clouds = saturate(remap(clouds, mainStrength*getNoise(mainSize*p, 0.0), 1.0, 0.0, 1.0));
     if(sampleDetail){
         //Subtract fine noise
@@ -510,20 +512,25 @@ float multipleOctaves(float extinction, float mu, float stepL){
 }
 
 //Get the amount of light that reaches a sample point.
-float lightRay(vec3 org, vec3 p, float phaseFunction, float mu, vec3 sunDirection,
-           float offset){
+float lightRay(vec3 org, vec3 p, float phaseFunction, float mu, vec3 sunDirection, float offset){
 
     float lightRayDistance = 1000.0;
     float distToStart = 0.0;
 
-    getCloudIntersection(p, vec3(0,1,0), distToStart, lightRayDistance);
-    bool renderClouds = getCloudLayerIntersection(org, dir, distToStart, exit, reenter, totalDistance, reentry);
+    float exit = -1.0;
+    float reenter = -1.0;
+    float totalDistance = 0.0;
+    bool reentry = false;
+
+    bool recordDepth = true;
+    //getCloudIntersection(p, vec3(0,1,0), distToStart, lightRayDistance);
+    bool renderClouds = true;//getCloudLayerIntersection(org, sunDirection, distToStart, exit, reenter, totalDistance, reentry);
 
     float stepL = min(1000.0, lightRayDistance/float(STEPS_LIGHT));
 
-    if(isinf(stepL)){
-        stepL = 1000.0;
-    }
+    //if(isinf(stepL)){
+      //  stepL = 1000.0;
+    //}
 
     float lightRayDensity = 0.0;
 
@@ -564,10 +571,17 @@ vec3 mainRay(vec3 org, vec3 dir, vec3 sunDirection,
 
     //The length of the intersection.
     float totalDistance = 0.0;
+    //View ray path through cloud layer.
+    float exit = -1.0;
+    float reenter = -1.0;
+    bool reentry = false;
+
+    bool recordDepth = true;
 
     //Determine if ray intersects bounding volume.
     //Set ray parameters in the cloud layer.
-    bool renderClouds = getCloudIntersection(org, dir, distToStart, totalDistance);
+    //bool renderClouds = getCloudIntersection(org, dir, distToStart, totalDistance);
+    bool renderClouds = true;//getCloudLayerIntersection(org, dir, distToStart, exit, reenter, totalDistance, reentry);
 
     if(!renderClouds){
         return colour;
@@ -646,7 +660,7 @@ vec3 mainRay(vec3 org, vec3 dir, vec3 sunDirection,
 
             //If ray combined transmittance is close to 0, nothing beyond this sample 
             //point is visible, so break early.
-            if(totalTransmittance <= 0.001 || isinf(totalTransmittance)){
+            if(totalTransmittance <= 0.001 ){
                 totalTransmittance = 0.0;
                 break;
             }
@@ -813,7 +827,7 @@ vec3 mainRay(vec3 org, vec3 dir, vec3 sunDirection,
       float cloudHeight;
 
       //Get density and cloud height at sample point
-      float density = clouds(p, cloudHeight, dist, org, true);
+      float density = clouds(p, cloudHeight, true);
 
       float sigmaS = 1.0;
       float sigmaA = 0.0;
@@ -836,7 +850,7 @@ vec3 mainRay(vec3 org, vec3 dir, vec3 sunDirection,
 	float ambient = mix((1.0), (1.2), cloudHeight);
 
 	//Amount of sunlight that reaches the sample point through the cloud
-	vec3 luminance = ambient + sunLight * phaseFunction * lightRay(org, p, phaseFunction, density, mu, sunDirection, cloudHeight, dist);
+	vec3 luminance = ambient + sunLight * phaseFunction * lightRay(org, p, phaseFunction, mu, sunDirection, 0.0);
 
 	//Scale light contribution by density of the cloud
 	luminance *= sampleSigmaS;
@@ -1507,6 +1521,7 @@ function renderCubeMap(){
   gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
   gl.activeTexture(gl.TEXTURE0);
   gl.uniform1i(shapeTextureHandle, 0);
+  gl.activeTexture(gl.TEXTURE5);
   gl.uniform1i(skyBoxHandle_, 5);  // texture unit 0
   gl.uniform1f(timeHandle, time);
   gl.uniform1f(iterationHandle, iteration);

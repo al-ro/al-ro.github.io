@@ -55,7 +55,6 @@ function getSphericalHarmonicsMatrices(cubeMap){
 
   var pixels = new Float32Array(3*4*4);
   gl.readPixels(0, 0, 4, 3, gl.RGBA, gl.FLOAT, pixels); 
-  console.log(pixels);
 
   gl.deleteFramebuffer(frameBuffer);
 

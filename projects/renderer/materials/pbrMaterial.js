@@ -1,4 +1,4 @@
-import {gl} from "../canvas.js"
+import {gl, enums} from "../canvas.js"
 import {Material} from './material.js'
 import {getVertexSource, getFragmentSource} from './pbrMaterial.glsl.js'
 
@@ -26,9 +26,13 @@ export class PBRMaterial extends Material{
   metal = 0.0;
   roughness = 1.0;
 
-  // In the absence of a base colour texture, use a vec3 uniform
+  // In the absence of a base colour texture, use a vec4 uniform
   // Either this or a texture must be supplied
-  albedo = [1,0,0];
+  // If both are given, the albedo values are used to multiply the texture values
+  albedo = [1, 1, 1, 1];
+
+  alphaMode = enums.OPAQUE;
+  alphaCutoff = 0.5;
 
   // --------- Textures ----------
 
@@ -81,6 +85,9 @@ export class PBRMaterial extends Material{
 
   brdfTextureHandle;
 
+  alphaCutoffHandle;
+  alphaModeHandle;
+
   hasAlbedoTexture = false;
   hasNormalTexture = false;
   hasEmissiveTexture = false;
@@ -111,6 +118,14 @@ export class PBRMaterial extends Material{
 
     this.environmentTextureUnit = this.textureUnits;
     this.textureUnits++;
+
+    if(parameters.hasOwnProperty("alphaMode") && parameters.alphaMode){
+      this.alphaMode = parameters.alphaMode;
+    }
+
+    if(parameters.hasOwnProperty("alphaCutoff") && parameters.alphaCutoff){
+      this.alphaCutoff = parameters.alphaCutoff;
+    }
 
     if(parameters.hasOwnProperty("albedoTexture") && parameters.albedoTexture){
       this.albedoTexture = parameters.albedoTexture;
@@ -211,6 +226,9 @@ export class PBRMaterial extends Material{
     this.shGrnMatrixHandle = this.program.getUniformLocation('shGrnMatrix');
     this.shBluMatrixHandle = this.program.getUniformLocation('shBluMatrix');
 
+    this.alphaCutoffHandle = this.program.getOptionalUniformLocation('alphaCutoff');
+    this.alphaModeHandle = this.program.getOptionalUniformLocation('alphaMode');
+
     if(this.hasAlbedoTexture){
       this.albedoTextureHandle = this.program.getOptionalUniformLocation('albedoTexture');
     }
@@ -246,7 +264,9 @@ export class PBRMaterial extends Material{
   }
 
   bindParameters(camera, geometry, time){
+
     gl.uniform1f(this.timeHandle, time);
+
     gl.uniformMatrix4fv(this.projectionMatrixHandle, false, camera.getProjectionMatrix());
     gl.uniformMatrix4fv(this.viewMatrixHandle, false, camera.getViewMatrix());
     gl.uniformMatrix4fv(this.normalMatrixHandle, false, geometry.getNormalMatrix());
@@ -259,6 +279,21 @@ export class PBRMaterial extends Material{
     this.shRedMatrix = shMatrices.red;
     this.shGrnMatrix = shMatrices.green;
     this.shBluMatrix = shMatrices.blue;
+
+    gl.uniform1f(this.alphaCutoffHandle, this.alphaCutoff);
+
+    let blendModeAsInt;
+    switch(this.alphaMode){
+      case enums.BLEND:
+        blendModeAsInt = 1;
+        break;
+      case enums.MASK:
+        blendModeAsInt = 2;
+        break;
+      default:
+        blendModeAsInt = 0; 
+    }
+    gl.uniform1i(this.alphaModeHandle, blendModeAsInt);
 
     gl.uniformMatrix4fv(this.shRedMatrixHandle, false, this.shRedMatrix);
     gl.uniformMatrix4fv(this.shGrnMatrixHandle, false, this.shGrnMatrix);
@@ -281,7 +316,7 @@ export class PBRMaterial extends Material{
       gl.bindTexture(gl.TEXTURE_2D, this.albedoTexture);
       gl.uniform1i(this.albedoTextureHandle, this.albedoTextureUnit);
     }else{
-      gl.uniform3fv(this.albedoHandle, this.albedo);
+      gl.uniform4fv(this.albedoHandle, this.albedo);
     }
 
     if(this.hasNormalTexture){

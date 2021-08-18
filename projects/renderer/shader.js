@@ -4,7 +4,7 @@ import {gl} from "./canvas.js"
 // Add hash defines to toggle specific parts of the shaders according to geometry and material data
 function getDefinePrefix(parameters, material){
 
-  var prefix = "";
+  var prefix = "// " + material.constructor.name + "\n";
 
   if(parameters){
     if(parameters.hasOwnProperty("instanced") && parameters.instanced){

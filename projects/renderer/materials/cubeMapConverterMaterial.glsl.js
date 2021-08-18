@@ -20,7 +20,7 @@ function getFragmentSource(){
 
   precision highp float;
 
-  #define PI 3.1415
+  #define PI 3.14159
   #define TWO_PI (2.0 * PI)
 
   uniform mat4 cameraMatrix;
@@ -33,8 +33,6 @@ function getFragmentSource(){
     rayDir = normalize((cameraMatrix * vec4(rayDir, 1.0)).xyz);
     vec2 texCoord = vec2((atan(rayDir.z, rayDir.x) / TWO_PI) + 0.5, acos(rayDir.y) / PI);
     vec4 data = texture2D(sphericalTexture, texCoord);
-    //data.rgb *= pow(2.0, data.a*255.0-128.0);
-    //data.rgb *= exposure;
     gl_FragColor = vec4(data.rgb, 1.0);
   }
   `;

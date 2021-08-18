@@ -138,7 +138,7 @@ function getFragmentSource(){
 #ifdef HAS_ALBEDO_TEXTURE
   uniform sampler2D albedoTexture;
 #else
-  uniform vec3 albedo;
+  uniform vec4 albedo;
 #endif
 
 #ifdef HAS_NORMAL_TEXTURE
@@ -167,6 +167,9 @@ function getFragmentSource(){
   uniform mat4 shRedMatrix;
   uniform mat4 shGrnMatrix;
   uniform mat4 shBluMatrix;
+
+  uniform int alphaMode;
+  uniform float alphaCutoff;
 
   // Normal mapping will lead to an impossible surface where the view ray and normal dot product
   // is negative. Using PBR, this leads to negative radiance and black artefacts at detail 
@@ -267,14 +270,14 @@ function getFragmentSource(){
   }
 
   //Cook-Torrance BRDF
-  vec3 BRDF(vec3 n, vec3 viewDir, vec3 lightDir, vec3 albedo, float metalness, 
+  vec3 BRDF(vec3 n, vec3 viewDir, vec3 lightDir, vec4 albedo, float metalness, 
       float roughness, vec3 F0, vec3 energyCompensation){
 
     vec3 h = normalize(viewDir + lightDir);
     float cosTheta = dot_c(h, viewDir);
 
     //Diffuse reflectance
-    vec3 lambertian = albedo / PI;
+    vec3 lambertian = albedo.rgb / PI;
 
     //Normal distribution
     //What fraction of microfacets are aligned in the correct direction
@@ -308,7 +311,7 @@ function getFragmentSource(){
 
   //---------------------------- Lighting ----------------------------
 
-  vec3 getIrradiance(vec3 rayDir, vec3 normal, vec3 albedo){
+  vec3 getIrradiance(vec3 rayDir, vec3 normal, vec4 albedo){
 
 #ifdef HAS_PROPERTIES_TEXTURE
     vec3 data = texture2D(propertiesTexture, vUV).rgb;
@@ -338,10 +341,7 @@ function getFragmentSource(){
 
     //Metals tint specular reflections.
     //https://docs.unrealengine.com/en-US/RenderingAndGraphics/Materials/PhysicallyBased/index.html
-    vec3 tintColour;
-    //Gold
-    //https://www.youtube.com/watch?v=j-A0mwsJRmk&ab_channel=ACMSIGGRAPH
-    tintColour = albedo;//vec3(1.022, 0.782, 0.344);
+    vec3 tintColour = albedo.rgb;
 
     // What is the standard way of setting tint?
     F0 = mix(F0, tintColour, metal);
@@ -353,7 +353,7 @@ function getFragmentSource(){
     //https://google.github.io/filament/Filament.html#materialsystem/improvingthebrdfs/energylossinspecularreflectance
     vec3 energyCompensation = 1.0 + F0 * (1.0 / envBRDF.x - 1.0);
 
-    I +=  BRDF(normal, -rayDir, lightDir, albedo, metal, roughness, F0, energyCompensation) 
+    I += BRDF(normal, -rayDir, lightDir, albedo, metal, roughness, F0, energyCompensation) 
       * radiance 
       * dot_c(normal, lightDir);
 
@@ -363,8 +363,8 @@ function getFragmentSource(){
     vec3 kS = F;
     vec3 kD = clamp(1.0-kS, 0.0, 1.0);
     kD *= 1.0 - metal;	
-    vec3 irradiance = 0.5 * getSHIrradiance(normal);
-    vec3 diffuse = irradiance * albedo;
+    vec3 irradiance = getSHIrradiance(normal);
+    vec3 diffuse = irradiance * albedo.rgb / PI;
 
     vec3 R;
     R = reflect(rayDir, normal);
@@ -375,7 +375,7 @@ function getFragmentSource(){
     // Scale the specular lobe to account for multiscattering
     specular *= energyCompensation;
 
-    vec3 ambient  =  kD * diffuse + specular;
+    vec3 ambient = kD * diffuse + specular;
 
     // Combine direct and IBL lighting
     return  ao * ambient + I;
@@ -423,34 +423,34 @@ function getFragmentSource(){
     vec3 normal = normalize(geometryNormal);
 #endif
 
-    float d = clamp(dot(normal, normalize(vec3(0,1,-0.5))), 0.0, 1.0);
-    d += 0.1;
-
     float alpha = 1.0;
 
 #ifdef HAS_ALBEDO_TEXTURE
     vec4 data = texture2D(albedoTexture, vUV);
-    vec3 col = pow(data.rgb, vec3(2.2));
-    alpha = data.a;
-    if(data.a < 0.95){
-      discard;
-    }
+    vec4 col = vec4(vec3(pow(data.rgb, vec3(2.2))), data.a);
 #else
-    vec3 col = albedo;
+    vec4 col = albedo;
 #endif
 
+    if(alphaMode != 0){
+      alpha = col.a;
+    }
+
+    if(alphaMode == 2 && alpha < alphaCutoff){
+      discard;
+    }
+
+
     vec3 viewDirection = normalize(cameraPosition - vPosition);
-    col.rgb = getIrradiance(-viewDirection, normal, col.rgb);
+    col.rgb = getIrradiance(-viewDirection, normal, col);
 
 #ifdef HAS_EMISSIVE_TEXTURE
     vec4 emissiveData = texture2D(emissiveTexture, vUV);
     vec3 emissiveCol = pow(emissiveData.rgb, vec3(2.2));
-    if(emissiveData.a > 0.0){
-      col += emissiveCol.rgb;
-    }
+    col.rgb += emissiveCol.rgb;
 #endif
 
-    col *= exposure;  
+    col.rgb *= exposure;  
 
     col.rgb = ACESFilm(col.rgb);
     col.rgb = pow(col.rgb, vec3(0.4545));
@@ -476,7 +476,8 @@ function getFragmentSource(){
 #endif
 
 #endif
-    col = vec3(roughness);
+    col = vec4(vec3(metal), 1.0);
+/*
     col = getSHIrradiance(-viewDirection);
     if(col.r < 0.0){
       col = vec3(1,0,0);
@@ -487,9 +488,13 @@ function getFragmentSource(){
     if(col.b < 0.0){
       col = vec3(0,0,1);
     }
+*/
 #endif
 
-    gl_FragColor = vec4(col, alpha);
+    if(alphaMode == 1){
+      col.rgb *= alpha;
+    }
+    gl_FragColor = vec4(col.rgb, alpha);
   }
   `;
 
