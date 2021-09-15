@@ -23,9 +23,29 @@ stats.domElement.style.position = 'relative';
 stats.domElement.style.bottom = '48px';
 document.getElementById('cc_1').appendChild(stats.domElement);
 
+// TODO:
+//      Physically based camera
+//      Animations
+//      Bones
+//      Better binary data download/process
+//      Better HDR
+//
+//      Postprocessing (bloom)
+//      Specular/Gloss
+//      Fabric
+//      Transmission/volume
+//      Pipeline state (program, sidedness)
+//      WebGL2
+//      Lights
+//      Shadow mapping
+//      Switch geometry/environment maps
+//      Volumetrics
+//      STL import
+
+
 var path;
 
-var model = "flighthelmet";
+var model = "camera";
 
 switch(model){
   case "boombox":
@@ -58,13 +78,20 @@ switch(model){
   case "blend":
     path  = "./gltf/blend/AlphaBlendModeTest.gltf";
     break;
+  case "camera":
+    path  = "./gltf/camera/Camera_01_1k.gltf";
+    break; 
+  case "minimal":
+    path  = "./gltf/minimal/scene.gltf";
+    break;
   default:
     path = "./gltf/duck/Duck.gltf";
 }
 var workingDirectory = path.substring(0, path.lastIndexOf("/") + 1);
 
-var p = Downloader.start([{name:"Test",type:"gltf", file: path}]).then(function(){
+var p = Downloader.start([{name: model, type:"gltf", file: path}]).then(function(){
     console.log("Downloader Complete");
+    //loadGLTF();
     setTimeout(loadGLTF, 50);
     }).catch(function(error){ console.error("error",error); });
 
@@ -140,17 +167,19 @@ function loadGLTF(){
 
   var loader = new GLTFLoader();
 
-  console.log(Downloader.Complete[0].dl);
-  let gltf = loader.load(Downloader.Complete[0].dl, true);
+  console.log(Downloader.complete[0].dl);
+  let gltf = loader.load(Downloader.complete[0].dl, true);
   console.log(gltf);
 
-  images = Downloader.Complete[0].dl.images;
-  materials = Downloader.Complete[0].dl.materials;
+  images = Downloader.complete[0].dl.images;
+  materials = Downloader.complete[0].dl.materials;
 
-  for(let i = 0; i < images.length; i++){ 
-    let texture = loadTexture(workingDirectory.concat(images[i].uri));
-    textures.push(texture);
-  }  
+  if(images){
+    for(let i = 0; i < images.length; i++){ 
+      let texture = loadTexture(workingDirectory.concat(images[i].uri));
+      textures.push(texture);
+    }
+  }
 
   for(let i = 0; i < gltf.nodes.length; i++){
     let node = gltf.nodes[i];
@@ -166,7 +195,9 @@ function loadGLTF(){
         gltfIndices = gltfMesh.indices.data;
         gltfCount = gltfMesh.indices.count;
       }
-      gltfUVs = gltfMesh.texcoord.data;
+      if(gltfMesh.texcoord){
+        gltfUVs = gltfMesh.texcoord.data;
+      }
       if(gltfMesh.tangent){
         gltfTangents = gltfMesh.tangent.data;
       }
@@ -195,68 +226,88 @@ function loadGLTF(){
 
       geometries.push(g);
 
-      var textureID = 0;
-      var normalTextureID = 0;
-      var emissiveTextureID = 0;
-      var occlusionRoughMetalTextureID = 0;
-      var occlusionTextureID = 0;
+      let material = null;
 
-      var albedoTexture = null;
-      var normalTexture = null;
-      var emissiveTexture = null;
-      var occlusionRoughMetalTexture = null;
-      var occlusionTexture = null;
+      if(materials && gltfMaterialID != undefined){
 
-      let gltfMaterial = materials[gltfMaterialID];
-      let pbrDesc = gltfMaterial.pbrMetallicRoughness;
+        var textureID = 0;
+        var normalTextureID = 0;
+        var emissiveTextureID = 0;
+        var occlusionRoughMetalTextureID = 0;
+        var occlusionTextureID = 0;
 
-      if(!pbrDesc){
-        continue;
-      }
+        var albedoTexture = null;
+        var normalTexture = null;
+        var emissiveTexture = null;
+        var occlusionRoughMetalTexture = null;
+        var occlusionTexture = null;
 
-      var alphaMode = enums.OPAQUE;
-      var alphaCutoff = 0.5;
+        let gltfMaterial = materials[gltfMaterialID];
+        let pbrDesc = gltfMaterial.pbrMetallicRoughness;
 
-      if(gltfMaterial.alphaMode){
-        switch(gltfMaterial.alphaMode){
-          case "BLEND":
-            alphaMode = enums.BLEND;
-            break;
-          case "MASK":
-            alphaMode = enums.MASK;
-            break;
-          default:
-            alphaMode = enums.OPAQUE; 
+        if(!pbrDesc){
+          continue;
         }
-      }
 
-      if(gltfMaterial.alphaCutoff){
-        alphaCutoff = gltfMaterial.alphaCutoff;
-      }
+        var alphaMode = enums.OPAQUE;
+        var alphaCutoff = 0.5;
+        var doubleSided = false;
 
-      if(pbrDesc.baseColorTexture){
-        textureID = pbrDesc.baseColorTexture.index;
-        albedoTexture = textures[textureID];
-      }
-      if(pbrDesc.metallicRoughnessTexture){
-        occlusionRoughMetalTextureID = pbrDesc.metallicRoughnessTexture.index;
-        occlusionRoughMetalTexture = textures[occlusionRoughMetalTextureID];
-      }
-      if(gltfMaterial.occlusionTexture){
-        occlusionTextureID = gltfMaterial.occlusionTexture.index;
-        occlusionTexture = textures[occlusionTextureID];
-      }
-      if(gltfMaterial.normalTexture){
-        normalTextureID = gltfMaterial.normalTexture.index;
-        normalTexture = textures[normalTextureID];
-      }
-      if(gltfMaterial.emissiveTexture){
-        emissiveTextureID = gltfMaterial.emissiveTexture.index;
-        emissiveTexture = textures[emissiveTextureID];
-      }
+        if(gltfMaterial.alphaMode){
+          switch(gltfMaterial.alphaMode){
+            case "BLEND":
+              alphaMode = enums.BLEND;
+              break;
+            case "MASK":
+              alphaMode = enums.MASK;
+              break;
+            default:
+              alphaMode = enums.OPAQUE; 
+          }
+        }
 
-      //let material = new NormalMaterial(albedoTexture);
-      let material = new PBRMaterial({albedoTexture: albedoTexture, normalTexture: normalTexture, emissiveTexture: emissiveTexture, propertiesTexture: occlusionRoughMetalTexture, aoTexture: occlusionTexture, environment: environment, alphaMode: alphaMode, alphaCutoff: alphaCutoff});
+        if(gltfMaterial.alphaCutoff){
+          alphaCutoff = gltfMaterial.alphaCutoff;
+        }
+        if(gltfMaterial.doubleSided){
+          doubleSided = gltfMaterial.doubleSided;
+        }
+
+        if(pbrDesc.baseColorTexture){
+          textureID = pbrDesc.baseColorTexture.index;
+          albedoTexture = textures[textureID];
+        }
+        if(pbrDesc.metallicRoughnessTexture){
+          occlusionRoughMetalTextureID = pbrDesc.metallicRoughnessTexture.index;
+          occlusionRoughMetalTexture = textures[occlusionRoughMetalTextureID];
+        }
+        if(gltfMaterial.occlusionTexture){
+          occlusionTextureID = gltfMaterial.occlusionTexture.index;
+          occlusionTexture = textures[occlusionTextureID];
+        }
+        if(gltfMaterial.normalTexture){
+          normalTextureID = gltfMaterial.normalTexture.index;
+          normalTexture = textures[normalTextureID];
+        }
+        if(gltfMaterial.emissiveTexture){
+          emissiveTextureID = gltfMaterial.emissiveTexture.index;
+          emissiveTexture = textures[emissiveTextureID];
+        }
+
+        material = new PBRMaterial({
+          albedoTexture: albedoTexture, 
+          normalTexture: normalTexture, 
+          emissiveTexture: emissiveTexture,
+          propertiesTexture: occlusionRoughMetalTexture, 
+          aoTexture: occlusionTexture, 
+          environment: environment, 
+          alphaMode: alphaMode, 
+          alphaCutoff: alphaCutoff, 
+          doubleSided: doubleSided
+        });
+      }else{
+        material = new PBRMaterial({environment: environment});
+      }
 
       let mesh = new Mesh(g, material);
       if(alphaMode == enums.BLEND){
@@ -308,6 +359,8 @@ function draw(){
 
   gl.clearColor(0, 0, 0, 0);
   gl.clearDepth(1.0);
+  gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+
   gl.enable(gl.DEPTH_TEST);
   gl.enable(gl.CULL_FACE);
   gl.cullFace(gl.BACK);
@@ -315,8 +368,6 @@ function draw(){
   if(environment.needsUpdate()){
     environment.generateIBLData();
   }
-
-  //camera.exposure = 2.0*(0.5+0.5*Math.sin(time));
 
   environment.render(camera, time);
 

@@ -49,7 +49,18 @@ export class Mesh{
     extVAO.bindVertexArrayOES(null);
   }
 
+  doubleSided(){
+    return this.material.doubleSided;
+  }
+
   render(camera, time){
+
+    if(this.material.doubleSided){
+      gl.disable(gl.CULL_FACE);
+    }else{
+      gl.enable(gl.CULL_FACE);
+    }
+    
     gl.useProgram(this.material.getProgram().program);
     this.bindVAO(); 
     this.material.bindParameters(camera, this.geometry, time);

@@ -31,6 +31,7 @@ function getFragmentSource(){
     //	[3] https://metashapes.com/blog/realtime-image-based-lighting-using-spherical-harmonics/
     //	[4] https://stackoverflow.com/questions/9600801/evenly-distributing-n-points-on-a-sphere/26127012#26127012
     //	[5] https://bduvenhage.me/geometry/2019/07/31/generating-equidistant-vectors.html
+    //  [6] https://andrew-pham.blog/2019/08/26/spherical-harmonics/
     //
 
     precision highp float;

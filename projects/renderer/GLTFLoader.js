@@ -36,6 +36,8 @@ class GLTFLoader{
   loadFromDom(elmID, processNow){
     //TODO: Validation of element, text and json parsing.
     let txt = document.getElementById(elmID).text;
+    // JSON.parse(json) converts a string into a JS object
+    // The reverse can be done with JSON.stringify(obj)
     this.json = JSON.parse(txt);
 
     if(processNow){
@@ -61,17 +63,17 @@ class GLTFLoader{
       //list of skeleton root nodes, prevent processing duplicate data that can exist in file
       let complete = [];					
       for(let i=0; i < s.length; i++){
-	if(complete.indexOf(s[i].skeleton) != -1){
-	  //If already processed, go to next skin
-	  continue; 
-	}
+        if(complete.indexOf(s[i].skeleton) != -1){
+          //If already processed, go to next skin
+          continue; 
+        }
 
-	//Loop through all specified joints and mark the nodes as joints.
-	for(j in s[i].joints){
-	  this.json.nodes[s[i].joints[j]].isJoint = true; 
-	}
-	//push root node index to complete list.
-	complete.push(s[i].skeleton); 
+        //Loop through all specified joints and mark the nodes as joints.
+        for(j in s[i].joints){
+          this.json.nodes[s[i].joints[j]].isJoint = true; 
+        }
+        //push root node index to complete list.
+        complete.push(s[i].skeleton); 
       }
     }
 
@@ -91,7 +93,7 @@ class GLTFLoader{
       //If not specified, get first scene
       sceneNum = 0;
     }
- 
+
     if(this.json.scenes[sceneNum].nodes.length == 0){
       return;
     }
@@ -104,7 +106,7 @@ class GLTFLoader{
     for(let i=0; i < sceneNodes.length; i++){
       nodeStack.push([sceneNodes[i], []]);
     }
-    
+
     //Process Stack of nodes, check for children to add to stack
     //Save node transformations in meshes
     while(nodeStack.length > 0){
@@ -112,11 +114,11 @@ class GLTFLoader{
       let idx = tuple[0];
       let parents = tuple[1];
       let node = this.json.nodes[idx];
-    
+
       //Add More Nodes to the stack
       if(node.children != undefined){
-        for(let i=0; i < node.children.length; i++){
-	  //Add child node with current node added to the parent list
+        for(let i = 0; i < node.children.length; i++){
+          //Add child node with current node added to the parent list
           nodeStack.push([node.children[i], parents.concat([idx])]);
         }
       }
@@ -127,7 +129,7 @@ class GLTFLoader{
   getModelTransform(n){
 
     let modelMatrix = m4.create();
-    
+
     //When matrix has been given, use it over TRS
     if(n.hasOwnProperty("matrix") && n.matrix){
 
@@ -140,13 +142,13 @@ class GLTFLoader{
       let scale = [1, 1, 1];
 
       if(n.hasOwnProperty("rotation") && n.rotation){
-	rotate = quaternionToEuler(n.rotation);
+        rotate = quaternionToEuler(n.rotation);
       }
       if(n.hasOwnProperty("scale") && n.scale){
-	scale = n.scale;
+        scale = n.scale;
       }
       if(n.hasOwnProperty("translation") && n.translation){
-	translate = n.translation;
+        translate = n.translation;
       }
 
       modelMatrix = m4.translate(modelMatrix, translate[0], translate[1], translate[2]); 
@@ -179,25 +181,25 @@ class GLTFLoader{
       let modelMatrix = this.getModelTransform(n); 
 
       if(parents && parents.length > 0){
-	//Loop over all parents and apply transformations in reverse order w.r.t. local transform
+        //Loop over all parents and apply transformations in reverse order w.r.t. local transform
         for(let p = parents.length-1; p >= 0; p--){
           let parentNode = this.json.nodes[parents[p]];
           if(parentNode){
-	    let parentModelMatrix = this.getModelTransform(parentNode);
-	    modelMatrix = m4.multiply(parentModelMatrix, modelMatrix);
+            let parentModelMatrix = this.getModelTransform(parentNode);
+            modelMatrix = m4.multiply(parentModelMatrix, modelMatrix);
           }
         }
       }
 
       let m = {
-		name: 		(n.name) ? n.name : "untitled",
-		matrix:		modelMatrix || null,
-		parents:	parents || null,
-		meshes:		this.processMesh(n.mesh)
+          name: 		(n.name) ? n.name : "untitled",
+          matrix:		modelMatrix || null,
+          parents:	parents || null,
+          meshes:		this.processMesh(n.mesh)
       };
 
       if(n.skin != undefined){
-	//m.skeleton = this.processSkin(n.skin);
+        //m.skeleton = this.processSkin(n.skin);
       }
 
       this.nodes.push(m);
@@ -221,54 +223,54 @@ class GLTFLoader{
       //.....................................
       //Alias for primitive element
       let p;
-      //Alias for primitive's attributes
-      let a;	
-      let itm;
-      let mesh = [];
+    //Alias for primitive's attributes
+    let a;	
+    let itm;
+    let mesh = [];
 
     for(let i=0; i < m.primitives.length; i++){
       p = m.primitives[i];
       a = p.attributes;
 
       itm = { 
-		name: 		meshName + "_p" + i,
-		mode:		(p.mode != undefined)? p.mode : GLTFLoader.MODE_TRIANGLES,
-		material:	p.material,
-		indices:	null,	//p.indices
-		vertices:	null,	//p.attributes.POSITION = vec3
-		normals:	null,	//p.attributes.NORMAL = vec3
-		texcoord:	null,	//p.attributes.TEXCOORD_0 = vec2
-		tangent:	null,	//p.attributes.TANGENT = vec4
-		joints: 	null,	//p.attributes.JOINTS_0 = vec4
-		weights: 	null	//p.attributes.WEIGHTS_0 = vec4
+          name: 		meshName + "_p" + i,
+          mode:		(p.mode != undefined)? p.mode : GLTFLoader.MODE_TRIANGLES,
+          material:	p.material,
+          indices:	null,	//p.indices
+          vertices:	null,	//p.attributes.POSITION = vec3
+          normals:	null,	//p.attributes.NORMAL = vec3
+          texcoord:	null,	//p.attributes.TEXCOORD_0 = vec2
+          tangent:	null,	//p.attributes.TANGENT = vec4
+          joints: 	null,	//p.attributes.JOINTS_0 = vec4
+          weights: 	null	//p.attributes.WEIGHTS_0 = vec4
       };
 
       //Get Raw Data
       itm.vertices = this.processAccessor(a.POSITION);
 
       if(p.indices != undefined){
-	itm.indices = this.processAccessor(p.indices);
+        itm.indices = this.processAccessor(p.indices);
       }
 
       if(a.NORMAL != undefined){
-	itm.normals = this.processAccessor(a.NORMAL);
+        itm.normals = this.processAccessor(a.NORMAL);
       }
 
       if(a.TEXCOORD_0 != undefined){
-	itm.texcoord = this.processAccessor(a.TEXCOORD_0);
+        itm.texcoord = this.processAccessor(a.TEXCOORD_0);
       }
 
       if(a.TANGENT != undefined){
-	itm.tangent = this.processAccessor(a.TANGENT);
+        itm.tangent = this.processAccessor(a.TANGENT);
       }
 
 
       if(a.WEIGHTS_0 != undefined){
-	itm.weights = this.processAccessor(a.WEIGHTS_0);
+        itm.weights = this.processAccessor(a.WEIGHTS_0);
       }
 
       if(a.JOINTS_0 != undefined){
-	itm.joints = this.processAccessor(a.JOINTS_0);
+        itm.joints = this.processAccessor(a.JOINTS_0);
       }
 
       //Save Data
@@ -302,30 +304,30 @@ class GLTFLoader{
     //Figure out which Type Array we need to save the data in
     switch(a.componentType){
       case GLTFLoader.TYPE_FLOAT:
-	TAry = Float32Array;
-	DFunc = "getFloat32";
-	break;
+        TAry = Float32Array;
+        DFunc = "getFloat32";
+        break;
       case GLTFLoader.TYPE_SHORT:
-	TAry = Int16Array;
-	DFunc = "getInt16";
-	break;
+        TAry = Int16Array;
+        DFunc = "getInt16";
+        break;
       case GLTFLoader.TYPE_UNSIGNED_SHORT:
-	TAry = Uint16Array;
-	DFunc = "getUint16";
-	break;
+        TAry = Uint16Array;
+        DFunc = "getUint16";
+        break;
       case GLTFLoader.TYPE_UNSIGNED_INT:
-	TAry = Uint32Array;
-	DFunc = "getUint32";
-	break;
+        TAry = Uint32Array;
+        DFunc = "getUint32";
+        break;
       case GLTFLoader.TYPE_UNSIGNED_BYTE:
-	TAry = Uint8Array;
-	DFunc = "getUint8";
-	break;
+        TAry = Uint8Array;
+        DFunc = "getUint8";
+        break;
 
       default:
-	console.error("ERROR processAccessor","componentType unknown", a.componentType);
-	return null;
-	break;
+        console.error("ERROR processAccessor","componentType unknown", a.componentType);
+        return null;
+        break;
     }
 
     //When more then one accessor shares a buffer, The BufferView length is the whole section
@@ -353,7 +355,6 @@ class GLTFLoader{
       ary[i] = buf.dView[DFunc](p,true);
     }
 
-    //console.log(a.type,GLTFLoader["COMP_"+a.type],"offset",bOffset, "bLen",bLen, "aLen", aLen, ary);
     return { data: ary, max: a.max, min: a.min, count: a.count, compLen: GLTFLoader["COMP_"+a.type] };
   }
 
@@ -380,10 +381,6 @@ class GLTFLoader{
     }
     buf.dView = dv;
 
-    //console.log("buffer len",buf.byteLength,dv.byteLength);
-    //let fAry = new Float32Array(blob.length/4);
-    //for(let j=0; j < fAry.length; j++) fAry[j] = dv.getFloat32(j*4,true);
-    //console.log(fAry);
     return buf;
   }
 
@@ -395,8 +392,8 @@ class GLTFLoader{
 
     for(i=0; i < this.skeletons.length; i++){
       if(this.skeletons[i].nodeIdx == s.skeleton){
-	//Find a root bone that matches the skin's.
-	return i; 
+        //Find a root bone that matches the skin's.
+        return i; 
       }
     }
 
@@ -420,7 +417,7 @@ class GLTFLoader{
     }else{
       let children = this.json.nodes[s.skeleton].children;
       for(let c = 0; c < children.length; c++){
-	stack.push([children[c], null]);
+        stack.push([children[c], null]);
       }
     }
 
@@ -428,29 +425,28 @@ class GLTFLoader{
     while(stack.length > 0){
       //Pop off the list
       itm = stack.pop();
-      
+
       //Get node info for joint
       n = this.json.nodes[itm[0]];
 
       //Check pre-processing to make sure its actually a used node.
       if(!n.isJoint){
-	continue; 
+        continue; 
       }
 
       //Save copy of data
       //Q: Are bones's joint number always in a linear fashion where parents have a lower index 
       //than the children;
       final.push({
-		  jointNum 	: s.joints.indexOf(itm[0]),
-		  name 		: n.name || null, 
-		  translaate	: n.translation || null,
-		  scale		: n.scale || null,
-		  rotation	: n.rotation || null,
-		  matrix	: n.matrix || null,
-		  parent	: itm[1],
-		  nodeIdx 	: itm[0]
-      });
-
+        jointNum 	: s.joints.indexOf(itm[0]),
+        name 		: n.name || null, 
+        translaate	: n.translation || null,
+        scale		: n.scale || null,
+        rotation	: n.rotation || null,
+        matrix	: n.matrix || null,
+        parent	: itm[1],
+        nodeIdx 	: itm[0]
+        });
 
       //Save the the final index for this joint for children reference 
       pIdx = final.length - 1;
@@ -471,22 +467,22 @@ class GLTFLoader{
 }
 
 //CONSTANTS
-GLTFLoader.MODE_POINTS 			= 0;	//Mode Constants for GLTF and WebGL are identical
+GLTFLoader.MODE_POINTS    = 0;	//Mode Constants for GLTF and WebGL are identical
 GLTFLoader.MODE_LINES			= 1;	//https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Constants
-GLTFLoader.MODE_LINE_LOOP		= 2;
-GLTFLoader.MODE_LINE_STRIP		= 3;
-GLTFLoader.MODE_TRIANGLES		= 4;
-GLTFLoader.MODE_TRIANGLE_STRIP		= 5;
+GLTFLoader.MODE_LINE_LOOP		    = 2;
+GLTFLoader.MODE_LINE_STRIP		  = 3;
+GLTFLoader.MODE_TRIANGLES		    = 4;
+GLTFLoader.MODE_TRIANGLE_STRIP	= 5;
 GLTFLoader.MODE_TRIANGLE_FAN		= 6;
 
-GLTFLoader.TYPE_BYTE			= 5120;
+GLTFLoader.TYPE_BYTE			      = 5120;
 GLTFLoader.TYPE_UNSIGNED_BYTE		= 5121;
-GLTFLoader.TYPE_SHORT			= 5122;
-GLTFLoader.TYPE_UNSIGNED_SHORT		= 5123;
+GLTFLoader.TYPE_SHORT			      = 5122;
+GLTFLoader.TYPE_UNSIGNED_SHORT	= 5123;
 GLTFLoader.TYPE_UNSIGNED_INT		= 5125;
-GLTFLoader.TYPE_FLOAT			= 5126;
+GLTFLoader.TYPE_FLOAT			      = 5126;
 
-GLTFLoader.COMP_SCALAR			= 1;
+GLTFLoader.COMP_SCALAR		= 1;
 GLTFLoader.COMP_VEC2			= 2;
 GLTFLoader.COMP_VEC3			= 3;
 GLTFLoader.COMP_VEC4			= 4;

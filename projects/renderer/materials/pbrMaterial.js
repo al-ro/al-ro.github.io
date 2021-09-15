@@ -23,7 +23,7 @@ export class PBRMaterial extends Material{
 
   // In the absence of metal/roughness texture, use float uniforms
   // Either these or a texture must be supplied
-  metal = 0.0;
+  metal = 1.0;
   roughness = 1.0;
 
   // In the absence of a base colour texture, use a vec4 uniform
@@ -33,6 +33,8 @@ export class PBRMaterial extends Material{
 
   alphaMode = enums.OPAQUE;
   alphaCutoff = 0.5;
+
+  doubleSided = false;
 
   // --------- Textures ----------
 
@@ -71,9 +73,14 @@ export class PBRMaterial extends Material{
 
   // --------- PBR uniform handles ----------
 
+  albedoHandle;
+  metalHandle;
+  roughnessHandle;
+
   albedoTextureHandle;
-  normalTextureHandle;
   propertiesTextureHandle;
+
+  normalTextureHandle;
   aoTextureHandle;
   emissiveTextureHandle;
 
@@ -125,6 +132,10 @@ export class PBRMaterial extends Material{
 
     if(parameters.hasOwnProperty("alphaCutoff") && parameters.alphaCutoff){
       this.alphaCutoff = parameters.alphaCutoff;
+    }
+
+    if(parameters.hasOwnProperty("doubleSided") && parameters.doubleSided){
+      this.doubleSided = parameters.doubleSided;
     }
 
     if(parameters.hasOwnProperty("albedoTexture") && parameters.albedoTexture){
@@ -231,6 +242,8 @@ export class PBRMaterial extends Material{
 
     if(this.hasAlbedoTexture){
       this.albedoTextureHandle = this.program.getOptionalUniformLocation('albedoTexture');
+    }else{
+      this.albedoHandle = this.program.getOptionalUniformLocation('albedo');
     }
 
     if(this.hasNormalTexture){
