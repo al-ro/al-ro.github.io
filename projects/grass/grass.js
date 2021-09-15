@@ -605,7 +605,6 @@ for(let v = 0; v < grassBaseGeometry.attributes.position.array.length; v += 3){
   grassBaseGeometry.attributes.position.array[v+2] = vertex.z;
 }
 
-grassBaseGeometry.computeFaceNormals();
 grassBaseGeometry.computeVertexNormals();
 var baseMaterial = new THREE.MeshNormalMaterial({side: THREE.DoubleSide});
 var baseBlade = new THREE.Mesh(grassBaseGeometry, baseMaterial);

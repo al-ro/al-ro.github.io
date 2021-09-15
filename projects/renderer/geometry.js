@@ -71,10 +71,10 @@ export class Geometry{
       this.hasIndices = true;
       this.indices = geometryData.indices;
       if(this.indices.BYTES_PER_ELEMENT == 1){
-	this.indexType = gl.UNSIGNED_BYTE;
+        this.indexType = gl.UNSIGNED_BYTE;
       } 
       if(this.indices.BYTES_PER_ELEMENT == 4){
-	this.indexType = gl.UNSIGNED_INT;
+        this.indexType = gl.UNSIGNED_INT;
       } 
     }else{
       console.log("GEOMETRY NOT INDEXED. VERTEX COUNT: ", this.vertices.length/3);
@@ -110,12 +110,12 @@ export class Geometry{
         this.hasOrientations = true;
         this.orientations = geometryData.orientations;
       }
-  
+
       if(geometryData.hasOwnProperty("offsets")){
         this.hasOffsets = true;
         this.offsets = geometryData.offsets;
       }
-  
+
       if(geometryData.hasOwnProperty("scales")){
         this.hasScales = true;
         this.scales = geometryData.scales;
@@ -161,23 +161,23 @@ export class Geometry{
     // ---------- Instanced geometry attributes ----------
 
     if(this.instanced){
-     if(this.hasOrientations){
-       this.orientationBuffer = gl.createBuffer();
-       gl.bindBuffer(gl.ARRAY_BUFFER, this.orientationBuffer);
-       gl.bufferData(gl.ARRAY_BUFFER, this.orientations, gl.DYNAMIC_DRAW);
-     }
+      if(this.hasOrientations){
+        this.orientationBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.orientationBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.orientations, gl.DYNAMIC_DRAW);
+      }
 
-     if(this.hasOffsets){
-       this.offsetBuffer = gl.createBuffer();
-       gl.bindBuffer(gl.ARRAY_BUFFER, this.offsetBuffer);
-       gl.bufferData(gl.ARRAY_BUFFER, this.offsets, gl.DYNAMIC_DRAW);
-     }
+      if(this.hasOffsets){
+        this.offsetBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.offsetBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.offsets, gl.DYNAMIC_DRAW);
+      }
 
-     if(this.hasScales){
-       this.scaleBuffer = gl.createBuffer();
-       gl.bindBuffer(gl.ARRAY_BUFFER, this.scaleBuffer);
-       gl.bufferData(gl.ARRAY_BUFFER, this.scales, gl.DYNAMIC_DRAW);
-     }
+      if(this.hasScales){
+        this.scaleBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.scaleBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.scales, gl.DYNAMIC_DRAW);
+      }
     }
 
   }
@@ -185,7 +185,7 @@ export class Geometry{
   enableBuffers(handles){
 
     // ---------- Mandatory vertex data ----------
-    
+
     if(handles.hasOwnProperty("positionHandle")){
       gl.enableVertexAttribArray(handles.positionHandle);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -204,31 +204,31 @@ export class Geometry{
 
     if(handles.hasOwnProperty("vertexNormalHandle")){
       if(this.hasNormals){
-	gl.enableVertexAttribArray(handles.vertexNormalHandle);
-	gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
-	gl.vertexAttribPointer(handles.vertexNormalHandle, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(handles.vertexNormalHandle);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
+        gl.vertexAttribPointer(handles.vertexNormalHandle, 3, gl.FLOAT, false, 0, 0);
       }else{
-	console.error("ERROR: geometry does not have vertex normals.");
+        console.error("ERROR: geometry does not have vertex normals.");
       }
     }
 
     if(handles.hasOwnProperty("vertexUVHandle")){
       if(this.hasUVs){
-	gl.enableVertexAttribArray(handles.vertexUVHandle);
-	gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
-	gl.vertexAttribPointer(handles.vertexUVHandle, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(handles.vertexUVHandle);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
+        gl.vertexAttribPointer(handles.vertexUVHandle, 2, gl.FLOAT, false, 0, 0);
       }else{
-	console.error("ERROR: geometry does not have UVs.");
+        console.error("ERROR: geometry does not have UVs.");
       }
     }
 
     if(handles.hasOwnProperty("vertexTangentHandle")){
       if(this.hasTangents){
-	gl.enableVertexAttribArray(handles.vertexTangentHandle);
-	gl.bindBuffer(gl.ARRAY_BUFFER, this.tangentBuffer);
-	gl.vertexAttribPointer(handles.vertexTangentHandle, 4, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(handles.vertexTangentHandle);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.tangentBuffer);
+        gl.vertexAttribPointer(handles.vertexTangentHandle, 4, gl.FLOAT, false, 0, 0);
       }else{
-	console.error("ERROR: geometry does not have tangents.");
+        console.error("ERROR: geometry does not have tangents.");
       }
     }
 
@@ -236,37 +236,37 @@ export class Geometry{
 
     if(handles.hasOwnProperty("orientationHandle")){
       if(this.hasOrientations){
-	gl.enableVertexAttribArray(handles.orientationHandle);
-	gl.bindBuffer(gl.ARRAY_BUFFER, this.orientationBuffer);
-	gl.vertexAttribPointer(handles.orientationHandle, 4, gl.FLOAT, false, 0, 0);
-	extINS.vertexAttribDivisorANGLE(handles.orientationHandle, 1);
+        gl.enableVertexAttribArray(handles.orientationHandle);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.orientationBuffer);
+        gl.vertexAttribPointer(handles.orientationHandle, 4, gl.FLOAT, false, 0, 0);
+        extINS.vertexAttribDivisorANGLE(handles.orientationHandle, 1);
       }else{
-	console.error("ERROR: geometry does not have instance orientations.");
+        console.error("ERROR: geometry does not have instance orientations.");
       }
     }
 
     if(handles.hasOwnProperty("offsetHandle")){
       if(this.hasOffsets){
-	gl.enableVertexAttribArray(handles.offsetHandle);
-	gl.bindBuffer(gl.ARRAY_BUFFER, this.offsetBuffer);
-	gl.vertexAttribPointer(handles.offsetHandle, 3, gl.FLOAT, false, 0, 0);
-	extINS.vertexAttribDivisorANGLE(handles.offsetHandle, 1);
+        gl.enableVertexAttribArray(handles.offsetHandle);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.offsetBuffer);
+        gl.vertexAttribPointer(handles.offsetHandle, 3, gl.FLOAT, false, 0, 0);
+        extINS.vertexAttribDivisorANGLE(handles.offsetHandle, 1);
       }else{
-	console.error("ERROR: geometry does not have instance offsets.");
+        console.error("ERROR: geometry does not have instance offsets.");
       }
     }
 
     if(handles.hasOwnProperty("scaleHandle")){
       if(this.hasScales){
-	gl.enableVertexAttribArray(handles.scaleHandle);
-	gl.bindBuffer(gl.ARRAY_BUFFER, this.scaleBuffer);
-	gl.vertexAttribPointer(handles.scaleHandle, 3, gl.FLOAT, false, 0, 0);
-	extINS.vertexAttribDivisorANGLE(handles.scaleHandle, 1);
+        gl.enableVertexAttribArray(handles.scaleHandle);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.scaleBuffer);
+        gl.vertexAttribPointer(handles.scaleHandle, 3, gl.FLOAT, false, 0, 0);
+        extINS.vertexAttribDivisorANGLE(handles.scaleHandle, 1);
       }else{
-	console.error("ERROR: geometry does not have instance scales.");
+        console.error("ERROR: geometry does not have instance scales.");
       }
     }
-  
+
   }
 
   setVertexBuffer(vertexBuffer){

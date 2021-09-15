@@ -49,9 +49,7 @@ function getFragmentSource(){
     //https://patapom.com/blog/Math/ImportanceSampling/
     //https://www.shadertoy.com/view/4dtBWH
     vec2 Nth_weyl(vec2 p0, int n) {
-
-      //return fract(p0 + float(n)*vec2(0.754877669, 0.569840296));
-      return fract(p0 + vec2(n*12664745, n*9560333)/exp2(24.));	// integer mul to avoid round-off
+      return fract(p0 + vec2(n*12664745, n*9560333)/exp2(24.));
     }
 
     // -------------------------------------------------------------------------------

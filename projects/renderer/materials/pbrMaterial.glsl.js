@@ -1,16 +1,8 @@
 function getVertexSource(){ 
 
-  //TODO:
-  // albedo vec3
-  // IBL
-  // Sidedness from gltf
-  // Transparency pipeline
-  // Transparency from gltf
-  // Do not copy properties you do not need
-
   var vertexSource = `
 
-    attribute vec3 position;
+  attribute vec3 position;
 
 #ifdef INSTANCED 
   attribute vec4 orientation;
@@ -113,7 +105,7 @@ function getFragmentSource(){
 #extension GL_EXT_shader_texture_lod : enable
 #extension GL_OES_standard_derivatives : enable
 
-    precision highp float;
+  precision highp float;
 
 #define PI 3.14159
 #define TWO_PI (2.0 * PI)
@@ -202,7 +194,6 @@ function getFragmentSource(){
   }
 
   vec2 getBRDFIntegrationMap(vec2 texCoord){
-    texCoord = clamp(texCoord, 1e-5, 0.99);
     return texture2D(brdfIntegrationMapTexture, texCoord).rg;
   }
 
@@ -214,8 +205,6 @@ function getFragmentSource(){
     float level = roughness * 5.0;
     level = max(0.0, min(level, 5.0));
 
-    //rayDir *= vec3(-1,1,1);
-
     vec3 col = textureCubeLodEXT(cubeMap, rayDir, level).rgb;
     return col;
   }
@@ -225,17 +214,17 @@ function getFragmentSource(){
 
   //Trowbridge-Reitz
   float distribution(vec3 n, vec3 h, float roughness){
-    float a_2 = roughness*roughness;
-    return a_2/(PI*pow(pow(dot_c(n, h), 2.0) * (a_2 - 1.0) + 1.0, 2.0));
+    float a2 = roughness * roughness;
+    return a2 / (PI * pow(pow(dot_c(n, h), 2.0) * (a2 - 1.0) + 1.0, 2.0));
   }
 
   //GGX and Schlick-Beckmann
   float geometry(float cosTheta, float k){
-    return (cosTheta)/(cosTheta*(1.0-k)+k);
+    return cosTheta / (cosTheta * (1.0 - k) + k);
   }
 
   float smiths(vec3 n, vec3 viewDir, vec3 lightDir, float roughness){
-    float k = pow(roughness + 1.0, 2.0)/8.0; 
+    float k = pow(roughness + 1.0, 2.0) / 8.0; 
     return geometry(dot_c(n, lightDir), k) * geometry(dot_c(n, viewDir), k);
   }
 
@@ -252,8 +241,7 @@ function getFragmentSource(){
   }
 
   //Smiths GGX correlated anisotropic
-  float smithsAnisotropic(float at, float ab, float ToV, float BoV,
-      float ToL, float BoL, float NoV, float NoL) {
+  float smithsAnisotropic(float at, float ab, float ToV, float BoV, float ToL, float BoL, float NoV, float NoL) {
     float lambdaV = NoL * length(vec3(at * ToV, ab * BoV, NoV));
     float lambdaL = NoV * length(vec3(at * ToL, ab * BoL, NoL));
     float v = 0.5 / (lambdaV + lambdaL);
@@ -342,8 +330,7 @@ function getFragmentSource(){
     //Metals tint specular reflections.
     //https://docs.unrealengine.com/en-US/RenderingAndGraphics/Materials/PhysicallyBased/index.html
     vec3 tintColour = albedo.rgb;
-
-    // What is the standard way of setting tint?
+    
     F0 = mix(F0, tintColour, metal);
 
     // Find direct lighting for all sources
@@ -476,7 +463,7 @@ function getFragmentSource(){
 #endif
 
 #endif
-    col = vec4(vec3(metal), 1.0);
+    col = vec4(vec3(albedo.rgb), 1.0);
 /*
     col = getSHIrradiance(-viewDirection);
     if(col.r < 0.0){
