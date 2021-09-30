@@ -45,7 +45,7 @@ document.getElementById('cc_1').appendChild(stats.domElement);
 
 var path;
 
-var model = "camera";
+var model = "damagedhelmet";
 
 switch(model){
   case "boombox":

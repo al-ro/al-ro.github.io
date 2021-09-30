@@ -76,7 +76,9 @@ controls.minDistance = 100;
 controls.autoRotate = rotate;
 
 //Particles
-var particles = new THREE.Geometry();
+var particles = [];
+var velocities = [];
+var geometry = new THREE.BufferGeometry();
 //Initial ember colour
 var colour = 0xff6800;
 
@@ -107,22 +109,26 @@ var material = new THREE.PointsMaterial({
 
 //Generate random particles
 for(i = 0; i < particleCount; i++){
-  var particle = {
-    x: width/2 - Math.random() * width,
-    y: height/2 - Math.random() * height,
-    z: depth/2 - Math.random() * depth,
-    vel_x: 0.5 - Math.random(),
-    vel_y: 0.5 - Math.random(),
-    vel_z: 0.5 - Math.random()
-  };
-  particles.vertices.push(particle);
+
+    let x = width/2 - Math.random() * width;
+    let y = height/2 - Math.random() * height;
+    let z = depth/2 - Math.random() * depth;
+    let vel_x = 0.5 - Math.random();
+    let vel_y = 0.5 - Math.random();
+    let vel_z = 0.5 - Math.random();
+  
+  particles.push(x,y,z);
+	velocities.push(vel_x,vel_y,vel_z);
 }
 
-var particleSystem = new THREE.Points(particles, material);
-scene.add(particleSystem);
+geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( particles, 3 ) );
 
+const points = new THREE.Points( geometry, material );
+
+scene.add( points );
 //-----------GUI-----------//
 //dat.gui library controls
+
 var reset_button = { reset:function(){ 
   //Use noise.js library to generate a grid of 3D simplex noise values
   try {
@@ -132,23 +138,23 @@ var reset_button = { reset:function(){
     console.log(err.message);
   }
 
-  for(i = 0; i < particleCount; i++){
+  for(i = 0; i < particleCount * 3.0; i+=3){
 
     var x = 0.5 - Math.random();
     var y = 0.5 - Math.random();
     var z = 0.5 - Math.random();
 
-    particles.vertices[i].vel_x = x;
-    particles.vertices[i].vel_y = y;
-    particles.vertices[i].vel_z = z;
+    velocities[i] = x;
+    velocities[i+1] = y;
+    velocities[i+2] = z;
 
-    particles.vertices[i].x = width/2 - Math.random() * width;
-    particles.vertices[i].y = height/2 - Math.random() * height;
-    particles.vertices[i].z = depth/2 - Math.random() * depth;
+    particles[i] = width/2 - Math.random() * width;
+    particles[i+1] = height/2 - Math.random() * height;
+    particles[i+2] = depth/2 - Math.random() * depth;
+
   }
 
 }};
-
 
 var gui = new dat.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
@@ -227,40 +233,41 @@ function computeCurl(x, y, z){
 
 //----------MOVE----------//
 function move(){
-  for(i = 0; i < particleCount; i++){
+  for(i = 0; i < particleCount * 3.0; i+=3){
 
     //Find curl value at partile location
-    var curl = computeCurl(particles.vertices[i].x/step, particles.vertices[i].y/step, particles.vertices[i].z/step);
+    var curl = computeCurl(particles[i]/step, particles[i+1]/step, particles[i+2]/step);
 
     //Update particle velocity according to curl value and speed
-    particles.vertices[i].vel_x = speed*curl.x;
-    particles.vertices[i].vel_y = speed*curl.y;
-    particles.vertices[i].vel_z = speed*curl.z;
+    velocities[i] = speed*curl.x;
+    velocities[i+1] = speed*curl.y;
+    velocities[i+2] = speed*curl.z;
 
     //Update particle position based on velocity
-    particles.vertices[i].x += particles.vertices[i].vel_x ;
-    particles.vertices[i].y += particles.vertices[i].vel_y ;
-    particles.vertices[i].z += particles.vertices[i].vel_z ;
+    particles[i] += velocities[i];
+    particles[i+1] += velocities[i+1];
+    particles[i+2] += velocities[i+2];
 
-    //Boundary conditions
+    //Boudnary conditions
     //If a particle gets too far away from (0,0,0), reset it to a random location
-    var dist = Math.sqrt(particles.vertices[i].x * particles.vertices[i].x + particles.vertices[i].y * particles.vertices[i].y + particles.vertices[i].z * particles.vertices[i].z);
+    var dist = Math.sqrt(particles[i] * particles[i] + particles[i+1] * particles[i+1] + particles[i+2] * particles[i+2]);
     if(dist > 5*width){
-      particles.vertices[i].x = width/2 - Math.random() * width;
-      particles.vertices[i].y = height/2 - Math.random() * height;
-      particles.vertices[i].z = depth/2 - Math.random() * depth; 
+      particles[i] = width/2 - Math.random() * width;
+      particles[i+1] = height/2 - Math.random() * height;
+      particles[i+2] = depth/2 - Math.random() * depth; 
     }
   }
+	
+	geometry.getAttribute('position').copyArray(particles);
+	geometry.getAttribute('position').needsUpdate = true;
+	
 }
-
 //----------DRAW----------//
 function draw(){
-  if(rotate){
+	if(rotate){
     controls.update();
   }
   move();
-  //Redraws partciles
-  particles.verticesNeedUpdate = true;
   renderer.render(scene, camera);
   requestAnimationFrame(draw);
 }
