@@ -22,11 +22,18 @@
 //https://raw.githubusercontent.com/javagl/JglTF/master/images/gltfOverview-0.2.0.png
 //https://github.com/KhronosGroup/glTF-Blender-Exporter/issues/39
 class GLTFLoader{
+
+  json;
+  meshes;
+  nodes;  
+
+  skeletons;
+
   constructor(){
     this.json = null;
-    this.skeletons = [];
     this.meshes = [];
     this.nodes = [];	
+    this.skeletons = [];
   }
 
   get version(){
