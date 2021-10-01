@@ -89,7 +89,7 @@ THREE.ImageUtils.crossOrigin = '';
 var texture =  loader.load('https://al-ro.github.io/images/embers/ember_texture.png');
 
 //Variable size for particle material
-var size = 50;
+var size = 70;
 
 if(mobile){
   size = 150;
@@ -179,7 +179,6 @@ function setColour(){
 }
 
 //----------NOISE---------//
-var noise_ = [];
 
 //Use noise.js library to generate a grid of 3D simplex noise values
 try {
@@ -189,41 +188,60 @@ catch(err) {
   console.log(err.message);
 }
 
+function fbm(x, y, z){
+  let n = 0;
+  let l = 1.0;
+  let totalWeight = 0.0;
+  let amplitude = 1.0;
+  for(let i = 0; i < 1; i++){
+    n += amplitude * noise.simplex3(x*l, y*l, z*l);
+    totalWeight += amplitude;
+    amplitude *= 0.5;
+    l *= 2.0;
+  }
+  n /= totalWeight;
+  return n;
+}
+
+
 //Find the curl of the noise field based on on the noise value at the location of a particle
 function computeCurl(x, y, z){
   var eps = 0.0001;
 
+  x += 1000.0*offset;
+  y -= 1000.0*offset;
+
   var curl = new THREE.Vector3();
 
   //Find rate of change in YZ plane
-  var n1 = noise.simplex3(x, y + eps, z); 
-  var n2 = noise.simplex3(x, y - eps, z); 
+  var n1 = fbm(x, y + eps, z); 
+  var n2 = fbm(x, y - eps, z); 
   //Average to find approximate derivative
   var a = (n1 - n2)/(2 * eps);
-  var n1 = noise.simplex3(x, y, z + eps); 
-  var n2 = noise.simplex3(x, y, z - eps); 
+  var n1 = fbm(x, y, z + eps); 
+  var n2 = fbm(x, y, z - eps); 
   //Average to find approximate derivative
   var b = (n1 - n2)/(2 * eps);
   curl.x = a - b;
 
-  //Find rate of change in XZ plane
-  n1 = noise.simplex3(x, y+offset, z + eps); 
-  n2 = noise.simplex3(x, y+offset, z - eps); 
+  //Find rate of change in ZX plane
+  n1 = fbm(x, y, z + eps); 
+  n2 = fbm(x, y, z - eps); 
   //Average to find approximate derivative
   a = (n1 - n2)/(2 * eps);
-  n1 = noise.simplex3(x + eps, y+offset, z); 
-  n2 = noise.simplex3(x - eps, y+offset, z); 
+  n1 = fbm(x + eps, y, z); 
+  n2 = fbm(x - eps, y, z); 
   //Average to find approximate derivative
   b = (n1 - n2)/(2 * eps);
   curl.y = a - b;
 
   //Find rate of change in XY plane
-  n1 = noise.simplex3(x + eps, y, z+offset); 
-  n2 = noise.simplex3(x - eps, y, z+offset); 
+  n1 = noise.simplex3(x + eps, y, z); 
+  n2 = noise.simplex3(x - eps, y, z); 
   //Average to find approximate derivative
   a = (n1 - n2)/(2 * eps);
-  n1 = noise.simplex3(x, y + eps, z+offset); 
-  n2 = noise.simplex3(x, y - eps, z+offset); 
+  n1 = noise.simplex3(x, y + eps, z); 
+  n2 = noise.simplex3(x, y - eps, z); 
   //Average to find approximate derivative
   b = (n1 - n2)/(2 * eps);
   curl.z = a - b;
@@ -251,7 +269,7 @@ function move(){
     //Boudnary conditions
     //If a particle gets too far away from (0,0,0), reset it to a random location
     var dist = Math.sqrt(particles[i] * particles[i] + particles[i+1] * particles[i+1] + particles[i+2] * particles[i+2]);
-    if(dist > 5*width){
+    if(dist > 5.0*width){
       particles[i] = width/2 - Math.random() * width;
       particles[i+1] = height/2 - Math.random() * height;
       particles[i+2] = depth/2 - Math.random() * depth; 
