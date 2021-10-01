@@ -212,7 +212,7 @@ function computeCurl(x, y, z){
   //Average to find approximate derivative
   a = (n1 - n2)/(2 * eps);
   n1 = noise.simplex3(x + eps, y+offset, z); 
-  n2 = noise.simplex3(x + eps, y+offset, z); 
+  n2 = noise.simplex3(x - eps, y+offset, z); 
   //Average to find approximate derivative
   b = (n1 - n2)/(2 * eps);
   curl.y = a - b;
