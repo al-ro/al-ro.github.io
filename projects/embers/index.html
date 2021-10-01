@@ -79,7 +79,7 @@
   n2 = noise.simplex3(x, y, z - eps); 
   a = (n1 - n2)/(2 * eps);
   n1 = noise.simplex3(x + eps, y, z); 
-  n2 = noise.simplex3(x + eps, y, z); 
+  n2 = noise.simplex3(x - eps, y, z); 
   b = (n1 - n2)/(2 * eps);
   curl.y = a - b;
 
