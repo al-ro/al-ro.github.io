@@ -7,20 +7,20 @@
 //https://webglfundamentals.org/
 //And many more
 
-const mobile = ( navigator.userAgent.match(/Android/i)
-    || navigator.userAgent.match(/webOS/i)
-    || navigator.userAgent.match(/iPhone/i)
-    || navigator.userAgent.match(/iPod/i)
-    || navigator.userAgent.match(/BlackBerry/i)
-    || navigator.userAgent.match(/Windows Phone/i)
-);
+  const mobile = ( navigator.userAgent.match(/Android/i)
+      || navigator.userAgent.match(/webOS/i)
+      || navigator.userAgent.match(/iPhone/i)
+      || navigator.userAgent.match(/iPod/i)
+      || navigator.userAgent.match(/BlackBerry/i)
+      || navigator.userAgent.match(/Windows Phone/i)
+      );
 
-var canvas = document.getElementById("canvas_1");
+  var canvas = document.getElementById("canvas_1");
 
-if(mobile){
-  canvas.width = 360;
-  canvas.height = 225;
-}
+  if(mobile){
+    canvas.width = 360;
+    canvas.height = 225;
+  }
 
 var WIDTH = Math.floor(0.9*canvas.width);
 var HEIGHT = Math.floor(0.9*canvas.height);
@@ -385,7 +385,7 @@ var vertexData = new Float32Array([
     -1.0, -1.0, // bottom left
     1.0,  1.0, // top right
     1.0, -1.0, // bottom right
-    ]);
+]);
 
 //Create vertex buffer
 var vertexDataBuffer = gl.createBuffer();
@@ -433,7 +433,7 @@ gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fla
 var blurFBO = [];
 var blurTexture = [];
 
-for(i = 0; i < 2; i++){
+for(let i = 0; i < 2; i++){
   var framebuffer = gl.createFramebuffer();
   framebuffer.width = canvas.width;
   framebuffer.height = canvas.height;
@@ -491,20 +491,20 @@ function step(){
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
       //Blur the result of the bright filter
-      for(i = 1; i < blurCount; i++){
-	gl.useProgram(x_blur_program);
-	gl.uniform1f(widthHandle, WIDTH/(i * blurFactor));
-	gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[1]);
-	gl.bindTexture(gl.TEXTURE_2D, blurTexture[0]);
-	//Draw a triangle strip connecting vertices 0-4
-	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      for(let i = 1; i < blurCount; i++){
+        gl.useProgram(x_blur_program);
+        gl.uniform1f(widthHandle, WIDTH/(i * blurFactor));
+        gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[1]);
+        gl.bindTexture(gl.TEXTURE_2D, blurTexture[0]);
+        //Draw a triangle strip connecting vertices 0-4
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-	gl.useProgram(y_blur_program);
-	gl.uniform1f(heightHandle, HEIGHT/(i * blurFactor));
-	gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[0]);
-	gl.bindTexture(gl.TEXTURE_2D, blurTexture[1]);
-	//Draw a triangle strip connecting vertices 0-4
-	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        gl.useProgram(y_blur_program);
+        gl.uniform1f(heightHandle, HEIGHT/(i * blurFactor));
+        gl.bindFramebuffer(gl.FRAMEBUFFER, blurFBO[0]);
+        gl.bindTexture(gl.TEXTURE_2D, blurTexture[1]);
+        //Draw a triangle strip connecting vertices 0-4
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }
 
       //Combine original and blurred image 
