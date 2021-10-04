@@ -113,7 +113,7 @@ float getGlow(float dist, float radius, float intensity){
 
 float getSegment(float t, vec2 pos, float offset){
 
-  float scale = 0.000015 * height;
+  float scale = 0.015;
 
   for(int i = 0; i < POINT_COUNT; i++){
     points[i] = getHeartPosition(offset + float(i)*len + fract(speed * t) * 6.28);
@@ -200,7 +200,7 @@ canvas.addEventListener('mouseleave', animateEnd);
 canvas.addEventListener('mousemove', mouseTrack);
 
 canvas.addEventListener("touchstart", touchMove);
-canvas.addEventListener("touchmove", animateStart);
+canvas.addEventListener("touchmove", touchMove);
 canvas.addEventListener("touchend", animateEnd);
 canvas.addEventListener("touchcancel", animateEnd);
 
