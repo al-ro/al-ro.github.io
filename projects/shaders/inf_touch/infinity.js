@@ -198,6 +198,7 @@ function onWindowResize(){
 canvas.addEventListener('mouseleave', animateEnd);
 canvas.addEventListener('mousemove', mouseTrack);
 
+canvas.addEventListener("touchstart", touchMove);
 canvas.addEventListener("touchmove", touchMove);
 canvas.addEventListener("touchend", animateEnd);
 canvas.addEventListener("touchcancel", animateEnd);
