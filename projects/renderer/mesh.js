@@ -22,7 +22,7 @@ export class Mesh{
 
     this.material.createProgram(geometry.geometryData, material);
     this.material.getParameterHandles(geometry.geometryData);
-  
+
     if(this.instanced){
       this.material.getInstanceParameterHandles();
     }
@@ -60,19 +60,19 @@ export class Mesh{
     }else{
       gl.enable(gl.CULL_FACE);
     }
-    
+
     gl.useProgram(this.material.getProgram().program);
     this.bindVAO(); 
     this.material.bindParameters(camera, this.geometry, time);
     if(this.geometry.hasIndices){
       if(this.geometry.instanced){
-	extINS.drawElementsInstancedANGLE(this.geometry.primitiveType, 
-					  this.geometry.length, 
-					  this.geometry.indexType, 
-					  0, 
-					  this.geometry.instances);
+        extINS.drawElementsInstancedANGLE(this.geometry.primitiveType, 
+            this.geometry.length, 
+            this.geometry.indexType, 
+            0, 
+            this.geometry.instances);
       }else{
-	gl.drawElements(this.geometry.primitiveType, this.geometry.length, this.geometry.indexType, 0);
+        gl.drawElements(this.geometry.primitiveType, this.geometry.length, this.geometry.indexType, 0);
       }
     }else{
       gl.drawArrays(this.geometry.primitiveType, 0, this.geometry.length);

@@ -40,9 +40,9 @@ function getDefinePrefix(parameters, material){
     }
     if(material.hasAO){
       if(material.hasAOTexture){
-	prefix += "#define HAS_AO_TEXTURE \n";
+        prefix += "#define HAS_AO_TEXTURE \n";
       }else{
-	prefix += "#define AO_IN_PROPERTIES_TEXTURE \n";
+        prefix += "#define AO_IN_PROPERTIES_TEXTURE \n";
       }
     }
   }
@@ -52,30 +52,30 @@ function getDefinePrefix(parameters, material){
 }
 
 var instancePrefix = `
-  
-  attribute vec4 orientation;
-  attribute vec3 offset;
-  attribute vec3 scale;
 
-  //https://www.geeks3d.com/20141201/how-to-rotate-a-vertex-by-a-quaternion-in-glsl/
-  vec3 rotateVectorByQuaternion(vec3 v, vec4 q){
-    return 2.0 * cross(q.xyz, v * q.w + cross(q.xyz, v)) + v;
-  }
+attribute vec4 orientation;
+attribute vec3 offset;
+attribute vec3 scale;
+
+//https://www.geeks3d.com/20141201/how-to-rotate-a-vertex-by-a-quaternion-in-glsl/
+vec3 rotateVectorByQuaternion(vec3 v, vec4 q){
+  return 2.0 * cross(q.xyz, v * q.w + cross(q.xyz, v)) + v;
+}
 `;
 
 function getNormalTransform(parameters){
 
   let normalTransform = `
-      vec4 transformedNormal = normalMatrix * vec4(vertexNormal, 0.0);
+    vec4 transformedNormal = normalMatrix * vec4(vertexNormal, 0.0);
   `
-  if(parameters && parameters.hasOwnProperty("instanced") && parameters.instanced){
-    // For instancing, we apply the same rotation as for the positions but an inverted scaling
-    // https://paroj.github.io/gltut/Illumination/Tut09%20Normal%20Transformation.html
-    normalTransform = `
-      vec4 transformedNormal = normalMatrix * vec4(normalize(normalize(vertexNormal)/scale), 0.0);
+    if(parameters && parameters.hasOwnProperty("instanced") && parameters.instanced){
+      // For instancing, we apply the same rotation as for the positions but an inverted scaling
+      // https://paroj.github.io/gltut/Illumination/Tut09%20Normal%20Transformation.html
+      normalTransform = `
+        vec4 transformedNormal = normalMatrix * vec4(normalize(normalize(vertexNormal)/scale), 0.0);
       transformedNormal.xyz = rotateVectorByQuaternion(transformedNormal.xyz, orientation);
-    `
-  }
+      `
+    }
 
   return normalTransform;
 
@@ -84,16 +84,16 @@ function getNormalTransform(parameters){
 function getPositionTransform(parameters){
 
   let positionTransform = `
-      vec4 pos = modelMatrix * vec4(position, 1.0);
+    vec4 pos = modelMatrix * vec4(position, 1.0);
   `;
   if(parameters && parameters.hasOwnProperty("instanced") && parameters.instanced){
     positionTransform = `
       vec4 pos = modelMatrix * vec4(position*scale, 1.0);
-      pos.xyz = rotateVectorByQuaternion(pos.xyz, orientation);
-      pos.xyz += offset; 
+    pos.xyz = rotateVectorByQuaternion(pos.xyz, orientation);
+    pos.xyz += offset; 
     `
   }
-  
+
   return positionTransform;
 
 }

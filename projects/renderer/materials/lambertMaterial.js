@@ -7,13 +7,13 @@ export class LambertMaterial extends Material{
   projectionMatrixHandle;
   viewMatrixHandle;
   modelMatrixHandle;
-  
+
   normalMatrixHandle;
 
   getVertexShaderSource(parameters){
     return getVertexSource(parameters);
   }
-  
+
   getFragmentShaderSource(){
     return getFragmentSource();
   }
