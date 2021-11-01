@@ -70,11 +70,11 @@ function getFragmentSource(){
     float angle = atan(pos.x, pos.y) / 6.2831853; 
     float height = data > 0 ? texture2D(tex, vec2(angle, 0.0)).b : texture2D(tex, vec2(angle, 0.0)).r ;
 
-    height *= 8.0 * radius;
+    //height *= 8.0 * radius;
 
     vec3 col1 = pow(vec3(0.561, 0.01, 1.0), vec3(2.2));
     vec3 col2 = pow(vec3(0.196, 0.259, 0.871), vec3(2.2));
-    vec3 gradientCol = vec3(0.1) + mix(col2, col1, 0.5+0.5*sin(1.0*atan(pos.x, pos.y)));
+    vec3 gradientCol = vec3(0.1) + mix(col2, col1, dot(normalize(pos), normalize(vec2(-0.75,1))));
 
     float c = (height + length(pos) - radius);
     vec3 col = gradientCol * getGlow(c, 0.5 * max(0.0, -height), 1.5);
