@@ -9,11 +9,6 @@ import {UVMaterial} from "./uvMaterial.js";
 import {WaveMaterial} from "./waveMaterial.js";
 import {CircleMaterial} from "./circleMaterial.js";
 
-
-var leftOffset = [0.115, 0.0];
-var rightOffset = [-0.115, 0.0];
-var middleOffset = [0.0, 0.0];
-
 var leftCircle = {
   radius: 0.15,
   x: 0.115,
@@ -179,8 +174,9 @@ function getEventLocation(centre){
   let y = (2.0 * (1.0-mousePos.y/height + centre[1]) - 1.0);
 
   if(!interact){
-    x = ((middleOffset[0] + centre[0]) );
-    y = ((middleOffset[1] + centre[1]) );
+    let lemniscate = setLemniscate();
+    x = -lemniscate[0] + centre[0];
+    y = -lemniscate[1] + centre[1];
   }
 
   let angle = Math.atan2(x, y) / (2.0 * Math.PI);
@@ -216,7 +212,7 @@ function waveSolver(t){
     waveMaterial.setInteraction(middleCircle.affectGlow || interact);
   }
 
-  waveMaterial.setEventLocation([getEventLocation(leftOffset), getEventLocation(rightOffset)]);
+  waveMaterial.setEventLocation([getEventLocation([leftCircle.x, leftCircle.y]), getEventLocation([rightCircle.x, rightCircle.y])]);
   waveMaterial.setStrength([waves.strength, waves.strength]);
   waveMaterial.setRadius(waves.radius);
   waveMaterial.setWobble(waves.wobble);
@@ -251,8 +247,6 @@ function setLemniscate(){
   let t = time * middleCircle.speed;
   let x = (width * Math.cos(t)) / (1.0 + Math.sin(t) * Math.sin(t));
   let y = (height * Math.sin(t) * Math.cos(t)) / (1.0 + Math.sin(t) * Math.sin(t));
-
-  middleOffset = [-x, -y];
   return [x, y];
 }
 
