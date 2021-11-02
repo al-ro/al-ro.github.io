@@ -26,9 +26,11 @@ function getFragmentSource(){
     varying vec2 vUV;
     uniform float time;
     uniform int interaction;
-    uniform float eventLocation;
+    uniform vec2 eventLocations;
     uniform sampler2D tex;
-    uniform float strength;
+    uniform vec2 strengths;
+    uniform float radius;
+    uniform float wobble;
  
     const float eps = 1e-2;
     const float dampen = 0.9;
@@ -37,7 +39,7 @@ function getFragmentSource(){
       return texture2D(tex, vec2(x, 0));
     }
 
-    vec2 solve(vec2 data, vec2 leftData, vec2 rightData){
+    vec2 solve(vec2 data, vec2 leftData, vec2 rightData, float eventLocation, float strength){
 
       float height = 0.0;
 
@@ -48,14 +50,14 @@ function getFragmentSource(){
         dist = min(dist, length((1.0 + eventLocation) - (vUV.x)));
         dist = min(dist, length((eventLocation - 1.0) - (vUV.x)));
 
-        height = strength * smoothstep(0.15, 0.0, dist);
+        height = strength * smoothstep(radius, 0.0, dist);
       }
 
       // Ripple propagation
       height += data.r + (0.5 * (leftData.r + rightData.r) - data.g);
 
       // Write new to red, previous to green
-      return vec2(dampen * height, data.r);
+      return vec2(wobble * height, data.r);
     }
 
     void main(){  
@@ -66,8 +68,8 @@ function getFragmentSource(){
       vec4 leftData = getData(vUV.x - eps);
       vec4 rightData = getData(vUV.x + eps);
       
-      vec2 leftCircle = solve(data.rg, leftData.rg, rightData.rg);
-      vec2 rightCircle = solve(data.ba, leftData.ba, rightData.ba);
+      vec2 leftCircle = solve(data.rg, leftData.rg, rightData.rg, eventLocations.x, strengths.x);
+      vec2 rightCircle = solve(data.ba, leftData.ba, rightData.ba, eventLocations.y, strengths.y);
 
       gl_FragColor = vec4(leftCircle, rightCircle);
     }

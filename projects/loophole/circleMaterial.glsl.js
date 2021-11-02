@@ -10,14 +10,8 @@ function getVertexSource(){
   varying vec2 vUV;
 
   void main(){
-
     vUV = uv;
-
-    vec4 pos;
-
-    pos = modelMatrix * vec4(position, 1.0);
-
-    gl_Position = vec4(pos);
+    gl_Position = modelMatrix * vec4(position, 1.0);
   }
   `;
 
@@ -38,6 +32,11 @@ function getFragmentSource(){
   uniform vec2 offset;
   uniform float radius;
   uniform int data;
+
+  uniform int deformationEnabled;
+  uniform int glowEnabled;
+  uniform float glowFade;
+  uniform float glowRadius;
 
   //https://www.shadertoy.com/view/3s3GDn
   float getGlow(float dist, float radius, float intensity){
@@ -68,16 +67,14 @@ function getFragmentSource(){
     pos += offset;
 
     float angle = atan(pos.x, pos.y) / 6.2831853; 
-    float height = data > 0 ? texture2D(tex, vec2(angle, 0.0)).b : texture2D(tex, vec2(angle, 0.0)).r ;
-
-    //height *= 8.0 * radius;
+    float height = data > 0 ? texture2D(tex, vec2(angle, 0.0)).a : texture2D(tex, vec2(angle, 0.0)).r ;
 
     vec3 col1 = pow(vec3(0.561, 0.01, 1.0), vec3(2.2));
     vec3 col2 = pow(vec3(0.196, 0.259, 0.871), vec3(2.2));
     vec3 gradientCol = vec3(0.1) + mix(col2, col1, dot(normalize(pos), normalize(vec2(-0.75,1))));
 
-    float c = (height + length(pos) - radius);
-    vec3 col = gradientCol * getGlow(c, 0.5 * max(0.0, -height), 1.5);
+    float c = (deformationEnabled > 0 ? height : 0.0) + length(pos) - radius;
+    vec3 col = glowEnabled > 0 ? gradientCol * getGlow(c, glowRadius * max(0.0, -height), glowFade) : vec3(0);
     vec3 gradient = 2.0 * gradientCol * smoothstep(-0.2 * radius, radius, c);
 
     col = mix((0.02 * col1) + gradient, clamp(col, 0.0, 1e6), smoothstep(-0.0, 0.0025, c));

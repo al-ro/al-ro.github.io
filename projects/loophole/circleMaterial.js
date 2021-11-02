@@ -20,6 +20,18 @@ export class CircleMaterial extends Material{
   dataHandle;
   data;
 
+  deformationEnabledHandle;
+  deformationEnabled;
+
+  glowEnabledHandle;
+  glowEnabled;
+
+  glowRadiusHandle;
+  glowRadius;
+
+  glowFadeHandle;
+  glowFade;
+
   getVertexShaderSource(parameters){
     return getVertexSource(parameters);
   }
@@ -40,6 +52,11 @@ export class CircleMaterial extends Material{
     this.offsetHandle = this.program.getUniformLocation('offset');
     this.radiusHandle = this.program.getUniformLocation('radius');
     this.dataHandle = this.program.getUniformLocation('data');
+
+    this.deformationEnabledHandle = this.program.getUniformLocation('deformationEnabled');
+    this.glowEnabledHandle = this.program.getUniformLocation('glowEnabled');
+    this.glowRadiusHandle = this.program.getUniformLocation('glowRadius');
+    this.glowFadeHandle = this.program.getUniformLocation('glowFade');
   }
 
 
@@ -51,6 +68,11 @@ export class CircleMaterial extends Material{
     gl.uniform2fv(this.offsetHandle, this.offset);
     gl.uniform1f(this.radiusHandle, this.radius);
     gl.uniform1i(this.dataHandle, this.data);
+
+    gl.uniform1i(this.deformationEnabledHandle, this.deformationEnabled);
+    gl.uniform1i(this.glowEnabledHandle, this.glowEnabled);
+    gl.uniform1f(this.glowRadiusHandle, this.glowRadius);
+    gl.uniform1f(this.glowFadeHandle, this.glowFade);
 
     // Tell WebGL we want to affect texture unit 0
     gl.activeTexture(gl.TEXTURE0);

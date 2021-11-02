@@ -9,6 +9,82 @@ import {UVMaterial} from "./uvMaterial.js";
 import {WaveMaterial} from "./waveMaterial.js";
 import {CircleMaterial} from "./circleMaterial.js";
 
+
+var leftOffset = [0.115, 0.0];
+var rightOffset = [-0.115, 0.0];
+var middleOffset = [0.0, 0.0];
+
+var leftCircle = {
+  radius: 0.15,
+  x: 0.115,
+  y: 0.0,
+};
+
+var rightCircle = {
+  radius: 0.145,
+  x: -0.115,
+  y: 0.0,
+};
+
+var middleCircle = {
+  radius: 0.03,
+  x: 0.0,
+  y: 0.0,
+  speed: 1.5,
+  animate: false,
+  affectGlow: false
+};
+
+var waves = {
+  enabled: true,
+  strength: -0.0015,
+  radius: 0.15,
+  wobble: 0.9
+}
+
+var glow = {
+  enabled: true,
+  radius: 0.5,
+  fade: 1.5
+}
+
+//************* GUI ***************
+
+var gui = new dat.GUI({ autoPlace: false });
+var customContainer = document.getElementById('gui_container');
+customContainer.appendChild(gui.domElement);
+
+var leftFolder = gui.addFolder("Left");
+leftFolder.add(leftCircle, 'radius').min(0.0).max(1).step(0.01);
+leftFolder.add(leftCircle, 'x').min(-1.0).max(1).step(0.01);
+leftFolder.add(leftCircle, 'y').min(-1.0).max(1).step(0.01);
+
+var rightFolder = gui.addFolder("Right");
+rightFolder.add(rightCircle, 'radius').min(0.0).max(1).step(0.01);
+rightFolder.add(rightCircle, 'x').min(-1.0).max(1).step(0.01);
+rightFolder.add(rightCircle, 'y').min(-1.0).max(1).step(0.01);
+
+var middleFolder = gui.addFolder("Middle");
+middleFolder.add(middleCircle, 'radius').min(0.0).max(1).step(0.01);
+middleFolder.add(middleCircle, 'x').min(-1.0).max(1).step(0.01);
+middleFolder.add(middleCircle, 'y').min(-1.0).max(1).step(0.01);
+middleFolder.add(middleCircle, 'animate');
+middleFolder.add(middleCircle, 'affectGlow');
+middleFolder.add(middleCircle, 'speed').min(-4.0).max(4).step(0.01);
+
+var wavesFolder = gui.addFolder("Waves");
+wavesFolder.add(waves, 'enabled');
+wavesFolder.add(waves, 'strength').min(-0.01).max(0.01).step(0.0001);
+wavesFolder.add(waves, 'radius').min(0.01).max(1.0).step(0.0001);
+wavesFolder.add(waves, 'wobble').min(0.8).max(0.999).step(0.0001);
+
+var glowFolder = gui.addFolder("Glow");
+glowFolder.add(glow, 'enabled');
+glowFolder.add(glow, 'radius').min(0.0).max(2.0).step(0.0001);
+glowFolder.add(glow, 'fade').min(0.0).max(4.0).step(0.0001);
+
+//************* GUI ***************
+
 function createAndSetupTexture() {
   var texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -78,6 +154,7 @@ let waveSolverCount = 1;
 
 let waveTexture0 = createAndSetupTexture();
 let waveTexture1 = createAndSetupTexture();
+let waveTexture_null = createAndSetupTexture();
 
 gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, waveTexture0);
@@ -86,10 +163,45 @@ gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, waveSolverResolution, waveSolverCount, 
 gl.bindTexture(gl.TEXTURE_2D, waveTexture1);
 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, waveSolverResolution, waveSolverCount, 0, gl.RGBA, gl.FLOAT, null);
 
+gl.bindTexture(gl.TEXTURE_2D, waveTexture_null);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.FLOAT, null);
+
 let waveMaterial = new WaveMaterial();
 let waveMesh = new Mesh(getScreenspaceQuad(), waveMaterial);
 
 let waveFrameBuffer = gl.createFramebuffer();
+
+function getEventLocation(centre){
+  let width = canvas.width/canvasMultiplier;
+  let height = canvas.height/canvasMultiplier;
+
+  let x = (2.0 * (mousePos.x/width + centre[0]) - 1.0);
+  let y = (2.0 * (1.0-mousePos.y/height + centre[1]) - 1.0);
+
+  if(!interact){
+    x = ((middleOffset[0] + centre[0]) );
+    y = ((middleOffset[1] + centre[1]) );
+  }
+
+  let angle = Math.atan2(x, y) / (2.0 * Math.PI);
+
+  return angle;
+
+}
+
+function getStrength(centre, radius){
+  let width = canvas.width/canvasMultiplier;
+  let height = canvas.height/canvasMultiplier;
+
+  let x = (2.0 * (mousePos.x/width + centre[0]) - 1.0);
+  let aspect = canvas.width/canvas.height;
+  let y = (2.0 * (1.0-(mousePos.y/height + centre[1])) - 1.0)/(aspect);
+  
+  let strength = Math.hypot(x, y) - 2.0 * radius;
+
+  return 0.005 * strength;
+
+}
 
 function waveSolver(t){
   let waveTexture = t > 0 ? waveTexture1 : waveTexture0;
@@ -100,12 +212,16 @@ function waveSolver(t){
 
   waveMaterial.setTexture(t > 0 ? waveTexture0 : waveTexture1);
   waveMaterial.setInteraction(interact ? 1 : 0);
-  let width = canvas.width/canvasMultiplier;
-  let height = canvas.height/canvasMultiplier;
-  let angle = Math.atan2(2.0 * mousePos.x/width - 1.0, 2.0 * (1.0-mousePos.y/height) - 1.0) /  (2.0 * Math.PI);
-  waveMaterial.setEventLocation(angle);
+  if(middleCircle.animate){
+    waveMaterial.setInteraction(middleCircle.affectGlow || interact);
+  }
+
+  waveMaterial.setEventLocation([getEventLocation(leftOffset), getEventLocation(rightOffset)]);
+  waveMaterial.setStrength([waves.strength, waves.strength]);
+  waveMaterial.setRadius(waves.radius);
+  waveMaterial.setWobble(waves.wobble);
   circleMaterial.setTexture(t > 0 ? waveTexture1 : waveTexture0);
-  //waveMaterial.setAspect(canvas.width/canvas.height);
+
   gl.disable(gl.BLEND);
   waveMesh.render(time);
 }
@@ -124,10 +240,21 @@ function hexToRgb(hex) {
   return [array.r/255, array.g/255, array.b/255];
 }
 
-console.log(hexToRgb("#8F00FF"));
-console.log(hexToRgb("#3242DE"));
+//console.log(hexToRgb("#8F00FF"));
+//console.log(hexToRgb("#3242DE"));
 
 var frame = 0;
+
+function setLemniscate(){
+  let width = 0.22;
+  let height = 0.3
+  let t = time * middleCircle.speed;
+  let x = (width * Math.cos(t)) / (1.0 + Math.sin(t) * Math.sin(t));
+  let y = (height * Math.sin(t) * Math.cos(t)) / (1.0 + Math.sin(t) * Math.sin(t));
+
+  middleOffset = [-x, -y];
+  return [x, y];
+}
 
 function draw(){
 
@@ -145,19 +272,29 @@ function draw(){
 
   circleMaterial.setAspect(canvas.width/canvas.height);
 
-  circleMaterial.setRadius(0.15);
-  circleMaterial.setOffset([0.115, 0.0]);
-  circleMaterial.setData[0];
+  circleMaterial.deformationEnabled = waves.enabled;
+  circleMaterial.glowEnabled = glow.enabled;
+  circleMaterial.glowRadius = glow.radius;
+  circleMaterial.glowFade = glow.fade;
+
+  circleMaterial.setRadius(leftCircle.radius);
+  circleMaterial.setOffset([leftCircle.x, leftCircle.y]);
+  circleMaterial.setData(0);
   mesh.render(time);
 
-  circleMaterial.setRadius(0.145);
-  circleMaterial.setOffset([-0.115, 0.0]);
-  circleMaterial.setData[1];
+  circleMaterial.setRadius(rightCircle.radius);
+  circleMaterial.setOffset([rightCircle.x, rightCircle.y]);
+  circleMaterial.setData(1);
   mesh.render(time);
 
-  circleMaterial.setRadius(0.03);
-  circleMaterial.setOffset([-0.0, 0.0]);
-  circleMaterial.setData[1];
+  circleMaterial.setRadius(middleCircle.radius);
+  if(middleCircle.animate){
+    circleMaterial.setOffset(setLemniscate());
+  }else{
+    circleMaterial.setOffset([middleCircle.x, middleCircle.y]); 
+  }
+  circleMaterial.setData(1);
+  circleMaterial.setTexture(waveTexture_null);
   mesh.render(time);
 
   gl.disable(gl.BLEND);
