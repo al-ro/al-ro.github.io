@@ -17,7 +17,13 @@ export class WaveMaterial extends Material{
   eventLocationHandle;
   eventLocation;
   strengthHandle;
-  strength = -0.0015;
+  strength = [-0.0015, -0.0015];
+
+  radiusHandle;
+  radius;
+
+  wobbleHandle;
+  wobble;
 
   getVertexShaderSource(parameters){
     return getVertexSource(parameters);
@@ -34,10 +40,12 @@ export class WaveMaterial extends Material{
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
 
     this.timeHandle = this.program.getUniformLocation('time');
-    this.eventLocationHandle = this.program.getUniformLocation('eventLocation');
+    this.eventLocationHandle = this.program.getUniformLocation('eventLocations');
     this.interactionHandle = this.program.getUniformLocation('interaction');
     this.textureHandle = this.program.getUniformLocation('tex');
-    this.strengthHandle = this.program.getUniformLocation('strength');
+    this.strengthHandle = this.program.getUniformLocation('strengths');
+    this.radiusHandle = this.program.getUniformLocation('radius');
+    this.wobbleHandle = this.program.getUniformLocation('wobble');
   }
 
 
@@ -46,8 +54,10 @@ export class WaveMaterial extends Material{
 
     gl.uniform1f(this.timeHandle, time);
     gl.uniform1i(this.interactionHandle, this.interaction);
-    gl.uniform1f(this.eventLocationHandle, this.eventLocation);
-    gl.uniform1f(this.strengthHandle, this.strength);
+    gl.uniform2fv(this.eventLocationHandle, this.eventLocation);
+    gl.uniform2fv(this.strengthHandle, this.strength);
+    gl.uniform1f(this.radiusHandle, this.radius);
+    gl.uniform1f(this.wobbleHandle, this.wobble);
 
     // Tell WebGL we want to affect texture unit 0
     gl.activeTexture(gl.TEXTURE0);
@@ -79,4 +89,11 @@ export class WaveMaterial extends Material{
     this.strength = strength;
   }
 
+  setRadius(radius){
+    this.radius = radius;
+  }
+
+  setWobble(wobble){
+    this.wobble = wobble;
+  }
 }
