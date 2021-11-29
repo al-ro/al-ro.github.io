@@ -7,41 +7,6 @@
    {file:"",type="gltf"}
  */
 
-// A class for downloadable element (gltf, bin, png, etc.)
-class Downloadable{
-  workingDirectory = "./";
-  type = null;
-  path = "";
-
-  constructor(descriptor){
-    this.type = descriptor.type;
-    this.path = descriptor.file;
-    this.workingDirectory = this.path.substring(0, file.lastIndexOf("/") + 1)
-  }
-}
-
-class Download{
-  getFile(url, type){
-    return new Promise((resolve, reject) => {
-      let xhr = new XMLHttpRequest();
-      xhr.open("GET", url);
-      xhr.responseType = type;
-      xhr.onResolve = () => {
-        resolve(xhr.response);
-      }
-      xhr.send();
-    });
-  }
-
-  download(url, type){
-    getFile(url, type).then(
-      data => {console.log(data);}
-    ).catch( () =>
-      {console.log("Download error");}
-    );
-  }
-}
-
 var workingDirectory = "./";
 class Downloader{
 
@@ -103,7 +68,6 @@ class Downloader{
 
   //Functionality for actual downloading
   static onXhrcomplete(e){
-    console.log(e);
     var doSave = Downloader.handlers[this.activeItem.type](this.activeItem, e.currentTarget.response);
     if(doSave){
       Downloader.complete.push(this.activeItem);

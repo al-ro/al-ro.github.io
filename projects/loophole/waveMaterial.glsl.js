@@ -54,10 +54,10 @@ function getFragmentSource(){
       }
 
       // Ripple propagation
-      height += data.r + (0.5 * (leftData.r + rightData.r) - data.g);
+      //height += data.r + (0.5 * (leftData.r + rightData.r) - data.g);
 
       // Write new to red, previous to green
-      return vec2(wobble * height, data.r);
+      return vec2(height, data.r);
     }
 
     void main(){  

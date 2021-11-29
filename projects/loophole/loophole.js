@@ -8,6 +8,7 @@ import {getScreenspaceQuad} from "./screenspace.js";
 import {UVMaterial} from "./uvMaterial.js";
 import {WaveMaterial} from "./waveMaterial.js";
 import {CircleMaterial} from "./circleMaterial.js";
+import {StarsMaterial} from "./starsMaterial.js";
 
 var leftCircle = {
   radius: 0.15,
@@ -32,7 +33,7 @@ var middleCircle = {
 
 var waves = {
   enabled: true,
-  strength: -0.0015,
+  strength: -0.015,
   radius: 0.15,
   wobble: 0.9
 }
@@ -69,7 +70,7 @@ middleFolder.add(middleCircle, 'speed').min(-4.0).max(4).step(0.01);
 
 var wavesFolder = gui.addFolder("Waves");
 wavesFolder.add(waves, 'enabled');
-wavesFolder.add(waves, 'strength').min(-0.01).max(0.01).step(0.0001);
+wavesFolder.add(waves, 'strength').min(-0.1).max(0.1).step(0.0001);
 wavesFolder.add(waves, 'radius').min(0.01).max(1.0).step(0.0001);
 wavesFolder.add(waves, 'wobble').min(0.8).max(0.999).step(0.0001);
 
@@ -95,7 +96,7 @@ function createAndSetupTexture() {
 var controls = new Controls();
 
 var mousePos = {x: 0, y: 0};
-var interact = false;
+var interact = true;
 
 canvas.addEventListener('mouseup', interactEnd);
 canvas.addEventListener('mousedown', interactStart);
@@ -111,7 +112,7 @@ function interactStart() {
 }
 
 function interactEnd() {
-  interact = false;
+  //interact = false;
 }
 
 function mouseTrack(event) {
@@ -144,6 +145,10 @@ let circleMaterial = new CircleMaterial();
 
 let mesh = new Mesh(getScreenspaceQuad(), circleMaterial);
 
+let starsMaterial = new StarsMaterial();
+
+let starsMesh = new Mesh(getScreenspaceQuad(), starsMaterial);
+
 let waveSolverResolution = 512;
 let waveSolverCount = 1;
 
@@ -165,6 +170,16 @@ let waveMaterial = new WaveMaterial();
 let waveMesh = new Mesh(getScreenspaceQuad(), waveMaterial);
 
 let waveFrameBuffer = gl.createFramebuffer();
+
+function getMousePosition(){
+  let width = canvas.width/canvasMultiplier;
+  let height = canvas.height/canvasMultiplier;
+
+  let x = (mousePos.x)/width;
+  let y = 1.0-(mousePos.y/height);
+
+  return [x, y];
+}
 
 function getEventLocation(centre){
   let width = canvas.width/canvasMultiplier;
@@ -264,6 +279,9 @@ function draw(){
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE);
 
+  circleMaterial.setMousePos(getMousePosition());
+  //console.log(getMousePosition());
+
   circleMaterial.setAspect(canvas.width/canvas.height);
 
   circleMaterial.deformationEnabled = waves.enabled;
@@ -291,6 +309,9 @@ function draw(){
   circleMaterial.setTexture(waveTexture_null);
   mesh.render(time);
 
+
+  starsMaterial.setAspect(canvas.width/canvas.height);
+  starsMesh.render(time);
   gl.disable(gl.BLEND);
 
   //Update time
