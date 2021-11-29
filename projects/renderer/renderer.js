@@ -16,6 +16,7 @@ import {Downloader} from "./downloader.js";
 import {getScreenspaceQuad} from "./screenspace.js";
 import {getSphericalHarmonicsMatrices} from "./iblUtils.js";
 import {programRepository} from "./programRepository.js"
+import {GLTF} from "./GLTF.js"
 
 const stats = new Stats();
 stats.showPanel(0);
@@ -45,7 +46,7 @@ document.getElementById('cc_1').appendChild(stats.domElement);
 
 var path;
 
-var model = "damagedhelmet";
+var model = "corridor";
 
 switch(model){
   case "boombox":
@@ -94,6 +95,10 @@ var p = Downloader.start([{name: model, type:"gltf", file: path}]).then(function
     //loadGLTF();
     setTimeout(loadGLTF, 50);
     }).catch(function(error){ console.error("error",error); });
+
+
+let _gltf = new GLTF(path);
+
 
 var yaw = Math.PI/4.0;
 var pitch = 0.0;
@@ -167,9 +172,7 @@ function loadGLTF(){
 
   var loader = new GLTFLoader();
 
-  console.log(Downloader.complete[0].dl);
   let gltf = loader.load(Downloader.complete[0].dl, true);
-  console.log(gltf);
 
   images = Downloader.complete[0].dl.images;
   materials = Downloader.complete[0].dl.materials;
@@ -320,12 +323,8 @@ function loadGLTF(){
 
   console.log(programRepository);
 
-  console.log(minExtent);
-  console.log(maxExtent);
-
   let centre = [(maxExtent[0] + minExtent[0])/2.0, (maxExtent[1] + minExtent[1])/2.0, (maxExtent[2] + minExtent[2])/2.0,]
 
-  console.log(centre);
   camera.setTarget(centre);
 
   readyToRender = true;

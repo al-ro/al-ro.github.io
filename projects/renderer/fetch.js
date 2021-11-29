@@ -8,6 +8,9 @@ function download(url, type){
           case "blob":
             return response.blob();
             break;
+          case "arrayBuffer":
+            return response.arrayBuffer();
+            break;
           default:
             console.log("Unknown file type: ", url);
             return null;
@@ -19,7 +22,9 @@ function download(url, type){
   }
 
 function processGLTF(json, workingDirectory){
-  console.log(json);
+  console.log("JSON to process:", json);
+  let imagePromises = [];
+  let bufferPromises = [];
 
   if(json.images){
     let images = [];
@@ -28,13 +33,28 @@ function processGLTF(json, workingDirectory){
     }
 
     Promise.all(imagePromises).then(p => {
-        for(let i = 0; i < imagePromises.length; i++){
-          imagePromises[i].then(data => console.log(data));
-        }
-      });
+      for(let i = 0; i < imagePromises.length; i++){
+        imagePromises[i].then(data => console.log(data));
+      }
+    });
+  }
+
+  if(json.buffers){
+    let buffers = [];
+    for(let i = 0; i < json.buffers.length; i++){
+      bufferPromises.push(download(workingDirectory.concat(json.buffers[i].uri), "arrayBuffer"));
+    }
+
+    Promise.all(bufferPromises).then(p => {
+      for(let i = 0; i < bufferPromises.length; i++){
+        bufferPromises[i].then(data => {
+          console.log(data);//reader.result contains the contents of blob as a typed array
+        });
+      }
+    });
   }
 }
 
-let p = download("./gltf/boombox/BoomBox.gltf", "gltf");
+let p = download("./gltf/flighthelmet/FlightHelmet.gltf", "gltf");
 
-p.then(data => processGLTF(data, "./gltf/boombox/"));
+p.then(data => processGLTF(data, "./gltf/flighthelmet/"));

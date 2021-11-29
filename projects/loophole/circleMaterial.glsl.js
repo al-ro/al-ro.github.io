@@ -28,6 +28,7 @@ function getFragmentSource(){
   uniform float time;
   uniform sampler2D tex;
   uniform float aspect;
+  uniform vec2 mousePos;
 
   uniform vec2 offset;
   uniform float radius;
@@ -62,12 +63,29 @@ function getFragmentSource(){
     return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
   }
 
-  vec3 getCircle(vec2 pos){
+  // https://www.iquilezles.org/www/articles/smin/smin.htm
+  float smoothMin(float a, float b, float k){
+    float h = clamp(0.5+0.5*(b-a)/k, 0.0, 1.0 );
+    return mix( b, a, h ) - k*h*(1.0-h);
+  }
+
+  vec3 getCircle(vec2 pos, vec2 mouse){
 
     pos += offset;
 
     float angle = atan(pos.x, pos.y) / 6.2831853; 
     float height = data > 0 ? texture2D(tex, vec2(angle, 0.0)).a : texture2D(tex, vec2(angle, 0.0)).r ;
+
+    if(length(mouse+offset) < radius){
+      height *= clamp(length(mouse+offset)/radius, 0.0, 1.0);
+    }else{
+      //height *= 1.0-clamp(length(mouse+offset)/(6.0 * radius), 0.0, 1.0);
+    }
+
+    height *= pow(1.0-abs(length(mouse+offset)-radius), 8.0);
+    //height = smoothstep(height, 0.0, 1.5 * radius - length(mouse+offset)/radius);
+
+    //return vec3(height);
 
     vec3 col1 = pow(vec3(0.561, 0.01, 1.0), vec3(2.2));
     vec3 col2 = pow(vec3(0.196, 0.259, 0.871), vec3(2.2));
@@ -75,6 +93,10 @@ function getFragmentSource(){
 
     float c = (deformationEnabled > 0 ? height : 0.0) + length(pos) - radius;
     vec3 col = glowEnabled > 0 ? gradientCol * getGlow(c, glowRadius * max(0.0, -height), glowFade) : vec3(0);
+
+    //float distMouse = length(mouse) - 0.01;
+    //c = smoothMin(c, distMouse, 0.1);
+
     vec3 gradient = 2.0 * gradientCol * smoothstep(-0.2 * radius, radius, c);
 
     col = mix((0.02 * col1) + gradient, clamp(col, 0.0, 1e6), smoothstep(-0.0, 0.0025, c));
@@ -88,7 +110,10 @@ function getFragmentSource(){
     vec2 pos = vUV - vec2(0.5);
     pos.y /= aspect;
 
-    vec3 col = getCircle(pos);
+    vec2 mouse = mousePos - vec2(0.5);
+    mouse.y /= aspect;
+
+    vec3 col = getCircle(pos, mouse);
 
     col = ACESFilm(col);
     col = pow(col, vec3(0.4545));
