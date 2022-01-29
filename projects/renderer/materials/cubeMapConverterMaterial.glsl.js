@@ -24,7 +24,6 @@ function getFragmentSource(){
   #define TWO_PI (2.0 * PI)
 
   uniform mat4 cameraMatrix;
-  uniform float exposure;
   uniform sampler2D sphericalTexture;
   varying vec3 vPosition;
 

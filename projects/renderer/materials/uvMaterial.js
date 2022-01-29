@@ -31,12 +31,6 @@ export class UVMaterial extends Material{
     this.attributeHandles.scaleHandle = this.program.getAttribLocation('scale');
   }
 
-  bindParameters(camera, geometry){
-    gl.uniformMatrix4fv(this.projectionMatrixHandle, false, camera.getProjectionMatrix());
-    gl.uniformMatrix4fv(this.viewMatrixHandle, false, camera.getViewMatrix());
-    gl.uniformMatrix4fv(this.modelMatrixHandle, false, geometry.getModelMatrix());
-  }
-
   getHandles(){
     return this.attributeHandles; 
   }

@@ -46,7 +46,7 @@ document.getElementById('cc_1').appendChild(stats.domElement);
 
 var path;
 
-var model = "corridor";
+var model = "jedifighter";
 
 switch(model){
   case "boombox":
@@ -214,6 +214,10 @@ function loadGLTF(){
         modelMatrix = m4.scale(modelMatrix, 100, 100, 100);
       }
 
+      if(model == "jedifighter"){
+        modelMatrix = m4.scale(modelMatrix, 0.01, 0.01, 0.01);
+      }
+
       g.setModelMatrix(modelMatrix);
 
       let min = m4.transformVector(modelMatrix, gltfMesh.vertices.min);
@@ -311,6 +315,8 @@ function loadGLTF(){
       }else{
         material = new PBRMaterial({environment: environment});
       }
+
+      //material = new NormalMaterial();
 
       let mesh = new Mesh(g, material);
       if(alphaMode == enums.BLEND){

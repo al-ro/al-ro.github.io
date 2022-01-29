@@ -28,7 +28,7 @@ export class SphericalHarmonicsMaterial extends Material{
     this.cubeMapHandle = this.program.getUniformLocation('cubeMap');
   }
 
-  bindParameters(camera, geometry){
+  bindParameters(){
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeMap);
     gl.uniform1i(this.cubeMapHandle, 0);
