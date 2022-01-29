@@ -5,17 +5,31 @@ import {getVertexSource, getFragmentSource} from './environmentMaterial.glsl.js'
 export class EnvironmentMaterial extends Material{
 
   cameraMatrixHandle;
+  cameraMatrix;
+
   exposureHandle;
+  exposure = 1.0;
 
   cubeMapHandle;
   cubeMap;
 
-  constructor(cubeMap){
+  fovHandle;
+  fov;
+
+  resolutionHandle;
+
+  constructor(cubeMap, camera){
     super();
-    if(!cubeMap){
+    this.needsCamera = true;
+    if(cubeMap != null){
+      this.cubeMap = cubeMap;
+    }else{
       console.error("Environment material must be created with a cube map texture. Parameter: ", cubeMap);
     }
-    this.cubeMap = cubeMap;
+
+    this.cameraMatrix = camera.getCameraMatrix();
+    this.exposure = camera.getExposure();
+    this.fov = camera.getFOV();
   }
 
   getVertexShaderSource(parameters){
@@ -36,11 +50,11 @@ export class EnvironmentMaterial extends Material{
     this.exposureHandle = this.program.getUniformLocation('exposure');
   }
 
-  bindParameters(camera, geometry){
-    gl.uniformMatrix4fv(this.cameraMatrixHandle, false, camera.getCameraMatrix());
-    gl.uniform1f(this.fovHandle, camera.getFOV());
+  bindParameters(){
+    gl.uniformMatrix4fv(this.cameraMatrixHandle, false, this.cameraMatrix);
+    gl.uniform1f(this.fovHandle, this.fov);
     gl.uniform2f(this.resolutionHandle, gl.canvas.width, gl.canvas.height);
-    gl.uniform1f(this.exposureHandle, camera.exposure);
+    gl.uniform1f(this.exposureHandle, this.exposure);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeMap);
@@ -49,6 +63,12 @@ export class EnvironmentMaterial extends Material{
 
   getHandles(){
     return this.attributeHandles; 
+  }
+
+  setCamera(camera){
+    this.cameraMatrix = camera.getCameraMatrix();
+    this.exposure = camera.getExposure();
+    this.fov = camera.getFOV();;
   }
 
 }

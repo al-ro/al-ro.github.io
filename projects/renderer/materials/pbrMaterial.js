@@ -7,10 +7,16 @@ export class PBRMaterial extends Material{
   projectionMatrixHandle;
   viewMatrixHandle;
   modelMatrixHandle;
+  normalMatrixHandle;
 
   exposureHandle;
+  exposure = 1.0;
 
-  normalMatrixHandle;
+  timeHandle;
+  time = 0.0;
+
+  cameraPositionHandle;
+  cameraPosition = [10, 10, 10];
 
   // Spherical harmonics (SH) matrices for red, green and blue
   // Must be generated every time a new environment map is used
@@ -118,6 +124,9 @@ export class PBRMaterial extends Material{
 
     super();
 
+    this.needsCamera = true;
+    this.needsTime = true;
+
     this.textureUnits = 0;
 
     this.brdfTextureUnit = this.textureUnits;
@@ -182,23 +191,23 @@ export class PBRMaterial extends Material{
     }else{
 
       if(parameters.hasOwnProperty("roughness") && parameters.roughness){
-	this.roughness = parameters.roughness;
+        this.roughness = parameters.roughness;
       }
 
       if(parameters.hasOwnProperty("metal") && parameters.metal){
-	this.metal = parameters.metal;
+        this.metal = parameters.metal;
       }
     }
 
     if(parameters.hasOwnProperty("aoTexture") && parameters.aoTexture){
       this.hasAO = true;
       if(parameters.aoTexture == this.propertiesTexture){
-	this.hasAOTexture = false;
+        this.hasAOTexture = false;
       }else{
-	this.hasAOTexture = true;
-	this.aoTextureUnit = this.textureUnits;
-	this.textureUnits++;
-	this.aoTexture = parameters.aoTexture;
+        this.hasAOTexture = true;
+        this.aoTextureUnit = this.textureUnits;
+        this.textureUnits++;
+        this.aoTexture = parameters.aoTexture;
       }
     }
   }
@@ -230,6 +239,7 @@ export class PBRMaterial extends Material{
     this.viewMatrixHandle = this.program.getUniformLocation('viewMatrix');
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
     this.normalMatrixHandle = this.program.getUniformLocation('normalMatrix');
+
     this.cameraPositionHandle = this.program.getUniformLocation('cameraPosition');
     this.exposureHandle = this.program.getUniformLocation('exposure');
 
@@ -276,14 +286,9 @@ export class PBRMaterial extends Material{
     this.attributeHandles.scaleHandle = this.program.getAttribLocation('scale');
   }
 
-  bindParameters(camera, geometry, time){
+  bindParameters(){
 
-    gl.uniform1f(this.timeHandle, time);
-
-    gl.uniformMatrix4fv(this.projectionMatrixHandle, false, camera.getProjectionMatrix());
-    gl.uniformMatrix4fv(this.viewMatrixHandle, false, camera.getViewMatrix());
-    gl.uniformMatrix4fv(this.normalMatrixHandle, false, geometry.getNormalMatrix());
-    gl.uniformMatrix4fv(this.modelMatrixHandle, false, geometry.getModelMatrix());
+    gl.uniform1f(this.timeHandle, this.time);
 
     this.brdfIntegrationMapTexture = this.environment.getBRDFIntegrationMap();
     this.environmentTexture = this.environment.getCubeMap();
@@ -312,9 +317,9 @@ export class PBRMaterial extends Material{
     gl.uniformMatrix4fv(this.shGrnMatrixHandle, false, this.shGrnMatrix);
     gl.uniformMatrix4fv(this.shBluMatrixHandle, false, this.shBluMatrix);
 
-    gl.uniform3fv(this.cameraPositionHandle, camera.position);
+    gl.uniform3fv(this.cameraPositionHandle, this.cameraPosition);
 
-    gl.uniform1f(this.exposureHandle, camera.exposure);
+    gl.uniform1f(this.exposureHandle, this.exposure);
 
     gl.activeTexture(gl.TEXTURE0 + this.brdfTextureUnit);
     gl.bindTexture(gl.TEXTURE_2D, this.brdfIntegrationMapTexture);
@@ -361,6 +366,15 @@ export class PBRMaterial extends Material{
 
   getHandles(){
     return this.attributeHandles; 
+  }
+
+  setCamera(camera){
+    this.cameraPosition = camera.getPosition();
+    this.exposure = camera.getExposure();
+  }
+
+  setTime(time){
+    this.time = time;
   }
 
 }

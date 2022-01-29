@@ -47,11 +47,7 @@ export class TextureMaterial extends Material{
     this.attributeHandles.scaleHandle = this.program.getAttribLocation('scale');
   }
 
-  bindParameters(camera, geometry){
-    gl.uniformMatrix4fv(this.projectionMatrixHandle, false, camera.getProjectionMatrix());
-    gl.uniformMatrix4fv(this.viewMatrixHandle, false, camera.getViewMatrix());
-    gl.uniformMatrix4fv(this.normalMatrixHandle, false, geometry.getNormalMatrix());
-    gl.uniformMatrix4fv(this.modelMatrixHandle, false, geometry.getModelMatrix());
+  bindParameters(){
 
     // Tell WebGL we want to affect texture unit 0
     gl.activeTexture(gl.TEXTURE0);

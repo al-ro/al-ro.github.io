@@ -27,7 +27,7 @@ export class BRDFMapMaterial extends Material{
     this.resolutionHandle = this.program.getUniformLocation('resolution');
   }
 
-  bindParameters(camera, geometry){
+  bindParameters(){
     gl.uniform2fv(this.resolutionHandle, this.resolution);
   }
 

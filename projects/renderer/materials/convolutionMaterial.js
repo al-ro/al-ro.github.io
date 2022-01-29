@@ -35,7 +35,7 @@ export class ConvolutionMaterial extends Material{
     this.roughnessHandle = this.program.getUniformLocation('roughness');
   }
 
-  bindParameters(camera, geometry){
+  bindParameters(){
     gl.uniform1i(this.cubeMapHandle, this.cubeMap);
     gl.uniform1f(this.roughnessHandle, this.roughness);
     gl.uniformMatrix4fv(this.cameraMatrixHandle, false, this.cameraMatrix);

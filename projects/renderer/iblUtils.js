@@ -51,9 +51,9 @@ function getSphericalHarmonicsMatrices(cubeMap){
 
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
-  mesh.render(null, 0);
+  mesh.render();
 
-  var pixels = new Float32Array(3*4*4);
+  var pixels = new Float32Array(3 * 4 * 4);
   gl.readPixels(0, 0, 4, 3, gl.RGBA, gl.FLOAT, pixels); 
 
   gl.deleteFramebuffer(frameBuffer);
@@ -85,7 +85,7 @@ function getSphericalHarmonicsMatrices(cubeMap){
   return {red: shRedMatrix, green: shGrnMatrix, blue: shBluMatrix};
 }
 
-function convertToCubeMap(sphericalTexture, cubeMap, camera){
+function convertToCubeMap(sphericalTexture, cubeMap){
 
   let texture = createAndSetupTexture();
 
@@ -94,7 +94,7 @@ function convertToCubeMap(sphericalTexture, cubeMap, camera){
 
   let frameBuffer = gl.createFramebuffer();
 
-  let size = 1024;
+  let size = 256;
   gl.viewport(0, 0, size, size);
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
@@ -111,7 +111,7 @@ function convertToCubeMap(sphericalTexture, cubeMap, camera){
 
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
-    mesh.render(camera, 0);
+    mesh.render();
   
     var target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + face;
 
@@ -144,7 +144,7 @@ function getCubeMapConvolution(cubeMap){
     let roughness = 0.2 * level;
     convolutionMaterial.roughness = roughness;
 
-    size = 1024 / Math.pow(2, level);
+    size = 256 / Math.pow(2, level);
     gl.viewport(0, 0, size, size);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
@@ -161,7 +161,7 @@ function getCubeMapConvolution(cubeMap){
 
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
-      mesh.render(null, 0);
+      mesh.render();
       var target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + face;
 
       gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
@@ -177,7 +177,7 @@ function getCubeMapConvolution(cubeMap){
 function getBRDFIntegrationMap(){
   let texture = createAndSetupTexture();
 
-  let size = 256;
+  let size = 32;
 
   let brdfMaterial = new BRDFMapMaterial([size, size]);
   let mesh = new Mesh(getScreenspaceQuad(), brdfMaterial);
@@ -193,7 +193,7 @@ function getBRDFIntegrationMap(){
 
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
-  mesh.render(null, 0);
+  mesh.render();
 
   gl.deleteFramebuffer(frameBuffer);
 

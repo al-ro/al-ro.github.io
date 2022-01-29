@@ -5,7 +5,6 @@ import {getVertexSource, getFragmentSource} from './cubeMapConverterMaterial.gls
 export class CubeMapConverterMaterial extends Material{
 
   cameraMatrixHandle;
-  exposureHandle;
 
   textureHandle;
   texture;
@@ -30,13 +29,11 @@ export class CubeMapConverterMaterial extends Material{
     this.attributeHandles.positionHandle = this.program.getAttribLocation('position');
 
     this.cameraMatrixHandle = this.program.getUniformLocation('cameraMatrix');
-    this.exposureHandle = this.program.getUniformLocation('exposure');
     this.textureHandle = this.program.getUniformLocation('texture');
   }
 
-  bindParameters(camera, geometry){
+  bindParameters(){
     gl.uniformMatrix4fv(this.cameraMatrixHandle, false, this.cameraMatrix);
-    gl.uniform1f(this.exposureHandle, camera.getExposure());
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.texture);

@@ -45,7 +45,7 @@ class Environment{
 
     this.cubeMap = createAndSetupCubemap();
 
-    this.environmentMaterial = new EnvironmentMaterial(this.cubeMap);
+    this.environmentMaterial = new EnvironmentMaterial(this.cubeMap, this.camera);
     this.environmentMesh = new Mesh(getScreenspaceQuad(), this.environmentMaterial);  
 
     this.shMatrices = {red: this.shRedMatrix, green: this.shGrnMatrix, blue: this.shBluMatrix};
@@ -111,6 +111,7 @@ class Environment{
 
         obj.updateFace(i, obj);
       }
+
       gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);

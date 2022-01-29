@@ -50,7 +50,7 @@ export class Geometry{
   idBuffer;
 
   modelMatrix = m4.create();
-  normalMatrix;
+  normalMatrix = m4.create();
 
   constructor(geometryData){
 

@@ -31,7 +31,11 @@ export class Camera{
     this.aspect = aspect;
     this.zNear = zNear;
     this.zFar = zFar;
-    this.updatePosition([0,0]);
+    this.updatePosition([0, 0]);
+
+    this.setProjectionMatrix();
+    this.setCameraMatrix();
+    this.setViewMatrix();
   }
 
   updatePosition(delta){
@@ -80,6 +84,10 @@ export class Camera{
    // this.position = pos;
    // this.rightDirection = normalize(cross(this.up, this.viewDirection));
    // this.target = [this.position[0] + this.viewDirection[0], this.position[1] + this.viewDirection[1], this.position[2] + this.viewDirection[2]];
+  }
+
+  getPosition(){
+    return this.position;
   }
 
   setProjectionMatrix(){

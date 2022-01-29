@@ -6,15 +6,18 @@
 // appropriate draws function depending on the geometry (indexed, instanced, primitives)
 
 import {gl, extVAO, extINS} from "./canvas.js"
+import {Node} from "./node.js"
 
-export class Mesh{
+export class Mesh extends Node{
 
   vao;
   geometry;
   material;
   instanced = false;
+  node;
 
-  constructor(geometry, material){
+  constructor(geometry, material, params){
+    super(params);
     this.geometry = geometry;
     this.material = material;
 
@@ -29,6 +32,7 @@ export class Mesh{
 
     this.createVAO();
   }
+
 
   createVAO(){
     this.vao = extVAO.createVertexArrayOES();
@@ -63,7 +67,26 @@ export class Mesh{
 
     gl.useProgram(this.material.getProgram().program);
     this.bindVAO(); 
-    this.material.bindParameters(camera, this.geometry, time);
+
+    if(camera != null){
+      this.material.bindMatrices({
+        projectionMatrix: camera.getProjectionMatrix(),
+        viewMatrix: camera.getViewMatrix(),
+        modelMatrix: this.getModelMatrix(),
+        normalMatrix: this.getNormalMatrix()
+      });
+    }
+
+    if(this.material.needsCamera){
+      this.material.setCamera(camera);
+    }
+
+    if(this.material.needsTime){
+      this.material.setTime(time);
+    }
+
+    this.material.bindParameters();
+
     if(this.geometry.hasIndices){
       if(this.geometry.instanced){
         extINS.drawElementsInstancedANGLE(this.geometry.primitiveType, 
@@ -78,6 +101,22 @@ export class Mesh{
       gl.drawArrays(this.geometry.primitiveType, 0, this.geometry.length);
     }
     this.unbindVAO();
+  }
+
+  setModelMatrix(modelMatrix){
+    this.geometry.setModelMatrix(modelMatrix);
+  }
+
+  setNormalMatrix(normalMatrix){
+    this.geometry.setNormalMatrix(normalMatrix);
+  }
+
+  getModelMatrix(){
+    return this.geometry.getModelMatrix();
+  }
+
+  getNormalMatrix(){
+    return this.geometry.getNormalMatrix();
   }
 
 }
