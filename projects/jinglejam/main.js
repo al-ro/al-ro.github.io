@@ -1,5 +1,7 @@
 import * as THREE from 'https://threejs.org/build/three.module.js';
 
+import { GUI } from 'https://threejs.org/examples/jsm/libs/dat.gui.module.js';
+
 import { OrbitControls } from 'https://threejs.org/examples/jsm/controls/OrbitControls.js';
 import { EffectComposer } from 'https://threejs.org/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'https://threejs.org/examples/jsm/postprocessing/RenderPass.js';
