@@ -6,7 +6,6 @@ import {Geometry} from "./geometry.js"
 import {Mesh} from "./mesh.js"
 import {BufferRepository} from "./bufferRepository.js"
 import {Attribute} from "./attribute.js"
-import {Descriptor} from "./descriptor.js"
 
 // Download and process GLTF file and create scenes of drawable Mesh object with a geometry and PBR material
 
