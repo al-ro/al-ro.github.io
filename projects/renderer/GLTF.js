@@ -1,10 +1,14 @@
 import {download} from "./download.js"
 import {gl} from "./canvas.js"
-import {Attribute} from "./attribute.js"
 import {Node} from "./node.js"
+import {PBRMaterial} from "./materials/pbrMaterial.js"
+import {Geometry} from "./geometry.js"
 import {Mesh} from "./mesh.js"
+import {BufferRepository} from "./bufferRepository.js"
+import {Attribute} from "./attribute.js"
+import {Descriptor} from "./descriptor.js"
 
-// Download and process GLTF file and create a drawable Mesh object with a geometry and PBR material
+// Download and process GLTF file and create scenes of drawable Mesh object with a geometry and PBR material
 
 export class GLTF{
   // Description of the GLTF
@@ -13,8 +17,11 @@ export class GLTF{
   buffers = [];
   // WebGL textures for albedo, roughness and emissive maps etc.
   images = [];
-  // Drawable Mesh objects
-  meshes = [];
+  // Scene graphs of nodes
+  scenes = [];
+
+  // Repository of gl buffers
+  bufferRepository;
 
   constructor(path){
     let workingDirectory = path.substring(0, path.lastIndexOf("/") + 1);
@@ -25,151 +32,252 @@ export class GLTF{
   // Parse the json, download images and buffers, construct meshes
   processGLTF(json, workingDirectory){
 
+    this.bufferRepository = new BufferRepository();
+
     this.json = json;
     console.log("Full GLTF: ", json);
 
+    // Promises of individual binary data to download
+    let bufferPromises = [];
+    let imagePromises = [];
+
+    // Promises which resolve once all downloads have completed
+    let buffersDownloaded = new Promise((resolve, reject) => {});
+    let imagesDownloaded = new Promise((resolve, reject) => {});
+    
     if(json.buffers){
 
-      let bufferPromises = [];
-    
       for(const buffer of json.buffers){
         bufferPromises.push(download(workingDirectory.concat(buffer.uri), "arrayBuffer"));
       }
 
-      Promise.all(bufferPromises).then(p => {
-        for(const promise of bufferPromises){
-          promise.then(data => {
-            this.buffers.push(data);
-            console.log("Buffer data: ", data);
-          });
+      buffersDownloaded = Promise.all(bufferPromises).then(buffers => {
+        for(const buffer of buffers){
+          this.buffers.push(buffer);
+          console.log("Buffer data: ", buffer);
         }
-      });
+      }).catch(e => {console.error("Buffer promises unresolved")});
+
     }else{
       console.error("GLTF file has no buffers: ", json);
     }
 
     if(json.images){
 
-      let imagePromises = [];
-    
       for(const image of json.images){
         imagePromises.push(download(workingDirectory.concat(image.uri), "arrayBuffer"));
       }
 
-      Promise.all(imagePromises).then(p => {
-        for(const promise of imagePromises){
-          promise.then(data => {
-            this.images.push(data);
-            console.log("Image data:", data);
-          });
+      imagesDownloaded = Promise.all(imagePromises).then(images => {
+        for(const image of images){
+            this.images.push(image);
+            console.log("Image data: ", image);
         }
-      });
-    }
-  
-    // Load all scenes
-    // TODO: Would it improve performance to only load scenes which are rendered?
-    for(const scene of json.scenes){
-      this.traverseScene(scene);
-    }  
+      }).catch(e => {console.error("Image promises unresolved")});
 
+    }else{
+      // If there are no images to fetch, resolve the promise
+      imagesDownloaded = Promise.resolve();
+    }
+
+    // Once we have the buffer and image data, we can process the gltf
+    Promise.all([buffersDownloaded, imagesDownloaded]).then(p => {
+        let nodes = this.processNodes(this.json.nodes);
+        nodes = this.setChildren(nodes);
+        console.log("Nodes: ", nodes); 
+    }).catch(e => {console.error("Download promises unresolved")});
+ 
   }
 
-  // Traverse the hierarchies starting from the root nodes of the scene
-  traverseScene(scene){
-    for(const nodeIdx of scene.nodes){
-      this.traverseNodes(this.json.nodes[nodeIdx]);
+  // Create array of Mesh objects and nodes from the GLTF
+  processNodes(gltfNodes){
+    let nodes = [];
+
+    for(const gltfNode of gltfNodes){
+
+      let params = {localMatrix: this.getTransform(gltfNode), children: gltfNode.children};
+
+      // If node describes a mesh, process it
+      if(gltfNode.hasOwnProperty("mesh") && gltfNode.mesh != null){
+        nodes.push(this.processMesh(this.json.meshes[gltfNode.mesh], params));
+      }else{
+        nodes.push(new Node(params));
+      }
     }
+
+    return nodes;
   }
 
-  // Travel down the node hierarchy recording parent-child relationships
-  // and process all meshes
-  traverseNodes(node){
-    // If node describes a mesh, process it
-    if(node.mesh != null){
-      this.processMesh(this.json.meshes[node.mesh]);
-    }
-
-    // Process all child nodes
-    // An important (and annoying) thing to note is that nodes
-    // are governed by the transformations of their ancestors.
-    // If node n is the child of node n-1, which is itself a 
-    // child of node n-2 etc. until n-x, then we have 
-    // to iteratively apply x+1 transformations to get the final
-    // model matrix.
-    // This means we need to store the child hierarchy of the 
-    // scene graph explicitly. We record the children of each
-    // node and call update on them if the nodes own transform
-    // is updated. This will propagate the update down the node
-    // graph while saving on update work on other nodes.
-    if(node.children != null){
-      for(const childIdx of node.children){
-        this.traverseNodes(this.json.nodes[childIdx]);
+  setChildren(nodes){
+    for(const node of nodes){
+      if(node.children != null){
+        let childNodes = [];
+        for(const childIdx of node.children){
+          childNodes.push(nodes[childIdx]);
+        }
+        node.setChildren(childNodes);
       }
     }
-
+    return nodes;
   }
 
-  // Create a geometry and material object, combine them into a drawable Mesh and
-  // store it
-  processMesh(mesh){
-    console.log("Mesh: ", mesh);
+  getTransform(node){
 
-    for(const primitive of mesh.primitives){
-      let geometryAttributes = [];
-      let attributes = primitive.attributes;
-      if(attributes.hasOwnProperty("POSITION")){
-        console.log("POSITION", this.json.accessors[attributes.POSITION]);
+    let modelMatrix = m4.create();
+
+    // When matrix has been given, use it over TRS
+    if(node.hasOwnProperty("matrix") && node.matrix){
+      modelMatrix = node.matrix;
+    }else{
+
+      let translation = [0, 0, 0];
+      let rotation = [0, 0, 0];
+      let scale = [1, 1, 1];
+
+      if(node.hasOwnProperty("rotation") && node.rotation){
+        rotation = quaternionToEuler(node.rotation);
       }
-      if(attributes.hasOwnProperty("NORMAL")){
-        console.log("NORMAL", this.json.accessors[attributes.NORMAL]);
+
+      if(node.hasOwnProperty("scale") && node.scale){
+        scale = node.scale;
       }
-      if(attributes.hasOwnProperty("TANGENT")){
-        console.log("TANGENT", this.json.accessors[attributes.TANGENT]);
+
+      if(node.hasOwnProperty("translation") && node.translation){
+        translation = node.translation;
       }
-      if(attributes.hasOwnProperty("TEXCOORD_0")){
-        console.log("TEXCOORD_0", this.json.accessors[attributes.TEXCOORD_0]);
-      }
-      if(attributes.hasOwnProperty("TEXCOORD_1")){
-        console.log("TEXCOORD_1", this.json.accessors[attributes.TEXCOORD_1]);
-      }
-      if(attributes.hasOwnProperty("COLOR_0")){
-        console.log("COLOR_0", this.json.accessors[attributes.COLOR_0]);
-      }
+
+      modelMatrix = m4.translate(modelMatrix, translation[0], translation[1], translation[2]); 
+
+      modelMatrix = m4.zRotate(modelMatrix, rotation[2]);
+      modelMatrix = m4.yRotate(modelMatrix, rotation[1]);
+      modelMatrix = m4.xRotate(modelMatrix, rotation[0]); 
+
+      modelMatrix = m4.scale(modelMatrix, scale[0], scale[1], scale[2]);
     }
- /*
-    let accessorID = mesh.primitives
-    let componentType = accessors[accessorID].componentType;
-    switch (componentType){
-      case gl.BYTE:
-        console.log("GL_BYTE");
-        //this.typedView = new Int8Array(buffer.buffer, byteOffset, arrayLength);
-        break;
-      case gl.UNSIGNED_BYTE:
-        console.log("GL_UNSIGNED_BYTE");
-        //this.typedView = new Uint8Array(buffer.buffer, byteOffset, arrayLength);
+
+    return modelMatrix;
+  }
+
+  createAttribute(name, accessor){
+    let bufferView = this.json.bufferViews[accessor.bufferView];
+    let buffer = this.buffers[bufferView.buffer];
+    let offset = bufferView.byteOffset != null ? bufferView.byteOffset : 0;
+
+    let typedArray;
+
+    switch(accessor.componentType){
+      case gl.FLOAT:
+        typedArray = Float32Array;
         break;
       case gl.SHORT:
-        console.log("GL_SHORT");
-        //this.typedView = new Int16Array(buffer.buffer, byteOffset, arrayLength);
+        typedArray = Int16Array;
         break;
       case gl.UNSIGNED_SHORT:
-        console.log("GL_UNSIGNED_SHORT");
-        //this.typedView = new Uint16Array(buffer.buffer, byteOffset, arrayLength);
+        typedArray = Uint16Array;
         break;
       case gl.UNSIGNED_INT:
-        console.log("GL_UNSIGNED_INT");
-        //this.typedView = new Uint32Array(buffer.buffer, byteOffset, arrayLength);
+        typedArray = Uint32Array;
         break;
-      case gl.FLOAT:
-        console.log("GL_FLOAT");
-        //this.typedView = new Float32Array(buffer.buffer, byteOffset, arrayLength);
+      case gl.UNSIGNED_BYTE:
+        typedArray = Uint8Array;
+        break;
+      default:
+        console.error("Unknown componentType: ", accessor.componentType);
         break;
     }
-*/
+
+    let data = new typedArray(buffer, offset, bufferView.byteLength / typedArray.BYTES_PER_ELEMENT);
+    //console.log(data);
+
+    let target = bufferView.target != null ? bufferView.target : gl.ELEMENT_ARRAY_BUFFER;
+
+    let parameters = {
+      index: bufferView.buffer,
+      byteOffset: offset,
+      byteLength: bufferView.byteLength,
+      data: data,
+      target: target,
+      usage: gl.STATIC_DRAW
+    };
+
+    let glBuffer = this.bufferRepository.getBuffer(parameters);
+
+    let componentCount;
+
+    switch (accessor.type){
+      case "SCALAR":
+        componentCount = 1;
+        break;
+      case "VEC2":
+        componentCount = 2;
+        break;
+      case "VEC3":
+        componentCount = 3;
+        break;
+      case "VEC4":
+      case "MAT2":
+        componentCount = 4;
+        break;
+      case "MAT3":
+        componentCount = 9;
+        break;
+      case "MAT4":
+        componentCount = 16;
+        break;
+      default:
+        console.error("Unknown type accessor type: ", accessor.type);
+    }
+
+    let descriptor = {
+      target: target,
+      componentType: accessor.componentType,
+      componentCount: componentCount,
+      normalized: accessor.normalized != null ? accessor.normalized : false,
+      byteStride: bufferView.byteStride != null ? bufferView.byteStride : 0,
+      offset: accessor.byteOffset != null ? accessor.byteOffset : 0
+    };
+
+    return new Attribute(name, glBuffer, descriptor);
   }
 
-  getData(accessor){
-    
-  }
+  // Create a geometry and material object, combine them into a drawable Mesh
+  processMesh(mesh, params){ 
 
+    const accessors = this.json.accessors;
+    const materials = this.json.materials;
+
+    for(const primitive of mesh.primitives){
+      const indicesAttribute = this.createAttribute("INDICES", accessors[primitive.indices]);
+
+      let attributes = primitive.attributes;
+
+      let geometryAttributes = [];
+      if(attributes.hasOwnProperty("POSITION")){
+        geometryAttributes.push(this.createAttribute("POSITION", accessors[attributes.POSITION]));
+      }
+      if(attributes.hasOwnProperty("NORMAL")){
+        geometryAttributes.push(this.createAttribute("NORMAL", accessors[attributes.NORMAL]));
+      }
+      if(attributes.hasOwnProperty("TANGENT")){
+        geometryAttributes.push(this.createAttribute("TANGENT", accessors[attributes.TANGENT]));
+      }
+      if(attributes.hasOwnProperty("TEXCOORD_0")){
+        geometryAttributes.push(this.createAttribute("TEXCOORD_0", accessors[attributes.TEXCOORD_0]));
+      }
+      if(attributes.hasOwnProperty("TEXCOORD_1")){
+        geometryAttributes.push(this.createAttribute("TEXCOORD_1", accessors[attributes.TEXCOORD_1]));
+      }
+      if(attributes.hasOwnProperty("COLOR_0")){
+        geometryAttributes.push(this.createAttribute("COLOR_0", accessors[attributes.COLOR_0]));
+      }
+
+      console.log(geometryAttributes);
+
+      // Create geometry
+      // Create material
+      //console.log(materials[primitive.material]);
+      // Create Mesh
+    }
+    return mesh;
+  }
 }

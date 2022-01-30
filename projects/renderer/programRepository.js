@@ -16,23 +16,21 @@ class ProgramRepository{
   // and return it.
   getProgram(parameters, material){
     
-    let definePrefix = getDefinePrefix(parameters, material);
+    const definePrefix = getDefinePrefix(parameters, material);
 
     if(this.programs.has(definePrefix)){
       return this.programs.get(definePrefix);
     }
 
-    let vertexSource = material.getVertexShaderSource();
-    vertexSource = definePrefix + vertexSource;
+    const vertexSource = definePrefix + material.getVertexShaderSource();
 
-    let vertexShader = compileShader(vertexSource, gl.VERTEX_SHADER);
+    const vertexShader = compileShader(vertexSource, gl.VERTEX_SHADER);
 
-    let fragmentSource = material.getFragmentShaderSource();
-    fragmentSource = definePrefix + fragmentSource;
+    const fragmentSource = definePrefix + material.getFragmentShaderSource();
 
-    let fragmentShader = compileShader(fragmentSource, gl.FRAGMENT_SHADER);
+    const fragmentShader = compileShader(fragmentSource, gl.FRAGMENT_SHADER);
 
-    let program = new Program(vertexShader, fragmentShader);
+    const program = new Program(vertexShader, fragmentShader);
     this.programs.set(definePrefix,  program);
 
     return program;

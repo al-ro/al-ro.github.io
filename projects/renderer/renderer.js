@@ -25,23 +25,34 @@ stats.domElement.style.bottom = '48px';
 document.getElementById('cc_1').appendChild(stats.domElement);
 
 // TODO:
-//      Physically based camera
+//      Better binary data process
+//      Switch geometry/environment maps
+//      Check memory leaks and WebGL util
+//      Camera navigation
+//      Switch materials
+//      View PBR maps/output
+//      Better HDR
 //      Animations
 //      Bones
-//      Better binary data download/process
-//      Better HDR
+//      Sparse accessor
+//      Camera from gltf
+//      Standardize instancing
+//      Particle class
 //
-//      Postprocessing (bloom)
 //      Specular/Gloss
 //      Fabric
 //      Transmission/volume
+//      OIT
 //      Pipeline state (program, sidedness)
 //      WebGL2
 //      Lights
 //      Shadow mapping
-//      Switch geometry/environment maps
 //      Volumetrics
 //      STL import
+//      OBJ import
+//      Basic geometries (sphere, quad, cylinder, cone, torus, knot)
+//      Postprocessing (bloom, depth of field, fog)
+//      Physically based camera
 
 
 var path;

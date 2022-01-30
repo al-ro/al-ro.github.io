@@ -8,15 +8,12 @@ function download(url, type){
         case "gltf":
         case "json":
         return response.json();
-        break;
       case "blob":
         return response.blob();
-        break;
       case "arrayBuffer":
         return response.arrayBuffer();
-        break;
       default:
-        console.log("Unknown file type: ", url);
+        console.log("Unknown file type: ", url, type);
         return null;
       }
      }else{
