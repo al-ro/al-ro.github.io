@@ -1,4 +1,5 @@
 import {gl, extINS} from "./canvas.js"
+import {Attribute} from "./attribute.js"
 
 export class Geometry{
 
@@ -23,6 +24,7 @@ export class Geometry{
   hasNormals = false;
   hasUVs = false;
   hasTangents = false;
+  hasColours = false;
 
   indexType = gl.UNSIGNED_SHORT;
   primitiveType = gl.TRIANGLES;
@@ -49,8 +51,166 @@ export class Geometry{
   scaleBuffer;
   idBuffer;
 
+  vertexAttribute;
+  indexAttribute;
+  normalAttribute;
+  uvAttribute;
+  tangentAttribute;
+  colourAttribute;
+
+  orientationAttribute;
+  offsetAttribute;
+  scaleAttribute;
+
   modelMatrix = m4.create();
   normalMatrix = m4.create();
+
+  constructo(geometryData){
+
+    this.setAttrbutes(geometryData.attributes);
+
+    this.length = geometryData.length;
+    if(geometryData.hasOwnProperty("indices") && geometryData.indices){
+      this.hasIndices = true;
+      this.indexType = geometrData.indexType;
+    }
+
+    if(geometryData.hasOwnProperty("primitiveType") && geometryData.primitiveType != null){
+      this.primitiveType = geometryData.primitiveType;
+    }
+  }
+
+  setAttributes(attributes){
+    for(const attribute of attributes){
+      switch(attribute.name){
+        case "POSITION":
+          this.positionAttribute = attribute;
+          break
+        case "NORMAL":
+          this.hasNormals = true;
+          this.normalAttribute = attribute;
+          break
+        case "TANGENT":
+          this.hasTangents = true;
+          this.tangentAttribute = attribute;
+          break
+        case "TEXCOORD_0":
+          this.hasUVs = true;
+          this.uvAttribute = attribute;
+          break
+        case "TEXCOORD_1":
+          this.hasUVs = true;
+          this.uvAttribute = attribute;
+          break
+        case "COLOR_0":
+          this.hasColours = true;
+          this.colourAttribute = attribute;
+          break
+        case "INSTANCE_IDX":
+          this.hasIDs = true;
+          this.instanceIndexAttribute = attribute;
+          break
+        case "INSTANCE_ORIENTATION":
+          this.hasOrientation = true;
+          this.orientationAttribute = attribute;
+          break
+        case "INSTANCE_SCALE":
+          this.hasScales = true;
+          this.scaleAttribute = attribute;
+          break
+        case "INSTANCE_OFFSET":
+          this.hasOffsets = true;
+          this.offsetAttribute = attribute;
+          break
+        default:
+          console.error("Unknown attribute: ", attribute);
+      }
+    }
+  }
+ 
+  enableBuffers(handles){
+
+    // ---------- Mandatory vertex data ----------
+
+    if(handles.hasOwnProperty("positionHandle")){
+      this.positionAttribute.enableBuffer(handles.positionHandle);
+    }else{
+      console.error("ERROR: No property \"positionHandle\" provided.");
+    }
+
+    // ---------- Optional attributes ----------
+
+    if(this.hasIndices){
+      this.indices.enableBuffer();
+    }
+
+    if(handles.hasOwnProperty("positionHandle")){
+      this.positionAttribute.enableBuffer(handles.positionHandle);
+    }else{
+      console.error("ERROR: geometry does not have vertex normals.");
+    }
+
+    if(handles.hasOwnProperty("vertexNormalHandle")){
+      if(this.hasNormals){
+        this.normalAttribute.enableBuffer(handles.vertexNormalHandle);
+      }else{
+        console.error("ERROR: geometry does not have vertex normals.");
+      }
+    }
+
+    if(handles.hasOwnProperty("vertexTangentHandle")){
+      if(this.hasTangents){
+        this.tangentAttribute.enableBuffer(handles.vertexTangentHandle);
+      }else{
+        console.error("ERROR: geometry does not have vertex tangents.");
+      }
+    }
+
+    if(handles.hasOwnProperty("vertexUVHandle")){
+      if(this.hasUVs){
+        this.uvAttribute.enableBuffer(handles.vertexUVHandle);
+      }else{
+        console.error("ERROR: geometry does not have vertex UVs.");
+      }}
+
+    if(handles.hasOwnProperty("vertexColourHandle")){
+      if(this.hasColours){
+        this.colourAttribute.enableBuffer(handles.vertexColourHandle);
+      }else{
+        console.error("ERROR: geometry does not have vertex colours.");
+      }
+    }
+
+    // ---------- Instanced geometry attributes ----------
+
+    if(handles.hasOwnProperty("orientationHandle")){
+      if(this.hasOrientations){
+        this.orientationAttribute.bindBuffer(handles.orientationHandle);
+        extINS.vertexAttribDivisorANGLE(handles.orientationHandle, 1);
+      }else{
+        console.error("ERROR: geometry does not have instance orientations.");
+      }
+    }
+
+    if(handles.hasOwnProperty("offsetHandle")){
+      if(this.hasOffsets){
+        this.offsetAttribute.bindBuffer(handles.offsetHandle);
+        extINS.vertexAttribDivisorANGLE(handles.offsetHandle, 1);
+      }else{
+        console.error("ERROR: geometry does not have instance offsets.");
+      }
+    }
+
+    if(handles.hasOwnProperty("scaleHandle")){
+      if(this.hasScales){
+        this.scaleAttribute.bindBuffer(handles.scaleHandle);
+        extINS.vertexAttribDivisorANGLE(handles.scaleHandle, 1);
+      }else{
+        console.error("ERROR: geometry does not have instance scales.");
+      }
+    }
+
+  }
 
   constructor(geometryData){
 

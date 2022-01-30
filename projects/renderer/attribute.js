@@ -1,82 +1,41 @@
 import {gl} from "./canvas.js"
 
-// Create, enable and bind vertex attributes and indices
-// TODO: Correct interleaved buffers and multiple attributes sharing the same array region
-
+// Create, enable and bind vertex attribute or indices. 
+// Buffers are supplied externally as multiple attributes 
+// may refer to the same gl buffer when using interleaved data.
 export class Attribute{
 
   // gl buffer object
   buffer;
 
-  // ArrayBuffer holding CPU side data
-  data;
+  // POSITION, NORMAL, TANGENT, TEXCOORD_0, TEXCOORD_1, COLOR_0, INDEX,
+  // INSTANCE_IDX, INSTANCE_SCALE, INSTANCE_ORIENTATION, INSTANCE_OFFSET
+  name;
 
-  // Descriptor for component type, offset and stride
-  accessor;
+  descriptor;
 
-  // 1, 2, 3, 4, 9 or 16 depending on data structure
-  componentCount;
-
-  // ARRAY_BUFFER for vertex attributes or ELEMENT_ARRAY_BUFFER for indices
-  target = gl.ARRAY_BUFFER;
-
-  // Whether data should be normalized before use
-  normalized = false;
-
-  constructor(data, accessor, target){
-    this.data = data;
-    this.accessor = accessor;
-
-    if(target != null){
-      this.target = target;
-    }
-
-    if(this.accessor.normalized != null){
-      this.normalized = this.accessor.normalized;
-    }
-
-    switch (this.accessor.type){
-      case "SCALAR":
-        this.componentCount = 1;
-        break;
-      case "VEC2":
-        this.componentCount = 2;
-        break;
-      case "VEC3":
-        this.componentCount = 3;
-        break;
-      case "VEC4":
-      case "MAT2":
-        this.componentCount = 4;
-        break;
-      case "MAT3":
-        this.componentCount = 9;
-        break;
-      case "MAT4":
-        this.componentCount = 16;
-        break;
-      default:
-        console.error("Unknown type accessor type: ", this.accessor.type);
-    }
-
-    this.setData(data);
+  constructor(name, buffer, descriptor){
+    this.name = name;
+    this.buffer = buffer;
+    this.descriptor = descriptor;
   }
 
-  setData(data){
-    this.data = data;
-    gl.bindBuffer(this.target, this.buffer);
-    gl.bufferData(this.target, this.data, gl.STATIC_DRAW);
+  setBuffer(buffer){
+    this.buffer = buffer;
   }
 
   enableBuffer(handle){
-    if(this.target == gl.ELEMENT_ARRAY_BUFFER){
-      gl.bindBuffer(this.target, this.buffer);
-
+    if(this.descriptor.target == gl.ELEMENT_ARRAY_BUFFER){
+      gl.bindBuffer(this.descriptor.target, this.buffer);
     }else{
       gl.enableVertexAttribArray(handle);
-      gl.bindBuffer(this.target, this.buffer);
-      gl.vertexAttribPointer(handle, this.componentCount, this.accessor.componentType, this.normalized, this.accessor.byteStride, 0);
+      gl.bindBuffer(this.descriptor.target, this.buffer);
+      gl.vertexAttribPointer(handle, this.descriptor.componentCount, this.descriptor.componentType, this.descriptor.normalized, this.descriptor.stride, this.descriptor.offset);
     }
+  }
+
+  getName(){
+    return this.name;
   }
 
 }
