@@ -37,10 +37,6 @@ export class GLTF{
     this.json = json;
     console.log("Full GLTF: ", json);
 
-    // Promises of individual binary data to download
-    let bufferPromises = [];
-    let imagePromises = [];
-
     // Promises which resolve once all downloads have completed
     let buffersDownloaded = new Promise((resolve, reject) => {});
     let imagesDownloaded = new Promise((resolve, reject) => {});
@@ -48,15 +44,12 @@ export class GLTF{
     if(json.buffers){
 
       for(const buffer of json.buffers){
-        bufferPromises.push(download(workingDirectory.concat(buffer.uri), "arrayBuffer"));
+        this.buffers.push(download(workingDirectory.concat(buffer.uri), "arrayBuffer"));
       }
 
-      buffersDownloaded = Promise.all(bufferPromises).then(buffers => {
-        for(const buffer of buffers){
-          this.buffers.push(buffer);
-          console.log("Buffer data: ", buffer);
-        }
-      }).catch(e => {console.error("Buffer promises unresolved")});
+      buffersDownloaded = Promise.all(this.buffers).then(buffers => {
+        this.buffers = buffers;
+      }).catch(e => {console.error("Buffer promises unresolved: ", e)});
 
     }else{
       console.error("GLTF file has no buffers: ", json);
@@ -65,15 +58,12 @@ export class GLTF{
     if(json.images){
 
       for(const image of json.images){
-        imagePromises.push(download(workingDirectory.concat(image.uri), "arrayBuffer"));
+        this.images.push(download(workingDirectory.concat(image.uri), "arrayBuffer"));
       }
 
-      imagesDownloaded = Promise.all(imagePromises).then(images => {
-        for(const image of images){
-            this.images.push(image);
-            console.log("Image data: ", image);
-        }
-      }).catch(e => {console.error("Image promises unresolved")});
+      imagesDownloaded = Promise.all(this.images).then(images => {
+        this.images = images;
+      }).catch(e => {console.error("Image promises unresolved:", e)});
 
     }else{
       // If there are no images to fetch, resolve the promise
@@ -85,7 +75,7 @@ export class GLTF{
         let nodes = this.processNodes(this.json.nodes);
         nodes = this.setChildren(nodes);
         console.log("Nodes: ", nodes); 
-    }).catch(e => {console.error("Download promises unresolved")});
+    }).catch(e => {console.error("Download promises unresolved:", e)});
  
   }
 
@@ -273,6 +263,15 @@ export class GLTF{
 
       console.log(geometryAttributes);
 
+/*
+      let g = new Geometry({
+        attributes: geometryAttributes,
+        indices: indicesAttribute,
+        indexType: accessors[primitive.indices].componentType,
+        length: 0,
+        primitiveType: gl.TRIANGLES
+      });
+*/
       // Create geometry
       // Create material
       //console.log(materials[primitive.material]);

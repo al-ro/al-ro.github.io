@@ -67,17 +67,18 @@ export class Geometry{
 
   constructo(geometryData){
 
-    this.setAttrbutes(geometryData.attributes);
+    this.setAttributes(geometryData.attributes);
 
     this.length = geometryData.length;
     if(geometryData.hasOwnProperty("indices") && geometryData.indices){
       this.hasIndices = true;
-      this.indexType = geometrData.indexType;
+      this.indexType = geometryData.indexType;
     }
 
     if(geometryData.hasOwnProperty("primitiveType") && geometryData.primitiveType != null){
       this.primitiveType = geometryData.primitiveType;
     }
+    console.log(this);
   }
 
   setAttributes(attributes){
