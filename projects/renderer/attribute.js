@@ -1,17 +1,35 @@
 import {gl} from "./canvas.js"
 
-// Create, enable and bind vertex attribute or indices. 
+const supportedAttributes = [
+  "POSITION",
+  "NORMAL",
+  "TANGENT",
+  "TEXCOORD_0",
+  "TEXCOORD_1",
+  "COLOR_0"
+];
+
+// Create, enable and bind vertex attribute.
 // Buffers are supplied externally as multiple attributes 
 // may refer to the same gl buffer when using interleaved data.
-export class Attribute{
+class Attribute{
 
-  // gl buffer object
+  // gl.Buffer object
   buffer;
 
-  // POSITION, NORMAL, TANGENT, TEXCOORD_0, TEXCOORD_1, COLOR_0, INDEX,
-  // INSTANCE_IDX, INSTANCE_SCALE, INSTANCE_ORIENTATION, INSTANCE_OFFSET
+  // One of supportedAttributes
   name;
 
+  // Location in program
+  handle;
+
+  // Object holding variables needed to describe buffer data
+  //  target
+  //  componentType
+  //  componentCount
+  //  normalized
+  //  stride
+  //  offset
   descriptor;
 
   constructor(name, buffer, descriptor){
@@ -20,15 +38,19 @@ export class Attribute{
     this.descriptor = descriptor;
   }
 
+  setBuffer(handle){
+    this.handle = handle;
+  }
+
   setBuffer(buffer){
     this.buffer = buffer;
   }
 
-  enableBuffer(handle){
-    if(this.descriptor.target == gl.ELEMENT_ARRAY_BUFFER){
-      gl.bindBuffer(this.descriptor.target, this.buffer);
+  enableBuffer(){
+    if(this.handle != null){
+      console.error("Handle is not defined: ", this);
     }else{
-      gl.enableVertexAttribArray(handle);
+      gl.enableVertexAttribArray(this.handle);
       gl.bindBuffer(this.descriptor.target, this.buffer);
       gl.vertexAttribPointer(handle, this.descriptor.componentCount, this.descriptor.componentType, this.descriptor.normalized, this.descriptor.stride, this.descriptor.offset);
     }
@@ -39,3 +61,5 @@ export class Attribute{
   }
 
 }
+
+export {supportedAttributes, Attribute}

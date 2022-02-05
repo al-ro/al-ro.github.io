@@ -81,7 +81,7 @@ function getVertexSource(){
     vec4 pos;
 
 #ifdef INSTANCED
-    pos = modelMatrix * vec4(position*scale, 1.0);
+    pos = modelMatrix * vec4(position * scale, 1.0);
     pos.xyz = rotateVectorByQuaternion(pos.xyz, orientation);
     pos.xyz += offset; 
 #else
@@ -127,10 +127,10 @@ function getFragmentSource(){
   uniform sampler2D brdfIntegrationMapTexture;
   uniform samplerCube cubeMap;
 
-#ifdef HAS_ALBEDO_TEXTURE
-  uniform sampler2D albedoTexture;
+#ifdef HAS_BASE_COLOR_TEXTURE
+  uniform sampler2D baseColorTexture;
 #else
-  uniform vec4 albedo;
+  uniform vec4 baseColor;
 #endif
 
 #ifdef HAS_NORMAL_TEXTURE
@@ -412,11 +412,11 @@ function getFragmentSource(){
 
     float alpha = 1.0;
 
-#ifdef HAS_ALBEDO_TEXTURE
-    vec4 data = texture2D(albedoTexture, vUV);
+#ifdef HAS_BASE_COLOR_TEXTURE
+    vec4 data = texture2D(baseColorTexture, vUV);
     vec4 col = vec4(vec3(pow(data.rgb, vec3(2.2))), data.a);
 #else
-    vec4 col = albedo;
+    vec4 col = baseColor;
 #endif
 
     if(alphaMode != 0){
@@ -463,7 +463,7 @@ function getFragmentSource(){
 #endif
 
 #endif
-    col = vec4(vec3(albedo.rgb), 1.0);
+    col = vec4(vec3(baseColor.rgb), 1.0);
 /*
     col = getSHIrradiance(-viewDirection);
     if(col.r < 0.0){

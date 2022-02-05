@@ -7,6 +7,12 @@ export class Material{
 
   attributeHandles = {};
 
+  // All attributes supported by the material
+  supportedAttributes = [];
+
+  // Attributes provided by the geometry and supported by the material
+  activeAttributes = [];
+
   program;
 
   needsCamera = false;
@@ -16,6 +22,7 @@ export class Material{
 
   createProgram(parameters, material){
     this.program = programRepository.getProgram(parameters, material);
+    //this.program = programRepository.getProgram(this);
   }
 
   getProgram(){
@@ -39,6 +46,14 @@ export class Material{
     if(this.normalMatrixHandle != null && params.normalMatrix != null){
       gl.uniformMatrix4fv(this.normalMatrixHandle, false, params.normalMatrix);
     }
+  }
+
+  getSupportedAttributes(){
+    return this.supportedAttributes;
+  }
+
+  getActiveAttributes(){
+    return this.activeAttributes;
   }
 
   bindParameters(){}

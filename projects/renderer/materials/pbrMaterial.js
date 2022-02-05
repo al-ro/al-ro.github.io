@@ -34,8 +34,8 @@ export class PBRMaterial extends Material{
 
   // In the absence of a base colour texture, use a vec4 uniform
   // Either this or a texture must be supplied
-  // If both are given, the albedo values are used to multiply the texture values
-  albedo = [1, 1, 1, 1];
+  // If both are given, the base colour values are used to multiply the texture values
+  baseColor = [1, 1, 1, 1];
 
   alphaMode = enums.OPAQUE;
   alphaCutoff = 0.5;
@@ -46,10 +46,13 @@ export class PBRMaterial extends Material{
 
   // The base colour texture
   // Optional
-  albedoTexture;
+  baseColorTexture;
 
   // Optional
   normalTexture;
+
+  // Multiplier for normal texture X and Y values
+  normalScale = 1.0;
 
   // Combined texture of:
   // 	ao		r
@@ -61,8 +64,14 @@ export class PBRMaterial extends Material{
   // Ambient occlusion may have a separate texture or use the red channel of properties
   aoTexture;
 
+  // Multiplier for texture value
+  aoStrength = 1.0;
+
   // Optional
   emissiveTexture;
+
+  // Multiplier for texture value
+  emissiveFactor = 1.0;
 
   // A cubemap or equirectangular texture where each mip map is a 
   // prefiltered environment map of the source cubemap at level 0
@@ -79,16 +88,21 @@ export class PBRMaterial extends Material{
 
   // --------- PBR uniform handles ----------
 
-  albedoHandle;
+  baseColorHandle;
   metalHandle;
   roughnessHandle;
 
-  albedoTextureHandle;
+  baseColorTextureHandle;
   propertiesTextureHandle;
 
   normalTextureHandle;
+  normalScaleHandle;
+
   aoTextureHandle;
+  aoStrengthHandle;
+
   emissiveTextureHandle;
+  emissiveFactorHandle;
 
   environmentTextureHandle;
 
@@ -101,20 +115,20 @@ export class PBRMaterial extends Material{
   alphaCutoffHandle;
   alphaModeHandle;
 
-  hasAlbedoTexture = false;
+  hasBaseColorTexture = false;
   hasNormalTexture = false;
-  hasEmissiveTexture = false;
   hasPropertiesTexture = false;
   hasAO = false;
   hasAOTexture = false;
+  hasEmissiveTexture = false;
 
   brdfTextureUnit;
   environmentTextureUnit;
-  albedoTextureUnit;
+  baseColorTextureUnit;
   normalTextureUnit;
-  emissiveTextureUnit;
   propertiesTextureUnit;
   aoTextureUnit;
+  emissiveTextureUnit;
 
   environment;
 
@@ -124,16 +138,15 @@ export class PBRMaterial extends Material{
 
     super();
 
+    this.supportedAttributes = [
+      "POSITION",
+      "NORMAL",
+      "TANGENT",
+      "TEXCOORD_0"
+    ];
+
     this.needsCamera = true;
     this.needsTime = true;
-
-    this.textureUnits = 0;
-
-    this.brdfTextureUnit = this.textureUnits;
-    this.textureUnits++;
-
-    this.environmentTextureUnit = this.textureUnits;
-    this.textureUnits++;
 
     if(parameters.hasOwnProperty("alphaMode") && parameters.alphaMode){
       this.alphaMode = parameters.alphaMode;
@@ -147,28 +160,11 @@ export class PBRMaterial extends Material{
       this.doubleSided = parameters.doubleSided;
     }
 
-    if(parameters.hasOwnProperty("albedoTexture") && parameters.albedoTexture){
-      this.albedoTexture = parameters.albedoTexture;
-      this.hasAlbedoTexture = true;
-      this.albedoTextureUnit = this.textureUnits;
-      this.textureUnits++;
-    }else if(parameters.hasOwnProperty("albedo") && parameters.albedo){
-      this.albedo = parameters.albedo;
-    }
+    this.textureUnits = 0;
 
-    if(parameters.hasOwnProperty("normalTexture") && parameters.normalTexture){
-      this.hasNormalTexture = true;
-      this.normalTextureUnit = this.textureUnits;
-      this.textureUnits++;
-      this.normalTexture = parameters.normalTexture;
-    }
+    this.brdfTextureUnit = this.textureUnits++;
 
-    if(parameters.hasOwnProperty("emissiveTexture") && parameters.emissiveTexture){
-      this.hasEmissiveTexture = true;
-      this.emissiveTextureUnit = this.textureUnits;
-      this.textureUnits++;
-      this.emissiveTexture = parameters.emissiveTexture;
-    }
+    this.environmentTextureUnit = this.textureUnits++;
 
     if(parameters.hasOwnProperty("environment") && parameters.environment){
 
@@ -183,19 +179,38 @@ export class PBRMaterial extends Material{
       this.shBluMatrix = shMatrices.blue;
     }
 
+    if(parameters.hasOwnProperty("baseColorTexture") && parameters.baseColorTexture){
+      this.baseColorTexture = parameters.baseColorTexture;
+      this.hasBaseColorTexture = true;
+      this.baseColorTextureUnit = this.textureUnits++;
+    }else if(parameters.hasOwnProperty("baseColor") && parameters.baseColor){
+      this.baseColor = parameters.baseColor;
+    }
+
+    if(parameters.hasOwnProperty("normalTexture") && parameters.normalTexture){
+      this.hasNormalTexture = true;
+      this.normalTextureUnit = this.textureUnits++;
+      this.normalTexture = parameters.normalTexture;
+    }
+
+    if(parameters.hasOwnProperty("emissiveTexture") && parameters.emissiveTexture){
+      this.hasEmissiveTexture = true;
+      this.emissiveTextureUnit = this.textureUnits++;
+      this.emissiveTexture = parameters.emissiveTexture;
+    }
+
     if(parameters.hasOwnProperty("propertiesTexture") && parameters.propertiesTexture){
       this.hasPropertiesTexture = true;
-      this.propertiesTextureUnit = this.textureUnits;
-      this.textureUnits++;
+      this.propertiesTextureUnit = this.textureUnits++;
       this.propertiesTexture = parameters.propertiesTexture;
     }else{
 
-      if(parameters.hasOwnProperty("roughness") && parameters.roughness){
-        this.roughness = parameters.roughness;
-      }
-
       if(parameters.hasOwnProperty("metal") && parameters.metal){
         this.metal = parameters.metal;
+      }
+
+      if(parameters.hasOwnProperty("roughness") && parameters.roughness){
+        this.roughness = parameters.roughness;
       }
     }
 
@@ -205,8 +220,7 @@ export class PBRMaterial extends Material{
         this.hasAOTexture = false;
       }else{
         this.hasAOTexture = true;
-        this.aoTextureUnit = this.textureUnits;
-        this.textureUnits++;
+        this.aoTextureUnit = this.textureUnits++;
         this.aoTexture = parameters.aoTexture;
       }
     }
@@ -250,10 +264,10 @@ export class PBRMaterial extends Material{
     this.alphaCutoffHandle = this.program.getOptionalUniformLocation('alphaCutoff');
     this.alphaModeHandle = this.program.getOptionalUniformLocation('alphaMode');
 
-    if(this.hasAlbedoTexture){
-      this.albedoTextureHandle = this.program.getOptionalUniformLocation('albedoTexture');
+    if(this.hasBaseColorTexture){
+      this.baseColorTextureHandle = this.program.getOptionalUniformLocation('baseColorTexture');
     }else{
-      this.albedoHandle = this.program.getOptionalUniformLocation('albedo');
+      this.baseColorHandle = this.program.getOptionalUniformLocation('baseColor');
     }
 
     if(this.hasNormalTexture){
@@ -311,6 +325,7 @@ export class PBRMaterial extends Material{
       default:
         blendModeAsInt = 0; 
     }
+
     gl.uniform1i(this.alphaModeHandle, blendModeAsInt);
 
     gl.uniformMatrix4fv(this.shRedMatrixHandle, false, this.shRedMatrix);
@@ -329,12 +344,12 @@ export class PBRMaterial extends Material{
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.environmentTexture);
     gl.uniform1i(this.environmentTextureHandle, this.environmentTextureUnit);
 
-    if(this.hasAlbedoTexture){
-      gl.activeTexture(gl.TEXTURE0 + this.albedoTextureUnit);
-      gl.bindTexture(gl.TEXTURE_2D, this.albedoTexture);
-      gl.uniform1i(this.albedoTextureHandle, this.albedoTextureUnit);
+    if(this.hasBaseColorTexture){
+      gl.activeTexture(gl.TEXTURE0 + this.baseColorTextureUnit);
+      gl.bindTexture(gl.TEXTURE_2D, this.baseColorTexture);
+      gl.uniform1i(this.baseColorTextureHandle, this.baseColorTextureUnit);
     }else{
-      gl.uniform4fv(this.albedoHandle, this.albedo);
+      gl.uniform4fv(this.baseColorHandle, this.baseColor);
     }
 
     if(this.hasNormalTexture){
@@ -357,6 +372,7 @@ export class PBRMaterial extends Material{
       gl.uniform1f(this.metalHandle, this.metal);
       gl.uniform1f(this.roughnessHandle, this.roughness);
     }
+
     if(this.hasAOTexture){
       gl.activeTexture(gl.TEXTURE0 + this.aoTextureUnit);
       gl.bindTexture(gl.TEXTURE_2D, this.aoTexture);
