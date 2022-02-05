@@ -1,3 +1,4 @@
+// For GLTF Buffer and BufferView handling
 // We maintain a repository of unique buffers to properly use interleaved data.
 // There are edge cases where multiple BufferViews overlap in which case there
 // there will be data duplication. This does not violate the standard and it's
@@ -14,9 +15,18 @@ class BufferRepository{
   // Return buffer corresponding to passed index and range 
   // If one does not exist, create it, enter it to the map
   // and return it.
+
+  // parameters
+  //  index
+  //  byteOffset
+  //  byteLength
+  //  data
+  //  target
+  //  usage
   getBuffer(parameters){
 
-    const id = "" + parameters.index + ", " + parameters.byteOffset + ", " + parameters.byteLength;
+    // Create an index combining buffer index and region
+    const id = parameters.index + ", " + parameters.byteOffset + ", " + parameters.byteLength;
 
     if(this.buffers.has(id)){
       return this.buffers.get(id);

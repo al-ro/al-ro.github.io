@@ -254,7 +254,7 @@ function loadGLTF(){
         var occlusionRoughMetalTextureID = 0;
         var occlusionTextureID = 0;
 
-        var albedoTexture = null;
+        var baseColorTexture = null;
         var normalTexture = null;
         var emissiveTexture = null;
         var occlusionRoughMetalTexture = null;
@@ -293,7 +293,7 @@ function loadGLTF(){
 
         if(pbrDesc.baseColorTexture){
           textureID = pbrDesc.baseColorTexture.index;
-          albedoTexture = textures[textureID];
+          baseColorTexture = textures[textureID];
         }
         if(pbrDesc.metallicRoughnessTexture){
           occlusionRoughMetalTextureID = pbrDesc.metallicRoughnessTexture.index;
@@ -313,7 +313,7 @@ function loadGLTF(){
         }
 
         material = new PBRMaterial({
-          albedoTexture: albedoTexture, 
+          baseColorTexture: baseColorTexture, 
           normalTexture: normalTexture, 
           emissiveTexture: emissiveTexture,
           propertiesTexture: occlusionRoughMetalTexture, 

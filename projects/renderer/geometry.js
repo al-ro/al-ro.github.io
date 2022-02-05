@@ -1,9 +1,8 @@
 import {gl, extINS} from "./canvas.js"
-import {Attribute} from "./attribute.js"
+import {Attribute, supportedAttributes} from "./attribute.js"
+import {Indices} from "./indices.js"
 
 export class Geometry{
-
-  geometyData;
 
   length;
 
@@ -62,74 +61,47 @@ export class Geometry{
   offsetAttribute;
   scaleAttribute;
 
+  attributes;
+
   modelMatrix = m4.create();
   normalMatrix = m4.create();
 
+  // geometryData
+  //  attributes
+  //  length
+  //  indices
+  //  primitiveType
   constructo(geometryData){
 
-    this.setAttributes(geometryData.attributes);
+    ths.atttributes = geometryData.attributes;
 
     this.length = geometryData.length;
-    if(geometryData.hasOwnProperty("indices") && geometryData.indices){
+
+    if(geometryData.hasOwnProperty("indices") && geometryData.indices != null){
       this.hasIndices = true;
-      this.indexType = geometryData.indexType;
+      this.indices = geometryData.indices;
+      this.indexType = geometryData.indices.getType();
     }
 
-    if(geometryData.hasOwnProperty("primitiveType") && geometryData.primitiveType != null){
+    if(geometry.hasOwnProperty("primitiveType") && geometryData.primitiveType != null){
       this.primitiveType = geometryData.primitiveType;
     }
-    console.log(this);
-  }
 
-  setAttributes(attributes){
-    for(const attribute of attributes){
-      switch(attribute.name){
-        case "POSITION":
-          this.positionAttribute = attribute;
-          break
-        case "NORMAL":
-          this.hasNormals = true;
-          this.normalAttribute = attribute;
-          break
-        case "TANGENT":
-          this.hasTangents = true;
-          this.tangentAttribute = attribute;
-          break
-        case "TEXCOORD_0":
-          this.hasUVs = true;
-          this.uvAttribute = attribute;
-          break
-        case "TEXCOORD_1":
-          this.hasUVs = true;
-          this.uvAttribute = attribute;
-          break
-        case "COLOR_0":
-          this.hasColours = true;
-          this.colourAttribute = attribute;
-          break
-        case "INSTANCE_IDX":
-          this.hasIDs = true;
-          this.instanceIndexAttribute = attribute;
-          break
-        case "INSTANCE_ORIENTATION":
-          this.hasOrientation = true;
-          this.orientationAttribute = attribute;
-          break
-        case "INSTANCE_SCALE":
-          this.hasScales = true;
-          this.scaleAttribute = attribute;
-          break
-        case "INSTANCE_OFFSET":
-          this.hasOffsets = true;
-          this.offsetAttribute = attribute;
-          break
-        default:
-          console.error("Unknown attribute: ", attribute);
-      }
-    }
+    console.log(this);
   }
  
   enableBuffers(handles){
+    let geo = this;
+    handles.forEach((value, key) => {
+      if(geo.attributes.has(key)){
+        geo.attributes.get(key).enableBuffer(value);
+      }else{
+        console.error("Attribute " + key + " does not exist in geometry: ", geo);
+      }
+    });
+  }
+
+  _enableBuffers(handles){
 
     // ---------- Mandatory vertex data ----------
 
@@ -143,12 +115,6 @@ export class Geometry{
 
     if(this.hasIndices){
       this.indices.enableBuffer();
-    }
-
-    if(handles.hasOwnProperty("positionHandle")){
-      this.positionAttribute.enableBuffer(handles.positionHandle);
-    }else{
-      console.error("ERROR: geometry does not have vertex normals.");
     }
 
     if(handles.hasOwnProperty("vertexNormalHandle")){

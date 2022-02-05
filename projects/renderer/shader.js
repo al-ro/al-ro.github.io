@@ -4,9 +4,10 @@ import {gl} from "./canvas.js"
 // Add hash defines to toggle specific parts of the shaders according to geometry and material data
 function getDefinePrefix(parameters, material){
 
-  var prefix = "// " + material.constructor.name + "\n";
+  var prefix = "// " + material.constructor.name + " \n";
 
   if(parameters){
+
     if(parameters.hasOwnProperty("instanced") && parameters.instanced){
       prefix += "#define INSTANCED \n";
     }
@@ -23,27 +24,28 @@ function getDefinePrefix(parameters, material){
       prefix += "#define HAS_TANGENTS \n";
     }
 
-    if(material.hasAlbedoTexture){
-      prefix += "#define HAS_ALBEDO_TEXTURE \n";
+    if(material.hasBaseColorTexture){
+      prefix += "#define HAS_BASE_COLOR_TEXTURE \n";
     }
 
     if(material.hasNormalTexture){
       prefix += "#define HAS_NORMAL_TEXTURE \n";
     }
 
-    if(material.hasEmissiveTexture){
-      prefix += "#define HAS_EMISSIVE_TEXTURE \n";
-    }
-
     if(material.hasPropertiesTexture){
       prefix += "#define HAS_PROPERTIES_TEXTURE \n";
     }
+
     if(material.hasAO){
       if(material.hasAOTexture){
         prefix += "#define HAS_AO_TEXTURE \n";
       }else{
         prefix += "#define AO_IN_PROPERTIES_TEXTURE \n";
       }
+    }
+
+    if(material.hasEmissiveTexture){
+      prefix += "#define HAS_EMISSIVE_TEXTURE \n";
     }
   }
 

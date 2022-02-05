@@ -1,28 +1,41 @@
 import {download} from "./download.js"
-import {gl} from "./canvas.js"
+import {gl, enums} from "./canvas.js"
 import {Node} from "./node.js"
 import {PBRMaterial} from "./materials/pbrMaterial.js"
 import {Geometry} from "./geometry.js"
 import {Mesh} from "./mesh.js"
 import {BufferRepository} from "./bufferRepository.js"
-import {Attribute} from "./attribute.js"
+import {Attribute, supportedAttributes} from "./attribute.js"
+import {Indices} from "./indices.js"
+import {loadTexture} from "./texture.js"
 
 // Download and process GLTF file and create scenes of drawable Mesh object with a geometry and PBR material
 
 export class GLTF{
+
   // Description of the GLTF
   json;
+
   // Binary data for vertices, indices, normals etc.
   buffers = [];
-  // WebGL textures for albedo, roughness and emissive maps etc.
+
+  // Image data
   images = [];
+
+  // WebGL textures for albedo, roughness and emissive maps etc.
+  textures = [];
+
   // Scene graphs of nodes
   scenes = [];
 
-  // Repository of gl buffers
+  // Drawable mesh objects
+  meshes = [];
+
+  // Repository of gl.Buffer object
   bufferRepository;
 
   constructor(path){
+
     let workingDirectory = path.substring(0, path.lastIndexOf("/") + 1);
     // Downlod gltf file and construct internal objects
     download(path, "gltf").then(data => this.processGLTF(data, workingDirectory));
@@ -39,13 +52,18 @@ export class GLTF{
     // Promises which resolve once all downloads have completed
     let buffersDownloaded = new Promise((resolve, reject) => {});
     let imagesDownloaded = new Promise((resolve, reject) => {});
+
+    // Promise which resolved when the gltf has been processed
+    let gltfLoadingDone = new Promise((resolve, reject) => {});
     
     if(json.buffers){
 
+      // Populate buffer array with promises of each gltf buffer to fetch
       for(const buffer of json.buffers){
         this.buffers.push(download(workingDirectory.concat(buffer.uri), "arrayBuffer"));
       }
 
+      // Once all buffers are ready, replace the promises with the data
       buffersDownloaded = Promise.all(this.buffers).then(buffers => {
         this.buffers = buffers;
       }).catch(e => {console.error("Buffer promises unresolved: ", e)});
@@ -56,13 +74,15 @@ export class GLTF{
 
     if(json.images){
 
+      // Populate image array with promises of each image to fetch
       for(const image of json.images){
-        this.images.push(download(workingDirectory.concat(image.uri), "arrayBuffer"));
+        this.images.push(download(workingDirectory.concat(image.uri), "blob"));
       }
 
+      // Once all images are ready, replace the promises with the data
       imagesDownloaded = Promise.all(this.images).then(images => {
         this.images = images;
-      }).catch(e => {console.error("Image promises unresolved:", e)});
+      }).catch(e => {console.error("Image promises unresolved: ", e)});
 
     }else{
       // If there are no images to fetch, resolve the promise
@@ -71,20 +91,30 @@ export class GLTF{
 
     // Once we have the buffer and image data, we can process the gltf
     Promise.all([buffersDownloaded, imagesDownloaded]).then(p => {
+        this.createTextures();
         let nodes = this.processNodes(this.json.nodes);
         nodes = this.setChildren(nodes);
         console.log("Nodes: ", nodes); 
-    }).catch(e => {console.error("Download promises unresolved:", e)});
+    }).catch(e => {console.error("Download promises unresolved: ", e)});
  
+    return gltfLoadingDone;
+  }
+
+  createTextures(){
+    for(const image of this.images){
+      const url = URL.createObjectURL(image);
+      this.textures.push(loadTexture(url));
+    }
   }
 
   // Create array of Mesh objects and nodes from the GLTF
   processNodes(gltfNodes){
-    let nodes = [];
+
+    const nodes = [];
 
     for(const gltfNode of gltfNodes){
 
-      let params = {localMatrix: this.getTransform(gltfNode), children: gltfNode.children};
+      const params = {localMatrix: this.getTransform(gltfNode), children: gltfNode.children};
 
       // If node describes a mesh, process it
       if(gltfNode.hasOwnProperty("mesh") && gltfNode.mesh != null){
@@ -98,12 +128,16 @@ export class GLTF{
   }
 
   setChildren(nodes){
+
     for(const node of nodes){
       if(node.children != null){
-        let childNodes = [];
+
+        const childNodes = [];
+
         for(const childIdx of node.children){
           childNodes.push(nodes[childIdx]);
         }
+
         node.setChildren(childNodes);
       }
     }
@@ -114,9 +148,11 @@ export class GLTF{
 
     let modelMatrix = m4.create();
 
-    // When matrix has been given, use it over TRS
+    // When matrix has been given, use it instead of TRS
     if(node.hasOwnProperty("matrix") && node.matrix){
+
       modelMatrix = node.matrix;
+
     }else{
 
       let translation = [0, 0, 0];
@@ -147,40 +183,33 @@ export class GLTF{
     return modelMatrix;
   }
 
+  createIndices(accessor){
+
+    const bufferView = this.json.bufferViews[accessor.bufferView];
+    const buffer = this.buffers[bufferView.buffer];
+
+    const offset = bufferView.byteOffset != null ? bufferView.byteOffset : 0;
+
+    // Get a typed view of the buffer data
+    const typedArray = getTypedArray(accessor.componentType);
+    const data = new typedArray(buffer, offset, bufferView.byteLength / typedArray.BYTES_PER_ELEMENT);
+
+    return new Indices(data, accessor.componentType);
+  }
+
   createAttribute(name, accessor){
-    let bufferView = this.json.bufferViews[accessor.bufferView];
-    let buffer = this.buffers[bufferView.buffer];
-    let offset = bufferView.byteOffset != null ? bufferView.byteOffset : 0;
 
-    let typedArray;
+    const bufferView = this.json.bufferViews[accessor.bufferView];
+    const buffer = this.buffers[bufferView.buffer];
 
-    switch(accessor.componentType){
-      case gl.FLOAT:
-        typedArray = Float32Array;
-        break;
-      case gl.SHORT:
-        typedArray = Int16Array;
-        break;
-      case gl.UNSIGNED_SHORT:
-        typedArray = Uint16Array;
-        break;
-      case gl.UNSIGNED_INT:
-        typedArray = Uint32Array;
-        break;
-      case gl.UNSIGNED_BYTE:
-        typedArray = Uint8Array;
-        break;
-      default:
-        console.error("Unknown componentType: ", accessor.componentType);
-        break;
-    }
+    const offset = bufferView.byteOffset != null ? bufferView.byteOffset : 0;
+    const target = bufferView.target != null ? bufferView.target : gl.ARRAY_BUFFER;
 
-    let data = new typedArray(buffer, offset, bufferView.byteLength / typedArray.BYTES_PER_ELEMENT);
-    //console.log(data);
+    // Get a typed view of the buffer data
+    const typedArray = getTypedArray(accessor.componentType);
+    const data = new typedArray(buffer, offset, bufferView.byteLength / typedArray.BYTES_PER_ELEMENT);
 
-    let target = bufferView.target != null ? bufferView.target : gl.ELEMENT_ARRAY_BUFFER;
-
-    let parameters = {
+    const parameters = {
       index: bufferView.buffer,
       byteOffset: offset,
       byteLength: bufferView.byteLength,
@@ -189,38 +218,12 @@ export class GLTF{
       usage: gl.STATIC_DRAW
     };
 
-    let glBuffer = this.bufferRepository.getBuffer(parameters);
+    const glBuffer = this.bufferRepository.getBuffer(parameters);
 
-    let componentCount;
-
-    switch (accessor.type){
-      case "SCALAR":
-        componentCount = 1;
-        break;
-      case "VEC2":
-        componentCount = 2;
-        break;
-      case "VEC3":
-        componentCount = 3;
-        break;
-      case "VEC4":
-      case "MAT2":
-        componentCount = 4;
-        break;
-      case "MAT3":
-        componentCount = 9;
-        break;
-      case "MAT4":
-        componentCount = 16;
-        break;
-      default:
-        console.error("Unknown type accessor type: ", accessor.type);
-    }
-
-    let descriptor = {
+    const descriptor = {
       target: target,
       componentType: accessor.componentType,
-      componentCount: componentCount,
+      componentCount: getComponentCount(accessor.type),
       normalized: accessor.normalized != null ? accessor.normalized : false,
       byteStride: bufferView.byteStride != null ? bufferView.byteStride : 0,
       offset: accessor.byteOffset != null ? accessor.byteOffset : 0
@@ -229,53 +232,188 @@ export class GLTF{
     return new Attribute(name, glBuffer, descriptor);
   }
 
-  // Create a geometry and material object, combine them into a drawable Mesh
+  getMaterial(idx){
+
+    const material = this.json.materials[idx];
+
+    var baseColorTexture = null;
+    var normalTexture = null;
+    var emissiveTexture = null;
+    var occlusionRoughMetalTexture = null;
+    var occlusionTexture = null;
+
+    let pbrDesc = material.pbrMetallicRoughness;
+
+    if(pbrDesc == null){
+      return null;
+    }
+
+    var alphaMode = enums.OPAQUE;
+    var alphaCutoff = 0.5;
+    var doubleSided = false;
+
+    if(material.alphaMode != null){
+      switch(material.alphaMode){
+        case "BLEND":
+          alphaMode = enums.BLEND;
+          break;
+        case "MASK":
+          alphaMode = enums.MASK;
+          break;
+        default:
+          alphaMode = enums.OPAQUE; 
+      }
+    }
+
+    if(material.alphaCutoff != null){
+      alphaCutoff = material.alphaCutoff;
+    }
+
+    if(material.doubleSided != null){
+      doubleSided = material.doubleSided;
+    }
+
+    if(pbrDesc.baseColorTexture != null){
+      const textureID = pbrDesc.baseColorTexture.index;
+      baseColorTexture = this.textures[this.textureID];
+    }
+
+    if(pbrDesc.metallicRoughnessTexture != null){
+      const textureID = pbrDesc.metallicRoughnessTexture.index;
+      occlusionRoughMetalTexture = this.textures[textureID];
+    }
+
+    if(material.occlusionTexture != null){
+      const textureID = material.occlusionTexture.index;
+      occlusionTexture = this.textures[textureID];
+    }
+
+    if(material.normalTexture != null){
+      const textureID = material.normalTexture.index;
+      normalTexture = this.textures[textureID];
+    }
+
+    if(material.emissiveTexture != null){
+      const textureID = material.emissiveTexture.index;
+      emissiveTexture = this.textures[textureID];
+    }
+
+    return new PBRMaterial({
+      baseColorTexture: baseColorTexture, 
+      normalTexture: normalTexture, 
+      emissiveTexture: emissiveTexture,
+      propertiesTexture: occlusionRoughMetalTexture, 
+      aoTexture: occlusionTexture, 
+      environment: null, 
+      alphaMode: alphaMode, 
+      alphaCutoff: alphaCutoff, 
+      doubleSided: doubleSided
+    });
+
+  }
+
+  // Construct Mesh objects described by the gltf mesh
   processMesh(mesh, params){ 
 
     const accessors = this.json.accessors;
-    const materials = this.json.materials;
+
+    // Drawable Mesh objects described by the gltf mesh
+    const primitives = [];
+
+    if(mesh.primitives == null){
+      console.error("Mesh doesn't specify any primitives");
+    }
 
     for(const primitive of mesh.primitives){
-      const indicesAttribute = this.createAttribute("INDICES", accessors[primitive.indices]);
 
-      let attributes = primitive.attributes;
+      const geometryParams = {
+        attributes: new Map(),
+        length: 0,
+        indices: null,
+        primitiveType: primitive.mode != null ? primitive.mode : gl.TRIANGLES
+      };
 
-      let geometryAttributes = [];
-      if(attributes.hasOwnProperty("POSITION")){
-        geometryAttributes.push(this.createAttribute("POSITION", accessors[attributes.POSITION]));
-      }
-      if(attributes.hasOwnProperty("NORMAL")){
-        geometryAttributes.push(this.createAttribute("NORMAL", accessors[attributes.NORMAL]));
-      }
-      if(attributes.hasOwnProperty("TANGENT")){
-        geometryAttributes.push(this.createAttribute("TANGENT", accessors[attributes.TANGENT]));
-      }
-      if(attributes.hasOwnProperty("TEXCOORD_0")){
-        geometryAttributes.push(this.createAttribute("TEXCOORD_0", accessors[attributes.TEXCOORD_0]));
-      }
-      if(attributes.hasOwnProperty("TEXCOORD_1")){
-        geometryAttributes.push(this.createAttribute("TEXCOORD_1", accessors[attributes.TEXCOORD_1]));
-      }
-      if(attributes.hasOwnProperty("COLOR_0")){
-        geometryAttributes.push(this.createAttribute("COLOR_0", accessors[attributes.COLOR_0]));
+      // ----- Create vertex indices ----- //
+
+      if(primitive.indices != null){
+
+        const accessor = accessors[primitive.indices];
+        geometryParams.indices = this.createIndices(accessor);
+
+        // If indices have been provided, geometry length is index count
+        geometryParams.length = accessor.count;
+
+      }else{
+        // If indices have not been provided, geometry length is vertex count
+        // This assumes that a GLTF will have at least POSITION defined which
+        // is not required by the specification.
+        geometryParams.length = accessors[attributes.POSITION].count;
       }
 
-      console.log(geometryAttributes);
+      // ----- Create vertex attributes ----- //
+
+      const attributes = primitive.attributes;
+
+      for(const name of supportedAttributes){
+        if(attributes.hasOwnProperty(name)){
+          const accessor = accessors[attributes[name]];
+          geometryParams.attributes.set(name, this.createAttribute(name, accessor));
+        }
+      }
 
 /*
-      let g = new Geometry({
-        attributes: geometryAttributes,
-        indices: indicesAttribute,
-        indexType: accessors[primitive.indices].componentType,
-        length: 0,
-        primitiveType: gl.TRIANGLES
-      });
+      let geometry = new Geometry(geometryParams);
 */
-      // Create geometry
-      // Create material
-      //console.log(materials[primitive.material]);
-      // Create Mesh
+
+      const material = this.getMaterial(primitive.material);
+
+      console.log(material);
+
+/*
+      let mesh = new Mesh(geometry, material);
+*/
     }
     return mesh;
   }
+}
+
+function getTypedArray(type){
+
+  switch(type){
+    case gl.SHORT:
+      return Int16Array;
+    case gl.FLOAT:
+      return Float32Array;
+    case gl.UNSIGNED_BYTE:
+      return Uint8Array;
+    case gl.UNSIGNED_SHORT:
+      return Uint16Array;
+    case gl.UNSIGNED_INT:
+      return Uint32Array;
+    default:
+      console.error("Unknown accessor.componentType: ", type);
+      return null;
+  }
+}
+
+function getComponentCount(type){
+
+    switch (type){
+      case "SCALAR":
+        return 1;
+      case "VEC2":
+        return 2;
+      case "VEC3":
+        return 3;
+      case "VEC4":
+      case "MAT2":
+        return 4;
+      case "MAT3":
+        return 9;
+      case "MAT4":
+        return 16;
+      default:
+        console.error("Unknown accessor.type: ", type);
+        return null;
+    }
 }

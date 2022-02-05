@@ -14,17 +14,28 @@ export class Mesh extends Node{
   geometry;
   material;
   instanced = false;
-  node;
 
   constructor(geometry, material, params){
+
     super(params);
+
     this.geometry = geometry;
     this.material = material;
 
     this.instanced = this.geometry.instanced;
 
+/*
+    // Determine intersection of geometry and material attributes
+    for(const attribute of this.material.attributes){
+      if(this.geometry.attributes.has(attribute)){
+        this.material.activeAttributes.push(attribute);
+      }
+    }
+*/
     this.material.createProgram(geometry.geometryData, material);
+    //this.material.createProgram();
     this.material.getParameterHandles(geometry.geometryData);
+    //this.material.getParameterHandles();
 
     if(this.instanced){
       this.material.getInstanceParameterHandles();
@@ -32,7 +43,6 @@ export class Mesh extends Node{
 
     this.createVAO();
   }
-
 
   createVAO(){
     this.vao = extVAO.createVertexArrayOES();
