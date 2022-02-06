@@ -138,7 +138,7 @@ export class PBRMaterial extends Material{
 
     super();
 
-    this.supportedAttributes = [
+    this.attributes = [
       "POSITION",
       "NORMAL",
       "TANGENT",
@@ -235,6 +235,7 @@ export class PBRMaterial extends Material{
   }
 
   getParameterHandles(parameters){
+/*
     this.attributeHandles.positionHandle = this.program.getAttribLocation('position');
 
     if(parameters.hasOwnProperty("uvs") && parameters.uvs){
@@ -248,7 +249,7 @@ export class PBRMaterial extends Material{
     if(parameters.hasOwnProperty("normals") && parameters.normals){
       this.attributeHandles.vertexNormalHandle = this.program.getAttribLocation('vertexNormal');
     }
-
+*/
     this.projectionMatrixHandle = this.program.getUniformLocation('projectionMatrix');
     this.viewMatrixHandle = this.program.getUniformLocation('viewMatrix');
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
@@ -307,11 +308,12 @@ export class PBRMaterial extends Material{
     this.brdfIntegrationMapTexture = this.environment.getBRDFIntegrationMap();
     this.environmentTexture = this.environment.getCubeMap();
 
+/*
     let shMatrices = this.environment.getSHMatrices();
     this.shRedMatrix = shMatrices.red;
     this.shGrnMatrix = shMatrices.green;
     this.shBluMatrix = shMatrices.blue;
-
+*/
     gl.uniform1f(this.alphaCutoffHandle, this.alphaCutoff);
 
     let blendModeAsInt;
@@ -378,10 +380,6 @@ export class PBRMaterial extends Material{
       gl.bindTexture(gl.TEXTURE_2D, this.aoTexture);
       gl.uniform1i(this.aoTextureHandle, this.aoTextureUnit);
     }
-  }
-
-  getHandles(){
-    return this.attributeHandles; 
   }
 
   setCamera(camera){

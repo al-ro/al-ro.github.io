@@ -26,7 +26,7 @@ export class Program{
   getAttribLocation(name) {
     var attributeLocation = gl.getAttribLocation(this.program, name);
     if (attributeLocation === -1) {
-      throw 'Cannot find attribute ' + name + '. Attributes which are declared must be used.';
+      console.error("Cannot find attribute ", name, ". Attributes which are declared must be used.");
     }
     return attributeLocation;
   }
@@ -34,7 +34,7 @@ export class Program{
   getUniformLocation(name) {
     var attributeLocation = gl.getUniformLocation(this.program, name);
     if (attributeLocation === -1) {
-      throw 'Cannot find uniform ' + name + '.';
+      console.error("Cannot find uniform: ",  name);
     }
     return attributeLocation;
   }

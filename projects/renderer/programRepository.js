@@ -14,9 +14,9 @@ class ProgramRepository{
   // Return program corresponding to passed prefix and type
   // If one does not exist, compile it, enter it to the map
   // and return it.
-  getProgram(parameters, material){
+  getProgram(material, attributes){
     
-    const definePrefix = getDefinePrefix(parameters, material);
+    const definePrefix = getDefinePrefix(material, attributes);
 
     if(this.programs.has(definePrefix)){
       return this.programs.get(definePrefix);

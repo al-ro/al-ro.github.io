@@ -14,7 +14,11 @@ export class TextureMaterial extends Material{
   texture;
 
   constructor(texture){
+
     super();
+
+    this.attributes = ["POSITION"];
+
     if(texture == null){
       console.error("TextureMaterial requires a texture during construction. Provided: ", texture);
     }
@@ -30,21 +34,12 @@ export class TextureMaterial extends Material{
   }
 
   getParameterHandles(){
-    this.attributeHandles.positionHandle = this.program.getAttribLocation('position');
-    this.attributeHandles.vertexUVHandle = this.program.getAttribLocation('uv');
-    this.attributeHandles.vertexNormalHandle = this.program.getAttribLocation('vertexNormal');
 
     this.projectionMatrixHandle = this.program.getUniformLocation('projectionMatrix');
     this.viewMatrixHandle = this.program.getUniformLocation('viewMatrix');
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
     this.normalMatrixHandle = this.program.getUniformLocation('normalMatrix');
     this.textureHandle = this.program.getUniformLocation('tex');
-  }
-
-  getInstanceParameterHandles(){
-    this.attributeHandles.orientationHandle = this.program.getAttribLocation('orientation');
-    this.attributeHandles.offsetHandle = this.program.getAttribLocation('offset');
-    this.attributeHandles.scaleHandle = this.program.getAttribLocation('scale');
   }
 
   bindParameters(){
@@ -57,10 +52,6 @@ export class TextureMaterial extends Material{
 
     // Tell the shader we bound the texture to texture unit 0
     gl.uniform1i(this.textureHandle, 0);
-  }
-
-  getHandles(){
-    return this.attributeHandles; 
   }
 
 }

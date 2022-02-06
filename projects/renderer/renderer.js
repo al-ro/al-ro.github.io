@@ -11,8 +11,6 @@ import {Environment} from "./environment.js"
 import {loadTexture, createAndSetupCubemap} from "./texture.js"
 import {Mesh} from "./mesh.js";
 import {canvas, gl, enums} from "./canvas.js";
-import {GLTFLoader} from "./GLTFLoader.js";
-import {Downloader} from "./downloader.js";
 import {getScreenspaceQuad} from "./screenspace.js";
 import {getSphericalHarmonicsMatrices} from "./iblUtils.js";
 import {programRepository} from "./programRepository.js"
@@ -57,7 +55,7 @@ document.getElementById('cc_1').appendChild(stats.domElement);
 
 var path;
 
-var model = "jedifighter";
+var model = "flighthelmet";
 
 switch(model){
   case "boombox":
@@ -100,16 +98,6 @@ switch(model){
     path = "./gltf/duck/Duck.gltf";
 }
 var workingDirectory = path.substring(0, path.lastIndexOf("/") + 1);
-
-var p = Downloader.start([{name: model, type:"gltf", file: path}]).then(function(){
-    console.log("Downloader Complete");
-    //loadGLTF();
-    setTimeout(loadGLTF, 50);
-    }).catch(function(error){ console.error("error",error); });
-
-
-let _gltf = new GLTF(path);
-
 
 var yaw = Math.PI/4.0;
 var pitch = 0.0;
@@ -159,193 +147,19 @@ var maxExtent = [-10000, -10000, -10000];
 //let environmentMaterial = new EnvironmentMaterial(cubeMap);
 //let environmentMesh = new Mesh(getScreenspaceQuad(), environmentMaterial);  
 
-//var path = './environmentMaps/dikhololo_night_1k.hdr';
-//var path = './environmentMaps/venice_sunset_1k.hdr';
-//var path = './environmentMaps/venice_sunrise_1k.hdr';
-var path = './environmentMaps/san_giuseppe_bridge_1k.hdr';
-//var path = './environmentMaps/spruit_sunrise_1k.hdr';
-//var path = './environmentMaps/studio_small_03_1k.hdr';
-//var path = './environmentMaps/cape_hill_1k.hdr';
-//var path = './environmentMaps/1k.hdr';
+//var environmentPath = './environmentMaps/dikhololo_night_1k.hdr';
+//var environmentPath = './environmentMaps/venice_sunset_1k.hdr';
+//var environmentPath = './environmentMaps/venice_sunrise_1k.hdr';
+var environmentPath = './environmentMaps/san_giuseppe_bridge_1k.hdr';
+//var environmentPath = './environmentMaps/spruit_sunrise_1k.hdr';
+//var environmentPath = './environmentMaps/studio_small_03_1k.hdr';
+//var environmentPath = './environmentMaps/cape_hill_1k.hdr';
+//var environmentPath = './environmentMaps/1k.hdr';
 
-/*
-var myHDR = new HDRImage();
-myHDR.src = path;
-myHDR.onload = function() {
-  console.log(">>>>> loading done");
-}*/
 //let environment = new Environment({path: "./defaultResources/uv_grid.jpg", type: "cubemap"});
-let environment = new Environment({path: path, type: "hdr", camera: camera});
+let environment = new Environment({path: environmentPath, type: "hdr", camera: camera});
 
-//let shMatrices = getSphericalHarmonicsMatrices(cubeMap);
-
-function loadGLTF(){
-
-  var loader = new GLTFLoader();
-
-  let gltf = loader.load(Downloader.complete[0].dl, true);
-
-  images = Downloader.complete[0].dl.images;
-  materials = Downloader.complete[0].dl.materials;
-
-  if(images){
-    for(let i = 0; i < images.length; i++){ 
-      let texture = loadTexture(workingDirectory.concat(images[i].uri));
-      textures.push(texture);
-    }
-  }
-
-  for(let i = 0; i < gltf.nodes.length; i++){
-    let node = gltf.nodes[i];
-    let gltfMeshes = node.meshes;
-
-    for(let m = 0; m < gltfMeshes.length; m++){
-      let gltfMesh = gltf.meshes[gltfMeshes[m]];
-      gltfVertices = gltfMesh.vertices.data;
-      if(gltfMesh.normals){
-        gltfNormals = gltfMesh.normals.data;
-      }
-      if(gltfMesh.indices){
-        gltfIndices = gltfMesh.indices.data;
-        gltfCount = gltfMesh.indices.count;
-      }
-      if(gltfMesh.texcoord){
-        gltfUVs = gltfMesh.texcoord.data;
-      }
-      if(gltfMesh.tangent){
-        gltfTangents = gltfMesh.tangent.data;
-      }
-      gltfMaterialID = gltfMesh.material;
-
-      let g = new Geometry({vertices: gltfVertices, length: gltfCount, indices: gltfIndices,  normals: gltfNormals, uvs: gltfUVs, tangents: gltfTangents});
-
-      let modelMatrix = node.matrix;
-
-      if(model == "boombox" || model == "car"){
-        modelMatrix = m4.scale(modelMatrix, 100, 100, 100);
-      }
-
-      if(model == "jedifighter"){
-        modelMatrix = m4.scale(modelMatrix, 0.005, 0.005, 0.005);
-      }
-
-      g.setModelMatrix(modelMatrix);
-
-      let min = m4.transformVector(modelMatrix, gltfMesh.vertices.min);
-      let max = m4.transformVector(modelMatrix, gltfMesh.vertices.max);
-      minExtent = [Math.min(minExtent[0], min[0]), Math.min(minExtent[1], min[1]), Math.min(minExtent[2], min[2])];
-      maxExtent = [Math.max(maxExtent[0], max[0]), Math.max(maxExtent[1], max[1]), Math.max(maxExtent[2], max[2])];
-
-      var normalMatrix = m4.create();
-      m4.invert(normalMatrix, modelMatrix);
-      m4.transpose(normalMatrix, normalMatrix);
-
-      g.setNormalMatrix(normalMatrix);
-
-      geometries.push(g);
-
-      let material = null;
-
-      if(materials && gltfMaterialID != undefined){
-
-        var textureID = 0;
-        var normalTextureID = 0;
-        var emissiveTextureID = 0;
-        var occlusionRoughMetalTextureID = 0;
-        var occlusionTextureID = 0;
-
-        var baseColorTexture = null;
-        var normalTexture = null;
-        var emissiveTexture = null;
-        var occlusionRoughMetalTexture = null;
-        var occlusionTexture = null;
-
-        let gltfMaterial = materials[gltfMaterialID];
-        let pbrDesc = gltfMaterial.pbrMetallicRoughness;
-
-        if(!pbrDesc){
-          continue;
-        }
-
-        var alphaMode = enums.OPAQUE;
-        var alphaCutoff = 0.5;
-        var doubleSided = false;
-
-        if(gltfMaterial.alphaMode){
-          switch(gltfMaterial.alphaMode){
-            case "BLEND":
-              alphaMode = enums.BLEND;
-              break;
-            case "MASK":
-              alphaMode = enums.MASK;
-              break;
-            default:
-              alphaMode = enums.OPAQUE; 
-          }
-        }
-
-        if(gltfMaterial.alphaCutoff){
-          alphaCutoff = gltfMaterial.alphaCutoff;
-        }
-        if(gltfMaterial.doubleSided){
-          doubleSided = gltfMaterial.doubleSided;
-        }
-
-        if(pbrDesc.baseColorTexture){
-          textureID = pbrDesc.baseColorTexture.index;
-          baseColorTexture = textures[textureID];
-        }
-        if(pbrDesc.metallicRoughnessTexture){
-          occlusionRoughMetalTextureID = pbrDesc.metallicRoughnessTexture.index;
-          occlusionRoughMetalTexture = textures[occlusionRoughMetalTextureID];
-        }
-        if(gltfMaterial.occlusionTexture){
-          occlusionTextureID = gltfMaterial.occlusionTexture.index;
-          occlusionTexture = textures[occlusionTextureID];
-        }
-        if(gltfMaterial.normalTexture){
-          normalTextureID = gltfMaterial.normalTexture.index;
-          normalTexture = textures[normalTextureID];
-        }
-        if(gltfMaterial.emissiveTexture){
-          emissiveTextureID = gltfMaterial.emissiveTexture.index;
-          emissiveTexture = textures[emissiveTextureID];
-        }
-
-        material = new PBRMaterial({
-          baseColorTexture: baseColorTexture, 
-          normalTexture: normalTexture, 
-          emissiveTexture: emissiveTexture,
-          propertiesTexture: occlusionRoughMetalTexture, 
-          aoTexture: occlusionTexture, 
-          environment: environment, 
-          alphaMode: alphaMode, 
-          alphaCutoff: alphaCutoff, 
-          doubleSided: doubleSided
-        });
-      }else{
-        material = new PBRMaterial({environment: environment});
-      }
-
-      //material = new NormalMaterial();
-
-      let mesh = new Mesh(g, material);
-      if(alphaMode == enums.BLEND){
-        transparentMeshes.push(mesh);
-      }else{
-        opaqueMeshes.push(mesh);
-      }
-    }
-  }
-
-  console.log(programRepository);
-
-  let centre = [(maxExtent[0] + minExtent[0])/2.0, (maxExtent[1] + minExtent[1])/2.0, (maxExtent[2] + minExtent[2])/2.0,]
-
-  camera.setTarget(centre);
-
-  readyToRender = true;
-}
+let _gltf = new GLTF(path, environment);
 
 var lastFrame = Date.now();
 var thisFrame;
@@ -390,6 +204,17 @@ function draw(){
   gl.depthMask(true);
 
   // Render opaque
+
+  opaqueMeshes = [];
+  transparentMeshes = [];
+
+  for(const mesh of _gltf.meshes){
+    if(mesh.material.alphaMode == enums.BLEND){
+      transparentMeshes.push(mesh);
+    }else{
+      opaqueMeshes.push(mesh);
+    }
+  }
 
   for(let i = 0; i < opaqueMeshes.length; i++){
     if(opaqueMeshes[i] != null){
