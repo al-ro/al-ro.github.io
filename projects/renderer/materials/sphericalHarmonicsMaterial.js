@@ -8,7 +8,11 @@ export class SphericalHarmonicsMaterial extends Material{
   cubeMap;
 
   constructor(cubeMap){
+
     super();
+
+    this.attributes = ["POSITION"];
+
     if(!cubeMap){
       console.error("SphericalHarmonicsMaterial must be created with a cube map texture. Parameter: ", cubeMap);
     }
@@ -24,7 +28,6 @@ export class SphericalHarmonicsMaterial extends Material{
   }
 
   getParameterHandles(){
-    this.attributeHandles.positionHandle = this.program.getAttribLocation('position');
     this.cubeMapHandle = this.program.getUniformLocation('cubeMap');
   }
 
@@ -32,10 +35,6 @@ export class SphericalHarmonicsMaterial extends Material{
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeMap);
     gl.uniform1i(this.cubeMapHandle, 0);
-  }
-
-  getHandles(){
-    return this.attributeHandles; 
   }
 
 }

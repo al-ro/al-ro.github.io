@@ -19,8 +19,13 @@ export class EnvironmentMaterial extends Material{
   resolutionHandle;
 
   constructor(cubeMap, camera){
+
     super();
+
+    this.attributes = ["POSITION"];
+
     this.needsCamera = true;
+
     if(cubeMap != null){
       this.cubeMap = cubeMap;
     }else{
@@ -41,7 +46,7 @@ export class EnvironmentMaterial extends Material{
   }
 
   getParameterHandles(){
-    this.attributeHandles.positionHandle = this.program.getAttribLocation('position');
+    //this.attributeHandles.positionHandle = this.program.getAttribLocation('position');
 
     this.cameraMatrixHandle = this.program.getUniformLocation('cameraMatrix');
     this.cubeMapHandle = this.program.getUniformLocation('cubeMap');
@@ -59,10 +64,6 @@ export class EnvironmentMaterial extends Material{
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeMap);
     gl.uniform1i(this.cubeMapHandle, 0);
-  }
-
-  getHandles(){
-    return this.attributeHandles; 
   }
 
   setCamera(camera){

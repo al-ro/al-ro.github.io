@@ -34,7 +34,11 @@ export class GLTF{
   // Repository of gl.Buffer object
   bufferRepository;
 
-  constructor(path){
+  environment;
+
+  constructor(path, environment){
+
+    this.environment = environment;
 
     let workingDirectory = path.substring(0, path.lastIndexOf("/") + 1);
     // Downlod gltf file and construct internal objects
@@ -188,11 +192,12 @@ export class GLTF{
     const bufferView = this.json.bufferViews[accessor.bufferView];
     const buffer = this.buffers[bufferView.buffer];
 
-    const offset = bufferView.byteOffset != null ? bufferView.byteOffset : 0;
+    let offset = bufferView.byteOffset != null ? bufferView.byteOffset : 0;
+    offset += (accessor.byteOffset != null) ? accessor.byteOffset : 0;
 
     // Get a typed view of the buffer data
     const typedArray = getTypedArray(accessor.componentType);
-    const data = new typedArray(buffer, offset, bufferView.byteLength / typedArray.BYTES_PER_ELEMENT);
+    const data = new typedArray(buffer, offset, accessor.count);
 
     return new Indices(data, accessor.componentType);
   }
@@ -275,7 +280,7 @@ export class GLTF{
 
     if(pbrDesc.baseColorTexture != null){
       const textureID = pbrDesc.baseColorTexture.index;
-      baseColorTexture = this.textures[this.textureID];
+      baseColorTexture = this.textures[textureID];
     }
 
     if(pbrDesc.metallicRoughnessTexture != null){
@@ -304,7 +309,7 @@ export class GLTF{
       emissiveTexture: emissiveTexture,
       propertiesTexture: occlusionRoughMetalTexture, 
       aoTexture: occlusionTexture, 
-      environment: null, 
+      environment: this.environment, 
       alphaMode: alphaMode, 
       alphaCutoff: alphaCutoff, 
       doubleSided: doubleSided
@@ -322,6 +327,7 @@ export class GLTF{
 
     if(mesh.primitives == null){
       console.error("Mesh doesn't specify any primitives");
+      return [];
     }
 
     for(const primitive of mesh.primitives){
@@ -333,6 +339,7 @@ export class GLTF{
         primitiveType: primitive.mode != null ? primitive.mode : gl.TRIANGLES
       };
 
+      const attributes = primitive.attributes;
       // ----- Create vertex indices ----- //
 
       if(primitive.indices != null){
@@ -352,7 +359,6 @@ export class GLTF{
 
       // ----- Create vertex attributes ----- //
 
-      const attributes = primitive.attributes;
 
       for(const name of supportedAttributes){
         if(attributes.hasOwnProperty(name)){
@@ -361,19 +367,18 @@ export class GLTF{
         }
       }
 
-/*
-      let geometry = new Geometry(geometryParams);
-*/
 
-      const material = this.getMaterial(primitive.material);
+      const geometry = new Geometry(geometryParams);
+      let material;
+      if(primitive.material != null){
+        material = this.getMaterial(primitive.material);
+      }else{
+        material = new PBRMaterial({environment: environment});
+      }
 
-      console.log(material);
-
-/*
-      let mesh = new Mesh(geometry, material);
-*/
+      this.meshes.push(new Mesh(geometry, material));
     }
-    return mesh;
+    return primitives;
   }
 }
 

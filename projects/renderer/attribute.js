@@ -38,7 +38,7 @@ class Attribute{
     this.descriptor = descriptor;
   }
 
-  setBuffer(handle){
+  setHandle(handle){
     this.handle = handle;
   }
 
@@ -47,12 +47,12 @@ class Attribute{
   }
 
   enableBuffer(){
-    if(this.handle != null){
+    if(this.handle == null){
       console.error("Handle is not defined: ", this);
     }else{
       gl.enableVertexAttribArray(this.handle);
       gl.bindBuffer(this.descriptor.target, this.buffer);
-      gl.vertexAttribPointer(handle, this.descriptor.componentCount, this.descriptor.componentType, this.descriptor.normalized, this.descriptor.stride, this.descriptor.offset);
+      gl.vertexAttribPointer(this.handle, this.descriptor.componentCount, this.descriptor.componentType, this.descriptor.normalized, this.descriptor.stride, this.descriptor.offset);
     }
   }
 

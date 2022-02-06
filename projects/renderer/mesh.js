@@ -14,6 +14,7 @@ export class Mesh extends Node{
   geometry;
   material;
   instanced = false;
+  activeAttributes = [];
 
   constructor(geometry, material, params){
 
@@ -24,18 +25,21 @@ export class Mesh extends Node{
 
     this.instanced = this.geometry.instanced;
 
-/*
+
     // Determine intersection of geometry and material attributes
-    for(const attribute of this.material.attributes){
+    for(const attribute of this.material.getAttributes()){
       if(this.geometry.attributes.has(attribute)){
-        this.material.activeAttributes.push(attribute);
+        this.activeAttributes.push(attribute);
       }
     }
-*/
-    this.material.createProgram(geometry.geometryData, material);
-    //this.material.createProgram();
-    this.material.getParameterHandles(geometry.geometryData);
-    //this.material.getParameterHandles();
+
+    this.material.createProgram(this.activeAttributes);
+    this.material.getParameterHandles();
+
+    for(const attribute of this.activeAttributes){
+      const handle = this.material.program.getAttribLocation(attribute);
+      this.geometry.attributes.get(attribute).setHandle(handle);
+    }
 
     if(this.instanced){
       this.material.getInstanceParameterHandles();
@@ -49,8 +53,7 @@ export class Mesh extends Node{
 
     this.bindVAO();
 
-    let handles = this.material.getHandles();
-    this.geometry.enableBuffers(handles);
+    this.geometry.enableBuffers(this.activeAttributes);
 
     this.unbindVAO();
   }

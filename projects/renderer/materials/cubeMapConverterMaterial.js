@@ -10,7 +10,11 @@ export class CubeMapConverterMaterial extends Material{
   texture;
 
   constructor(texture){
+
     super();
+
+    this.attributes = ["POSITION"];
+
     if(!texture){
       console.error("Cube map converter material must be created with a texture. Parameter: ", texture);
     }
@@ -26,8 +30,6 @@ export class CubeMapConverterMaterial extends Material{
   }
 
   getParameterHandles(){
-    this.attributeHandles.positionHandle = this.program.getAttribLocation('position');
-
     this.cameraMatrixHandle = this.program.getUniformLocation('cameraMatrix');
     this.textureHandle = this.program.getUniformLocation('texture');
   }
@@ -38,10 +40,6 @@ export class CubeMapConverterMaterial extends Material{
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.texture);
     gl.uniform1i(this.textureHandle, 0);
-  }
-
-  getHandles(){
-    return this.attributeHandles; 
   }
 
   setCameraMatrix(cameraMatrix){

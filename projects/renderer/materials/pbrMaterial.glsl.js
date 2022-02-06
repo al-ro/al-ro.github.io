@@ -2,7 +2,7 @@ function getVertexSource(){
 
   var vertexSource = `
 
-  attribute vec3 position;
+  attribute vec3 POSITION;
 
 #ifdef INSTANCED 
   attribute vec4 orientation;
@@ -11,12 +11,12 @@ function getVertexSource(){
 #endif
 
 #ifdef HAS_NORMALS
-  attribute vec3 vertexNormal;
+  attribute vec3 NORMAL;
   uniform mat4 normalMatrix;
 #endif
 
 #ifdef HAS_UVS
-  attribute vec2 uv;
+  attribute vec2 TEXCOORD_0;
 #endif
 
 
@@ -33,7 +33,7 @@ function getVertexSource(){
 #endif
 
 #ifdef HAS_TANGENTS
-  attribute vec4 tangent;
+  attribute vec4 TANGENT;
   varying mat3 tbn;
 #endif
 
@@ -47,33 +47,33 @@ function getVertexSource(){
   void main(){
 
 #ifdef HAS_UVS
-    vUV = uv;
+    vUV = TEXCOORD_0;
 #endif
 
 #ifdef HAS_NORMALS
     vec4 transformedNormal;
 
 #ifdef INSTANCED
-    transformedNormal = normalMatrix * vec4(normalize(normalize(vertexNormal)/scale), 0.0);
+    transformedNormal = normalMatrix * vec4(normalize(normalize(NORMAL)/scale), 0.0);
     transformedNormal.xyz = rotateVectorByQuaternion(transformedNormal.xyz, orientation);
 #else
-    transformedNormal = normalMatrix * vec4(vertexNormal, 0.0);
+    transformedNormal = normalMatrix * vec4(NORMAL, 0.0);
 #endif
 
     vNormal = transformedNormal.xyz;
 #endif
 
 #ifdef HAS_TANGENTS
-    vec3 N = normalize(vec3(modelMatrix * vec4(vertexNormal, 0.0)));
+    vec3 N = normalize(vec3(modelMatrix * vec4(NORMAL, 0.0)));
     //https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     //Create matrix to transform normal to tangent space i.e. transform static normal map data into the underlying triangle frame
-    vec3 T = normalize(vec3(modelMatrix * vec4(tangent.xyz, 0.0)));
+    vec3 T = normalize(vec3(modelMatrix * vec4(TANGENT.xyz, 0.0)));
     //The triangle normal
     //Re-orthogonalize T with respect to N (for small optional correction)
     T = normalize(T - dot(T, N) * N);
     //The bitangent vector is perpendicular to N and T
     //The w value of the tangent is the "handedness"
-    vec3 B = normalize(cross(N, T)) * tangent.w;
+    vec3 B = normalize(cross(N, T)) * TANGENT.w;
     //Create matrix from three vectors
     tbn = mat3(T, B, N);
 #endif 
@@ -81,15 +81,15 @@ function getVertexSource(){
     vec4 pos;
 
 #ifdef INSTANCED
-    pos = modelMatrix * vec4(position * scale, 1.0);
+    pos = modelMatrix * vec4(POSITION * scale, 1.0);
     pos.xyz = rotateVectorByQuaternion(pos.xyz, orientation);
     pos.xyz += offset; 
 #else
-    pos = modelMatrix * vec4(position, 1.0);
+    pos = modelMatrix * vec4(POSITION, 1.0);
 #endif
 
     vPosition = pos.rgb;
-    vPosition = vec3((modelMatrix * vec4(position, 1.0)));
+    vPosition = vec3((modelMatrix * vec4(POSITION, 1.0)));
 
     pos = projectionMatrix * viewMatrix * pos;
     gl_Position = pos;

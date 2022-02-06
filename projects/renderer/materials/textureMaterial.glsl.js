@@ -2,9 +2,9 @@ function getVertexSource(parameters){
 
   var vertexSource = `
   
-  attribute vec3 position;
-  attribute vec3 vertexNormal;
-  attribute vec2 uv;
+  attribute vec3 POSITION;
+  attribute vec3 NORMAL;
+  attribute vec2 TEXCOORD_0;
 
   uniform mat4 modelMatrix;
   uniform mat4 normalMatrix;
@@ -22,15 +22,15 @@ function getVertexSource(parameters){
 
   void main(){
   
-    vUV = uv;
+    vUV = TEXCOORD_0;
 
     vec4 transformedNormal;
   
 #ifdef INSTANCED
-    transformedNormal = normalMatrix * vec4(normalize(normalize(vertexNormal)/scale), 0.0);
+    transformedNormal = normalMatrix * vec4(normalize(normalize(NORMAL)/scale), 0.0);
     transformedNormal.xyz = rotateVectorByQuaternion(transformedNormal.xyz, orientation);
 #else
-    transformedNormal = normalMatrix * vec4(vertexNormal, 0.0);
+    transformedNormal = normalMatrix * vec4(NORMAL, 0.0);
 #endif
 
     vNormal = transformedNormal.xyz;
@@ -38,11 +38,11 @@ function getVertexSource(parameters){
     vec4 pos;
 
 #ifdef INSTANCED
-    pos = modelMatrix * vec4(position*scale, 1.0);
+    pos = modelMatrix * vec4(POSITION*scale, 1.0);
     pos.xyz = rotateVectorByQuaternion(pos.xyz, orientation);
     pos.xyz += offset; 
 #else
-    pos = modelMatrix * vec4(position, 1.0);
+    pos = modelMatrix * vec4(POSITION, 1.0);
 #endif
 
     pos = projectionMatrix * viewMatrix * pos;

@@ -2,8 +2,8 @@ function getVertexSource(){
 
   var vertexSource = `
   
-  attribute vec3 position;
-  attribute vec2 uv;
+  attribute vec3 POSITION;
+  attribute vec2 TEXCOORD_0;
 
   uniform mat4 modelMatrix;
   uniform mat4 viewMatrix;
@@ -19,16 +19,16 @@ function getVertexSource(){
 
   void main(){
   
-    vUV = uv;
+    vUV = TEXCOORD_0;
 
     vec4 pos;
 
 #ifdef INSTANCED
-    pos = modelMatrix * vec4(position*scale, 1.0);
+    pos = modelMatrix * vec4(POSITION*scale, 1.0);
     pos.xyz = rotateVectorByQuaternion(pos.xyz, orientation);
     pos.xyz += offset; 
 #else
-    pos = modelMatrix * vec4(position, 1.0);
+    pos = modelMatrix * vec4(POSITION, 1.0);
 #endif
   
     pos = projectionMatrix * viewMatrix * pos;

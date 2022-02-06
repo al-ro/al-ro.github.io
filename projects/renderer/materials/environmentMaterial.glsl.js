@@ -2,10 +2,10 @@ function getVertexSource(parameters){
 
   var vertexSource = `
 
-  attribute vec3 position;
+  attribute vec3 POSITION;
 
   void main(){ 
-    gl_Position = vec4(position, 1.0);
+    gl_Position = vec4(POSITION, 1.0);
   }
   `;
 

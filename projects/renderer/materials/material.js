@@ -8,21 +8,19 @@ export class Material{
   attributeHandles = {};
 
   // All attributes supported by the material
-  supportedAttributes = [];
-
-  // Attributes provided by the geometry and supported by the material
-  activeAttributes = [];
+  attributes = [];
 
   program;
 
   needsCamera = false;
   needTime = false;
+  instanced = false;
 
   constructor(){}
 
-  createProgram(parameters, material){
-    this.program = programRepository.getProgram(parameters, material);
-    //this.program = programRepository.getProgram(this);
+  createProgram(attributes){
+    //this.program = programRepository.getProgram(parameters, material);
+    this.program = programRepository.getProgram(this, attributes);
   }
 
   getProgram(){
@@ -48,15 +46,15 @@ export class Material{
     }
   }
 
-  getSupportedAttributes(){
-    return this.supportedAttributes;
-  }
-
-  getActiveAttributes(){
-    return this.activeAttributes;
+  getAttributes(){
+    return this.attributes;
   }
 
   bindParameters(){}
+
+  isInstanced(){
+    return this.instanced;
+  }
 
   setPipeline(){}
 }

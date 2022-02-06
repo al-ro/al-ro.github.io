@@ -2,52 +2,51 @@ import {gl} from "./canvas.js"
 
 
 // Add hash defines to toggle specific parts of the shaders according to geometry and material data
-function getDefinePrefix(parameters, material){
+function getDefinePrefix(material, attributes){
 
   var prefix = "// " + material.constructor.name + " \n";
 
-  if(parameters){
 
-    if(parameters.hasOwnProperty("instanced") && parameters.instanced){
-      prefix += "#define INSTANCED \n";
-    }
+  if(material.isInstanced()){
+    prefix += "#define INSTANCED \n";
+  }
 
-    if(parameters.hasOwnProperty("normals") && parameters.normals){
-      prefix += "#define HAS_NORMALS \n";
-    }
+  if(attributes.includes("NORMAL")){
+    prefix += "#define HAS_NORMALS \n";
+  }
 
-    if(parameters.hasOwnProperty("uvs") && parameters.uvs){
-      prefix += "#define HAS_UVS \n";
-    }
+  if(attributes.includes("TEXCOORD_0")){
+    prefix += "#define HAS_UVS \n";
+  }
 
-    if(parameters.hasOwnProperty("tangents") && parameters.tangents){
-      prefix += "#define HAS_TANGENTS \n";
-    }
+  if(attributes.includes("TANGENT")){
+    prefix += "#define HAS_TANGENTS \n";
+  }
 
-    if(material.hasBaseColorTexture){
-      prefix += "#define HAS_BASE_COLOR_TEXTURE \n";
-    }
+  if(material.hasBaseColorTexture){
+    prefix += "#define HAS_BASE_COLOR_TEXTURE \n";
+  }
 
-    if(material.hasNormalTexture){
-      prefix += "#define HAS_NORMAL_TEXTURE \n";
-    }
+  if(material.hasNormalTexture){
+    prefix += "#define HAS_NORMAL_TEXTURE \n";
+  }
 
-    if(material.hasPropertiesTexture){
-      prefix += "#define HAS_PROPERTIES_TEXTURE \n";
-    }
+  if(material.hasPropertiesTexture){
+    prefix += "#define HAS_PROPERTIES_TEXTURE \n";
+  }
 
-    if(material.hasAO){
-      if(material.hasAOTexture){
-        prefix += "#define HAS_AO_TEXTURE \n";
-      }else{
-        prefix += "#define AO_IN_PROPERTIES_TEXTURE \n";
-      }
-    }
-
-    if(material.hasEmissiveTexture){
-      prefix += "#define HAS_EMISSIVE_TEXTURE \n";
+  if(material.hasAO){
+    if(material.hasAOTexture){
+      prefix += "#define HAS_AO_TEXTURE \n";
+    }else{
+      prefix += "#define AO_IN_PROPERTIES_TEXTURE \n";
     }
   }
+
+  if(material.hasEmissiveTexture){
+    prefix += "#define HAS_EMISSIVE_TEXTURE \n";
+  }
+
 
   return prefix;
 
