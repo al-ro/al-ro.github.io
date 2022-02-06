@@ -226,7 +226,7 @@ function loadGLTF(){
       }
 
       if(model == "jedifighter"){
-        modelMatrix = m4.scale(modelMatrix, 0.01, 0.01, 0.01);
+        modelMatrix = m4.scale(modelMatrix, 0.005, 0.005, 0.005);
       }
 
       g.setModelMatrix(modelMatrix);

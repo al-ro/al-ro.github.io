@@ -60,41 +60,41 @@ async function loadHDR(buffer){
 
     if (isNewRLE && (width >= 8) && (width < 32768)){
       for (let i = 0; i < 4; i++){
-	let ptr = i * width;
-	const ptr_end = (i + 1) * width;
-	let buf = undefined;
-	let count = undefined;
-	while (ptr < ptr_end){
-	  buf = d8.slice(pos, pos += 2);
-	  if (buf[0] > 128){
-	    count = buf[0] - 128;
-	    while (count-- > 0) scanline[ptr++] = buf[1];
-	  }else{
-	    count = buf[0] - 1;
-	    scanline[ptr++] = buf[1];
-	    while (count-- > 0){
-	      scanline[ptr++] = d8[pos++];
-	    }
-	  }
-	}
+        let ptr = i * width;
+        const ptr_end = (i + 1) * width;
+        let buf = undefined;
+        let count = undefined;
+        while (ptr < ptr_end){
+          buf = d8.slice(pos, pos += 2);
+          if (buf[0] > 128){
+            count = buf[0] - 128;
+            while (count-- > 0) scanline[ptr++] = buf[1];
+          }else{
+            count = buf[0] - 1;
+            scanline[ptr++] = buf[1];
+            while (count-- > 0){
+              scanline[ptr++] = d8[pos++];
+            }
+          }
+        }
       }
 
       for (let i = 0; i < width; i++){
-	img[ipos++] = scanline[i + 0 * width];
-	img[ipos++] = scanline[i + 1 * width];
-	img[ipos++] = scanline[i + 2 * width];
-	img[ipos++] = scanline[i + 3 * width];
+        img[ipos++] = scanline[i + 0 * width];
+        img[ipos++] = scanline[i + 1 * width];
+        img[ipos++] = scanline[i + 2 * width];
+        img[ipos++] = scanline[i + 3 * width];
       }
     }else{
       pos -= 4;
 
       for (let i = 0; i < width; i++){
-	rgbe = d8.slice(pos, pos += 4);
+        rgbe = d8.slice(pos, pos += 4);
 
-	img[ipos++] = rgbe[0];
-	img[ipos++] = rgbe[1];
-	img[ipos++] = rgbe[2];
-	img[ipos++] = rgbe[3];
+        img[ipos++] = rgbe[0];
+        img[ipos++] = rgbe[1];
+        img[ipos++] = rgbe[2];
+        img[ipos++] = rgbe[3];
       }
     }
   }
@@ -102,9 +102,9 @@ async function loadHDR(buffer){
   const imageFloatBuffer = _rgbeToFloat(img);
 
   return {dataFloat: imageFloatBuffer,
-	  width: width,
-	  height: height
-	  };
+    width: width,
+    height: height
+  };
 }
 
 export { loadHDR };
