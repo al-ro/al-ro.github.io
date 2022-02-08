@@ -10,7 +10,7 @@ export class UVMaterial extends Material{
 
   constructor(){
     super();
-    this.attributes = ["POSITION"];
+    this.attributes = ["POSITION", "TEXCOORD_0"];
   }
 
   getVertexShaderSource(parameters){

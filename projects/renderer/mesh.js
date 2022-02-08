@@ -16,6 +16,8 @@ export class Mesh extends Node{
   instanced = false;
   activeAttributes = [];
 
+  normalMatrix = m4.create();
+
   constructor(geometry, material, params){
 
     super(params);
@@ -116,20 +118,18 @@ export class Mesh extends Node{
     this.unbindVAO();
   }
 
-  setModelMatrix(modelMatrix){
-    this.geometry.setModelMatrix(modelMatrix);
-  }
-
-  setNormalMatrix(normalMatrix){
-    this.geometry.setNormalMatrix(normalMatrix);
-  }
-
-  getModelMatrix(){
-    return this.geometry.getModelMatrix();
-  }
-
   getNormalMatrix(){
-    return this.geometry.getNormalMatrix();
+    m4.invert(this.normalMatrix, this.modelMatrix)
+    m4.transpose(this.normalMatrix, this.normalMatrix)
+    return this.normalMatrix;
+  }
+
+  getMin(){
+    return m4.transformVector(this.modelMatrix, this.geometry.getMin());
+  }
+
+  getMax(){
+    return m4.transformVector(this.modelMatrix, this.geometry.getMax());
   }
 
 }

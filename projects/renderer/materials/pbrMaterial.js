@@ -27,15 +27,15 @@ export class PBRMaterial extends Material{
   shGrnMatrix = m4.create();
   shBluMatrix = m4.create();
 
-  // In the absence of metal/roughness texture, use float uniforms
+  // In the absence of metallicRoughnessTexture, use float uniforms
   // Either these or a texture must be supplied
-  metal = 1.0;
-  roughness = 1.0;
+  metallicFactor = 1.0;
+  roughnessFactor = 1.0;
 
   // In the absence of a base colour texture, use a vec4 uniform
   // Either this or a texture must be supplied
   // If both are given, the base colour values are used to multiply the texture values
-  baseColor = [1, 1, 1, 1];
+  baseColorFactor = [1, 1, 1, 1];
 
   alphaMode = enums.OPAQUE;
   alphaCutoff = 0.5;
@@ -55,23 +55,23 @@ export class PBRMaterial extends Material{
   normalScale = 1.0;
 
   // Combined texture of:
-  // 	ao		r
-  //	roughness	g
-  //	metal		b
+  // 	occlusion   r
+  //	roughness   g
+  //	metal       b
   // Optional
-  propertiesTexture;
+  metallicRoughnessTexture;
 
   // Ambient occlusion may have a separate texture or use the red channel of properties
-  aoTexture;
+  occlusionTexture;
 
   // Multiplier for texture value
-  aoStrength = 1.0;
+  occlusionStrength = 1.0;
 
   // Optional
   emissiveTexture;
 
   // Multiplier for texture value
-  emissiveFactor = 1.0;
+  emissiveFactor = [1, 1, 1];
 
   // A cubemap or equirectangular texture where each mip map is a 
   // prefiltered environment map of the source cubemap at level 0
@@ -89,17 +89,17 @@ export class PBRMaterial extends Material{
   // --------- PBR uniform handles ----------
 
   baseColorHandle;
-  metalHandle;
-  roughnessHandle;
+  metallicFactorHandle;
+  roughnessFactorHandle;
 
   baseColorTextureHandle;
-  propertiesTextureHandle;
+  metallicRoughnessTextureHandle;
 
   normalTextureHandle;
   normalScaleHandle;
 
-  aoTextureHandle;
-  aoStrengthHandle;
+  occlusionTextureHandle;
+  occlusionStrengthHandle;
 
   emissiveTextureHandle;
   emissiveFactorHandle;
@@ -117,7 +117,7 @@ export class PBRMaterial extends Material{
 
   hasBaseColorTexture = false;
   hasNormalTexture = false;
-  hasPropertiesTexture = false;
+  hasMetallicRoughnessTexture = false;
   hasAO = false;
   hasAOTexture = false;
   hasEmissiveTexture = false;
@@ -126,8 +126,8 @@ export class PBRMaterial extends Material{
   environmentTextureUnit;
   baseColorTextureUnit;
   normalTextureUnit;
-  propertiesTextureUnit;
-  aoTextureUnit;
+  metallicRoughnessTextureUnit;
+  occlusionTextureUnit;
   emissiveTextureUnit;
 
   environment;
@@ -183,45 +183,56 @@ export class PBRMaterial extends Material{
       this.baseColorTexture = parameters.baseColorTexture;
       this.hasBaseColorTexture = true;
       this.baseColorTextureUnit = this.textureUnits++;
-    }else if(parameters.hasOwnProperty("baseColor") && parameters.baseColor){
-      this.baseColor = parameters.baseColor;
+    }
+
+    if(parameters.hasOwnProperty("baseColorFactor") && parameters.baseColorFactor){
+      this.baseColorFactor = parameters.baseColorFactor;
     }
 
     if(parameters.hasOwnProperty("normalTexture") && parameters.normalTexture){
       this.hasNormalTexture = true;
       this.normalTextureUnit = this.textureUnits++;
       this.normalTexture = parameters.normalTexture;
+      if(parameters.hasOwnProperty("normalScale") && parameters.normalScale != null){
+        this.normalScale = parameters.normalScale;
+      }
     }
 
     if(parameters.hasOwnProperty("emissiveTexture") && parameters.emissiveTexture){
       this.hasEmissiveTexture = true;
       this.emissiveTextureUnit = this.textureUnits++;
       this.emissiveTexture = parameters.emissiveTexture;
+      if(parameters.hasOwnProperty("emissiveFactor") && parameters.emissiveFactor != null){
+        this.emissiveFactor = parameters.emissiveFactor;
+      }
     }
 
-    if(parameters.hasOwnProperty("propertiesTexture") && parameters.propertiesTexture){
-      this.hasPropertiesTexture = true;
-      this.propertiesTextureUnit = this.textureUnits++;
-      this.propertiesTexture = parameters.propertiesTexture;
+    if(parameters.hasOwnProperty("metallicRoughnessTexture") && parameters.metallicRoughnessTexture){
+      this.hasMetallicRoughnessTexture = true;
+      this.metallicRoughnessTextureUnit = this.textureUnits++;
+      this.metallicRoughnessTexture = parameters.metallicRoughnessTexture;
     }else{
 
-      if(parameters.hasOwnProperty("metal") && parameters.metal){
-        this.metal = parameters.metal;
+      if(parameters.hasOwnProperty("metallicFactor") && parameters.metallicFactor != null){
+        this.metallicFactor = parameters.metallicFactor;
       }
 
-      if(parameters.hasOwnProperty("roughness") && parameters.roughness){
-        this.roughness = parameters.roughness;
+      if(parameters.hasOwnProperty("roughnessFactor") && parameters.roughnessFactor != null){
+        this.roughnessFactor = parameters.roughnessFactor;
       }
     }
 
-    if(parameters.hasOwnProperty("aoTexture") && parameters.aoTexture){
+    if(parameters.hasOwnProperty("occlusionTexture") && parameters.occlusionTexture){
       this.hasAO = true;
-      if(parameters.aoTexture == this.propertiesTexture){
+      if(parameters.occlusionTexture == this.metallicRoughnessTexture){
         this.hasAOTexture = false;
       }else{
         this.hasAOTexture = true;
-        this.aoTextureUnit = this.textureUnits++;
-        this.aoTexture = parameters.aoTexture;
+        this.occlusionTextureUnit = this.textureUnits++;
+        this.occlusionTexture = parameters.occlusionTexture;
+      }
+      if(parameters.hasOwnProperty("occlusionStrength") && parameters.occlusionStrength != null){
+        this.occlusionStrength = parameters.occlusionStrength;
       }
     }
   }
@@ -235,21 +246,6 @@ export class PBRMaterial extends Material{
   }
 
   getParameterHandles(parameters){
-/*
-    this.attributeHandles.positionHandle = this.program.getAttribLocation('position');
-
-    if(parameters.hasOwnProperty("uvs") && parameters.uvs){
-      this.attributeHandles.vertexUVHandle = this.program.getAttribLocation('uv');
-    }
-
-    if(parameters.hasOwnProperty("tangents") && parameters.tangents){
-      this.attributeHandles.vertexTangentHandle = this.program.getAttribLocation('tangent');
-    }
-
-    if(parameters.hasOwnProperty("normals") && parameters.normals){
-      this.attributeHandles.vertexNormalHandle = this.program.getAttribLocation('vertexNormal');
-    }
-*/
     this.projectionMatrixHandle = this.program.getUniformLocation('projectionMatrix');
     this.viewMatrixHandle = this.program.getUniformLocation('viewMatrix');
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
@@ -267,27 +263,30 @@ export class PBRMaterial extends Material{
 
     if(this.hasBaseColorTexture){
       this.baseColorTextureHandle = this.program.getOptionalUniformLocation('baseColorTexture');
-    }else{
-      this.baseColorHandle = this.program.getOptionalUniformLocation('baseColor');
     }
 
+    this.baseColorHandle = this.program.getOptionalUniformLocation('baseColorFactor');
+    
     if(this.hasNormalTexture){
       this.normalTextureHandle = this.program.getOptionalUniformLocation('normalTexture');
+      this.normalScaleHandle = this.program.getOptionalUniformLocation('normalScale');
     }
 
     if(this.hasEmissiveTexture){
       this.emissiveTextureHandle = this.program.getOptionalUniformLocation('emissiveTexture');
+      this.emissiveFactorHandle = this.program.getOptionalUniformLocation('emissiveFactor'); 
     }
 
-    if(this.hasPropertiesTexture){
-      this.propertiesTextureHandle = this.program.getOptionalUniformLocation('propertiesTexture');
-    }else{
-      this.metalHandle = this.program.getOptionalUniformLocation('metal'); 
-      this.roughnessHandle = this.program.getOptionalUniformLocation('roughness'); 
+    if(this.hasMetallicRoughnessTexture){
+      this.metallicRoughnessTextureHandle = this.program.getOptionalUniformLocation('metallicRoughnessTexture');
     }
+
+    this.metallicFactorHandle = this.program.getOptionalUniformLocation('metallicFactor'); 
+    this.roughnessFactorHandle = this.program.getOptionalUniformLocation('roughnessFactor'); 
 
     if(this.hasAOTexture){
-      this.aoTextureHandle = this.program.getOptionalUniformLocation('aoTexture');
+      this.occlusionTextureHandle = this.program.getOptionalUniformLocation('occlusionTexture');
+      this.occlusionStrengthHandle = this.program.getOptionalUniformLocation('occlusionStrength'); 
     }
 
     this.timeHandle = this.program.getOptionalUniformLocation('time'); 
@@ -350,35 +349,39 @@ export class PBRMaterial extends Material{
       gl.activeTexture(gl.TEXTURE0 + this.baseColorTextureUnit);
       gl.bindTexture(gl.TEXTURE_2D, this.baseColorTexture);
       gl.uniform1i(this.baseColorTextureHandle, this.baseColorTextureUnit);
-    }else{
-      gl.uniform4fv(this.baseColorHandle, this.baseColor);
     }
+
+    gl.uniform4fv(this.baseColorHandle, this.baseColorFactor); 
 
     if(this.hasNormalTexture){
       gl.activeTexture(gl.TEXTURE0 + this.normalTextureUnit);
       gl.bindTexture(gl.TEXTURE_2D, this.normalTexture);
       gl.uniform1i(this.normalTextureHandle, this.normalTextureUnit);
+      gl.uniform1f(this.normalScaleHandle, this.normalScale);
     }
 
     if(this.hasEmissiveTexture){
       gl.activeTexture(gl.TEXTURE0 + this.emissiveTextureUnit);
       gl.bindTexture(gl.TEXTURE_2D, this.emissiveTexture);
       gl.uniform1i(this.emissiveTextureHandle, this.emissiveTextureUnit);
+      gl.uniform3fv(this.emissiveFactorHandle, this.emissiveFactor);
     }
 
-    if(this.hasPropertiesTexture){
-      gl.activeTexture(gl.TEXTURE0 + this.propertiesTextureUnit);
-      gl.bindTexture(gl.TEXTURE_2D, this.propertiesTexture);
-      gl.uniform1i(this.propertiesTextureHandle, this.propertiesTextureUnit);
-    }else{
-      gl.uniform1f(this.metalHandle, this.metal);
-      gl.uniform1f(this.roughnessHandle, this.roughness);
+    if(this.hasMetallicRoughnessTexture){
+      gl.activeTexture(gl.TEXTURE0 + this.metallicRoughnessTextureUnit);
+      gl.bindTexture(gl.TEXTURE_2D, this.metallicRoughnessTexture);
+      gl.uniform1i(this.metallicRoughnessTextureHandle, this.metallicRoughnessTextureUnit);
     }
+    
+    gl.uniform1f(this.metallicFactorHandle, this.metallicFactor);
+    gl.uniform1f(this.roughnessFactorHandle, this.roughnessFactor);
+    
 
     if(this.hasAOTexture){
-      gl.activeTexture(gl.TEXTURE0 + this.aoTextureUnit);
-      gl.bindTexture(gl.TEXTURE_2D, this.aoTexture);
-      gl.uniform1i(this.aoTextureHandle, this.aoTextureUnit);
+      gl.activeTexture(gl.TEXTURE0 + this.occlusionTextureUnit);
+      gl.bindTexture(gl.TEXTURE_2D, this.occlusionTexture);
+      gl.uniform1i(this.occlusionTextureHandle, this.occlusionTextureUnit);
+      gl.uniform1f(this.occlusionStrengthHandle, this.occlusionStrength);
     }
   }
 

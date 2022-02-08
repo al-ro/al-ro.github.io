@@ -25,15 +25,17 @@ export class Node{
         this.localModelMatrix = params.localModelMatrix;
       }
 
-      if(params.modelMatrix != null){
-        this.modelMatrix = params.modelMatrix;
-      }
+      this.modelMatrix = this.localModelMatrix;
     }
   }
 
   // Apply accumulated ancestor transforms and propagate change to children
   updateMatrix(parentModelMatrix){
-    this.modelMatrix = parentModelMatrix * this.localModelMatrix;
+    this.modelMatrix = m4.multiply(parentModelMatrix, this.localModelMatrix);
+    this.updateChildren();
+  }
+
+  updateChildren(){
     for(const child of this.children){
       child.updateMatrix(this.modelMatrix);
     }

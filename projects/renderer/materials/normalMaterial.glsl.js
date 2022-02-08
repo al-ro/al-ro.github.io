@@ -55,9 +55,10 @@ function getFragmentSource(){
     precision highp float;
     
     varying vec3 vNormal;
-   
+
     void main(){ 
-      gl_FragColor = vec4( 0.5 + 0.5 * normalize(vNormal), 1.0);
+      vec3 normal = normalize(gl_FrontFacing ? vNormal : -vNormal);
+      gl_FragColor = vec4( 0.5 + 0.5 * normal, 1.0);
     }
   `;
 

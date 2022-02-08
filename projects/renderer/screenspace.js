@@ -32,7 +32,6 @@ const descriptor = {
 geometryParams.attributes.set("POSITION", new Attribute("POSITION", buffer, descriptor));
 
 function getScreenspaceQuad(){
-  //return new Geometry({primitiveType: gl.TRIANGLE_STRIP, vertices: vertexData, length: 4});
   return new Geometry(geometryParams);
 }
 

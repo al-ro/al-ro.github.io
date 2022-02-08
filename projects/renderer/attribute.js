@@ -30,12 +30,27 @@ class Attribute{
   //  normalized
   //  stride
   //  offset
+  //  min (optional)
+  //  max (optional)
   descriptor;
+
+  // Optional min/max values of data in buffer. Used for bounding box.
+  min;
+  max;
 
   constructor(name, buffer, descriptor){
     this.name = name;
     this.buffer = buffer;
     this.descriptor = descriptor;
+
+    if(descriptor.hasOwnProperty("min") && descriptor.min != null){
+      this.min = descriptor.min;
+    }
+
+    if(descriptor.hasOwnProperty("max") && descriptor.max != null){
+      this.max = descriptor.max;
+    }
+
   }
 
   setHandle(handle){
@@ -58,6 +73,14 @@ class Attribute{
 
   getName(){
     return this.name;
+  }
+
+  getMin(){
+    return this.min;
+  }
+
+  getMax(){
+    return this.max;
   }
 
 }
