@@ -11,13 +11,9 @@ export class LambertMaterial extends Material{
   normalMatrixHandle;
 
   constructor(){
-
     super();
-
     this.attributes = ["POSITION", "NORMAL"];
-
   }
-
 
   getVertexShaderSource(parameters){
     return getVertexSource(parameters);

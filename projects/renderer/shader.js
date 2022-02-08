@@ -31,15 +31,15 @@ function getDefinePrefix(material, attributes){
     prefix += "#define HAS_NORMAL_TEXTURE \n";
   }
 
-  if(material.hasPropertiesTexture){
-    prefix += "#define HAS_PROPERTIES_TEXTURE \n";
+  if(material.hasMetallicRoughnessTexture){
+    prefix += "#define HAS_METALLIC_ROUGHNESS_TEXTURE \n";
   }
 
   if(material.hasAO){
     if(material.hasAOTexture){
       prefix += "#define HAS_AO_TEXTURE \n";
     }else{
-      prefix += "#define AO_IN_PROPERTIES_TEXTURE \n";
+      prefix += "#define AO_IN_METALLIC_ROUGHNESS_TEXTURE \n";
     }
   }
 

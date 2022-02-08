@@ -17,7 +17,7 @@ export class TextureMaterial extends Material{
 
     super();
 
-    this.attributes = ["POSITION"];
+    this.attributes = ["POSITION", "NORMAL", "TEXCOORD_0"];
 
     if(texture == null){
       console.error("TextureMaterial requires a texture during construction. Provided: ", texture);

@@ -2,6 +2,10 @@ import {download} from "./download.js"
 import {gl, enums} from "./canvas.js"
 import {Node} from "./node.js"
 import {PBRMaterial} from "./materials/pbrMaterial.js"
+import {NormalMaterial} from "./materials/normalMaterial.js"
+import {TextureMaterial} from "./materials/textureMaterial.js"
+import {LambertMaterial} from "./materials/lambertMaterial.js"
+import {UVMaterial} from "./materials/uvMaterial.js"
 import {Geometry} from "./geometry.js"
 import {Mesh} from "./mesh.js"
 import {BufferRepository} from "./bufferRepository.js"
@@ -11,6 +15,14 @@ import {loadTexture} from "./texture.js"
 
 // Download and process GLTF file and create scenes of drawable Mesh object with a geometry and PBR material
 
+// TODO:
+//  full spec conform (color_0, sampler, camera)
+//  file vs buffer
+//  animation
+//  extensions
+//  morph
+//  skins
+
 export class GLTF{
 
   // Description of the GLTF
@@ -18,9 +30,6 @@ export class GLTF{
 
   // Binary data for vertices, indices, normals etc.
   buffers = [];
-
-  // Image data
-  images = [];
 
   // WebGL textures for albedo, roughness and emissive maps etc.
   textures = [];
@@ -31,10 +40,19 @@ export class GLTF{
   // Drawable mesh objects
   meshes = [];
 
-  // Repository of gl.Buffer object
+  // Repository of gl.Buffer objects
   bufferRepository;
 
+  // IBL data for PBR material
   environment;
+
+  // Promise which resolves when all downloads and processing has completed
+  ready;
+
+  // Extent of model vertices
+  min;
+  max;
+  centre;
 
   constructor(path, environment){
 
@@ -45,6 +63,23 @@ export class GLTF{
     download(path, "gltf").then(data => this.processGLTF(data, workingDirectory));
   }
 
+  destroy(){
+    this.ready.then(() => {
+      // Free buffers
+      // Free webgl buffers
+      // Free bufferRepository
+      // Free typed arrays
+
+      // Free textures
+      // Free webgl textures
+      // Free images
+
+      // Free meshes
+      // Free nodes
+      // Delete json
+    });
+  }
+
   // Parse the json, download images and buffers, construct meshes
   processGLTF(json, workingDirectory){
 
@@ -53,9 +88,8 @@ export class GLTF{
     this.json = json;
     console.log("Full GLTF: ", json);
 
-    // Promises which resolve once all downloads have completed
+    // Promises which resolve once buffer downloads have completed
     let buffersDownloaded = new Promise((resolve, reject) => {});
-    let imagesDownloaded = new Promise((resolve, reject) => {});
 
     // Promise which resolved when the gltf has been processed
     let gltfLoadingDone = new Promise((resolve, reject) => {});
@@ -77,38 +111,31 @@ export class GLTF{
     }
 
     if(json.images){
-
-      // Populate image array with promises of each image to fetch
+      // Create textures and trigger data downloads but don't wait for them to finish.
+      // Image files take long to fetch and we can create a single pixel texture,
+      // render the geometry and replace the data with the image file when it has loaded.
       for(const image of json.images){
-        this.images.push(download(workingDirectory.concat(image.uri), "blob"));
+        this.textures.push(loadTexture(workingDirectory.concat(image.uri)));
       }
-
-      // Once all images are ready, replace the promises with the data
-      imagesDownloaded = Promise.all(this.images).then(images => {
-        this.images = images;
-      }).catch(e => {console.error("Image promises unresolved: ", e)});
-
-    }else{
-      // If there are no images to fetch, resolve the promise
-      imagesDownloaded = Promise.resolve();
     }
 
-    // Once we have the buffer and image data, we can process the gltf
-    Promise.all([buffersDownloaded, imagesDownloaded]).then(p => {
-        this.createTextures();
+    // Once we have the buffers, we can process the gltf
+    buffersDownloaded.then(p => {
         let nodes = this.processNodes(this.json.nodes);
         nodes = this.setChildren(nodes);
         console.log("Nodes: ", nodes); 
+        for(const node of this.json.scenes[this.json.scene].nodes){
+          nodes[node].updateChildren();
+        }
+        this.calculateCentre();
+        let modelMatrix = m4.create();
+        modelMatrix = m4.translate(modelMatrix, -this.centre[0], -this.centre[1], -this.centre[2]); 
+        for(const node of this.json.scenes[this.json.scene].nodes){
+          nodes[node].updateMatrix(modelMatrix);
+        }
     }).catch(e => {console.error("Download promises unresolved: ", e)});
  
     return gltfLoadingDone;
-  }
-
-  createTextures(){
-    for(const image of this.images){
-      const url = URL.createObjectURL(image);
-      this.textures.push(loadTexture(url));
-    }
   }
 
   // Create array of Mesh objects and nodes from the GLTF
@@ -118,7 +145,7 @@ export class GLTF{
 
     for(const gltfNode of gltfNodes){
 
-      const params = {localMatrix: this.getTransform(gltfNode), children: gltfNode.children};
+      const params = {localModelMatrix: this.getTransform(gltfNode), children: gltfNode.children};
 
       // If node describes a mesh, process it
       if(gltfNode.hasOwnProperty("mesh") && gltfNode.mesh != null){
@@ -146,6 +173,22 @@ export class GLTF{
       }
     }
     return nodes;
+  }
+
+  calculateCentre(){
+    this.min = [1e5, 1e5, 1e5];
+    this.max = [-1e5, -1e5, -1e5];
+    for(const mesh of this.meshes){
+      let meshMin = mesh.getMin();
+      let meshMax = mesh.getMax();
+      for(let i = 0; i < 3; i++){
+        this.min[i] = Math.min(this.min[i], meshMin[i]);
+        this.max[i] = Math.max(this.max[i], meshMax[i]);
+      }
+    }
+    this.centre = [ this.min[0] + 0.5 * (this.max[0] - this.min[0]),
+                    this.min[1] + 0.5 * (this.max[1] - this.min[1]),
+                    this.min[2] + 0.5 * (this.max[2] - this.min[2])];
   }
 
   getTransform(node){
@@ -197,6 +240,7 @@ export class GLTF{
 
     // Get a typed view of the buffer data
     const typedArray = getTypedArray(accessor.componentType);
+    // Typed array is created of the underlying buffer. No memory is allocated.
     const data = new typedArray(buffer, offset, accessor.count);
 
     return new Indices(data, accessor.componentType);
@@ -212,6 +256,7 @@ export class GLTF{
 
     // Get a typed view of the buffer data
     const typedArray = getTypedArray(accessor.componentType);
+    // Typed array is created of the underlying buffer. No memory is allocated.
     const data = new typedArray(buffer, offset, bufferView.byteLength / typedArray.BYTES_PER_ELEMENT);
 
     const parameters = {
@@ -234,18 +279,20 @@ export class GLTF{
       offset: accessor.byteOffset != null ? accessor.byteOffset : 0
     };
 
+    // Position min/max must be set in the gltf
+    if(name == "POSITION"){
+      descriptor.min = accessor.min;
+      descriptor.max = accessor.max;
+    }
+
     return new Attribute(name, glBuffer, descriptor);
   }
 
-  getMaterial(idx){
+  getMaterial(index){
 
-    const material = this.json.materials[idx];
+    const material = this.json.materials[index];
 
-    var baseColorTexture = null;
-    var normalTexture = null;
-    var emissiveTexture = null;
-    var occlusionRoughMetalTexture = null;
-    var occlusionTexture = null;
+    let materialParameters = {environment: this.environment};
 
     let pbrDesc = material.pbrMetallicRoughness;
 
@@ -253,67 +300,75 @@ export class GLTF{
       return null;
     }
 
-    var alphaMode = enums.OPAQUE;
-    var alphaCutoff = 0.5;
-    var doubleSided = false;
-
     if(material.alphaMode != null){
       switch(material.alphaMode){
         case "BLEND":
-          alphaMode = enums.BLEND;
+          materialParameters.alphaMode = enums.BLEND;
           break;
         case "MASK":
-          alphaMode = enums.MASK;
+          materialParameters.alphaMode = enums.MASK;
           break;
         default:
-          alphaMode = enums.OPAQUE; 
+          materialParameters.alphaMode = enums.OPAQUE; 
       }
     }
 
     if(material.alphaCutoff != null){
-      alphaCutoff = material.alphaCutoff;
+      materialParameters.alphaCutoff = material.alphaCutoff;
     }
 
     if(material.doubleSided != null){
-      doubleSided = material.doubleSided;
+      materialParameters.doubleSided = material.doubleSided;
     }
 
     if(pbrDesc.baseColorTexture != null){
       const textureID = pbrDesc.baseColorTexture.index;
-      baseColorTexture = this.textures[textureID];
+      materialParameters.baseColorTexture = this.textures[textureID];
+    }
+
+    if(pbrDesc.baseColorFactor != null){
+      materialParameters.baseColorFactor = pbrDesc.baseColorFactor;
+    }
+
+    if(pbrDesc.metallicFactor != null){
+      materialParameters.metallicFactor = pbrDesc.metallicFactor;
+    }
+
+    if(pbrDesc.roughnessFactor != null){
+      materialParameters.roughnessFactor = pbrDesc.roughnessFactor;
+    }
+
+    if(material.emissiveFactor != null){
+      materialParameters.emissiveFactor = material.emissiveFactor;
     }
 
     if(pbrDesc.metallicRoughnessTexture != null){
       const textureID = pbrDesc.metallicRoughnessTexture.index;
-      occlusionRoughMetalTexture = this.textures[textureID];
+      materialParameters.metallicRoughnessTexture = this.textures[textureID];
     }
 
     if(material.occlusionTexture != null){
       const textureID = material.occlusionTexture.index;
-      occlusionTexture = this.textures[textureID];
+      materialParameters.occlusionTexture = this.textures[textureID];
+      if(material.occlusionTexture.strength != null){
+        materialParameters.occlusionStrength = material.occlusionTexture.strength;
+      }
     }
 
     if(material.normalTexture != null){
       const textureID = material.normalTexture.index;
-      normalTexture = this.textures[textureID];
+      materialParameters.normalTexture = this.textures[textureID];
+      if(material.normalTexture.scale != null){
+        materialParameters.normalScale = material.normalTexture.scale;
+      }
     }
 
     if(material.emissiveTexture != null){
       const textureID = material.emissiveTexture.index;
-      emissiveTexture = this.textures[textureID];
+      materialParameters.emissiveTexture = this.textures[textureID];
     }
 
-    return new PBRMaterial({
-      baseColorTexture: baseColorTexture, 
-      normalTexture: normalTexture, 
-      emissiveTexture: emissiveTexture,
-      propertiesTexture: occlusionRoughMetalTexture, 
-      aoTexture: occlusionTexture, 
-      environment: this.environment, 
-      alphaMode: alphaMode, 
-      alphaCutoff: alphaCutoff, 
-      doubleSided: doubleSided
-    });
+    return new PBRMaterial(materialParameters);
 
   }
 
@@ -326,7 +381,7 @@ export class GLTF{
     const primitives = [];
 
     if(mesh.primitives == null){
-      console.error("Mesh doesn't specify any primitives");
+      console.error("Mesh doesn't specify any primitives: ", mesh);
       return [];
     }
 
@@ -367,8 +422,8 @@ export class GLTF{
         }
       }
 
-
       const geometry = new Geometry(geometryParams);
+
       let material;
       if(primitive.material != null){
         material = this.getMaterial(primitive.material);
@@ -376,9 +431,14 @@ export class GLTF{
         material = new PBRMaterial({environment: environment});
       }
 
-      this.meshes.push(new Mesh(geometry, material));
+      primitives.push(new Mesh(geometry, material, params));
     }
-    return primitives;
+
+    for(const primitive of primitives){
+      this.meshes.push(primitive);
+    }
+
+    return primitives[0];
   }
 }
 

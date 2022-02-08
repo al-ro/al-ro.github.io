@@ -89,6 +89,10 @@ function loadTexture(url) {
     gl.bindTexture(gl.TEXTURE_2D, null);
   };
 
+  image.onerror = function(){
+    console.error("Error fetching image: ", this);
+  }
+
   image.src = url;
 
   return texture;

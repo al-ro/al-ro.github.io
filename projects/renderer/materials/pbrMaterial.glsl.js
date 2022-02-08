@@ -129,12 +129,13 @@ function getFragmentSource(){
 
 #ifdef HAS_BASE_COLOR_TEXTURE
   uniform sampler2D baseColorTexture;
-#else
-  uniform vec4 baseColor;
 #endif
+  
+  uniform vec4 baseColorFactor;
 
 #ifdef HAS_NORMAL_TEXTURE
   uniform sampler2D normalTexture;
+  uniform float normalScale;
 #endif
 
 #ifdef HAS_TANGENTS
@@ -143,17 +144,23 @@ function getFragmentSource(){
 
 #ifdef HAS_EMISSIVE_TEXTURE
   uniform sampler2D emissiveTexture;
+  uniform vec3 emissiveFactor;
 #endif
 
-#ifdef HAS_PROPERTIES_TEXTURE
-  uniform sampler2D propertiesTexture;
-#else
-  uniform float metal;
-  uniform float roughness;
+#ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
+  uniform sampler2D metallicRoughnessTexture;
 #endif
+
+  uniform float metallicFactor;
+  uniform float roughnessFactor;
 
 #ifdef HAS_AO_TEXTURE
-  uniform sampler2D aoTexture;
+  uniform sampler2D occlusionTexture;
+  uniform float occlusionStrength;
+#endif
+
+#ifdef AO_IN_METALLIC_ROUGHNESS_TEXTURE
+  uniform float occlusionStrength;
 #endif
 
   uniform mat4 shRedMatrix;
@@ -301,21 +308,26 @@ function getFragmentSource(){
 
   vec3 getIrradiance(vec3 rayDir, vec3 normal, vec4 albedo){
 
-#ifdef HAS_PROPERTIES_TEXTURE
-    vec3 data = texture2D(propertiesTexture, vUV).rgb;
-    float roughness = data.g;
-    float metal = data.b; 
+    float metal = metallicFactor;
+    float roughness = roughnessFactor;
+
+#ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
+    vec3 data = texture2D(metallicRoughnessTexture, vUV).rgb;
+    roughness *= data.g;
+    metal *= data.b; 
 #endif 
 
-    float ao = 1.0;
+    float occlusion = 1.0;
 
 #ifdef HAS_AO_TEXTURE
-    ao = texture2D(aoTexture, vUV).r;
+    occlusion = texture2D(occlusionTexture, vUV).r;
+    occlusion = 1.0 + occlusionStrength * (occlusion - 1.0);
 #else
 
-#ifdef HAS_PROPERTIES_TEXTURE
-#ifdef AO_IN_PROPERTIES_TEXTURE
-    ao = data.r;
+#ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
+#ifdef AO_IN_METALLIC_ROUGHNESS_TEXTURE
+    occlusion = data.r;
+    occlusion = 1.0 + occlusionStrength * (occlusion - 1.0);
 #endif
 #endif
 
@@ -365,7 +377,7 @@ function getFragmentSource(){
     vec3 ambient = kD * diffuse + specular;
 
     // Combine direct and IBL lighting
-    return  ao * ambient + I;
+    return  occlusion * ambient + I;
   }
 
   //https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
@@ -390,7 +402,7 @@ function getFragmentSource(){
 #ifdef HAS_NORMAL_TEXTURE
     //https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     //Transform RGB normal map data from [0, 1] to [-1, 1]
-    vec3 normalColour = normalize(texture2D(normalTexture, vUV).rgb*2.0-1.0);
+    vec3 normalColour = normalize(vec3(vec2(normalScale), 1.0) * (texture2D(normalTexture, vUV).rgb * 2.0 - 1.0));
 #ifdef HAS_TANGENTS
     // Transform the normal vector in the RGB channels to tangent space
     vec3 normal = normalize(tbn * normalColour.rgb);
@@ -410,13 +422,17 @@ function getFragmentSource(){
     vec3 normal = normalize(geometryNormal);
 #endif
 
+    if(!gl_FrontFacing){
+      normal *= -1.0;
+    }
+
     float alpha = 1.0;
 
 #ifdef HAS_BASE_COLOR_TEXTURE
     vec4 data = texture2D(baseColorTexture, vUV);
-    vec4 col = vec4(vec3(pow(data.rgb, vec3(2.2))), data.a);
+    vec4 col = baseColorFactor * vec4(vec3(pow(data.rgb, vec3(2.2))), data.a);
 #else
-    vec4 col = baseColor;
+    vec4 col = baseColorFactor;
 #endif
 
     if(alphaMode != 0){
@@ -433,7 +449,7 @@ function getFragmentSource(){
 
 #ifdef HAS_EMISSIVE_TEXTURE
     vec4 emissiveData = texture2D(emissiveTexture, vUV);
-    vec3 emissiveCol = pow(emissiveData.rgb, vec3(2.2));
+    vec3 emissiveCol = emissiveFactor * pow(emissiveData.rgb, vec3(2.2));
     col.rgb += emissiveCol.rgb;
 #endif
 
@@ -444,26 +460,26 @@ function getFragmentSource(){
 
 //#define DEBUG
 #ifdef DEBUG
-    float ao = 1.0;
-#ifdef HAS_PROPERTIES_TEXTURE
-    vec3 data_ = texture2D(propertiesTexture, vUV).rgb;
+    float occlusion = 1.0;
+#ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
+    vec3 data_ = texture2D(metallicRoughnessTexture, vUV).rgb;
     float roughness = data_.g;
     float metal = data_.b;
 
     //col = vec3(texture2D(brdfIntegrationMapTexture, gl_FragCoord.xy/256.0).rg, 0.0);
 #endif
 #ifdef HAS_AO_TEXTURE
-    ao = texture2D(aoTexture, vUV).r;
+    occlusion = texture2D(occlusionTexture, vUV).r;
 #else
 
-#ifdef HAS_PROPERTIES_TEXTURE
-#ifdef AO_IN_PROPERTIES_TEXTURE
-    ao = data.r;
+#ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
+#ifdef AO_IN_METALLIC_ROUGHNESS_TEXTURE
+    occlusion = data.r;
 #endif
 #endif
 
 #endif
-    col = vec4(vec3(baseColor.rgb), 1.0);
+    col = vec4(vec3(occlusion), 1.0);
 /*
     col = getSHIrradiance(-viewDirection);
     if(col.r < 0.0){

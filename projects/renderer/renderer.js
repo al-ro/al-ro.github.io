@@ -23,9 +23,9 @@ stats.domElement.style.bottom = '48px';
 document.getElementById('cc_1').appendChild(stats.domElement);
 
 // TODO:
-//      Better binary data process
 //      Switch geometry/environment maps
 //      Check memory leaks and WebGL util
+//      Pack uniforms to vec4
 //      Camera navigation
 //      Switch materials
 //      View PBR maps/output
@@ -38,8 +38,8 @@ document.getElementById('cc_1').appendChild(stats.domElement);
 //      Particle class
 //
 //      Specular/Gloss
-//      Fabric
-//      Transmission/volume
+//      Sheen
+//      Transmission/volume/IOR
 //      OIT
 //      Pipeline state (program, sidedness)
 //      WebGL2
@@ -51,7 +51,6 @@ document.getElementById('cc_1').appendChild(stats.domElement);
 //      Basic geometries (sphere, quad, cylinder, cone, torus, knot)
 //      Postprocessing (bloom, depth of field, fog)
 //      Physically based camera
-
 
 var path;
 
@@ -147,10 +146,10 @@ var maxExtent = [-10000, -10000, -10000];
 //let environmentMaterial = new EnvironmentMaterial(cubeMap);
 //let environmentMesh = new Mesh(getScreenspaceQuad(), environmentMaterial);  
 
-//var environmentPath = './environmentMaps/dikhololo_night_1k.hdr';
-//var environmentPath = './environmentMaps/venice_sunset_1k.hdr';
+///var environmentPath = './environmentMaps/dikhololo_night_1k.hdr';
+var environmentPath = './environmentMaps/venice_sunset_1k.hdr';
 //var environmentPath = './environmentMaps/venice_sunrise_1k.hdr';
-var environmentPath = './environmentMaps/san_giuseppe_bridge_1k.hdr';
+//var environmentPath = './environmentMaps/san_giuseppe_bridge_1k.hdr';
 //var environmentPath = './environmentMaps/spruit_sunrise_1k.hdr';
 //var environmentPath = './environmentMaps/studio_small_03_1k.hdr';
 //var environmentPath = './environmentMaps/cape_hill_1k.hdr';
@@ -169,13 +168,12 @@ function setCameraMatrices(){
   camera.setCameraMatrix(); 
   camera.setViewMatrix();
 }
-
-
+console.log(programRepository);
 function draw(){
 
   stats.begin();
-  //Update time
   thisFrame = Date.now();
+
   let dT = (thisFrame - lastFrame)/1000;	
   time += dT;
   lastFrame = thisFrame;
@@ -208,6 +206,7 @@ function draw(){
   opaqueMeshes = [];
   transparentMeshes = [];
 
+if(_gltf != null){
   for(const mesh of _gltf.meshes){
     if(mesh.material.alphaMode == enums.BLEND){
       transparentMeshes.push(mesh);
@@ -215,6 +214,7 @@ function draw(){
       opaqueMeshes.push(mesh);
     }
   }
+}
 
   for(let i = 0; i < opaqueMeshes.length; i++){
     if(opaqueMeshes[i] != null){

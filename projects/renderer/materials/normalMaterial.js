@@ -12,7 +12,7 @@ export class NormalMaterial extends Material{
 
   constructor(){
     super();
-    this.attributes = ["POSITION"];
+    this.attributes = ["POSITION", "NORMAL"];
   }
 
   getVertexShaderSource(parameters){
