@@ -15,10 +15,16 @@ export class Node{
   // transform of this node is changed
   children = [];
 
+  childIndices = [];
+
   constructor(params){
     if(params != null){
       if(params.children != null){
         this.children = params.children;
+      }
+
+      if(params.childIndices != null){
+        this.childIndices = params.childIndices;
       }
 
       if(params.localModelMatrix != null){
@@ -51,6 +57,15 @@ export class Node{
 
   setChildren(children){
     this.children = children;
+  }
+
+  setChildIndices(childIndices){
+    this.childIndices = childIndices;
+  }
+
+  setLocalModelMatrix(localModelMatrix){
+    this.localModelMatrix = localModelMatrix;
+    this.modelMatrix = this.localModelMatrix;
   }
 }
 

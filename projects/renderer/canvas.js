@@ -7,7 +7,7 @@ const enums = {
 }
 
 // A factor to multiply the canvas dimensions with. Values > 1.0 give MSAA as the canvas is interpolated with CSS. Values < 1.0 produce lower resolution images stretched across the viewport.
-var canvasMultiplier = 1.0;
+var canvasMultiplier = 2.0;
 
 let w = canvas.clientWidth;
 let h = canvas.width/1.6;

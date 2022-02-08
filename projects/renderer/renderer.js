@@ -100,7 +100,7 @@ var workingDirectory = path.substring(0, path.lastIndexOf("/") + 1);
 
 var yaw = Math.PI/4.0;
 var pitch = 0.0;
-var dist = 1.0;
+var dist = 1.5;
 var up = [0, 1, 0];
 
 var fov = 45 * Math.PI / 180;
@@ -206,15 +206,15 @@ function draw(){
   opaqueMeshes = [];
   transparentMeshes = [];
 
-if(_gltf != null){
-  for(const mesh of _gltf.meshes){
-    if(mesh.material.alphaMode == enums.BLEND){
-      transparentMeshes.push(mesh);
-    }else{
-      opaqueMeshes.push(mesh);
+  if(_gltf != null){
+    for(const mesh of _gltf.meshes){
+      if(mesh.material.alphaMode == enums.BLEND){
+        transparentMeshes.push(mesh);
+      }else{
+        opaqueMeshes.push(mesh);
+      }
     }
   }
-}
 
   for(let i = 0; i < opaqueMeshes.length; i++){
     if(opaqueMeshes[i] != null){
