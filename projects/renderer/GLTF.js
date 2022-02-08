@@ -122,17 +122,12 @@ export class GLTF{
     // Once we have the buffers, we can process the gltf
     buffersDownloaded.then(p => {
         let nodes = this.processNodes(this.json.nodes);
-        nodes = this.setChildren(nodes);
+        this.nodes = this.setChildren(nodes);
         console.log("Nodes: ", nodes); 
         for(const node of this.json.scenes[this.json.scene].nodes){
-          nodes[node].updateChildren();
+          this.nodes[node].updateChildren();
         }
-        this.calculateCentre();
-        let modelMatrix = m4.create();
-        modelMatrix = m4.translate(modelMatrix, -this.centre[0], -this.centre[1], -this.centre[2]); 
-        for(const node of this.json.scenes[this.json.scene].nodes){
-          nodes[node].updateMatrix(modelMatrix);
-        }
+        this.scaleAndCentre();
     }).catch(e => {console.error("Download promises unresolved: ", e)});
  
     return gltfLoadingDone;
@@ -145,11 +140,21 @@ export class GLTF{
 
     for(const gltfNode of gltfNodes){
 
-      const params = {localModelMatrix: this.getTransform(gltfNode), children: gltfNode.children};
+      const params = {localModelMatrix: this.getTransform(gltfNode), childIndices: gltfNode.children != null ? gltfNode.children : []};
 
       // If node describes a mesh, process it
       if(gltfNode.hasOwnProperty("mesh") && gltfNode.mesh != null){
-        nodes.push(this.processMesh(this.json.meshes[gltfNode.mesh], params));
+        let primitive = this.processMesh(this.json.meshes[gltfNode.mesh]);
+        if(primitive.length > 1){
+          let node = new Node(params);
+          node.setChildren(primitive);
+          nodes.push(node);
+        }else{
+          primitive[0].setChildIndices(params.childIndices);
+          primitive[0].setLocalModelMatrix(params.localModelMatrix);
+          nodes.push(primitive[0]);
+        }
+        
       }else{
         nodes.push(new Node(params));
       }
@@ -163,9 +168,9 @@ export class GLTF{
     for(const node of nodes){
       if(node.children != null){
 
-        const childNodes = [];
+        const childNodes = node.children;
 
-        for(const childIdx of node.children){
+        for(const childIdx of node.childIndices){
           childNodes.push(nodes[childIdx]);
         }
 
@@ -173,6 +178,27 @@ export class GLTF{
       }
     }
     return nodes;
+  }
+
+  scaleAndCentre(){
+    this.calculateCentre();
+    let modelMatrix = m4.create();
+
+    let scale = [1, 1, 1];
+    let maxExtent = Math.max(Math.max(this.max[0] - this.min[0], this.max[1] - this.min[1]), this.max[2] - this.min[2]);
+    scale[0] /= maxExtent;
+    scale[1] /= maxExtent;
+    scale[2] /= maxExtent;
+    console.log(maxExtent, scale);
+
+    modelMatrix = m4.scale(modelMatrix, scale[0], scale[1], scale[2]);
+
+    modelMatrix = m4.translate(modelMatrix, -this.centre[0], -this.centre[1], -this.centre[2]);
+
+    for(const node of this.json.scenes[this.json.scene].nodes){
+      this.nodes[node].updateMatrix(modelMatrix);
+    }
+
   }
 
   calculateCentre(){
@@ -373,7 +399,7 @@ export class GLTF{
   }
 
   // Construct Mesh objects described by the gltf mesh
-  processMesh(mesh, params){ 
+  processMesh(mesh){ 
 
     const accessors = this.json.accessors;
 
@@ -431,14 +457,14 @@ export class GLTF{
         material = new PBRMaterial({environment: environment});
       }
 
-      primitives.push(new Mesh(geometry, material, params));
+      primitives.push(new Mesh(geometry, material));
     }
 
     for(const primitive of primitives){
       this.meshes.push(primitive);
     }
 
-    return primitives[0];
+    return primitives;
   }
 }
 
