@@ -28,20 +28,22 @@ document.getElementById('cc_1').appendChild(stats.domElement);
 //      Pack uniforms to vec4
 //      Camera navigation
 //      Switch materials
+//      Prefix hashes
 //      View PBR maps/output
 //      Better HDR
 //      Animations
-//      Bones
+//      Morph targets
+//      Skinning
 //      Sparse accessor
 //      Camera from gltf
-//      Standardize instancing
-//      Particle class
-//
 //      Specular/Gloss
 //      Sheen
 //      Transmission/volume/IOR
-//      OIT
+
+//      Standardize instancing
 //      Pipeline state (program, sidedness)
+//      Particle class
+//      OIT
 //      WebGL2
 //      Lights
 //      Shadow mapping
@@ -147,9 +149,9 @@ var maxExtent = [-10000, -10000, -10000];
 //let environmentMesh = new Mesh(getScreenspaceQuad(), environmentMaterial);  
 
 ///var environmentPath = './environmentMaps/dikhololo_night_1k.hdr';
-var environmentPath = './environmentMaps/venice_sunset_1k.hdr';
+//var environmentPath = './environmentMaps/venice_sunset_1k.hdr';
 //var environmentPath = './environmentMaps/venice_sunrise_1k.hdr';
-//var environmentPath = './environmentMaps/san_giuseppe_bridge_1k.hdr';
+var environmentPath = './environmentMaps/san_giuseppe_bridge_1k.hdr';
 //var environmentPath = './environmentMaps/spruit_sunrise_1k.hdr';
 //var environmentPath = './environmentMaps/studio_small_03_1k.hdr';
 //var environmentPath = './environmentMaps/cape_hill_1k.hdr';
