@@ -50,6 +50,7 @@ function createAndSetupCubemap() {
 function loadTexture(url) {
 
   const texture = gl.createTexture();
+  gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
 
   const level = 0;
   const internalFormat = gl.RGBA;

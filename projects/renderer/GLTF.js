@@ -16,8 +16,12 @@ import {loadTexture} from "./texture.js"
 // Download and process GLTF file and create scenes of drawable Mesh object with a geometry and PBR material
 
 // TODO:
-//  full spec conform (color_0, sampler, camera)
-//  file vs buffer
+//  multiple scenes
+//  ready status
+//  detructor
+//  full spec conform (color_0, sampler)
+//  sparse accessor
+//  image from bufferView
 //  animation
 //  extensions
 //  morph
@@ -35,7 +39,10 @@ export class GLTF{
   textures = [];
 
   // Scene graphs of nodes
-  scenes = [];
+  nodes = [];
+
+  // Default scene to display
+  scene = 0;
 
   // Drawable mesh objects
   meshes = [];
@@ -81,12 +88,18 @@ export class GLTF{
   }
 
   // Parse the json, download images and buffers, construct meshes
-  processGLTF(json, workingDirectory){
+  processGLTF(json, workingDirectory, scene){
 
     this.bufferRepository = new BufferRepository();
 
     this.json = json;
     console.log("Full GLTF: ", json);
+
+    if(scene != null){
+      this.scene = scene;
+    }else if(this.json.scene != null){
+      this.scene = this.json.scene;
+    }
 
     // Promises which resolve once buffer downloads have completed
     let buffersDownloaded = new Promise((resolve, reject) => {});
@@ -98,7 +111,13 @@ export class GLTF{
 
       // Populate buffer array with promises of each gltf buffer to fetch
       for(const buffer of json.buffers){
-        this.buffers.push(download(workingDirectory.concat(buffer.uri), "arrayBuffer"));
+        let prefix = "";
+
+        if(buffer.uri.substring(0, 5) != "data:"){
+          prefix = workingDirectory;
+        }
+        
+        this.buffers.push(download(prefix.concat(buffer.uri), "arrayBuffer")); 
       }
 
       // Once all buffers are ready, replace the promises with the data
@@ -115,18 +134,28 @@ export class GLTF{
       // Image files take long to fetch and we can create a single pixel texture,
       // render the geometry and replace the data with the image file when it has loaded.
       for(const image of json.images){
-        this.textures.push(loadTexture(workingDirectory.concat(image.uri)));
+        if(image.hasOwnProperty("uri") && image.uri != null){
+          let prefix = "";
+
+          if(image.uri.substring(0, 5) != "data:"){
+            prefix = workingDirectory;
+          }
+          this.textures.push(loadTexture(prefix.concat(image.uri)));
+        }else{
+          //TODO: image from bufferview. Might not have loaded yet.
+          console.error("Image from buffer: ", image);
+        }
       }
     }
 
     // Once we have the buffers, we can process the gltf
     buffersDownloaded.then(p => {
-        let nodes = this.processNodes(this.json.nodes);
-        this.nodes = this.setChildren(nodes);
-        console.log("Nodes: ", nodes); 
-        for(const node of this.json.scenes[this.json.scene].nodes){
+        this.nodes = this.processNodes(this.json.nodes);
+        this.setChildren(this.nodes);
+        for(const node of this.json.scenes[this.scene].nodes){
           this.nodes[node].updateChildren();
         }
+        console.log("Nodes: ", this.nodes); 
         this.scaleAndCentre();
     }).catch(e => {console.error("Download promises unresolved: ", e)});
  
@@ -140,22 +169,32 @@ export class GLTF{
 
     for(const gltfNode of gltfNodes){
 
-      const params = {localModelMatrix: this.getTransform(gltfNode), childIndices: gltfNode.children != null ? gltfNode.children : []};
+      const transform = this.getTransform(gltfNode);
+      const indices = gltfNode.children != null ? gltfNode.children : [];
+
+      const params = {localModelMatrix: transform, childIndices: indices};
 
       // If node describes a mesh, process it
       if(gltfNode.hasOwnProperty("mesh") && gltfNode.mesh != null){
-        let primitive = this.processMesh(this.json.meshes[gltfNode.mesh]);
+
+        // Get the primitives of the gltf mesh
+        const primitive = this.processMesh(this.json.meshes[gltfNode.mesh]);
+
         if(primitive.length > 1){
-          let node = new Node(params);
+          // When there are multiple primitives, set them as the children of a new empty node
+          const node = new Node(params);
           node.setChildren(primitive);
+          // Add the node to the scene graph
           nodes.push(node);
         }else{
+          // Otherwise set the Mesh object as a node of the scene graph
           primitive[0].setChildIndices(params.childIndices);
           primitive[0].setLocalModelMatrix(params.localModelMatrix);
           nodes.push(primitive[0]);
         }
-        
+
       }else{
+        // If it's not a mesh, add a new empty node in the scene graph
         nodes.push(new Node(params));
       }
     }
@@ -164,38 +203,30 @@ export class GLTF{
   }
 
   setChildren(nodes){
-
     for(const node of nodes){
-      if(node.children != null){
-
-        const childNodes = node.children;
-
+      if(node.childIndices.length > 0){
+        // Add child references to nodes which exist in the scene graph
         for(const childIdx of node.childIndices){
-          childNodes.push(nodes[childIdx]);
+          node.children.push(nodes[childIdx]);
         }
-
-        node.setChildren(childNodes);
       }
     }
-    return nodes;
   }
 
   scaleAndCentre(){
     this.calculateCentre();
     let modelMatrix = m4.create();
 
-    let scale = [1, 1, 1];
-    let maxExtent = Math.max(Math.max(this.max[0] - this.min[0], this.max[1] - this.min[1]), this.max[2] - this.min[2]);
+    const scale = [1, 1, 1];
+    const maxExtent = Math.max(Math.max(this.max[0] - this.min[0], this.max[1] - this.min[1]), this.max[2] - this.min[2]);
     scale[0] /= maxExtent;
     scale[1] /= maxExtent;
     scale[2] /= maxExtent;
-    console.log(maxExtent, scale);
 
     modelMatrix = m4.scale(modelMatrix, scale[0], scale[1], scale[2]);
-
     modelMatrix = m4.translate(modelMatrix, -this.centre[0], -this.centre[1], -this.centre[2]);
 
-    for(const node of this.json.scenes[this.json.scene].nodes){
+    for(const node of this.json.scenes[this.scene].nodes){
       this.nodes[node].updateMatrix(modelMatrix);
     }
 
@@ -454,7 +485,7 @@ export class GLTF{
       if(primitive.material != null){
         material = this.getMaterial(primitive.material);
       }else{
-        material = new PBRMaterial({environment: environment});
+        material = new PBRMaterial({environment: this.environment});
       }
 
       primitives.push(new Mesh(geometry, material));

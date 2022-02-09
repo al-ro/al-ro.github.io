@@ -15,10 +15,13 @@ export class Node{
   // transform of this node is changed
   children = [];
 
+  // Indices of other nodes in the scene graph which are children of this node
   childIndices = [];
 
   constructor(params){
+
     if(params != null){
+
       if(params.children != null){
         this.children = params.children;
       }
@@ -33,6 +36,7 @@ export class Node{
 
       this.modelMatrix = this.localModelMatrix;
     }
+
   }
 
   // Apply accumulated ancestor transforms and propagate change to children
