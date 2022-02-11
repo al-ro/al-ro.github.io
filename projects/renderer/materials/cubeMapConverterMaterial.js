@@ -31,7 +31,7 @@ export class CubeMapConverterMaterial extends Material{
 
   getParameterHandles(){
     this.cameraMatrixHandle = this.program.getUniformLocation('cameraMatrix');
-    this.textureHandle = this.program.getUniformLocation('texture');
+    this.textureHandle = this.program.getUniformLocation('sphericalTexture');
   }
 
   bindParameters(){

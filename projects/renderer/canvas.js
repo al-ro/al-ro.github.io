@@ -1,4 +1,6 @@
 var canvas = document.getElementById("canvas_1");
+//import 'https://greggman.github.io/webgl-lint/webgl-lint.js';
+import 'https://greggman.github.io/webgl-memory/webgl-memory.js';
 
 const enums = {
   OPAQUE: "opaque",
@@ -23,6 +25,9 @@ if(!gl){
 }
 
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+//const ext = gl.getExtension('GMAN_debug_helper');
+const extMEM = gl.getExtension('GMAN_webgl_memory');
 
 const extVAO = gl.getExtension("OES_vertex_array_object");
 if (!extVAO) {
@@ -59,4 +64,4 @@ if (!extFPT) {
   console.error("Could not load OES_texture_float_linear. No fallback.");
 }
 
-export {canvas, gl, canvasMultiplier, enums, extVAO, extINS, extDFD}
+export {canvas, gl, canvasMultiplier, enums, extVAO, extINS, extDFD, extMEM}

@@ -28,7 +28,7 @@ class Attribute{
   //  componentType
   //  componentCount
   //  normalized
-  //  stride
+  //  byteStride
   //  offset
   //  min (optional)
   //  max (optional)
@@ -37,6 +37,13 @@ class Attribute{
   // Optional min/max values of data in buffer. Used for bounding box.
   min;
   max;
+
+  // If attribute has been attached to a VAO, it must be bound
+  // for the deletion to work. Otherwise it fails silently.
+  // Trying to delete an already deleted buffer has no effect.
+  destroy(){
+    gl.deleteBuffer(this.buffer);
+  }
 
   constructor(name, buffer, descriptor){
     this.name = name;
@@ -67,7 +74,7 @@ class Attribute{
     }else{
       gl.enableVertexAttribArray(this.handle);
       gl.bindBuffer(this.descriptor.target, this.buffer);
-      gl.vertexAttribPointer(this.handle, this.descriptor.componentCount, this.descriptor.componentType, this.descriptor.normalized, this.descriptor.stride, this.descriptor.offset);
+      gl.vertexAttribPointer(this.handle, this.descriptor.componentCount, this.descriptor.componentType, this.descriptor.normalized, this.descriptor.byteStride, this.descriptor.offset);
     }
   }
 

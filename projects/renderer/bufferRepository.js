@@ -12,6 +12,16 @@ class BufferRepository{
 
   constructor(){}
 
+  // If attribute has been attached to a VAO, it must be bound
+  // for the deletion to work. Otherwise it fails silently.
+  // Trying to delete an already deleted buffer has no effect.
+  destroy(){
+    this.buffers.forEach((buffer) => {
+      gl.deleteBuffer(buffer);
+    });
+    this.buffers = new Map();
+  }
+
   // Return buffer corresponding to passed index and range 
   // If one does not exist, create it, enter it to the map
   // and return it.

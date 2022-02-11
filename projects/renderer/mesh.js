@@ -50,6 +50,23 @@ export class Mesh extends Node{
     this.createVAO();
   }
 
+  destroy(){
+    if(this.geometry != null){
+
+      this.bindVAO();
+      this.geometry.destroy();
+      this.unbindVAO();
+
+      extVAO.deleteVertexArrayOES(this.vao);
+      this.geometry = null;
+    }
+
+    if(this.material != null){
+      this.material.destroy();
+      this.material = null;
+    }
+  }
+
   createVAO(){
     this.vao = extVAO.createVertexArrayOES();
 
@@ -73,6 +90,10 @@ export class Mesh extends Node{
   }
 
   render(camera, time){
+
+    if(!(this.material != null && this.geometry != null)){
+      return;
+    }
 
     if(this.material.doubleSided){
       gl.disable(gl.CULL_FACE);
@@ -115,6 +136,7 @@ export class Mesh extends Node{
     }else{
       gl.drawArrays(this.geometry.primitiveType, 0, this.geometry.length);
     }
+
     this.unbindVAO();
   }
 

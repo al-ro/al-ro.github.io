@@ -10,7 +10,7 @@ import {TextureMaterial} from "./materials/textureMaterial.js"
 import {Environment} from "./environment.js"
 import {loadTexture, createAndSetupCubemap} from "./texture.js"
 import {Mesh} from "./mesh.js";
-import {canvas, gl, enums} from "./canvas.js";
+import {canvas, gl, enums, extMEM} from "./canvas.js";
 import {getScreenspaceQuad} from "./screenspace.js";
 import {getSphericalHarmonicsMatrices} from "./iblUtils.js";
 import {programRepository} from "./programRepository.js"
@@ -18,13 +18,11 @@ import {GLTF} from "./GLTF.js"
 
 const stats = new Stats();
 stats.showPanel(0);
-stats.domElement.style.position = 'relative';
-stats.domElement.style.bottom = '48px';
-document.getElementById('cc_1').appendChild(stats.domElement);
+stats.dom.style.cssText="position:relative;bottom:48px;left:0;cursor:pointer;opacity:0.9;z-index:10000";
+document.getElementById('cc_1').appendChild(stats.dom);
 
 // TODO:
-//      Switch geometry/environment maps
-//      Check memory leaks and WebGL util
+//      Switch environment maps
 //      Pack uniforms to vec4
 //      Camera navigation
 //      Switch materials
@@ -54,129 +52,114 @@ document.getElementById('cc_1').appendChild(stats.domElement);
 //      Postprocessing (bloom, depth of field, fog)
 //      Physically based camera
 
-var path;
+let models = new Map();
+models.set("Flight Helmet", "./gltf/flighthelmet/FlightHelmet.gltf");
+models.set("Boombox", "./gltf/boombox/BoomBox.gltf");
+models.set("Sponza", "./gltf/sponza/Sponza.gltf");
+models.set("Damaged Helmet", "./gltf/helmet/DamagedHelmet.gltf");
+models.set("Toy Car", "./gltf/toycar/ToyCar.gltf");
+models.set("Fox", "./gltf/fox/Fox.gltf");
+models.set("Venator Corridor", "./gltf/corridor/scene.gltf");
+models.set("Jedi Fighter", "./gltf/jedifighter/scene.gltf");
+models.set("PBR Spheres", "./gltf/spheres/MetalRoughSpheres.gltf");
+models.set("Blend", "./gltf/blend/AlphaBlendModeTest.gltf");
+models.set("Camera", "./gltf/camera/Camera_01_1k.gltf");
+models.set("Minimal", "./gltf/minimal/scene.gltf");
+models.set("Collada Duck", "./gltf/duck/Duck.gltf");
 
-var model = "flighthelmet";
+let modelNames = Array.from(models.keys());
+modelNames.sort();
 
-switch(model){
-  case "boombox":
-    path  = "./gltf/boombox/BoomBox.gltf";
-    break;
-  case "sponza":
-    path  = "./gltf/sponza/Sponza.gltf";
-    break;
-  case "damagedhelmet":
-    path  = "./gltf/helmet/DamagedHelmet.gltf";
-    break;
-  case "flighthelmet":
-    path  = "./gltf/flighthelmet/FlightHelmet.gltf";
-    break;
-  case "car":
-    path  = "./gltf/toycar/ToyCar.gltf";
-    break;
-  case "fox":
-    path  = "./gltf/fox/Fox.gltf";
-    break;
-  case "corridor":
-    path  = "./gltf/corridor/scene.gltf";
-    break;
-  case "jedifighter":
-    path  = "./gltf/jedifighter/scene.gltf";
-    break;
-  case "spheres":
-    path  = "./gltf/spheres/MetalRoughSpheres.gltf";
-    break;
-  case "blend":
-    path  = "./gltf/blend/AlphaBlendModeTest.gltf";
-    break;
-  case "camera":
-    path  = "./gltf/camera/Camera_01_1k.gltf";
-    break; 
-  case "minimal":
-    path  = "./gltf/minimal/scene.gltf";
-    break;
-  default:
-    path = "./gltf/duck/Duck.gltf";
-}
-var workingDirectory = path.substring(0, path.lastIndexOf("/") + 1);
+let yaw = Math.PI/4.0;
+let pitch = 0.0;
+let dist = 1.5;
+let up = [0, 1, 0];
 
-var yaw = Math.PI/4.0;
-var pitch = 0.0;
-var dist = 1.5;
-var up = [0, 1, 0];
+let fov = 45 * Math.PI / 180;
+let aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+let zNear = 0.1;
+let zFar = 1000.0;
 
-var fov = 45 * Math.PI / 180;
-var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-var zNear = 0.1;
-var zFar = 1000.0;
-
-var camera = new Camera(pitch, yaw, dist, [0, 0, 0], up, fov, aspect, zNear, zFar);
-var controls = new Controls(camera);
+let camera = new Camera(pitch, yaw, dist, [0, 0, 0], up, fov, aspect, zNear, zFar);
+let controls = new Controls(camera);
 
 //Time
-var time = 0.0;
+let time = 0.0;
 
-//************* GUI ***************
-var gui = new dat.GUI({ autoPlace: false });
-var customContainer = document.getElementById('gui_container');
-customContainer.appendChild(gui.domElement);
-gui.add(camera, 'exposure').min(0.0).max(2).step(0.01);
-gui.close();
+//let environmentPath = './environmentMaps/dikhololo_night_1k.hdr';
+//let environmentPath = './environmentMaps/venice_sunset_1k.hdr';
+//let environmentPath = './environmentMaps/venice_sunrise_1k.hdr';
+let environmentPath = './environmentMaps/san_giuseppe_bridge_1k.hdr';
+//let environmentPath = './environmentMaps/spruit_sunrise_1k.hdr';
+//let environmentPath = './environmentMaps/studio_small_03_1k.hdr';
+//let environmentPath = './environmentMaps/cape_hill_1k.hdr';
+//let environmentPath = './environmentMaps/1k.hdr';
 
-var gltfNormals;
-var gltfVertices;
-var gltfIndices; 
-var gltfUVs; 
-var gltfTangents; 
-var gltfCount; 
-var gltfMaterialID;
-
-var readyToRender = false;
-
-var geometries = [];
-var opaqueMeshes = [];
-var transparentMeshes = [];
-
-var images = [];
-var materials = [];
-var textures = [];
-
-var minExtent = [10000, 10000, 10000];
-var maxExtent = [-10000, -10000, -10000];
-
-//let cubeMap = createAndSetupCubemap();
-//let environmentMaterial = new EnvironmentMaterial(cubeMap);
-//let environmentMesh = new Mesh(getScreenspaceQuad(), environmentMaterial);  
-
-///var environmentPath = './environmentMaps/dikhololo_night_1k.hdr';
-//var environmentPath = './environmentMaps/venice_sunset_1k.hdr';
-//var environmentPath = './environmentMaps/venice_sunrise_1k.hdr';
-var environmentPath = './environmentMaps/san_giuseppe_bridge_1k.hdr';
-//var environmentPath = './environmentMaps/spruit_sunrise_1k.hdr';
-//var environmentPath = './environmentMaps/studio_small_03_1k.hdr';
-//var environmentPath = './environmentMaps/cape_hill_1k.hdr';
-//var environmentPath = './environmentMaps/1k.hdr';
-
-//let environment = new Environment({path: "./defaultResources/uv_grid.jpg", type: "cubemap"});
+//let environment = new Environment({path: "./defaultResources/uv_grid.jpg", type: "cubemap", camera: camera});
 let environment = new Environment({path: environmentPath, type: "hdr", camera: camera});
 
-let _gltf = new GLTF(path, environment);
+let opaqueMeshes = [];
+let transparentMeshes = [];
 
-var lastFrame = Date.now();
-var thisFrame;
+let modelSelector = {model: "Flight Helmet"};
+let path = models.get(modelSelector.model);
+let gltf;
+
+loadGLTF(modelSelector.model);// = new GLTF(path, environment);
+
+function loadGLTF(model){
+  if(gltf != null){
+    gltf.destroy();
+  }
+  opaqueMeshes = [];
+  transparentMeshes = [];
+  
+  let path = models.get(modelSelector.model);
+  gltf = new GLTF(path, environment);
+  
+  
+  gltf.ready.then(p => {
+    for(const mesh of gltf.meshes){
+      if(mesh.material.alphaMode == enums.BLEND){
+        transparentMeshes.push(mesh);
+      }else{
+        opaqueMeshes.push(mesh);
+      }
+    }
+    console.log("Total memory: ", extMEM.getMemoryInfo().memory.texture);
+    console.log("Total buffers: ", extMEM.getMemoryInfo().resources.buffer);
+  });
+}
+
+//************* GUI ***************
+
+let gui = new lil.GUI({ autoPlace: false });
+let customContainer = document.getElementById('gui_container');
+customContainer.appendChild(gui.domElement);
+gui.add(camera, 'exposure').min(0.0).max(2).step(0.01);
+gui.add(modelSelector, 'model').options(modelNames).onChange(name => {loadGLTF(name);});
+
+//************* GUI ***************
+
+let lastFrame = Date.now();
+let thisFrame;
 
 function setCameraMatrices(){
   camera.setProjectionMatrix(); 
   camera.setCameraMatrix(); 
   camera.setViewMatrix();
 }
-console.log(programRepository);
-function draw(){
 
+let frame = 0;
+
+function draw(){
+  
   stats.begin();
+
+  frame++;
   thisFrame = Date.now();
 
-  let dT = (thisFrame - lastFrame)/1000;	
+  let dT = (thisFrame - lastFrame)/1000;
   time += dT;
   lastFrame = thisFrame;
 
@@ -204,19 +187,6 @@ function draw(){
   gl.depthMask(true);
 
   // Render opaque
-
-  opaqueMeshes = [];
-  transparentMeshes = [];
-
-  if(_gltf != null){
-    for(const mesh of _gltf.meshes){
-      if(mesh.material.alphaMode == enums.BLEND){
-        transparentMeshes.push(mesh);
-      }else{
-        opaqueMeshes.push(mesh);
-      }
-    }
-  }
 
   for(let i = 0; i < opaqueMeshes.length; i++){
     if(opaqueMeshes[i] != null){

@@ -39,7 +39,9 @@ export class ConvolutionMaterial extends Material{
   }
 
   bindParameters(){
-    gl.uniform1i(this.cubeMapHandle, this.cubeMap);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeMap);
+    gl.uniform1i(this.cubeMapHandle, 0);
     gl.uniform1f(this.roughnessHandle, this.roughness);
     gl.uniformMatrix4fv(this.cameraMatrixHandle, false, this.cameraMatrix);
   }
