@@ -50,7 +50,6 @@ function createAndSetupCubemap() {
 function loadTexture(url) {
 
   const texture = gl.createTexture();
-  gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
 
   const level = 0;
   const internalFormat = gl.RGBA;
@@ -59,7 +58,6 @@ function loadTexture(url) {
   const border = 0;
   const srcFormat = gl.RGBA;
   const srcType = gl.UNSIGNED_BYTE;
-
 
   // Initialize texture with a grey pixel
   const pixel = new Uint8Array([128, 128, 128, 255]);
@@ -70,24 +68,26 @@ function loadTexture(url) {
   const image = new Image();
 
   image.onload = function() {
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
+    if(texture != null){
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
 
-    // WebGL1 has different requirements for power of 2 images
-    // vs non power of 2 images so check if the image is a
-    // power of 2 in both dimensions.
-    if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
-      // Yes, it's a power of 2. Generate mips.
-      gl.generateMipmap(gl.TEXTURE_2D);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-    } else {
-      // No, it's not a power of 2. Turn off mips and set
-      // wrapping to clamp to edge
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      // WebGL1 has different requirements for power of 2 images
+      // vs non power of 2 images so check if the image is a
+      // power of 2 in both dimensions.
+      if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+        // Yes, it's a power of 2. Generate mips.
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      } else {
+        // No, it's not a power of 2. Turn off mips and set
+        // wrapping to clamp to edge
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      }
+      gl.bindTexture(gl.TEXTURE_2D, null);
     }
-    gl.bindTexture(gl.TEXTURE_2D, null);
   };
 
   image.onerror = function(){
