@@ -24,6 +24,8 @@ if(!gl){
   console.error("Unable to initialize WebGL.");
 }
 
+gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+
 gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
 //const ext = gl.getExtension('GMAN_debug_helper');
