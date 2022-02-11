@@ -38,7 +38,17 @@ export class Geometry{
     }
 
   }
- 
+
+  destroy(){
+    this.attributes.forEach((attribute) => {
+        attribute.destroy();
+        attribute = null;
+    });  
+    if(this.hasIndices){
+      this.indices.destroy();
+    }
+  } 
+
   enableBuffers(attributes){
     let geo = this;
     for(const attribute of attributes){

@@ -31,7 +31,7 @@ class ProgramRepository{
     const fragmentShader = compileShader(fragmentSource, gl.FRAGMENT_SHADER);
 
     const program = new Program(vertexShader, fragmentShader);
-    this.programs.set(definePrefix,  program);
+    this.programs.set(definePrefix, program);
 
     return program;
   

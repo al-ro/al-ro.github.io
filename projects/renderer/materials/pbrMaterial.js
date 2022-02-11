@@ -134,6 +134,29 @@ export class PBRMaterial extends Material{
 
   textureUnits = 0;
 
+  destroy(){
+    if(this.baseColorTexture != null){
+      gl.deleteTexture(this.baseColorTexture);
+      this.baseColorTexture = null;
+    }
+    if(this.metallicRoughnessTexture != null){
+      gl.deleteTexture(this.metallicRoughnessTexture);
+      this.metallicRoughnessTexture = null;
+    }
+    if(this.normalTexture != null){
+      gl.deleteTexture(this.normalTexture);
+      this.normalTexture = null;
+    }
+    if(this.emissiveTexture != null){
+      gl.deleteTexture(this.emissiveTexture);
+      this.emissiveTexture = null;
+    }
+    if(this.occlusionTexture != null){
+      gl.deleteTexture(this.occlusionTexture);
+      this.occlusionTexture = null;
+    }
+  }
+
   constructor(parameters){
 
     super();
@@ -284,14 +307,16 @@ export class PBRMaterial extends Material{
     this.metallicFactorHandle = this.program.getOptionalUniformLocation('metallicFactor'); 
     this.roughnessFactorHandle = this.program.getOptionalUniformLocation('roughnessFactor'); 
 
+    if(this.hasAO){
+      this.occlusionStrengthHandle = this.program.getOptionalUniformLocation('occlusionStrength'); 
+    }
     if(this.hasAOTexture){
       this.occlusionTextureHandle = this.program.getOptionalUniformLocation('occlusionTexture');
-      this.occlusionStrengthHandle = this.program.getOptionalUniformLocation('occlusionStrength'); 
     }
 
     this.timeHandle = this.program.getOptionalUniformLocation('time'); 
     this.environmentTextureHandle = this.program.getUniformLocation('cubeMap');
-    this.brdfTextureHandle = this.program.getUniformLocation('brdfInteggrationMapTexture');
+    this.brdfTextureHandle = this.program.getUniformLocation('brdfIntegrationMapTexture');
   }
 
   getInstanceParameterHandles(){
@@ -307,12 +332,11 @@ export class PBRMaterial extends Material{
     this.brdfIntegrationMapTexture = this.environment.getBRDFIntegrationMap();
     this.environmentTexture = this.environment.getCubeMap();
 
-/*
     let shMatrices = this.environment.getSHMatrices();
     this.shRedMatrix = shMatrices.red;
     this.shGrnMatrix = shMatrices.green;
     this.shBluMatrix = shMatrices.blue;
-*/
+
     gl.uniform1f(this.alphaCutoffHandle, this.alphaCutoff);
 
     let blendModeAsInt;
@@ -377,11 +401,13 @@ export class PBRMaterial extends Material{
     gl.uniform1f(this.roughnessFactorHandle, this.roughnessFactor);
     
 
+    if(this.hasAO){
+      gl.uniform1f(this.occlusionStrengthHandle, this.occlusionStrength);
+    }
     if(this.hasAOTexture){
       gl.activeTexture(gl.TEXTURE0 + this.occlusionTextureUnit);
       gl.bindTexture(gl.TEXTURE_2D, this.occlusionTexture);
       gl.uniform1i(this.occlusionTextureHandle, this.occlusionTextureUnit);
-      gl.uniform1f(this.occlusionStrengthHandle, this.occlusionStrength);
     }
   }
 

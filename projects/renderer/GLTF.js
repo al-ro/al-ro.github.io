@@ -17,8 +17,6 @@ import {loadTexture} from "./texture.js"
 
 // TODO:
 //  multiple scenes
-//  ready status
-//  detructor
 //  full spec conform (color_0, sampler)
 //  sparse accessor
 //  image from bufferView
@@ -56,6 +54,10 @@ export class GLTF{
   // Promise which resolves when all downloads and processing has completed
   ready;
 
+  // A reference to the resolve function of the ready promise so it can be called
+  // explicitly once gltf downloads and processing have completed
+  setReady;
+
   // Extent of model vertices
   min;
   max;
@@ -63,27 +65,40 @@ export class GLTF{
 
   constructor(path, environment){
 
+    let gltf = this;
+    this.ready = new Promise(function(resolve, reject){ gltf.setReady = resolve; });
+
     this.environment = environment;
 
     let workingDirectory = path.substring(0, path.lastIndexOf("/") + 1);
+
     // Downlod gltf file and construct internal objects
     download(path, "gltf").then(data => this.processGLTF(data, workingDirectory));
   }
 
   destroy(){
     this.ready.then(() => {
-      // Free buffers
-      // Free webgl buffers
-      // Free bufferRepository
-      // Free typed arrays
+      this.buffers.forEach((buffer) => {
+        buffer = null;
+      });
+      this.buffers = null;
 
-      // Free textures
-      // Free webgl textures
-      // Free images
+      this.meshes.forEach((mesh) => {
+        mesh.destroy();
+        mesh = null;
+      });
+      this.meshes = null;
 
-      // Free meshes
-      // Free nodes
-      // Delete json
+      this.bufferRepository.destroy();
+      this.bufferRepository = null;
+
+      this.textures.forEach((texture) => {
+        gl.deleteTexture(texture);
+        texture = null;
+      });
+      this.textures = null;
+
+      this.nodes = null;
     });
   }
 
@@ -101,12 +116,7 @@ export class GLTF{
       this.scene = this.json.scene;
     }
 
-    // Promises which resolve once buffer downloads have completed
-    let buffersDownloaded = new Promise((resolve, reject) => {});
-
-    // Promise which resolved when the gltf has been processed
-    let gltfLoadingDone = new Promise((resolve, reject) => {});
-    
+    // Start buffer fetch
     if(json.buffers){
 
       // Populate buffer array with promises of each gltf buffer to fetch
@@ -119,16 +129,11 @@ export class GLTF{
         
         this.buffers.push(download(prefix.concat(buffer.uri), "arrayBuffer")); 
       }
-
-      // Once all buffers are ready, replace the promises with the data
-      buffersDownloaded = Promise.all(this.buffers).then(buffers => {
-        this.buffers = buffers;
-      }).catch(e => {console.error("Buffer promises unresolved: ", e)});
-
     }else{
       console.error("GLTF file has no buffers: ", json);
     }
 
+    // Start processing images which may reference buffers
     if(json.images){
       // Create textures and trigger data downloads but don't wait for them to finish.
       // Image files take long to fetch and we can create a single pixel texture,
@@ -148,21 +153,34 @@ export class GLTF{
       }
     }
 
-    // Once we have the buffers, we can process the gltf
-    buffersDownloaded.then(p => {
+    if(json.buffers){
+
+      // Once we have the buffers, we can process the gltf
+      Promise.all(this.buffers).then(buffers => {
+
+        // Replace promises with data
+        this.buffers = buffers;
+
         this.nodes = this.processNodes(this.json.nodes);
         this.setChildren(this.nodes);
+
         for(const node of this.json.scenes[this.scene].nodes){
           this.nodes[node].updateChildren();
         }
+
         console.log("Nodes: ", this.nodes); 
         this.scaleAndCentre();
-    }).catch(e => {console.error("Download promises unresolved: ", e)});
+
+        // Resolve ready promise
+        this.setReady();
+      
+      }).catch(e => {console.error("Buffer promises unresolved: ", e)});
+
+    }
  
-    return gltfLoadingDone;
   }
 
-  // Create array of Mesh objects and nodes from the GLTF
+  // Create array of Mesh and Node objects from the GLTF
   processNodes(gltfNodes){
 
     const nodes = [];
