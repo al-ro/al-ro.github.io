@@ -65,7 +65,7 @@ models.set("PBR Spheres", "./gltf/spheres/MetalRoughSpheres.gltf");
 models.set("Blend", "./gltf/blend/AlphaBlendModeTest.gltf");
 models.set("Camera", "./gltf/camera/Camera_01_1k.gltf");
 models.set("Minimal", "./gltf/minimal/scene.gltf");
-models.set("Collada Duck", "./gltf/duck/Duck.gltf");
+models.set("Collada Duck", "./gltf/duck/duck.gltf");
 
 let modelNames = Array.from(models.keys());
 modelNames.sort();
