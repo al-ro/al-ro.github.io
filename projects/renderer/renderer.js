@@ -136,8 +136,9 @@ function loadGLTF(model){
 let gui = new lil.GUI({ autoPlace: false });
 let customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
-gui.add(camera, 'exposure').min(0.0).max(2).step(0.01);
 gui.add(modelSelector, 'model').options(modelNames).onChange(name => {loadGLTF(name);});
+gui.add(camera, 'exposure').min(0.0).max(2).step(0.01);
+gui.close();
 
 //************* GUI ***************
 
