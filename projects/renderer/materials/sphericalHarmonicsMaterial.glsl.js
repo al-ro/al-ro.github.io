@@ -64,126 +64,126 @@ function getFragmentSource(){
 
       if(gl_FragCoord.x < 4.0 && gl_FragCoord.y < 4.0){
 
-	// Coefficient values to accumulate
-	vec3 L00 = vec3(0);
-	vec3 L1_1 = vec3(0);
-	vec3 L10 = vec3(0);
-	vec3 L11 = vec3(0);
+        // Coefficient values to accumulate
+        vec3 L00 = vec3(0);
+        vec3 L1_1 = vec3(0);
+        vec3 L10 = vec3(0);
+        vec3 L11 = vec3(0);
 
-	vec3 L2_2 = vec3(0);
-	vec3 L2_1 = vec3(0);
-	vec3 L20 = vec3(0);
-	vec3 L21 = vec3(0);
-	vec3 L22 = vec3(0);
+        vec3 L2_2 = vec3(0);
+        vec3 L2_1 = vec3(0);
+        vec3 L20 = vec3(0);
+        vec3 L21 = vec3(0);
+        vec3 L22 = vec3(0);
 
-	// To make the sampling rate scalable and independent of the cubemap dimensions, 
-	// we can sample a set number of equidistant directions on a sphere. While this is 
-	// not doable for all number of directions, a good approximation is the Fibonacci 
-	// spiral on a sphere.
+        // To make the sampling rate scalable and independent of the cubemap dimensions, 
+        // we can sample a set number of equidistant directions on a sphere. While this is 
+        // not doable for all number of directions, a good approximation is the Fibonacci 
+        // spiral on a sphere.
 
-	// From [4]
-	// Golden angle in radians
-	float phi = PI * (3.0 - sqrt(5.0));
+        // From [4]
+        // Golden angle in radians
+        float phi = PI * (3.0 - sqrt(5.0));
 
-	const float sampleCount = 1024.0;
+        const float sampleCount = 1024.0;
 
-	for(float i = 0.0; i < sampleCount; i++){
+        for(float i = 0.0; i < sampleCount; i++){
 
-	  float y = 1.0 - (i / sampleCount) * 2.0;
+          float y = 1.0 - (i / sampleCount) * 2.0;
 
-	  // Radius at y
-	  float radius = sqrt(1.0 - y * y);  
+          // Radius at y
+          float radius = sqrt(1.0 - y * y);  
 
-	  // Golden angle increment
-	  float theta = phi * i;
+          // Golden angle increment
+          float theta = phi * i;
 
-	  float x = cos(theta) * radius;
-	  float z = sin(theta) * radius;
+          float x = cos(theta) * radius;
+          float z = sin(theta) * radius;
 
-	  // Sample direction
-	  vec3 dir = normalize(vec3(x, y, z));
+          // Sample direction
+          vec3 dir = normalize(vec3(x, y, z));
 
-	  // Environment map value in the direction (interpolated)
-	  vec3 radiance = getRadiance(dir);
+          // Environment map value in the direction (interpolated)
+          vec3 radiance = getRadiance(dir);
 
-	  // Accumulate value weighted by spherical harmonic coefficient in the direction
-	  L00 += radiance * Y00;
-	  L1_1 += radiance * Y1n * dir.y;
-	  L10 += radiance * Y1n * dir.z;
-	  L11 += radiance * Y1n * dir.x;
-	  L2_2 += radiance * Y2n * dir.x * dir.y;
-	  L2_1 += radiance * Y2n * dir.y * dir.z;
-	  L20 += radiance * Y20 * (3.0 * pow(dir.z, 2.0) - 1.0);
-	  L21 += radiance * Y2n * dir.x * dir.z;
-	  L22 += radiance * Y22 * (pow(dir.x, 2.0) - pow(dir.y, 2.0));
-	}
+          // Accumulate value weighted by spherical harmonic coefficient in the direction
+          L00 += radiance * Y00;
+          L1_1 += radiance * Y1n * dir.y;
+          L10 += radiance * Y1n * dir.z;
+          L11 += radiance * Y1n * dir.x;
+          L2_2 += radiance * Y2n * dir.x * dir.y;
+          L2_1 += radiance * Y2n * dir.y * dir.z;
+          L20 += radiance * Y20 * (3.0 * pow(dir.z, 2.0) - 1.0);
+          L21 += radiance * Y2n * dir.x * dir.z;
+          L22 += radiance * Y22 * (pow(dir.x, 2.0) - pow(dir.y, 2.0));
+        }
 
-	// Scale the sum of coefficients on a sphere
-	float factor = 4.0 * PI / sampleCount;
+        // Scale the sum of coefficients on a sphere
+        float factor = 4.0 * PI / sampleCount;
 
-	L00 *= factor;
-	L1_1 *= factor;
-	L10 *= factor;
-	L11 *= factor;
-	L2_2 *= factor;
-	L2_1 *= factor;
-	L20 *= factor;
-	L21 *= factor;
-	L22 *= factor;
+        L00 *= factor;
+        L1_1 *= factor;
+        L10 *= factor;
+        L11 *= factor;
+        L2_2 *= factor;
+        L2_1 *= factor;
+        L20 *= factor;
+        L21 *= factor;
+        L22 *= factor;
 
-	// Write three 4x4 matrices
-	// GLSL matrices are column major
+        // Write three 4x4 matrices
+        // GLSL matrices are column major
 
-	if(gl_FragCoord.y == 0.5){
-	  mat4 redMatrix;
-	  redMatrix[0] = vec4(c1*L22.r, c1*L2_2.r, c1*L21.r, c2*L11.r);
-	  redMatrix[1] = vec4(c1*L2_2.r, -c1*L22.r, c1*L2_1.r, c2*L1_1.r);
-	  redMatrix[2] = vec4(c1*L21.r, c1*L2_1.r, c3*L20.r, c2*L10.r);
-	  redMatrix[3] = vec4(c2*L11.r, c2*L1_1.r, c2*L10.r, c4*L00.r-c5*L20.r);
-	  if(gl_FragCoord.x == 0.5){
-	    col = redMatrix[0];
-	  }else if(gl_FragCoord.x == 1.5){
-	    col = redMatrix[1];
-	  }else if(gl_FragCoord.x == 2.5){
-	    col = redMatrix[2];
-	  }else if(gl_FragCoord.x == 3.5){
-	    col = redMatrix[3];
-	  }
-	}
+        if(gl_FragCoord.y == 0.5){
+          mat4 redMatrix;
+          redMatrix[0] = vec4(c1 * L22.r, c1 * L2_2.r, c1 * L21.r, c2 * L11.r);
+          redMatrix[1] = vec4(c1 * L2_2.r, -c1 * L22.r, c1 * L2_1.r, c2 * L1_1.r);
+          redMatrix[2] = vec4(c1 * L21.r, c1 * L2_1.r, c3 * L20.r, c2 * L10.r);
+          redMatrix[3] = vec4(c2 * L11.r, c2 * L1_1.r, c2 * L10.r, c4 * L00.r-c5 * L20.r);
+          if(gl_FragCoord.x == 0.5){
+            col = redMatrix[0];
+          }else if(gl_FragCoord.x == 1.5){
+            col = redMatrix[1];
+          }else if(gl_FragCoord.x == 2.5){
+            col = redMatrix[2];
+          }else if(gl_FragCoord.x == 3.5){
+            col = redMatrix[3];
+          }
+        }
 
-	if(gl_FragCoord.y == 1.5){
-	  mat4 grnMatrix;
-	  grnMatrix[0] = vec4(c1*L22.g, c1*L2_2.g, c1*L21.g, c2*L11.g);
-	  grnMatrix[1] = vec4(c1*L2_2.g, -c1*L22.g, c1*L2_1.g, c2*L1_1.g);
-	  grnMatrix[2] = vec4(c1*L21.g, c1*L2_1.g, c3*L20.g, c2*L10.g);
-	  grnMatrix[3] = vec4(c2*L11.g, c2*L1_1.g, c2*L10.g, c4*L00.g-c5*L20.g);
-	  if(gl_FragCoord.x == 0.5){
-	    col = grnMatrix[0];
-	  }else if(gl_FragCoord.x == 1.5){
-	    col = grnMatrix[1];
-	  }else if(gl_FragCoord.x == 2.5){
-	    col = grnMatrix[2];
-	  }else if(gl_FragCoord.x == 3.5){
-	    col = grnMatrix[3];
-	  }
-	}
+        if(gl_FragCoord.y == 1.5){
+          mat4 grnMatrix;
+          grnMatrix[0] = vec4(c1 * L22.g, c1 * L2_2.g, c1 * L21.g, c2 * L11.g);
+          grnMatrix[1] = vec4(c1 * L2_2.g, -c1 * L22.g, c1 * L2_1.g, c2 * L1_1.g);
+          grnMatrix[2] = vec4(c1 * L21.g, c1 * L2_1.g, c3 * L20.g, c2 * L10.g);
+          grnMatrix[3] = vec4(c2 * L11.g, c2 * L1_1.g, c2 * L10.g, c4 * L00.g-c5 * L20.g);
+          if(gl_FragCoord.x == 0.5){
+            col = grnMatrix[0];
+          }else if(gl_FragCoord.x == 1.5){
+            col = grnMatrix[1];
+          }else if(gl_FragCoord.x == 2.5){
+            col = grnMatrix[2];
+          }else if(gl_FragCoord.x == 3.5){
+            col = grnMatrix[3];
+          }
+        }
 
-	if(gl_FragCoord.y == 2.5){
-	  mat4 bluMatrix;
-	  bluMatrix[0] = vec4(c1*L22.b, c1*L2_2.b, c1*L21.b, c2*L11.b);
-	  bluMatrix[1] = vec4(c1*L2_2.b, -c1*L22.b, c1*L2_1.b, c2*L1_1.b);
-	  bluMatrix[2] = vec4(c1*L21.b, c1*L2_1.b, c3*L20.b, c2*L10.b);
-	  bluMatrix[3] = vec4(c2*L11.b, c2*L1_1.b, c2*L10.b, c4*L00.b-c5*L20.b);
-	  if(gl_FragCoord.x == 0.5){
-	    col = bluMatrix[0];
-	  }else if(gl_FragCoord.x == 1.5){
-	    col = bluMatrix[1];
-	  }else if(gl_FragCoord.x == 2.5){
-	    col = bluMatrix[2];
-	  }else if(gl_FragCoord.x == 3.5){
-	    col = bluMatrix[3];
-	  }
-	}
+        if(gl_FragCoord.y == 2.5){
+          mat4 bluMatrix;
+          bluMatrix[0] = vec4(c1 * L22.b, c1 * L2_2.b, c1 * L21.b, c2 * L11.b);
+          bluMatrix[1] = vec4(c1 * L2_2.b, -c1 * L22.b, c1 * L2_1.b, c2 * L1_1.b);
+          bluMatrix[2] = vec4(c1 * L21.b, c1 * L2_1.b, c3 * L20.b, c2 * L10.b);
+          bluMatrix[3] = vec4(c2 * L11.b, c2 * L1_1.b, c2 * L10.b, c4 * L00.b-c5 * L20.b);
+          if(gl_FragCoord.x == 0.5){
+            col = bluMatrix[0];
+          }else if(gl_FragCoord.x == 1.5){
+            col = bluMatrix[1];
+          }else if(gl_FragCoord.x == 2.5){
+            col = bluMatrix[2];
+          }else if(gl_FragCoord.x == 3.5){
+            col = bluMatrix[3];
+          }
+        }
       }
 
       gl_FragColor = col;
