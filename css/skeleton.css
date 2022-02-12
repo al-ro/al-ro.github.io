@@ -237,9 +237,9 @@ input[type="button"].button-primary:focus {
 /* Forms
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 input[type="email"],
-input[type="number"],
+/*input[type="number"],*/
 input[type="search"],
-input[type="text"],
+/*input[type="text"],*/
 input[type="tel"],
 input[type="url"],
 input[type="password"],
