@@ -168,12 +168,12 @@ customContainer.appendChild(gui.domElement);
 gui.add(camera, 'exposure').min(0.0).max(2).step(0.01);
 gui.add(modelSelector, 'model').options(modelNames).onChange(name => {loadGLTF(name);});
 //gui.add(materialSelector, 'material').options(materialNames).onChange(name => {setMaterial(name);});
-gui.add(modelManipulation, 'scale').min(0.0).max(60).step(0.0001).listen().onChange(scale => {gltf.setScale(scale);});
+//gui.add(modelManipulation, 'scale').min(0.0).max(60).step(0.0001).listen().onChange(scale => {gltf.setScale(scale);});
 ;
 gui.add(info, 'buffers').disable().listen();
 gui.add(info, 'textures').disable().listen();
 gui.add(info, 'memory').disable().listen();
-//gui.close();
+gui.close();
 
 //************* GUI ***************
 

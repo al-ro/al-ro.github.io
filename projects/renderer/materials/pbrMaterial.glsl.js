@@ -475,23 +475,22 @@ function getFragmentSource(){
 
 #endif
     col = vec4(vec3(occlusion), 1.0);
-/*
-    col = getSHIrradiance(-viewDirection);
-    if(col.r < 0.0){
-      col = vec3(1,0,0);
-    }
-    if(col.g < 0.0){
-      col = vec3(0,1,0);
-    }
-    if(col.b < 0.0){
-      col = vec3(0,0,1);
-    }
-*/
+
+    col = vec4(getSHIrradiance(normal), 1.0);
+
+    col = vec4(vec3(metal), 1.0);
+    col = vec4(vec3(roughness), 1.0);
+
+    col = vec4(0.5 + 0.5 * normal, 1.0);
+
+    col = vec4(vec3(vUV, 0.0), 1.0);
+
 #endif
 
     if(alphaMode == 1){
       col.rgb *= alpha;
     }
+
     gl_FragColor = vec4(col.rgb, alpha);
   }
   `;
