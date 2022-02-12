@@ -90,9 +90,9 @@ let controls = new Controls(camera);
 let time = 0.0;
 
 //let environmentPath = './environmentMaps/dikhololo_night_1k.hdr';
-//let environmentPath = './environmentMaps/venice_sunset_1k.hdr';
+let environmentPath = './environmentMaps/venice_sunset_1k.hdr';
 //let environmentPath = './environmentMaps/venice_sunrise_1k.hdr';
-let environmentPath = './environmentMaps/san_giuseppe_bridge_1k.hdr';
+//let environmentPath = './environmentMaps/san_giuseppe_bridge_1k.hdr';
 //let environmentPath = './environmentMaps/spruit_sunrise_1k.hdr';
 //let environmentPath = './environmentMaps/studio_small_03_1k.hdr';
 //let environmentPath = './environmentMaps/cape_hill_1k.hdr';
@@ -107,7 +107,7 @@ let transparentMeshes = [];
 let info = {memory: "0", buffers: "0", textures: "0"};
 
 let pbrMaterial = null;
-let modelSelector = {model: "Flight Helmet"};
+let modelSelector = {model: "Damaged Helmet"};
 let path = models.get(modelSelector.model);
 let gltf;
 let modelManipulation = {scale: 1};

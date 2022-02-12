@@ -124,7 +124,7 @@ export class GLTF{
     this.bufferRepository = new BufferRepository();
 
     this.json = json;
-    //console.log("Full GLTF: ", json);
+    console.log("Full GLTF: ", json);
 
     if(scene != null){
       this.scene = scene;

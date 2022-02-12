@@ -261,7 +261,7 @@ function getFragmentSource(){
   } 
 
   vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness){
-    return F0 + (max(vec3(1.0-roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
   }
 
   //Cook-Torrance BRDF
@@ -334,7 +334,7 @@ function getFragmentSource(){
 #endif
 
     vec3 I = vec3(0);
-    vec3 radiance = vec3(1);
+    vec3 radiance = vec3(0);
     vec3 lightDir = vec3(0);
 
     vec3 F0 = vec3(0.04);
@@ -348,7 +348,7 @@ function getFragmentSource(){
     // Find direct lighting for all sources
     lightDir = normalize(vec3(sin(time), 0.5, cos(time)));
 
-    vec2 envBRDF  = getBRDFIntegrationMap(vec2(dot_c(normal, -rayDir), roughness));
+    vec2 envBRDF = getBRDFIntegrationMap(vec2(dot_c(normal, -rayDir), roughness));
     //https://google.github.io/filament/Filament.html#materialsystem/improvingthebrdfs/energylossinspecularreflectance
     vec3 energyCompensation = 1.0 + F0 * (1.0 / envBRDF.x - 1.0);
 
@@ -360,7 +360,7 @@ function getFragmentSource(){
 
     vec3 F = fresnelSchlickRoughness(dot_c(normal, -rayDir), F0, roughness);
     vec3 kS = F;
-    vec3 kD = clamp(1.0-kS, 0.0, 1.0);
+    vec3 kD = clamp(1.0 - kS, 0.0, 1.0);
     kD *= 1.0 - metal;	
     vec3 irradiance = getSHIrradiance(normal);
     vec3 diffuse = irradiance * albedo.rgb / PI;
@@ -411,7 +411,7 @@ function getFragmentSource(){
     vec3 T = normalize(t_ - geometryNormal * dot(geometryNormal, t_));
     vec3 B = cross(geometryNormal, T);
 
-    vec3 normal = normalize(mat3(T,B,geometryNormal) * normalColour.rgb);
+    vec3 normal = normalize(mat3(T, B, geometryNormal) * normalColour.rgb);
 #endif
 #else
     vec3 normal = normalize(geometryNormal);
@@ -429,6 +429,8 @@ function getFragmentSource(){
 #else
     vec4 col = baseColorFactor;
 #endif
+
+    vec3 baseColor = col.rgb;
 
     if(alphaMode != 0){
       alpha = col.a;
@@ -484,6 +486,8 @@ function getFragmentSource(){
     col = vec4(0.5 + 0.5 * normal, 1.0);
 
     col = vec4(vec3(vUV, 0.0), 1.0);
+
+    col = vec4(pow(baseColor, vec3(0.4545)), 1.0);
 
 #endif
 

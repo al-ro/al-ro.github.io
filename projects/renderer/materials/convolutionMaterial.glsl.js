@@ -25,9 +25,10 @@ function getFragmentSource(){
     uniform samplerCube cubeMap;
     uniform mat4 cameraMatrix;
     uniform float roughness;
+
     varying vec3 vPosition;
 
-    const int sampleCount = 1024;
+    const int sampleCount = 512;
 
     const float minDot = 1e-5;
 
@@ -49,7 +50,7 @@ function getFragmentSource(){
     //https://patapom.com/blog/Math/ImportanceSampling/
     //https://www.shadertoy.com/view/4dtBWH
     vec2 Nth_weyl(vec2 p0, int n) {
-      return fract(p0 + vec2(n*12664745, n*9560333)/exp2(24.));
+      return fract(p0 + vec2(n * 12664745, n * 9560333) / exp2(24.0));
     }
 
     // -------------------------------------------------------------------------------
@@ -57,14 +58,14 @@ function getFragmentSource(){
     //  Return a world space sample vector based on a random hemisphere point, the surface normal
     //  and the roughness of the surface.
     //  https://google.github.io/filament/Filament.html#annex/choosingimportantdirectionsforsamplingthebrdf
-  
+
     vec3 importanceSampleGGX(vec2 randomHemisphere, vec3 N, float roughness){
-      float a = roughness*roughness;
-  
+      float a = roughness * roughness;
+
       float phi = 2.0 * PI * randomHemisphere.x;
       float cosTheta = sqrt((1.0 - randomHemisphere.y) / (1.0 + (a*a - 1.0) * randomHemisphere.y));
       float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
-  
+
       //From spherical coordinates to cartesian coordinates
       vec3 H = vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
 
@@ -98,20 +99,45 @@ function getFragmentSource(){
       //specular lobe and add the environment map data into a weighted sum.
       for(int i = 0; i < sampleCount; i++){
 
-	vec2 randomHemisphere = Nth_weyl(vec2(0.0), i);
-	vec3 H  = importanceSampleGGX(randomHemisphere, N, roughness);
-	vec3 L  = normalize(2.0 * dot(V, H) * H - V);
+        vec2 randomHemisphere = Nth_weyl(vec2(0.0), i);
+        vec3 H  = importanceSampleGGX(randomHemisphere, N, roughness);
+        vec3 L  = normalize(2.0 * dot(V, H) * H - V);
 
-	float NdotL = dot_c(N, L);
-	if(NdotL > 0.0){
+        float NdotL = dot(N, L);
+        if(NdotL > 0.0){
           // The Sun in many HDR scenes is so much brighter than other pixels that we get
           // firefly artefacts. Since we don't importance sample based on light sources in the
           // environment map, we clamp the light values at an arbitrary value for the convolution.
-	  prefilteredColor += min(vec3(10.0), textureCubeLodEXT(cubeMap, L, 0.0).rgb) * NdotL;
-	  totalWeight      += NdotL;
-	}
+
+          float level = 0.0;
+
+          // Sample the mip levels of the environment map
+          // https://placeholderart.wordpress.com/2015/07/28/implementation-notes-runtime-environment-map-filtering-for-image-based-lighting/
+          // Vectors to evaluate pdf
+          float NdotH = dot(N, H);
+          float VdotH = dot(V, H);
+
+          // Probability distribution function
+          float pdf = D_GGX(NdotH, roughness * roughness) * NdotH / (4.0 * VdotH);
+
+          // Solid angle represented by this sample
+          float omegaS = 1.0 / (float(sampleCount) * pdf);
+
+          float envMapSize = 512.0;
+          // Solid angle covered by 1 pixel
+          float omegaP = 4.0 * PI / (6.0 * envMapSize * envMapSize);
+          // Original paper suggests biasing the mip to improve the results
+          float mipBias = 1.0;
+          level = max(0.5 * log2(omegaS / omegaP) + mipBias, 0.0);
+
+          prefilteredColor += textureCubeLodEXT(cubeMap, L, level).rgb * NdotL;
+          totalWeight      += NdotL;
+        }
       }
-      prefilteredColor = prefilteredColor / totalWeight;
+
+      if(totalWeight > 0.0){
+        prefilteredColor = prefilteredColor / totalWeight;
+      }
 
       return prefilteredColor;
     }
@@ -120,12 +146,12 @@ function getFragmentSource(){
       vec3 rayDir = normalize(vec3(vPosition.rg, -1.0));
       rayDir = normalize((cameraMatrix * vec4(rayDir, 1.0)).xyz);
       vec3 c = getPreFilteredColour(rayDir, roughness);
-  
+
       gl_FragColor = vec4(c, 1.0);
     }
-  `;
-  
-  return fragmentSource;
+    `;
+
+    return fragmentSource;
 }
 
 export {getVertexSource, getFragmentSource};
