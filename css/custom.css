@@ -32,6 +32,11 @@
   .two.columns	{ width: 32.55555555%; }
 }
 
+.lil-gui {
+	--number-color: #ffffff;
+	--string-color: #ffffff;
+}
+
 .project {
   margin-left: 0.5%; 
   margin-right: 0.5%;  

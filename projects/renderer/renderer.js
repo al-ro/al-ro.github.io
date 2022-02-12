@@ -38,9 +38,8 @@ document.getElementById('cc_1').appendChild(stats.dom);
 //      Sheen
 //      Transmission/volume/IOR
 
-//      Standardize instancing
+//      Instancing
 //      Pipeline state (program, sidedness)
-//      Particle class
 //      OIT
 //      WebGL2
 //      Lights
@@ -49,6 +48,7 @@ document.getElementById('cc_1').appendChild(stats.dom);
 //      STL import
 //      OBJ import
 //      Basic geometries (sphere, quad, cylinder, cone, torus, knot)
+//      Particle class
 //      Postprocessing (bloom, depth of field, fog)
 //      Physically based camera
 
@@ -69,6 +69,9 @@ models.set("Collada Duck", "./gltf/duck/duck.gltf");
 
 let modelNames = Array.from(models.keys());
 modelNames.sort();
+
+let materialNames = ["PBR", "Normal", "UV", "Lambert", "Texture"];
+let materialSelector = {material: "PBR"};
 
 let yaw = Math.PI/4.0;
 let pitch = 0.0;
@@ -101,24 +104,31 @@ let environment = new Environment({path: environmentPath, type: "hdr", camera: c
 let opaqueMeshes = [];
 let transparentMeshes = [];
 
+let info = {memory: "0", buffers: "0", textures: "0"};
+
+let pbrMaterial = null;
 let modelSelector = {model: "Flight Helmet"};
 let path = models.get(modelSelector.model);
 let gltf;
+let modelManipulation = {scale: 1};
 
 loadGLTF(modelSelector.model);// = new GLTF(path, environment);
 
 function loadGLTF(model){
   if(gltf != null){
+    //gltf.setMaterial(pbrMaterial);
     gltf.destroy();
   }
+  pbrMaterial = null;
   opaqueMeshes = [];
   transparentMeshes = [];
   
   let path = models.get(modelSelector.model);
-  gltf = new GLTF(path, environment);
-  
+  gltf = new GLTF(path, environment);  
   
   gltf.ready.then(p => {
+    modelManipulation.scale = gltf.scale;
+    pbrMaterial = gltf.material;
     for(const mesh of gltf.meshes){
       if(mesh.material.alphaMode == enums.BLEND){
         transparentMeshes.push(mesh);
@@ -126,19 +136,44 @@ function loadGLTF(model){
         opaqueMeshes.push(mesh);
       }
     }
-    console.log("Total memory: ", extMEM.getMemoryInfo().memory.texture);
-    console.log("Total buffers: ", extMEM.getMemoryInfo().resources.buffer);
   });
 }
+
+function setMaterial(name){
+  if(pbrMaterial != null){
+    let material;
+    switch (name){
+      case "PBR": material = pbrMaterial;
+      break;
+      case "Normal": material = new NormalMaterial();
+      break;
+      case "UV": material = new UVMaterial();
+      break;
+      case "Texture": material = new TextureMaterial();
+      break;
+      case "Lambert": material = new LambertMaterial();
+      break;
+      default: material = pbrMaterial;
+    }
+    gltf.setMaterial(material);
+  }
+}
+
 
 //************* GUI ***************
 
 let gui = new lil.GUI({ autoPlace: false });
 let customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
-gui.add(modelSelector, 'model').options(modelNames).onChange(name => {loadGLTF(name);});
 gui.add(camera, 'exposure').min(0.0).max(2).step(0.01);
-gui.close();
+gui.add(modelSelector, 'model').options(modelNames).onChange(name => {loadGLTF(name);});
+//gui.add(materialSelector, 'material').options(materialNames).onChange(name => {setMaterial(name);});
+gui.add(modelManipulation, 'scale').min(0.0).max(60).step(0.0001).listen().onChange(scale => {gltf.setScale(scale);});
+;
+gui.add(info, 'buffers').disable().listen();
+gui.add(info, 'textures').disable().listen();
+gui.add(info, 'memory').disable().listen();
+//gui.close();
 
 //************* GUI ***************
 
@@ -158,6 +193,13 @@ function draw(){
   stats.begin();
 
   frame++;
+
+  if(frame % 30 == 0){
+    info.memory = (extMEM.getMemoryInfo().memory.total * 1e-6).toPrecision(4) + " MB";
+    info.buffers = extMEM.getMemoryInfo().resources.buffer;
+    info.textures = extMEM.getMemoryInfo().resources.texture;
+  }
+
   thisFrame = Date.now();
 
   let dT = (thisFrame - lastFrame)/1000;

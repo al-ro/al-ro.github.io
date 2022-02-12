@@ -23,11 +23,16 @@ export class Mesh extends Node{
     super(params);
 
     this.geometry = geometry;
-    this.material = material;
-
     this.instanced = this.geometry.instanced;
 
+    this.setMaterial(material);
+  }
 
+  setMaterial(material){
+
+    this.material = material;
+
+    this.activeAttributes = [];
     // Determine intersection of geometry and material attributes
     for(const attribute of this.material.getAttributes()){
       if(this.geometry.attributes.has(attribute)){
@@ -41,10 +46,6 @@ export class Mesh extends Node{
     for(const attribute of this.activeAttributes){
       const handle = this.material.program.getAttribLocation(attribute);
       this.geometry.attributes.get(attribute).setHandle(handle);
-    }
-
-    if(this.instanced){
-      this.material.getInstanceParameterHandles();
     }
 
     this.createVAO();
@@ -68,7 +69,9 @@ export class Mesh extends Node{
   }
 
   createVAO(){
-    this.vao = extVAO.createVertexArrayOES();
+    if(this.vao == null){
+      this.vao = extVAO.createVertexArrayOES();
+    }
 
     this.bindVAO();
 

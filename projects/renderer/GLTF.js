@@ -63,6 +63,8 @@ export class GLTF{
   max;
   centre;
 
+  scale = 1.0;
+
   constructor(path, environment){
 
     let gltf = this;
@@ -102,13 +104,27 @@ export class GLTF{
     });
   }
 
+  setScale(scale){
+    this.scale = scale;
+    let modelMatrix = m4.create();
+
+    const maxExtent = Math.max(Math.max(this.max[0] - this.min[0], this.max[1] - this.min[1]), this.max[2] - this.min[2]);
+
+    modelMatrix = m4.scale(modelMatrix, this.scale, this.scale, this.scale);
+    modelMatrix = m4.translate(modelMatrix, -this.centre[0], -this.centre[1], -this.centre[2]);
+
+    for(const node of this.json.scenes[this.scene].nodes){
+      this.nodes[node].updateMatrix(modelMatrix);
+    }
+  }
+
   // Parse the json, download images and buffers, construct meshes
   processGLTF(json, workingDirectory, scene){
 
     this.bufferRepository = new BufferRepository();
 
     this.json = json;
-    console.log("Full GLTF: ", json);
+    //console.log("Full GLTF: ", json);
 
     if(scene != null){
       this.scene = scene;
@@ -168,7 +184,8 @@ export class GLTF{
           this.nodes[node].updateChildren();
         }
 
-        console.log("Nodes: ", this.nodes); 
+        //console.log("Nodes: ", this.nodes); 
+        this.calculateCentre();
         this.scaleAndCentre();
 
         // Resolve ready promise
@@ -231,17 +248,16 @@ export class GLTF{
     }
   }
 
+
   scaleAndCentre(){
-    this.calculateCentre();
+
     let modelMatrix = m4.create();
 
-    const scale = [1, 1, 1];
     const maxExtent = Math.max(Math.max(this.max[0] - this.min[0], this.max[1] - this.min[1]), this.max[2] - this.min[2]);
-    scale[0] /= maxExtent;
-    scale[1] /= maxExtent;
-    scale[2] /= maxExtent;
 
-    modelMatrix = m4.scale(modelMatrix, scale[0], scale[1], scale[2]);
+    this.scale /= maxExtent;
+
+    modelMatrix = m4.scale(modelMatrix, this.scale, this.scale, this.scale);
     modelMatrix = m4.translate(modelMatrix, -this.centre[0], -this.centre[1], -this.centre[2]);
 
     for(const node of this.json.scenes[this.scene].nodes){
