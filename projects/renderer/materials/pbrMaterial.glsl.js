@@ -316,7 +316,11 @@ function getFragmentSource(){
     roughness *= data.g;
     metal *= data.b; 
 #endif 
-
+/*
+    roughness = 1.0;
+    metal = 0.0;
+    albedo = vec4(1);
+*/
     float occlusion = 1.0;
 
 #ifdef HAS_AO_TEXTURE
@@ -364,6 +368,7 @@ function getFragmentSource(){
     kD *= 1.0 - metal;	
     vec3 irradiance = getSHIrradiance(normal);
     vec3 diffuse = irradiance * albedo.rgb / PI;
+    //return diffuse;
 
     vec3 R;
     R = reflect(rayDir, normal);
@@ -488,6 +493,8 @@ function getFragmentSource(){
     col = vec4(vec3(vUV, 0.0), 1.0);
 
     col = vec4(pow(baseColor, vec3(0.4545)), 1.0);
+    vec3 irradiance = getSHIrradiance(normal);
+    col = vec4(pow(irradiance, vec3(0.4545)), 1.0);
 
 #endif
 

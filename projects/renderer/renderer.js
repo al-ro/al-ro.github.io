@@ -38,6 +38,7 @@ document.getElementById('cc_1').appendChild(stats.dom);
 //      Sheen
 //      Transmission/volume/IOR
 
+//      Spherical Gaussian Irradiance
 //      Instancing
 //      Pipeline state (program, sidedness)
 //      OIT
@@ -90,9 +91,9 @@ let controls = new Controls(camera);
 let time = 0.0;
 
 //let environmentPath = './environmentMaps/dikhololo_night_1k.hdr';
-let environmentPath = './environmentMaps/venice_sunset_1k.hdr';
+//let environmentPath = './environmentMaps/venice_sunset_1k.hdr';
 //let environmentPath = './environmentMaps/venice_sunrise_1k.hdr';
-//let environmentPath = './environmentMaps/san_giuseppe_bridge_1k.hdr';
+let environmentPath = './environmentMaps/san_giuseppe_bridge_1k.hdr';
 //let environmentPath = './environmentMaps/spruit_sunrise_1k.hdr';
 //let environmentPath = './environmentMaps/studio_small_03_1k.hdr';
 //let environmentPath = './environmentMaps/cape_hill_1k.hdr';
@@ -107,7 +108,7 @@ let transparentMeshes = [];
 let info = {memory: "0", buffers: "0", textures: "0"};
 
 let pbrMaterial = null;
-let modelSelector = {model: "Damaged Helmet"};
+let modelSelector = {model: "Flight Helmet"};
 let path = models.get(modelSelector.model);
 let gltf;
 let modelManipulation = {scale: 1};
@@ -173,7 +174,7 @@ gui.add(modelSelector, 'model').options(modelNames).onChange(name => {loadGLTF(n
 gui.add(info, 'buffers').disable().listen();
 gui.add(info, 'textures').disable().listen();
 gui.add(info, 'memory').disable().listen();
-gui.close();
+//gui.close();
 
 //************* GUI ***************
 

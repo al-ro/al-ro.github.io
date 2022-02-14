@@ -25,6 +25,21 @@ function getFragmentSource(){
   uniform float exposure;
   uniform samplerCube cubeMap;
 
+  uniform mat4 shRedMatrix;
+  uniform mat4 shGrnMatrix;
+  uniform mat4 shBluMatrix;
+
+  vec3 getSHIrradiance(vec3 normal){
+
+    vec4 n = vec4(normal, 1.0);
+
+    float r = dot(n, shRedMatrix * n);
+    float g = dot(n, shGrnMatrix * n);
+    float b = dot(n, shBluMatrix * n);
+
+    return max(vec3(r, g, b), vec3(0));
+  }
+
   vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
     vec2 xy = fragCoord - resolution.xy / 2.0;
     float z = (0.5 * resolution.y) / tan(fieldOfView / 2.0);
@@ -46,6 +61,8 @@ function getFragmentSource(){
     vec3 col = exposure * textureCubeLodEXT(cubeMap, normalize(rayDir), 0.0).rgb;
     col = ACESFilm(col);
     col = pow(col, vec3(0.4545));
+
+
     gl_FragColor = vec4(col, 1.0);
   }
   `;

@@ -58,6 +58,8 @@ function getSphericalHarmonicsMatrices(cubeMap){
 
   gl.deleteFramebuffer(frameBuffer);
 
+  // The shader outputs column major data
+  // SH matrices are symmetric so column vs row major are the same
   for(let mat = 0; mat < 3; mat++){
     let matrix = [];
     for(let column = 0; column < 4; column++){
@@ -177,7 +179,7 @@ function getCubeMapConvolution(cubeMap){
 function getBRDFIntegrationMap(){
   let texture = createAndSetupTexture();
 
-  let size = 32;
+  let size = 128;
 
   let brdfMaterial = new BRDFMapMaterial([size, size]);
   let mesh = new Mesh(getScreenspaceQuad(), brdfMaterial);
