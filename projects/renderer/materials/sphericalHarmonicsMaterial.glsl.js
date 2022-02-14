@@ -15,6 +15,7 @@ function getVertexSource(){
 function getFragmentSource(){
    
   var fragmentSource = `
+#extension GL_EXT_shader_texture_lod : enable
 
     //
     //	Diffuse IBL using spherical harmonics
@@ -55,7 +56,7 @@ function getFragmentSource(){
     #define PI 3.14159
 
     vec3 getRadiance(vec3 dir){
-      return textureCube(cubeMap, dir).rgb;
+      return textureCubeLodEXT(cubeMap, dir, 3.0).rgb;
     }
 
     void main(){

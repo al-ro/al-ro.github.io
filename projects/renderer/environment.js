@@ -45,7 +45,7 @@ class Environment{
 
     this.cubeMap = createAndSetupCubemap();
 
-    this.environmentMaterial = new EnvironmentMaterial(this.cubeMap, this.camera);
+    this.environmentMaterial = new EnvironmentMaterial(this.cubeMap, this.camera, this);
     this.environmentMesh = new Mesh(getScreenspaceQuad(), this.environmentMaterial);  
 
     this.shMatrices = {red: this.shRedMatrix, green: this.shGrnMatrix, blue: this.shBluMatrix};
@@ -72,8 +72,8 @@ class Environment{
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
 
-    this.calculateSHMatrices();
     this.convoluteCubeMap();
+    this.calculateSHMatrices();
 
     this.loadFlags = [false, false, false, false, false, false];
     this.hdrLoaded = false;
