@@ -18,7 +18,7 @@ import {GLTF} from "./GLTF.js"
 
 const stats = new Stats();
 stats.showPanel(0);
-stats.dom.style.cssText="position:relative;bottom:48px;left:0;cursor:pointer;opacity:1.0;z-index:10000";
+stats.dom.style.cssText="position: relative; bottom: 48px; left: 0; cursor: pointer; opacity: 1.0; z-index: 10000";
 document.getElementById('cc_1').appendChild(stats.dom);
 
 // TODO:
