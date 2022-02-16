@@ -24,6 +24,7 @@
     res.__defineGetter__('dataFloat',function(){ return rgbeToFloat(HDRdata); });
     res.__defineGetter__('dataRGBE',function(){ return HDRdata; });
     res.toHDRBlob = function(cb,m,q) {
+      console.log("To blob");
       // Array to image.. slightly more involved.  
         function createShader(gl, source, type) {
             var shader = gl.createShader(type);
@@ -85,6 +86,7 @@
         this.onload&&this.onload(); 
       }.bind(res));
       else if (val.match(/\.rgb9_e5\.png$/i)) {
+        console.log("Use webgl");
         var i = new Image();
         i.src = val;
         i.onload = function() {
@@ -113,6 +115,7 @@
           this.onload&&this.onload(); 
         }.bind(res);
       } else if (val.match(/\.hdr\.png$|\.rgbe\.png/i)) {
+        console.log("Use webgl");
         var i = new Image();
         i.src = val;
         i.onload = function() {
