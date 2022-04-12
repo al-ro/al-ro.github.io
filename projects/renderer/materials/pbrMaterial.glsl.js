@@ -19,7 +19,6 @@ function getVertexSource(){
   attribute vec2 TEXCOORD_0;
 #endif
 
-
   uniform mat4 modelMatrix;
   uniform mat4 viewMatrix;
   uniform mat4 projectionMatrix;
@@ -88,7 +87,6 @@ function getVertexSource(){
     pos = modelMatrix * vec4(POSITION, 1.0);
 #endif
 
-    vPosition = pos.rgb;
     vPosition = vec3((modelMatrix * vec4(POSITION, 1.0)));
 
     pos = projectionMatrix * viewMatrix * pos;

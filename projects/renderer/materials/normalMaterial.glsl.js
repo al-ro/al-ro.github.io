@@ -3,10 +3,12 @@ function getVertexSource(parameters){
   var vertexSource = `
 
   attribute vec3 POSITION;
+#ifdef HAS_NORMALS
   attribute vec3 NORMAL;
+  uniform mat4 normalMatrix;
+#endif
 
   uniform mat4 modelMatrix;
-  uniform mat4 normalMatrix;
   uniform mat4 viewMatrix;
   uniform mat4 projectionMatrix;
 
@@ -16,10 +18,15 @@ function getVertexSource(parameters){
   attribute vec3 scale;
 #endif
 
+#ifdef HAS_NORMALS
   varying vec3 vNormal;
+#else
+  varying vec3  vPosition;
+#endif
 
   void main(){
 
+#ifdef HAS_NORMALS
     vec4 transformedNormal;
 
 #ifdef INSTANCED
@@ -30,6 +37,7 @@ function getVertexSource(parameters){
 #endif
 
     vNormal = transformedNormal.xyz;
+#endif
 
     vec4 pos;
 
@@ -39,6 +47,10 @@ function getVertexSource(parameters){
     pos.xyz += offset; 
 #else
     pos = modelMatrix * vec4(POSITION, 1.0);
+#endif
+
+#ifndef HAS_NORMALS
+    vPosition = vec3((modelMatrix * vec4(POSITION, 1.0)));
 #endif
   
     pos = projectionMatrix * viewMatrix * pos;
@@ -52,12 +64,27 @@ function getVertexSource(parameters){
 function getFragmentSource(){
 
   var fragmentSource = `
+#extension GL_OES_standard_derivatives : enable
     precision highp float;
     
-    varying vec3 vNormal;
+#ifdef HAS_NORMALS
+  varying vec3 vNormal;
+#else
+  varying vec3  vPosition;
+#endif
 
     void main(){ 
-      vec3 normal = normalize(gl_FrontFacing ? vNormal : -vNormal);
+      vec3 normal;
+#ifdef HAS_NORMALS
+      normal = normalize(vNormal);
+#else
+      normal = normalize(cross(dFdx(vPosition), dFdy(vPosition)));
+#endif
+
+      if(!gl_FrontFacing){
+        normal *= -1.0;
+      }
+
       gl_FragColor = vec4( 0.5 + 0.5 * normal, 1.0);
     }
   `;

@@ -13,6 +13,11 @@ export class Mesh extends Node{
   vao;
   geometry;
   material;
+
+  // Meshes can display an override material while retaining their original one
+  originalMaterial;
+  overrideMaterial;
+
   instanced = false;
   activeAttributes = [];
 
@@ -23,6 +28,10 @@ export class Mesh extends Node{
     super(params);
 
     this.geometry = geometry;
+
+    this.originalMaterial = material;
+    this.overrideMaterial = material;
+
     this.instanced = this.geometry.instanced;
 
     this.setMaterial(material);
@@ -47,8 +56,19 @@ export class Mesh extends Node{
       const handle = this.material.program.getAttribLocation(attribute);
       this.geometry.attributes.get(attribute).setHandle(handle);
     }
-
     this.createVAO();
+  }
+
+  setOverrideMaterial(material){
+    this.overrideMaterial = material;
+  }
+
+  displayOverrideMaterial(){
+    this.setMaterial(this.overrideMaterial);
+  }
+
+  displayOriginalMaterial(){
+    this.setMaterial(this.originalMaterial);
   }
 
   destroy(){
