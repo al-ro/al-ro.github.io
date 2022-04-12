@@ -72,7 +72,7 @@ let modelNames = Array.from(models.keys());
 modelNames.sort();
 modelNames.push("NONE");
 
-let materialNames = ["PBR", "Normal", "UV", "Lambert", "Texture"];
+let materialNames = ["PBR", "Normal", "UV", "Lambert"];
 let materialSelector = {material: "PBR"};
 
 let yaw = Math.PI/4.0;
@@ -108,20 +108,36 @@ let transparentMeshes = [];
 
 let info = {memory: "0", buffers: "0", textures: "0"};
 
-let pbrMaterial = null;
 let modelSelector = {model: "Flight Helmet"};
 let path = models.get(modelSelector.model);
 let gltf;
 let modelManipulation = {scale: 1};
 
+//************* GUI ***************
+
+let gui = new lil.GUI({ autoPlace: false });
+let customContainer = document.getElementById('gui_container');
+customContainer.appendChild(gui.domElement);
+gui.add(camera, 'exposure').min(0.0).max(2).step(0.01);
+gui.add(modelSelector, 'model').options(modelNames).onChange(name => {loadGLTF(name);});
+const materialControls = gui.add(materialSelector, 'material').options(materialNames).onChange(name => {setMaterial(name);});
+//gui.add(modelManipulation, 'scale').min(0.0).max(60).step(0.0001).listen().onChange(scale => {gltf.setScale(scale);});
+;
+gui.add(info, 'buffers').disable().listen();
+gui.add(info, 'textures').disable().listen();
+gui.add(info, 'memory').disable().listen();
+//gui.close();
+
+//************* GUI ***************
+
 loadGLTF(modelSelector.model);// = new GLTF(path, environment);
 
 function loadGLTF(model){
+  materialControls.setValue("PBR");
   if(gltf != null){
     gltf.destroy();
     gltf = null;
   }
-  pbrMaterial = null;
   opaqueMeshes = [];
   transparentMeshes = [];
   
@@ -134,8 +150,8 @@ function loadGLTF(model){
   
   gltf.ready.then(p => {
     if(gltf != null){
+      materialControls.setValue("PBR");
       modelManipulation.scale = gltf.scale;
-      pbrMaterial = gltf.material;
       for(const mesh of gltf.meshes){
         if(mesh.material.alphaMode == enums.BLEND){
           transparentMeshes.push(mesh);
@@ -148,42 +164,36 @@ function loadGLTF(model){
 }
 
 function setMaterial(name){
-  if(pbrMaterial != null){
-    let material;
-    switch (name){
-      case "PBR": material = pbrMaterial;
-      break;
-      case "Normal": material = new NormalMaterial();
-      break;
-      case "UV": material = new UVMaterial();
-      break;
-      case "Texture": material = new TextureMaterial();
-      break;
-      case "Lambert": material = new LambertMaterial();
-      break;
-      default: material = pbrMaterial;
+  let material;
+  switch (name){
+    case "PBR": material = null;
+    break;
+    case "Normal": material = new NormalMaterial();
+    break;
+    case "UV": material = new UVMaterial();
+    break;
+    case "Lambert": material = new LambertMaterial();
+    break;
+    default: material = null;
+  }
+  if(material != null){
+    for(const mesh of opaqueMeshes){
+      mesh.setOverrideMaterial(material);
+      mesh.displayOverrideMaterial();
     }
-    gltf.setMaterial(material);
+    for(const mesh of transparentMeshes){
+      mesh.setOverrideMaterial(material);
+      mesh.displayOverrideMaterial();
+    }
+  }else{
+    for(const mesh of opaqueMeshes){
+      mesh.displayOriginalMaterial();
+    }
+    for(const mesh of transparentMeshes){
+      mesh.displayOriginalMaterial();
+    }
   }
 }
-
-
-//************* GUI ***************
-
-let gui = new lil.GUI({ autoPlace: false });
-let customContainer = document.getElementById('gui_container');
-customContainer.appendChild(gui.domElement);
-gui.add(camera, 'exposure').min(0.0).max(2).step(0.01);
-gui.add(modelSelector, 'model').options(modelNames).onChange(name => {loadGLTF(name);});
-//gui.add(materialSelector, 'material').options(materialNames).onChange(name => {setMaterial(name);});
-//gui.add(modelManipulation, 'scale').min(0.0).max(60).step(0.0001).listen().onChange(scale => {gltf.setScale(scale);});
-;
-gui.add(info, 'buffers').disable().listen();
-gui.add(info, 'textures').disable().listen();
-gui.add(info, 'memory').disable().listen();
-//gui.close();
-
-//************* GUI ***************
 
 let lastFrame = Date.now();
 let thisFrame;
