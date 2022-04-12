@@ -74,7 +74,7 @@ function getNormalTransform(parameters){
       // https://paroj.github.io/gltut/Illumination/Tut09%20Normal%20Transformation.html
       normalTransform = `
         vec4 transformedNormal = normalMatrix * vec4(normalize(normalize(vertexNormal)/scale), 0.0);
-      transformedNormal.xyz = rotateVectorByQuaternion(transformedNormal.xyz, orientation);
+        transformedNormal.xyz = rotateVectorByQuaternion(transformedNormal.xyz, orientation);
       `
     }
 
@@ -90,8 +90,8 @@ function getPositionTransform(parameters){
   if(parameters && parameters.hasOwnProperty("instanced") && parameters.instanced){
     positionTransform = `
       vec4 pos = modelMatrix * vec4(position*scale, 1.0);
-    pos.xyz = rotateVectorByQuaternion(pos.xyz, orientation);
-    pos.xyz += offset; 
+      pos.xyz = rotateVectorByQuaternion(pos.xyz, orientation);
+      pos.xyz += offset; 
     `
   }
 
