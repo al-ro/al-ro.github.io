@@ -23,12 +23,12 @@ document.getElementById('cc_1').appendChild(stats.dom);
 
 // TODO:
 //      Switch environment maps
+//      Better HDR
 //      Pack uniforms to vec4
 //      Camera navigation
 //      Switch materials
 //      Prefix hashes
 //      View PBR maps/output
-//      Better HDR
 //      Animations
 //      Morph targets
 //      Skinning
@@ -70,6 +70,7 @@ models.set("Collada Duck", "./gltf/duck/duck.gltf");
 
 let modelNames = Array.from(models.keys());
 modelNames.sort();
+modelNames.push("NONE");
 
 let materialNames = ["PBR", "Normal", "UV", "Lambert", "Texture"];
 let materialSelector = {material: "PBR"};
@@ -117,24 +118,29 @@ loadGLTF(modelSelector.model);// = new GLTF(path, environment);
 
 function loadGLTF(model){
   if(gltf != null){
-    //gltf.setMaterial(pbrMaterial);
     gltf.destroy();
   }
   pbrMaterial = null;
   opaqueMeshes = [];
   transparentMeshes = [];
   
+  if(model == "NONE"){
+    return;
+  }
+
   let path = models.get(modelSelector.model);
   gltf = new GLTF(path, environment);  
   
   gltf.ready.then(p => {
-    modelManipulation.scale = gltf.scale;
-    pbrMaterial = gltf.material;
-    for(const mesh of gltf.meshes){
-      if(mesh.material.alphaMode == enums.BLEND){
-        transparentMeshes.push(mesh);
-      }else{
-        opaqueMeshes.push(mesh);
+    if(gltf != null){
+      modelManipulation.scale = gltf.scale;
+      pbrMaterial = gltf.material;
+      for(const mesh of gltf.meshes){
+        if(mesh.material.alphaMode == enums.BLEND){
+          transparentMeshes.push(mesh);
+        }else{
+          opaqueMeshes.push(mesh);
+        }
       }
     }
   });
