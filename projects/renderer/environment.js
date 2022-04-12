@@ -1,21 +1,20 @@
+import {download} from "./download.js"
 import {gl} from "./canvas.js"
 import {createAndSetupCubemap} from "./texture.js"
 import {EnvironmentMaterial} from "./materials/environmentMaterial.js"
 import {Mesh} from "./mesh.js";
 import {getScreenspaceQuad} from "./screenspace.js";
 import {createAndSetupTexture} from "./texture.js"
+
+import {loadHDR} from "./hdrpng.js"
 import {getSphericalHarmonicsMatrices, getBRDFIntegrationMap, getCubeMapConvolution, convertToCubeMap} from "./iblUtils.js";
 
 class Environment{
   // Type of the file passed in
   type = "cubemap"; // "cubemap" or "hdr"
 
-  path = "";
-
   // Internal representation is a cube map
   cubeMap;
-
-  hdr;
 
   camera;
 
@@ -30,7 +29,7 @@ class Environment{
 
   brdfIntegrationMap;
 
-  hdrLoaded = false;
+  updateHDR = false;
 
   loadFlags = [false, false, false, false, false, false];
 
@@ -56,7 +55,7 @@ class Environment{
     if(this.type == "cubemap"){
       this.setupCubemap(path);
     }else if(this.type == "hdr"){
-      this.setupHDR(path);
+      this.setHDR(path);
     }else{
       console.log("Unknown or missing environement map type: ", this.type);
     }
@@ -76,7 +75,7 @@ class Environment{
     this.calculateSHMatrices();
 
     this.loadFlags = [false, false, false, false, false, false];
-    this.hdrLoaded = false;
+    this.updateHDR = false;
   }
 
   updateFace = function(i, obj){
@@ -84,11 +83,7 @@ class Environment{
   }
 
   needsUpdate(){
-    if(this.type == "cubemap"){
-      return this.loadFlags.every(function(x){return x;});
-    }else if(this.type == "hdr"){
-      return this.hdrLoaded;
-    }
+    return this.updateHDR;
   }
 
   setupCubemap(path){
@@ -121,21 +116,22 @@ class Environment{
     }
   }
 
-  setupHDR(path){
-    this.HDR = new HDRImage();
+  setHDR(path){
 
-    let obj = this;
+    download(path, "arrayBuffer").then(data => {
 
-    this.HDR.onload = function() {
-      console.log("HDR loading done");
-      let texture = createAndSetupTexture();
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1024, 512, 0, gl.RGB, gl.FLOAT, obj.HDR.dataFloat);
-      convertToCubeMap(texture, obj.cubeMap, obj.camera);
-      obj.hdrLoaded = true;
-    }
-    this.HDR.src = path;
+        let hdr = loadHDR(new Uint8Array(data));
+
+        let texture = createAndSetupTexture();
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, hdr.width, hdr.height, 0, gl.RGB, gl.FLOAT, hdr.dataFloat);
+        convertToCubeMap(texture, this.cubeMap, this.camera);
+        gl.deleteTexture(texture);
+
+        this.updateHDR = true;
+        
+    });
   }
 
   calculateSHMatrices(){

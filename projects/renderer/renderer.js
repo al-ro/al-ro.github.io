@@ -22,11 +22,8 @@ stats.dom.style.cssText="position: relative; bottom: 48px; left: 0; cursor: poin
 document.getElementById('cc_1').appendChild(stats.dom);
 
 // TODO:
-//      Switch environment maps
-//      Better HDR
 //      Pack uniforms to vec4
 //      Camera navigation
-//      Switch materials
 //      Prefix hashes
 //      View PBR maps/output
 //      Animations
@@ -72,6 +69,18 @@ let modelNames = Array.from(models.keys());
 modelNames.sort();
 modelNames.push("NONE");
 
+let environments = new Map();
+environments.set("Dikhololo Night", "./environmentMaps/dikhololo_night_1k.hdr");
+environments.set("Venice Sunset", "./environmentMaps/venice_sunset_1k.hdr");
+environments.set("Venice Sunrise", "./environmentMaps/venice_sunrise_1k.hdr");
+environments.set("San Giuseppe Bridge", "./environmentMaps/san_giuseppe_bridge_1k.hdr");
+environments.set("Spruit Sunrise", "./environmentMaps/spruit_sunrise_1k.hdr");
+environments.set("Small Studio", "./environmentMaps/studio_small_03_1k.hdr");
+environments.set("Cape Hill", "./environmentMaps/cape_hill_1k.hdr");
+environments.set("1k", "./environmentMaps/1k.hdr");
+let environmentNames = Array.from(environments.keys());
+environmentNames.sort();
+
 let materialNames = ["PBR", "Normal", "UV", "Lambert"];
 let materialSelector = {material: "PBR"};
 
@@ -91,25 +100,14 @@ let controls = new Controls(camera);
 //Time
 let time = 0.0;
 
-//let environmentPath = './environmentMaps/dikhololo_night_1k.hdr';
-//let environmentPath = './environmentMaps/venice_sunset_1k.hdr';
-//let environmentPath = './environmentMaps/venice_sunrise_1k.hdr';
-let environmentPath = './environmentMaps/san_giuseppe_bridge_1k.hdr';
-//let environmentPath = './environmentMaps/spruit_sunrise_1k.hdr';
-//let environmentPath = './environmentMaps/studio_small_03_1k.hdr';
-//let environmentPath = './environmentMaps/cape_hill_1k.hdr';
-//let environmentPath = './environmentMaps/1k.hdr';
-
-//let environment = new Environment({path: "./defaultResources/uv_grid.jpg", type: "cubemap", camera: camera});
-let environment = new Environment({path: environmentPath, type: "hdr", camera: camera});
-
 let opaqueMeshes = [];
 let transparentMeshes = [];
 
 let info = {memory: "0", buffers: "0", textures: "0"};
 
 let modelSelector = {model: "Flight Helmet"};
-let path = models.get(modelSelector.model);
+let environmentSelector = {environment: "Venice Sunset"};
+let environment;
 let gltf;
 let modelManipulation = {scale: 1};
 
@@ -119,6 +117,7 @@ let gui = new lil.GUI({ autoPlace: false });
 let customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
 gui.add(camera, 'exposure').min(0.0).max(2).step(0.01);
+gui.add(environmentSelector, 'environment').options(environmentNames).onChange(name => {environment.setHDR(environments.get(name));});
 gui.add(modelSelector, 'model').options(modelNames).onChange(name => {loadGLTF(name);});
 const materialControls = gui.add(materialSelector, 'material').options(materialNames).onChange(name => {setMaterial(name);});
 //gui.add(modelManipulation, 'scale').min(0.0).max(60).step(0.0001).listen().onChange(scale => {gltf.setScale(scale);});
@@ -130,7 +129,9 @@ gui.add(info, 'memory').disable().listen();
 
 //************* GUI ***************
 
-loadGLTF(modelSelector.model);// = new GLTF(path, environment);
+environment = new Environment({path: environments.get(environmentSelector.environment), type: "hdr", camera: camera});
+
+loadGLTF(modelSelector.model);
 
 function loadGLTF(model){
   materialControls.setValue("PBR");
@@ -248,7 +249,6 @@ function draw(){
   gl.depthMask(true);
 
   // Render opaque
-
   for(let i = 0; i < opaqueMeshes.length; i++){
     if(opaqueMeshes[i] != null){
       opaqueMeshes[i].render(camera, time);  
@@ -256,7 +256,6 @@ function draw(){
   }
 
   // Render transparent
-
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   

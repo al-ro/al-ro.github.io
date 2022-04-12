@@ -123,6 +123,7 @@ function convertToCubeMap(sphericalTexture, cubeMap){
   }
 
   gl.deleteFramebuffer(frameBuffer);
+  gl.deleteTexture(texture);
 
   return cubeMap;
 }
@@ -172,6 +173,7 @@ function getCubeMapConvolution(cubeMap){
   }
 
   gl.deleteFramebuffer(frameBuffer);
+  gl.deleteTexture(texture);
 
   return cubeMap;
 }
