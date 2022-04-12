@@ -80,24 +80,24 @@ export class GLTF{
 
   destroy(){
     this.ready.then(() => {
-      this.buffers.forEach((buffer) => {
-        buffer = null;
-      });
+      for(let i = 0; i < this.buffers.length; i++){
+        this.buffers[i] = null;
+      }
       this.buffers = null;
 
-      this.meshes.forEach((mesh) => {
-        mesh.destroy();
-        mesh = null;
-      });
+      for(let i = 0; i < this.meshes.length; i++){
+        this.meshes[i].destroy();
+        this.meshes[i] = null;
+      }
       this.meshes = null;
 
       this.bufferRepository.destroy();
       this.bufferRepository = null;
 
-      this.textures.forEach((texture) => {
-        gl.deleteTexture(texture);
-        texture = null;
-      });
+      for(let i = 0; i < this.textures.length; i++){
+        gl.deleteTexture(this.textures[i]);
+        this.textures[i] = null;
+      }
       this.textures = null;
 
       this.nodes = null;

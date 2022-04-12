@@ -49,7 +49,7 @@ function createAndSetupCubemap() {
 //
 function loadTexture(url) {
 
-  const texture = gl.createTexture();
+  let texture = gl.createTexture();
 
   const level = 0;
   const internalFormat = gl.RGBA;
@@ -68,7 +68,7 @@ function loadTexture(url) {
   const image = new Image();
 
   image.onload = function() {
-    if(texture != null){
+    if(texture != null && gl.isTexture(texture)){
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
 
