@@ -126,7 +126,10 @@ class Environment{
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, hdr.width, hdr.height, 0, gl.RGB, gl.FLOAT, hdr.dataFloat);
-        convertToCubeMap(texture, this.cubeMap, this.camera);
+
+        let type = hdr.width == hdr.height ? "angular" : "equirectangular";
+
+        convertToCubeMap(texture, this.cubeMap, type);
         gl.deleteTexture(texture);
 
         this.updateHDR = true;

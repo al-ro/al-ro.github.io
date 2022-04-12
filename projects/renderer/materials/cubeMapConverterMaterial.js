@@ -7,6 +7,8 @@ export class CubeMapConverterMaterial extends Material{
   cameraMatrixHandle;
 
   textureHandle;
+  textureTypeHandle;
+  textureType = "equirectangular";
   texture;
 
   constructor(texture){
@@ -32,6 +34,7 @@ export class CubeMapConverterMaterial extends Material{
   getParameterHandles(){
     this.cameraMatrixHandle = this.program.getUniformLocation('cameraMatrix');
     this.textureHandle = this.program.getUniformLocation('sphericalTexture');
+    this.textureTypeHandle = this.program.getUniformLocation('textureType');
   }
 
   bindParameters(){
@@ -40,10 +43,15 @@ export class CubeMapConverterMaterial extends Material{
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.texture);
     gl.uniform1i(this.textureHandle, 0);
+    gl.uniform1f(this.textureTypeHandle, this.textureType == "equirectangular" ? 0 : 1);
   }
 
   setCameraMatrix(cameraMatrix){
     this.cameraMatrix = cameraMatrix;
+  }
+
+  setTextureType(type){
+    this.textureType = type;
   }
 
 }
