@@ -119,6 +119,7 @@ loadGLTF(modelSelector.model);// = new GLTF(path, environment);
 function loadGLTF(model){
   if(gltf != null){
     gltf.destroy();
+    gltf = null;
   }
   pbrMaterial = null;
   opaqueMeshes = [];
