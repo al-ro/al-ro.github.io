@@ -77,7 +77,8 @@ environments.set("San Giuseppe Bridge", "./environmentMaps/san_giuseppe_bridge_1
 environments.set("Spruit Sunrise", "./environmentMaps/spruit_sunrise_1k.hdr");
 environments.set("Small Studio", "./environmentMaps/studio_small_03_1k.hdr");
 environments.set("Cape Hill", "./environmentMaps/cape_hill_1k.hdr");
-environments.set("1k", "./environmentMaps/1k.hdr");
+environments.set("Lilienstein", "./environmentMaps/1k.hdr");
+environments.set("Uffizi Gallery", "./environmentMaps/uffizi_probe.hdr");
 let environmentNames = Array.from(environments.keys());
 environmentNames.sort();
 
@@ -106,7 +107,7 @@ let transparentMeshes = [];
 let info = {memory: "0", buffers: "0", textures: "0"};
 
 let modelSelector = {model: "Flight Helmet"};
-let environmentSelector = {environment: "Venice Sunset"};
+let environmentSelector = {environment: "Uffizi Gallery"};
 let environment;
 let gltf;
 let modelManipulation = {scale: 1};
