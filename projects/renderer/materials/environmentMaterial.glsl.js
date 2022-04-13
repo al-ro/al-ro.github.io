@@ -24,7 +24,7 @@ function getFragmentSource(){
   uniform mat4 cameraMatrix;
   uniform float exposure;
   uniform samplerCube cubeMap;
-
+/*
   uniform mat4 shRedMatrix;
   uniform mat4 shGrnMatrix;
   uniform mat4 shBluMatrix;
@@ -39,6 +39,7 @@ function getFragmentSource(){
 
     return max(vec3(r, g, b), vec3(0));
   }
+*/
 
   vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
     vec2 xy = fragCoord - resolution.xy / 2.0;
@@ -61,7 +62,6 @@ function getFragmentSource(){
     vec3 col = exposure * textureCubeLodEXT(cubeMap, normalize(rayDir), 0.0).rgb;
     col = ACESFilm(col);
     col = pow(col, vec3(0.4545));
-
 
     gl_FragColor = vec4(col, 1.0);
   }
