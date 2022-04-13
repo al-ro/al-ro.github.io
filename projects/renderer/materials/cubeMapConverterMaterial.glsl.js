@@ -24,7 +24,7 @@ function getFragmentSource(){
   #define TWO_PI (2.0 * PI)
 
   uniform mat4 cameraMatrix;
-  uniform sampler2D flatTexture;
+  uniform sampler2D sphericalTexture;
   uniform float textureType;
   varying vec3 vPosition;
 
@@ -40,7 +40,7 @@ function getFragmentSource(){
       float r = 1.0 / PI * acos(rayDir.z) / sqrt(pow(rayDir.x, 2.0) + pow(rayDir.y, 2.0));
       texCoord = 0.5 + 0.5 * vec2(rayDir.x * r, rayDir.y * r);
     }
-    vec4 data = texture2D(flatTexture, texCoord);
+    vec4 data = texture2D(sphericalTexture, texCoord);
     gl_FragColor = vec4(data.rgb, 1.0);
   }
   `;

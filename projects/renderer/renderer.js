@@ -26,6 +26,13 @@ document.getElementById('cc_1').appendChild(stats.dom);
 //      Camera navigation
 //      Prefix hashes
 //      View PBR maps/output
+//      Physically based camera
+//
+//      Instancing
+//      Pipeline state (program, sidedness)
+//      Lights
+//      Shadow mapping
+//
 //      Animations
 //      Morph targets
 //      Skinning
@@ -34,21 +41,17 @@ document.getElementById('cc_1').appendChild(stats.dom);
 //      Specular/Gloss
 //      Sheen
 //      Transmission/volume/IOR
-
+//
+//      Import PBR materials (e.g. Substance)
 //      Spherical Gaussian Irradiance
-//      Instancing
-//      Pipeline state (program, sidedness)
 //      OIT
 //      WebGL2
-//      Lights
-//      Shadow mapping
 //      Volumetrics
 //      STL import
 //      OBJ import
 //      Basic geometries (sphere, quad, cylinder, cone, torus, knot)
 //      Particle class
 //      Postprocessing (bloom, depth of field, fog)
-//      Physically based camera
 
 let models = new Map();
 models.set("Flight Helmet", "./gltf/flighthelmet/FlightHelmet.gltf");
@@ -85,8 +88,8 @@ environmentNames.sort();
 let materialNames = ["PBR", "Normal", "UV", "Lambert"];
 let materialSelector = {material: "PBR"};
 
-let yaw = Math.PI/4.0;
-let pitch = 0.0;
+let yaw = Math.PI / 3.0;
+let pitch = Math.PI / 2.0;
 let dist = 1.5;
 let up = [0, 1, 0];
 

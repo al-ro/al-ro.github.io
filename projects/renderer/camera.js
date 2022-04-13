@@ -24,13 +24,16 @@ export class Camera{
   constructor(pitch, yaw, distance, target, up, fov, aspect, zNear, zFar){
     this.pitch = pitch;
     this.yaw = yaw;
+
     this.distance = distance;
     this.target = target;
     this.up = up;
+
     this.fov = fov;
     this.aspect = aspect;
     this.zNear = zNear;
     this.zFar = zFar;
+
     this.updatePosition([0, 0]);
 
     this.setProjectionMatrix();
@@ -40,17 +43,23 @@ export class Camera{
 
   updatePosition(delta){
     let yawChange = (delta[0] * 0.01) % (2.0 * Math.PI);
-    this.yaw  += yawChange;
-    this.position[0] = Math.sin(this.yaw) ;
-    this.position[2] = Math.cos(this.yaw) ;
+    this.yaw -= yawChange;
+
     let pitchChange = (delta[1] * 0.01) % (2.0 * Math.PI);
     this.pitch += pitchChange;
-    this.pitch = Math.max(-Math.PI/2.0, Math.min(Math.PI/2.0, this.pitch));
-    this.position[1] = -Math.sin(this.pitch) ;
+
+    this.yaw = mod(this.yaw, 2.0 * Math.PI);
+    this.pitch = Math.max(0.01, Math.min(Math.PI-0.01, this.pitch));
+
+    this.position[0] = Math.cos(this.yaw) * Math.sin(this.pitch);
+    this.position[1] = Math.cos(this.pitch);
+    this.position[2] = Math.sin(this.yaw) * Math.sin(this.pitch);
+
     this.position = normalize(this.position);
     this.position[0] *= this.distance;
     this.position[1] *= this.distance;
     this.position[2] *= this.distance;
+
     this.position = add(this.position, this.target);
   }
 

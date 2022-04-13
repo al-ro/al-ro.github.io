@@ -57,6 +57,7 @@ function getSphericalHarmonicsMatrices(cubeMap){
   gl.readPixels(0, 0, 4, 3, gl.RGBA, gl.FLOAT, pixels); 
 
   gl.deleteFramebuffer(frameBuffer);
+  gl.deleteTexture(texture);
 
   // The shader outputs column major data
   // SH matrices are symmetric so column vs row major are the same
