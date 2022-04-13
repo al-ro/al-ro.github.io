@@ -132,6 +132,24 @@ export class PBRMaterial extends Material{
 
   environment;
 
+  // Which quantity to render
+  // 0: final PBR colour
+  // 1: albedo
+  // 2: metalness
+  // 3: roughness
+  // 4: geometry normal
+  // 5: tangent
+  // 6: bitangent
+  // 7: normal texture
+  // 8: ambient occlusion
+  // 9: emissive
+  // 10: vertex colour
+  // 11: TEXCOORD_1
+  // 12: TEXCOORD_0
+  // 13: Alpha
+  // 14: Shading normal
+  outputVariable = 0;
+
   textureUnits = 0;
 
   destroy(){
