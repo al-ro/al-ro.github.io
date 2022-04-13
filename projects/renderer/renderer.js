@@ -23,7 +23,6 @@ document.getElementById('cc_1').appendChild(stats.dom);
 
 // TODO:
 //      Pack uniforms to vec4
-//      Camera navigation
 //      Prefix hashes
 //      View PBR maps/output
 //      Physically based camera
@@ -33,25 +32,25 @@ document.getElementById('cc_1').appendChild(stats.dom);
 //      Lights
 //      Shadow mapping
 //
-//      Animations
-//      Morph targets
-//      Skinning
 //      Sparse accessor
-//      Camera from gltf
 //      Specular/Gloss
 //      Sheen
 //      Transmission/volume/IOR
+//      Animations
+//      Morph targets
+//      Skinning
+//      Camera from gltf
 //
 //      Import PBR materials (e.g. Substance)
+//      STL import
+//      OBJ import
+//      Particle class
+//      Postprocessing (bloom, depth of field, fog)
 //      Spherical Gaussian Irradiance
 //      OIT
 //      WebGL2
 //      Volumetrics
-//      STL import
-//      OBJ import
 //      Basic geometries (sphere, quad, cylinder, cone, torus, knot)
-//      Particle class
-//      Postprocessing (bloom, depth of field, fog)
 
 let models = new Map();
 models.set("Flight Helmet", "./gltf/flighthelmet/FlightHelmet.gltf");
