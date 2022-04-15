@@ -2,6 +2,7 @@ import {gl} from "./canvas.js";
 
 function createAndSetupTexture() {
   var texture = gl.createTexture();
+  gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texture);
 
   // Set up texture so we can render any size

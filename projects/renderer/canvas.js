@@ -68,4 +68,9 @@ if (!extFPT) {
   console.error("Could not load OES_texture_float_linear. No fallback.");
 }
 
+const extDT = gl.getExtension("WEBGL_depth_texture");
+if (!extDT) {
+  console.error("Could not load WEBGL_depth_texture. No fallback.");
+}
+
 export {canvas, gl, canvasMultiplier, enums, extVAO, extINS, extDFD, extMEM}

@@ -88,7 +88,7 @@ function getFragmentSource(){
       return k * k * (1.0 / PI);
     }
 
-    vec3 getPreFilteredColour(vec3 N, float roughness){
+    vec3 getPreFilteredColor(vec3 N, float roughness){
       vec3 R = N;
       vec3 V = R;
 
@@ -105,9 +105,6 @@ function getFragmentSource(){
 
         float NdotL = dot(N, L);
         if(NdotL > 0.0){
-          // The Sun in many HDR scenes is so much brighter than other pixels that we get
-          // firefly artefacts. Since we don't importance sample based on light sources in the
-          // environment map, we clamp the light values at an arbitrary value for the convolution.
 
           float level = 0.0;
 
@@ -145,7 +142,7 @@ function getFragmentSource(){
     void main(){
       vec3 rayDir = normalize(vec3(vPosition.rg, -1.0));
       rayDir = normalize((cameraMatrix * vec4(rayDir, 1.0)).xyz);
-      vec3 c = getPreFilteredColour(rayDir, roughness);
+      vec3 c = getPreFilteredColor(rayDir, roughness);
 
       gl_FragColor = vec4(c, 1.0);
     }

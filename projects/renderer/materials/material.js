@@ -21,7 +21,6 @@ export class Material{
   destroy(){}
 
   createProgram(attributes){
-    //this.program = programRepository.getProgram(parameters, material);
     this.program = programRepository.getProgram(this, attributes);
   }
 
