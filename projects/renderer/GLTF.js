@@ -25,6 +25,8 @@ import {loadTexture} from "./texture.js"
 //  morph
 //  skins
 
+const supportedExtensions = ["KHR_materials_transmission"];
+
 export class GLTF{
 
   // Description of the GLTF
@@ -124,7 +126,28 @@ export class GLTF{
     this.bufferRepository = new BufferRepository();
 
     this.json = json;
-    //console.log("Full GLTF: ", json);
+
+    if(json.extensionsUsed){
+      for(const extension of json.extensionsUsed){
+        let supported = supportedExtensions.includes(extension);
+        if(supported){
+          console.log(extension, "is supported");
+        }else{
+          console.log(extension, "is NOT SUPPORTED");
+        }
+      }
+    };
+
+    if(json.extensionsRequired){
+      for(const extension of json.extensionsRequired){
+        let supported = supportedExtensions.includes(extension);
+        if(supported){
+          console.log(extension, "is supported");
+        }else{
+          console.error("Required extension", extension, "is NOT SUPPORTED");
+        }
+      }
+    };
 
     if(scene != null){
       this.scene = scene;
@@ -382,8 +405,23 @@ export class GLTF{
   getMaterial(index){
 
     const material = this.json.materials[index];
+    const jsonTextures = this.json.textures;
 
     let materialParameters = {environment: this.environment};
+
+    if(material.extensions){
+      const ext = material.extensions;
+      if(ext.KHR_materials_transmission){
+        const transmission = ext.KHR_materials_transmission;
+        if(transmission.transmissionTexture != null){
+          const textureID = jsonTextures[transmission.transmissionTexture.index].source;
+          materialParameters.transmissionTexture = this.textures[textureID];
+        }
+        if(transmission.transmissionFactor != null){
+          materialParameters.transmissionFactor = transmission.transmissionFactor;
+        }
+      }
+    }
 
     let pbrDesc = material.pbrMetallicRoughness;
 
@@ -413,7 +451,7 @@ export class GLTF{
     }
 
     if(pbrDesc.baseColorTexture != null){
-      const textureID = pbrDesc.baseColorTexture.index;
+      const textureID = jsonTextures[pbrDesc.baseColorTexture.index].source;
       materialParameters.baseColorTexture = this.textures[textureID];
     }
 
@@ -434,12 +472,12 @@ export class GLTF{
     }
 
     if(pbrDesc.metallicRoughnessTexture != null){
-      const textureID = pbrDesc.metallicRoughnessTexture.index;
+      const textureID = jsonTextures[pbrDesc.metallicRoughnessTexture.index].source;
       materialParameters.metallicRoughnessTexture = this.textures[textureID];
     }
 
     if(material.occlusionTexture != null){
-      const textureID = material.occlusionTexture.index;
+      const textureID = jsonTextures[material.occlusionTexture.index].source;
       materialParameters.occlusionTexture = this.textures[textureID];
       if(material.occlusionTexture.strength != null){
         materialParameters.occlusionStrength = material.occlusionTexture.strength;
@@ -447,7 +485,7 @@ export class GLTF{
     }
 
     if(material.normalTexture != null){
-      const textureID = material.normalTexture.index;
+      const textureID = jsonTextures[material.normalTexture.index].source;
       materialParameters.normalTexture = this.textures[textureID];
       if(material.normalTexture.scale != null){
         materialParameters.normalScale = material.normalTexture.scale;
@@ -455,7 +493,7 @@ export class GLTF{
     }
 
     if(material.emissiveTexture != null){
-      const textureID = material.emissiveTexture.index;
+      const textureID = jsonTextures[material.emissiveTexture.index].source;
       materialParameters.emissiveTexture = this.textures[textureID];
     }
 

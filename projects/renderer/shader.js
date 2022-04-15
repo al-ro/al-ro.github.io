@@ -43,8 +43,24 @@ function getDefinePrefix(material, attributes){
     }
   }
 
+  if(material.hasEmission){
+    prefix += "#define HAS_EMISSION \n";
+  }
   if(material.hasEmissiveTexture){
     prefix += "#define HAS_EMISSIVE_TEXTURE \n";
+  }
+  if(material.hasEmissiveFactor){
+    prefix += "#define HAS_EMISSIVE_FACTOR \n";
+  }
+
+  if(material.hasTransmission){
+    prefix += "#define HAS_TRANSMISSION \n";
+  }
+  if(material.hasTransmissionTexture){
+    prefix += "#define HAS_TRANSMISSION_TEXTURE \n";
+  }
+  if(material.hasTransmissionFactor){
+    prefix += "#define HAS_TRANSMISSION_FACTOR \n";
   }
 
 

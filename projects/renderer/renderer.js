@@ -7,14 +7,16 @@ import {PBRMaterial} from "./materials/pbrMaterial.js"
 import {LambertMaterial} from "./materials/lambertMaterial.js"
 import {UVMaterial} from "./materials/uvMaterial.js"
 import {TextureMaterial} from "./materials/textureMaterial.js"
+import {ScreenspaceMaterial} from "./materials/screenspaceMaterial.js"
 import {Environment} from "./environment.js"
-import {loadTexture, createAndSetupCubemap} from "./texture.js"
+import {loadTexture, createAndSetupCubemap, createAndSetupTexture} from "./texture.js"
 import {Mesh} from "./mesh.js";
 import {canvas, gl, enums, extMEM} from "./canvas.js";
 import {getScreenspaceQuad} from "./screenspace.js";
 import {getSphericalHarmonicsMatrices} from "./iblUtils.js";
 import {programRepository} from "./programRepository.js"
 import {GLTF} from "./GLTF.js"
+import {RenderTarget} from "./target.js"
 
 const stats = new Stats();
 stats.showPanel(0);
@@ -35,7 +37,9 @@ document.getElementById('cc_1').appendChild(stats.dom);
 //      Sparse accessor
 //      Specular/Gloss
 //      Sheen
-//      Transmission/volume/IOR
+//      Volume
+//      IOR
+//      Clearcoat
 //      Animations
 //      Morph targets
 //      Skinning
@@ -62,6 +66,8 @@ models.set("Fox", "./gltf/fox/Fox.gltf");
 models.set("Venator Corridor", "./gltf/corridor/scene.gltf");
 models.set("Jedi Fighter", "./gltf/jedifighter/scene.gltf");
 models.set("PBR Spheres", "./gltf/spheres/MetalRoughSpheres.gltf");
+models.set("Transmission", "./gltf/transmission/TransmissionTest.gltf");
+models.set("Transmission Roughness Test", "./gltf/transmissionRoughness/TransmissionRoughnessTest.gltf");
 models.set("Blend", "./gltf/blend/AlphaBlendModeTest.gltf");
 models.set("Camera", "./gltf/camera/Camera_01_1k.gltf");
 models.set("Minimal", "./gltf/minimal/scene.gltf");
@@ -84,7 +90,9 @@ environments.set("Uffizi Gallery", "./environmentMaps/uffizi_probe.hdr");
 let environmentNames = Array.from(environments.keys());
 environmentNames.sort();
 
-let materialNames = ["PBR", "Normal", "UV", "Lambert"];
+let texture_0 = loadTexture("./defaultResources/uv_grid.jpg");
+
+let materialNames = ["PBR", "Normal", "UV", "Texture", "Lambert"];
 let materialSelector = {material: "PBR"};
 
 let yaw = Math.PI / 3.0;
@@ -104,12 +112,13 @@ let controls = new Controls(camera);
 let time = 0.0;
 
 let opaqueMeshes = [];
+let transmissiveMeshes = [];
 let transparentMeshes = [];
 
 let info = {memory: "0", buffers: "0", textures: "0"};
 
 let modelSelector = {model: "Flight Helmet"};
-let environmentSelector = {environment: "Uffizi Gallery"};
+let environmentSelector = {environment: "Venice Sunrise"};
 let environment;
 let gltf;
 let modelManipulation = {scale: 1};
@@ -143,6 +152,7 @@ function loadGLTF(model){
     gltf = null;
   }
   opaqueMeshes = [];
+  transmissiveMeshes = [];
   transparentMeshes = [];
   
   if(model == "NONE"){
@@ -157,7 +167,9 @@ function loadGLTF(model){
       materialControls.setValue("PBR");
       modelManipulation.scale = gltf.scale;
       for(const mesh of gltf.meshes){
-        if(mesh.material.alphaMode == enums.BLEND){
+        if(mesh.material.hasTransmission){
+          transmissiveMeshes.push(mesh);
+        }else if(mesh.material.alphaMode == enums.BLEND){
           transparentMeshes.push(mesh);
         }else{
           opaqueMeshes.push(mesh);
@@ -178,6 +190,8 @@ function setMaterial(name){
     break;
     case "Lambert": material = new LambertMaterial();
     break;
+    case "Texture": material = new TextureMaterial(texture_0);
+    break;
     default: material = null;
   }
   if(material != null){
@@ -189,11 +203,18 @@ function setMaterial(name){
       mesh.setOverrideMaterial(material);
       mesh.displayOverrideMaterial();
     }
+    for(const mesh of transmissiveMeshes){
+      mesh.setOverrideMaterial(material);
+      mesh.displayOverrideMaterial();
+    }
   }else{
     for(const mesh of opaqueMeshes){
       mesh.displayOriginalMaterial();
     }
     for(const mesh of transparentMeshes){
+      mesh.displayOriginalMaterial();
+    }
+    for(const mesh of transmissiveMeshes){
       mesh.displayOriginalMaterial();
     }
   }
@@ -209,6 +230,38 @@ function setCameraMatrices(){
 }
 
 let frame = 0;
+
+// Main texture where the scene is rendered
+let sceneTexture = createAndSetupTexture();
+let sceneDepthTexture = createAndSetupTexture();
+let width = 1;
+let height = 1;
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_2D, sceneTexture);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+gl.bindTexture(gl.TEXTURE_2D, sceneDepthTexture);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, width, height, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
+let sceneRenderTarget = new RenderTarget(sceneTexture, sceneDepthTexture);
+
+let sceneQuad = getScreenspaceQuad();
+let sceneMaterial = new ScreenspaceMaterial(sceneTexture);
+let sceneMesh = new Mesh(sceneQuad, sceneMaterial);
+
+// A square texture of the scene which can be mipmapped and blurred for transmission background
+let blurredWidth = 1024;
+let blurredHeight = 1024;
+let blurredSceneTexture = createAndSetupTexture();
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_2D, blurredSceneTexture);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, blurredWidth, blurredHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+let blurredSceneRenderTarget = new RenderTarget(blurredSceneTexture);
+
+let blurredSceneMaterial = new ScreenspaceMaterial(sceneTexture);
+let blurredSceneMesh = new Mesh(sceneQuad, blurredSceneMaterial);
+
+let screenMaterial = new ScreenspaceMaterial(blurredSceneTexture);
+let screenMesh = new Mesh(sceneQuad, screenMaterial);
 
 function draw(){
   
@@ -232,7 +285,8 @@ function draw(){
 
   setCameraMatrices(); 
 
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  sceneRenderTarget.setSize(gl.canvas.width, gl.canvas.height);
+  sceneRenderTarget.bind();
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
   gl.clearColor(0, 0, 0, 0);
@@ -258,6 +312,30 @@ function draw(){
     }
   }
 
+  // Generate background texture for transmissive objects
+  blurredSceneRenderTarget.bind();
+  gl.viewport(0, 0, blurredWidth, blurredHeight);
+  blurredSceneMesh.render();
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, blurredSceneTexture);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+
+
+  // Render transmissive objects into the scene
+  sceneRenderTarget.bind();
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  for(let i = 0; i < transmissiveMeshes.length; i++){
+    if(transmissiveMeshes[i] != null){
+      if(transmissiveMeshes[i].material.hasTransmission){
+        transmissiveMeshes[i].material.setBackgroundTexture(blurredSceneTexture);
+        transmissiveMeshes[i].material.setResolution([gl.canvas.width, gl.canvas.height]);
+      }
+      transmissiveMeshes[i].render(camera, time);  
+    }
+  }
+
   // Render transparent
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -269,6 +347,12 @@ function draw(){
   }
 
   gl.disable(gl.BLEND);
+
+
+  // Output render target colour texture to screen
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  sceneMesh.render(camera, time);
 
   stats.end();
   requestAnimationFrame(draw);

@@ -116,6 +116,7 @@ function getFragmentSource(){
   uniform float exposure;
   uniform float time;
   uniform vec3 cameraPosition;
+  uniform vec2 resolution;
   varying vec3 vPosition;
 
 #ifdef HAS_UVS
@@ -140,9 +141,25 @@ function getFragmentSource(){
   varying mat3 tbn;
 #endif
 
+#ifdef HAS_EMISSION
 #ifdef HAS_EMISSIVE_TEXTURE
   uniform sampler2D emissiveTexture;
+#endif
+
+#ifdef HAS_EMISSIVE_FACTOR
   uniform vec3 emissiveFactor;
+#endif
+#endif
+
+#ifdef HAS_TRANSMISSION
+  uniform sampler2D backgroundTexture;
+#ifdef HAS_TRANSMISSION_TEXTURE
+  uniform sampler2D transmissionTexture;
+#endif
+
+#ifdef HAS_TRANSMISSION_FACTOR
+  uniform float transmissionFactor;
+#endif
 #endif
 
 #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
@@ -179,12 +196,17 @@ function getFragmentSource(){
   float dot_c(vec3 a, vec3 b){
     return max(dot(a, b), minDot);
   }
+
   float dot_c(vec4 a, vec4 b){
     return max(dot(a, b), minDot);
   }
 
   float saturate(float x){
     return max(0.0, min(x, 1.0));
+  }
+
+  vec3 saturate(vec3 x){
+    return max(vec3(0), min(x, vec3(1)));
   }
 
   vec3 getSHIrradiance(vec3 normal){
@@ -202,17 +224,22 @@ function getFragmentSource(){
     return texture2D(brdfIntegrationMapTexture, texCoord).rg;
   }
 
-  // Get two prefiltered roughness environment maps and linearly interpolate
-  // between them to get the roughness data needed.
   vec3 getEnvironment(vec3 rayDir, float roughness){
 
     //There are 6 levels of roughness (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
     float level = roughness * 5.0;
     level = max(0.0, min(level, 5.0));
 
-    vec3 col = textureCubeLodEXT(cubeMap, rayDir, level).rgb;
-    return col;
+    return textureCubeLodEXT(cubeMap, rayDir, level).rgb;
   }
+
+#ifdef HAS_TRANSMISSION
+  vec3 getBackground(vec2 uv, float roughness){
+    float level = roughness * 10.0;
+
+    return pow(texture2DLodEXT(backgroundTexture, uv, level).rgb, vec3(2.2));
+  }
+#endif
 
 
   //---------------------------- PBR ----------------------------
@@ -262,23 +289,17 @@ function getFragmentSource(){
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
   }
 
+  // Lambertian
+  vec3 diffuseBRDF(vec3 albedo){
+    return albedo / PI;
+  }
+
   //Cook-Torrance BRDF
-  vec3 BRDF(vec3 n, vec3 viewDir, vec3 lightDir, vec4 albedo, float metalness, 
-      float roughness, vec3 F0, vec3 energyCompensation){
-
-    vec3 h = normalize(viewDir + lightDir);
-    float cosTheta = dot_c(h, viewDir);
-
-    //Diffuse reflectance
-    vec3 lambertian = albedo.rgb / PI;
+  float specularBRDF(vec3 n, vec3 viewDir, vec3 lightDir, vec3 h, float roughness){
 
     //Normal distribution
     //What fraction of microfacets are aligned in the correct direction
     float D;
-
-    //Fresnel term
-    //How reflective are the microfacets viewed from the current angle
-    vec3 F = fresnelSchlickRoughness(cosTheta, F0, roughness);
 
     //Geometry term
     //What fraction of the microfacets are lit and visible
@@ -292,14 +313,7 @@ function getFragmentSource(){
     G = smiths(n, viewDir, lightDir, roughness);
     V = G / max(0.0001, (4.0 * dot_c(lightDir, n) * dot_c(viewDir, n)));
 
-    //Specular reflectance
-    vec3 specular = D * F * V;
-
-    specular *= energyCompensation;
-
-    //Combine diffuse and specular
-    vec3 kD = (1.0 - F) * (1.0 - metalness);
-    return kD * lambertian + specular;
+    return D * V;
   }
 
   //---------------------------- Lighting ----------------------------
@@ -314,11 +328,7 @@ function getFragmentSource(){
     roughness *= data.g;
     metal *= data.b; 
 #endif 
-/*
-    roughness = 1.0;
-    metal = 0.0;
-    albedo = vec4(1);
-*/
+
     float occlusion = 1.0;
 
 #ifdef HAS_AO_TEXTURE
@@ -339,40 +349,72 @@ function getFragmentSource(){
     vec3 radiance = vec3(0);
     vec3 lightDir = vec3(0);
 
-    vec3 F0 = vec3(0.04);
+    //Index of refraction for common dielectrics. Corresponds to f0 4%
+    float IOR = 1.5;
+
+    // Reflectance of the surface when looking straight at it along the negative normal
+    vec3 F0 = vec3(pow(IOR - 1.0, 2.0) / pow(IOR + 1.0, 2.0));
 
     //Metals tint specular reflections.
-    //https://docs.unrealengine.com/en-US/RenderingAndGraphics/Materials/PhysicallyBased/index.html
-    vec3 tintColour = albedo.rgb;
-    
-    F0 = mix(F0, tintColour, metal);
+    //https://docs.unrealengine.com/en-US/RenderingAndGraphics/Materials/PhysicallyBased/index.html 
+    F0 = mix(F0, albedo.rgb, metal);
 
-    // Find direct lighting for all sources
     lightDir = normalize(vec3(sin(time), 0.5, cos(time)));
 
     vec2 envBRDF = getBRDFIntegrationMap(vec2(dot_c(normal, -rayDir), roughness));
     //https://google.github.io/filament/Filament.html#materialsystem/improvingthebrdfs/energylossinspecularreflectance
     vec3 energyCompensation = 1.0 + F0 * (1.0 / envBRDF.x - 1.0);
 
-    I += BRDF(normal, -rayDir, lightDir, albedo, metal, roughness, F0, energyCompensation) 
-      * radiance 
-      * dot_c(normal, lightDir);
+    vec3 h = normalize(-rayDir + lightDir);
+    float cosTheta = dot_c(h, -rayDir);
+
+    //How reflective are the microfacets viewed from the current angle
+    vec3 F = fresnelSchlickRoughness(cosTheta, F0, roughness);
+
+    //Specular reflectance
+    vec3 specular = F * specularBRDF(normal, -rayDir, lightDir, h, roughness); 
+
+    // Scale the specular lobe to account for multiscattering
+    specular *= energyCompensation;
+
+    vec3 diffuse = diffuseBRDF(albedo.rgb);
+
+#ifdef HAS_TRANSMISSION
+    vec3 transmitted = vec3(0);
+    float transmission = 1.0;
+#ifdef HAS_TRANSMISSION_FACTOR
+    transmission = transmissionFactor;
+#endif
+
+#ifdef HAS_TRANSMISSION_TEXTURE
+    transmission *= texture2D(transmissionTexture, vUV).r;
+#endif
+
+    diffuse = mix(diffuse, transmitted, transmission);
+#endif
+
+    //Combine diffuse and specular
+    vec3 kD = (1.0 - F) * (1.0 - metal);
+    vec3 direct = kD * diffuse + specular;
+
+    I += direct * radiance * dot_c(normal, lightDir);
 
     // Find ambient diffuse IBL component
 
-    vec3 F = fresnelSchlickRoughness(dot_c(normal, -rayDir), F0, roughness);
-    vec3 kS = F;
-    vec3 kD = clamp(1.0 - kS, 0.0, 1.0);
-    kD *= 1.0 - metal;	
+    F = fresnelSchlickRoughness(dot_c(normal, -rayDir), F0, roughness);
+    kD = saturate(1.0 - F) * (1.0 - metal);	
     vec3 irradiance = getSHIrradiance(normal);
-    vec3 diffuse = irradiance * albedo.rgb / PI;
-    //return diffuse;
+    diffuse = irradiance * albedo.rgb / PI;
 
-    vec3 R;
-    R = reflect(rayDir, normal);
+#ifdef HAS_TRANSMISSION
+    transmitted = albedo.rgb * getBackground(gl_FragCoord.xy / resolution, roughness);// * (1.0-(F * envBRDF.x + envBRDF.y));   
+    diffuse = mix(diffuse, transmitted, transmission);
+#endif
+
+    vec3 R = reflect(rayDir, normal);
 
     vec3 prefilteredColor = getEnvironment(R, roughness);   
-    vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+    specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
 
     // Scale the specular lobe to account for multiscattering
     specular *= energyCompensation;
@@ -400,10 +442,10 @@ function getFragmentSource(){
 #ifdef HAS_NORMAL_TEXTURE
     //https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     //Transform RGB normal map data from [0, 1] to [-1, 1]
-    vec3 normalColour = normalize(vec3(vec2(normalScale), 1.0) * (texture2D(normalTexture, vUV).rgb * 2.0 - 1.0));
+    vec3 normalColor = normalize(vec3(vec2(normalScale), 1.0) * (texture2D(normalTexture, vUV).rgb * 2.0 - 1.0));
 #ifdef HAS_TANGENTS
     // Transform the normal vector in the RGB channels to tangent space
-    vec3 normal = normalize(tbn * normalColour.rgb);
+    vec3 normal = normalize(tbn * normalColor.rgb);
 #else
 
     vec3 uv_dx = dFdx(vec3(vUV, 0.0));
@@ -414,7 +456,7 @@ function getFragmentSource(){
     vec3 T = normalize(t_ - geometryNormal * dot(geometryNormal, t_));
     vec3 B = cross(geometryNormal, T);
 
-    vec3 normal = normalize(mat3(T, B, geometryNormal) * normalColour.rgb);
+    vec3 normal = normalize(mat3(T, B, geometryNormal) * normalColor.rgb);
 #endif
 #else
     vec3 normal = normalize(geometryNormal);
@@ -443,13 +485,19 @@ function getFragmentSource(){
       discard;
     }
 
-
     vec3 viewDirection = normalize(cameraPosition - vPosition);
     col.rgb = getIrradiance(-viewDirection, normal, col);
 
+#ifdef HAS_EMISSION
+    vec3 emissiveCol = vec3(1);
 #ifdef HAS_EMISSIVE_TEXTURE
-    vec4 emissiveData = texture2D(emissiveTexture, vUV);
-    vec3 emissiveCol = emissiveFactor * pow(emissiveData.rgb, vec3(2.2));
+    vec3 emissiveData = texture2D(emissiveTexture, vUV).rgb;
+    emissiveCol = pow(emissiveData, vec3(2.2));
+#endif
+#ifdef HAS_EMISSIVE_FACTOR
+    emissiveCol *= emissiveFactor;
+#endif
+    
     col.rgb += emissiveCol.rgb;
 #endif
 
@@ -468,31 +516,12 @@ function getFragmentSource(){
 
     //col = vec3(texture2D(brdfIntegrationMapTexture, gl_FragCoord.xy/256.0).rg, 0.0);
 #endif
-#ifdef HAS_AO_TEXTURE
-    occlusion = texture2D(occlusionTexture, vUV).r;
+#ifdef HAS_BASE_COLOR_TEXTURE
+    vec4 baseColorData = texture2D(baseColorTexture, vUV);
+    col = baseColorFactor * vec4(vec3(pow(data.rgb, vec3(2.2))), baseColorData.a);
 #else
-
-#ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
-#ifdef AO_IN_METALLIC_ROUGHNESS_TEXTURE
-    occlusion = data.r;
+    col = baseColorFactor;
 #endif
-#endif
-
-#endif
-    col = vec4(vec3(occlusion), 1.0);
-
-    col = vec4(getSHIrradiance(normal), 1.0);
-
-    col = vec4(vec3(metal), 1.0);
-    col = vec4(vec3(roughness), 1.0);
-
-    col = vec4(0.5 + 0.5 * normal, 1.0);
-
-    col = vec4(vec3(vUV, 0.0), 1.0);
-
-    col = vec4(pow(baseColor, vec3(0.4545)), 1.0);
-    vec3 irradiance = getSHIrradiance(normal);
-    col = vec4(pow(irradiance, vec3(0.4545)), 1.0);
 
 #endif
 

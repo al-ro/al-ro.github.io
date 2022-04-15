@@ -117,7 +117,7 @@ function convertToCubeMap(sphericalTexture, cubeMap, type = "equirectangular"){
 
     mesh.render();
   
-    var target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + face;
+    let target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + face;
 
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
     gl.texImage2D(target, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.FLOAT, null);

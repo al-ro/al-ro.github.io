@@ -1,12 +1,8 @@
 import {gl} from "../canvas.js"
 import {Material} from './material.js'
-import {getVertexSource, getFragmentSource} from './textureMaterial.glsl.js'
+import {getVertexSource, getFragmentSource} from './screenspaceMaterial.glsl.js'
 
-export class TextureMaterial extends Material{
-
-  projectionMatrixHandle;
-  viewMatrixHandle;
-  modelMatrixHandle;
+export class ScreenspaceMaterial extends Material{
 
   textureHandle;
   texture;
@@ -18,8 +14,9 @@ export class TextureMaterial extends Material{
     this.attributes = ["POSITION", "TEXCOORD_0"];
 
     if(texture == null){
-      console.error("TextureMaterial requires a texture during construction. Provided: ", texture);
+      console.error("ScreenspaceMaterial requires a texture during construction. Provided: ", texture);
     }
+
     this.texture = texture;
   }
 
@@ -32,9 +29,6 @@ export class TextureMaterial extends Material{
   }
 
   getParameterHandles(){
-    this.projectionMatrixHandle = this.program.getUniformLocation('projectionMatrix');
-    this.viewMatrixHandle = this.program.getUniformLocation('viewMatrix');
-    this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
     this.textureHandle = this.program.getUniformLocation('tex');
   }
 
