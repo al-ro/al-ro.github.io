@@ -1,4 +1,5 @@
 import {gl} from "./canvas.js";
+import {pushDownload, popDownload} from "./download.js";
 
 function createAndSetupTexture() {
   var texture = gl.createTexture();
@@ -69,6 +70,7 @@ function loadTexture(url) {
   const image = new Image();
 
   image.onload = function() {
+    popDownload();
     if(texture != null && gl.isTexture(texture)){
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
@@ -96,6 +98,7 @@ function loadTexture(url) {
   }
 
   image.src = url;
+  pushDownload();
 
   return texture;
 }

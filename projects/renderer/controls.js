@@ -53,7 +53,7 @@ export class Controls{
   onScroll(event){
     event.preventDefault();
     let dist = this.camera.distance;
-    dist += event.deltaY * 0.025;
+    dist += event.deltaY * 0.001;
     dist = Math.min(Math.max(0.0001, dist), this.maxDistance);
     this.camera.updateDistance(dist);
   }
@@ -100,7 +100,7 @@ export class Controls{
 
   move(dT){
 
-    let speed = 800.0;
+    let speed = 10.0;
     let viewDirection = this.camera.viewDirection;
     let rightDirection = this.camera.rightDirection;
     let pos = this.camera.position;
@@ -130,6 +130,16 @@ export class Controls{
 
   }
 
+  setPageLayout(w, h){
+    let canvasOverlay = document.getElementById("canvas_overlay");
+    canvasOverlay.style.width = w + "px";
+    canvasOverlay.style.height = h + "px";
+    canvasOverlay.style.bottom = h + "px";
+    canvasOverlay.style.visibility = "hidden";
+
+    let canvasContainer = document.getElementById("canvas_container");
+    canvasContainer.style.height = h + "px";
+  }
 
   onWindowResize(){
     var w = canvas.clientWidth;
@@ -139,6 +149,8 @@ export class Controls{
     }
     canvas.width = w * canvasMultiplier;
     canvas.height = h * canvasMultiplier;
+
+    this.setPageLayout(w, h);
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     this.camera.setAspect(gl.canvas.clientWidth / gl.canvas.clientHeight);

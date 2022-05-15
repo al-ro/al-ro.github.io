@@ -55,7 +55,7 @@ const stats = new Stats();
 stats.showPanel(0);
 stats.domElement.style.position = 'relative';
 stats.domElement.style.bottom = '48px';
-document.getElementById('cc_1').appendChild(stats.domElement);
+document.getElementById('canvas_container').appendChild(stats.domElement);
 
 const ratio = 2.0;
 const scaleZ = 2.0;

@@ -17,11 +17,12 @@ import {getSphericalHarmonicsMatrices} from "./iblUtils.js";
 import {programRepository} from "./programRepository.js"
 import {GLTF} from "./GLTF.js"
 import {RenderTarget} from "./target.js"
+import {getDownloadingCount} from "./download.js"
 
 const stats = new Stats();
 stats.showPanel(0);
-stats.dom.style.cssText="position: relative; bottom: 48px; left: 0; cursor: pointer; opacity: 1.0; z-index: 10000";
-document.getElementById('cc_1').appendChild(stats.dom);
+stats.dom.style.cssText="visibility: visible; position: absolute; bottom: 0px; left: 0; cursor: pointer; opacity: 1.0; z-index: 10000";
+document.getElementById('canvas_overlay').appendChild(stats.dom);
 
 // TODO:
 //      Pack uniforms to vec4
@@ -115,7 +116,7 @@ let opaqueMeshes = [];
 let transmissiveMeshes = [];
 let transparentMeshes = [];
 
-let info = {memory: "0", buffers: "0", textures: "0"};
+let info = {memory: "0", buffers: "0", textures: "0", downloadingCount: getDownloadingCount()};
 
 let modelSelector = {model: "Flight Helmet"};
 let environmentSelector = {environment: "Venice Sunrise"};
@@ -126,8 +127,9 @@ let modelManipulation = {scale: 1};
 //************* GUI ***************
 
 let gui = new lil.GUI({ autoPlace: false });
-let customContainer = document.getElementById('gui_container');
+let customContainer = document.getElementById('canvas_overlay');
 customContainer.appendChild(gui.domElement);
+gui.domElement.style.cssText="visibility: visible; position: absolute; top: 0px; right: 0;";
 gui.add(camera, 'exposure').min(0.0).max(2).step(0.01);
 gui.add(environmentSelector, 'environment').options(environmentNames).onChange(name => {environment.setHDR(environments.get(name));});
 gui.add(modelSelector, 'model').options(modelNames).onChange(name => {loadGLTF(name);});
@@ -137,7 +139,10 @@ const materialControls = gui.add(materialSelector, 'material').options(materialN
 gui.add(info, 'buffers').disable().listen();
 gui.add(info, 'textures').disable().listen();
 gui.add(info, 'memory').disable().listen();
+gui.add(info, 'downloadingCount').disable().listen();
 //gui.close();
+
+controls.onWindowResize();
 
 //************* GUI ***************
 
@@ -268,6 +273,14 @@ function draw(){
   stats.begin();
 
   frame++;
+
+  if(getDownloadingCount() != 0){
+    document.getElementById('loading_spinner').style.display="inline-block";
+  }else{
+    document.getElementById('loading_spinner').style.display="none";
+  }
+
+  info.downloadingCount = getDownloadingCount();
 
   if(frame % 30 == 0){
     info.memory = (extMEM.getMemoryInfo().memory.total * 1e-6).toPrecision(4) + " MB";

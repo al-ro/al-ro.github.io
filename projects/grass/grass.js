@@ -109,7 +109,7 @@ const stats = new Stats();
 stats.showPanel(0);
 stats.domElement.style.position = 'relative';
 stats.domElement.style.bottom = '48px';
-document.getElementById('cc_1').appendChild(stats.domElement);
+document.getElementById('canvas_container').appendChild(stats.domElement);
 
 //************* GUI ***************
 var gui = new dat.GUI({ autoPlace: false });
@@ -262,7 +262,7 @@ groundBaseGeometry.lookAt(new THREE.Vector3(0,1,0));
 groundBaseGeometry.verticesNeedUpdate = true;
 
 var groundGeometry = new THREE.PlaneBufferGeometry(width, width, resolution, resolution);
-groundGeometry.addAttribute('basePosition', groundBaseGeometry.getAttribute("position"));
+groundGeometry.setAttribute('basePosition', groundBaseGeometry.getAttribute("position"));
 groundGeometry.lookAt(new THREE.Vector3(0,1,0));
 groundGeometry.verticesNeedUpdate = true;
 var groundMaterial = new THREE.MeshPhongMaterial({color: 0x000900});
