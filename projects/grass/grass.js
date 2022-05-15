@@ -265,7 +265,7 @@ var groundGeometry = new THREE.PlaneBufferGeometry(width, width, resolution, res
 groundGeometry.setAttribute('basePosition', groundBaseGeometry.getAttribute("position"));
 groundGeometry.lookAt(new THREE.Vector3(0,1,0));
 groundGeometry.verticesNeedUpdate = true;
-var groundMaterial = new THREE.MeshPhongMaterial({color: 0x000900});
+var groundMaterial = new THREE.MeshPhongMaterial({color: new THREE.Color("rgb(10%, 25%, 2%)")});
 
 var sharedPrefix = `
   uniform sampler2D noiseTexture;
@@ -416,10 +416,10 @@ var grassVertexSource = sharedPrefix + `
     fractionalPos *= TWO_PI;
 
     //Wind is sine waves in time. 
-    float noise = sin(fractionalPos.x + time);
-    float halfAngle = noise * 0.1;
-    noise = 0.5 + 0.5 * cos(fractionalPos.y + 0.25 * time);
-    halfAngle -= noise * 0.2;
+    float noise = 0.5 + 0.5 * sin(fractionalPos.x + time);
+    float halfAngle = -noise * 0.1;
+    noise = 0.5 + 0.5 * cos(fractionalPos.y + time);
+    halfAngle -= noise * 0.05;
   
     direction = normalize(vec4(sin(halfAngle), 0.0, -sin(halfAngle), cos(halfAngle)));
   
@@ -492,8 +492,8 @@ var grassFragmentSource = `
     vec3 textureColour = pow(texture2D(map, vUv).rgb, vec3(2.2));
   
     //Add different green tones towards root
-    vec3 mixColour = idx > 0.75 ? vec3(0.07, 0.52, 0.06) : vec3(0.07, 0.43, 0.08);
-    textureColour = mix(pow(mixColour, vec3(2.2)), textureColour, frc);
+    vec3 mixColour = idx > 0.75 ? vec3(0.2, 0.8, 0.06) : vec3(0.5, 0.8, 0.08);
+    textureColour = mix(0.1 * mixColour, textureColour, 0.75);
   
     vec3 lightTimesTexture = lightColour * textureColour;
     vec3 ambient = textureColour;
@@ -530,14 +530,14 @@ var grassFragmentSource = `
   
     vec3 col = 0.3 * skyLight * textureColour + ambientStrength * ambient + diffuseStrength * diffuse + specularStrength * specular + diffuseTranslucency + forwardTranslucency;
   
+    //Add a shadow towards root
+    col = mix(0.35*vec3(0.1, 0.25, 0.02), col, frc);
+    
     //Tonemapping
     col = ACESFilm(col);
   
     //Gamma correction 1.0/2.2 = 0.4545...
     col = pow(col, vec3(0.4545));
-  
-    //Add a shadow towards root
-    col = mix(vec3(0.0, 0.2, 0.0), col, frc);
   
     gl_FragColor = vec4(col, 1.0);
   }
