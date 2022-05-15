@@ -28,7 +28,7 @@ var blu = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
   var height_ = 600;
   var maxDim;
   var large = false;
-  var canvasContainer = document.getElementById('cc_1');
+  var canvasContainer = document.getElementById('canvas_container');
   maxDim = Math.max(canvasContainer.offsetWidth,canvasContainer.offsetHeight);
 
   canvas_1.width = width_;

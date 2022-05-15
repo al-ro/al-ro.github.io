@@ -31,7 +31,7 @@
   var width;
   var height;
   var maxDim;
-  var canvasContainer = document.getElementById('cc_1');
+  var canvasContainer = document.getElementById('canvas_container');
   maxDim = Math.max(canvasContainer.offsetWidth,canvasContainer.offsetHeight);
   if(mobile){
     width = 300;

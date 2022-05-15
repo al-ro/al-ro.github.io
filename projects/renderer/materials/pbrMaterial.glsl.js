@@ -38,7 +38,7 @@ function getVertexSource(){
 
   varying vec3  vPosition;
 
-  //https://www.geeks3d.com/20141201/how-to-rotate-a-vertex-by-a-quaternion-in-glsl/
+  // https://www.geeks3d.com/20141201/how-to-rotate-a-vertex-by-a-quaternion-in-glsl/
   vec3 rotateVectorByQuaternion(vec3 v, vec4 q){
     return 2.0 * cross(q.xyz, v * q.w + cross(q.xyz, v)) + v;
   }
@@ -64,16 +64,16 @@ function getVertexSource(){
 
 #ifdef HAS_TANGENTS
     vec3 N = normalize(vec3(modelMatrix * vec4(NORMAL, 0.0)));
-    //https://learnopengl.com/Advanced-Lighting/Normal-Mapping
-    //Create matrix to transform normal to tangent space i.e. transform static normal map data into the underlying triangle frame
+    // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+    // Create matrix to transform normal to tangent space i.e. transform static normal map data into the underlying triangle frame
     vec3 T = normalize(vec3(modelMatrix * vec4(TANGENT.xyz, 0.0)));
-    //The triangle normal
-    //Re-orthogonalize T with respect to N (for small optional correction)
+    // The triangle normal
+    // Re-orthogonalize T with respect to N (for small optional correction)
     T = normalize(T - dot(T, N) * N);
-    //The bitangent vector is perpendicular to N and T
-    //The w value of the tangent is the "handedness"
+    // The bitangent vector is perpendicular to N and T
+    // The w value of the tangent is the "handedness"
     vec3 B = normalize(cross(N, T)) * TANGENT.w;
-    //Create matrix from three vectors
+    // Create matrix from three vectors
     tbn = mat3(T, B, N);
 #endif 
 
@@ -226,7 +226,7 @@ function getFragmentSource(){
 
   vec3 getEnvironment(vec3 rayDir, float roughness){
 
-    //There are 6 levels of roughness (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+    // There are 6 levels of roughness (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
     float level = roughness * 5.0;
     level = max(0.0, min(level, 5.0));
 
@@ -242,15 +242,15 @@ function getFragmentSource(){
 #endif
 
 
-  //---------------------------- PBR ----------------------------
+  // ---------------------------- PBR ----------------------------
 
-  //Trowbridge-Reitz
+  // Trowbridge-Reitz
   float distribution(vec3 n, vec3 h, float roughness){
     float a2 = roughness * roughness;
     return a2 / (PI * pow(pow(dot_c(n, h), 2.0) * (a2 - 1.0) + 1.0, 2.0));
   }
 
-  //GGX and Schlick-Beckmann
+  // GGX and Schlick-Beckmann
   float geometry(float cosTheta, float k){
     return cosTheta / (cosTheta * (1.0 - k) + k);
   }
@@ -260,8 +260,8 @@ function getFragmentSource(){
     return geometry(dot_c(n, lightDir), k) * geometry(dot_c(n, viewDir), k);
   }
 
-  //Anisotropic distribution and visibility functions from Filament
-  //GGX
+  // Anisotropic distribution and visibility functions from Filament
+  // GGX
   float distributionAnisotropic(float NoH, vec3 h, vec3 t, vec3 b, float at, float ab) {
     float ToH = dot(t, h);
     float BoH = dot(b, h);
@@ -272,7 +272,7 @@ function getFragmentSource(){
     return a2 * w2 * w2 * (1.0 / PI);
   }
 
-  //Smiths GGX correlated anisotropic
+  // Smiths GGX correlated anisotropic
   float smithsAnisotropic(float at, float ab, float ToV, float BoV, float ToL, float BoL, float NoV, float NoL) {
     float lambdaV = NoL * length(vec3(at * ToV, ab * BoV, NoV));
     float lambdaL = NoV * length(vec3(at * ToL, ab * BoL, NoL));
@@ -280,7 +280,7 @@ function getFragmentSource(){
     return saturate(v);
   }
 
-  //Fresnel-Schlick
+  // Fresnel-Schlick
   vec3 fresnel(float cosTheta, vec3 F0){
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
   } 
@@ -294,19 +294,19 @@ function getFragmentSource(){
     return albedo / PI;
   }
 
-  //Cook-Torrance BRDF
+  // Cook-Torrance BRDF
   float specularBRDF(vec3 n, vec3 viewDir, vec3 lightDir, vec3 h, float roughness){
 
-    //Normal distribution
-    //What fraction of microfacets are aligned in the correct direction
+    // Normal distribution
+    // What fraction of microfacets are aligned in the correct direction
     float D;
 
-    //Geometry term
-    //What fraction of the microfacets are lit and visible
+    // Geometry term
+    // What fraction of the microfacets are lit and visible
     float G;
 
-    //Visibility term. 
-    //In Filament it combines the geometry term and the denominator
+    // Visibility term. 
+    // In Filament it combines the geometry term and the denominator
     float V;
 
     D = distribution(n, h, roughness);
@@ -316,7 +316,7 @@ function getFragmentSource(){
     return D * V;
   }
 
-  //---------------------------- Lighting ----------------------------
+  // ---------------------------- Lighting ----------------------------
 
   vec3 getIrradiance(vec3 rayDir, vec3 normal, vec4 albedo){
 
@@ -349,29 +349,29 @@ function getFragmentSource(){
     vec3 radiance = vec3(0);
     vec3 lightDir = vec3(0);
 
-    //Index of refraction for common dielectrics. Corresponds to f0 4%
+    // Index of refraction for common dielectrics. Corresponds to f0 4%
     float IOR = 1.5;
 
     // Reflectance of the surface when looking straight at it along the negative normal
     vec3 F0 = vec3(pow(IOR - 1.0, 2.0) / pow(IOR + 1.0, 2.0));
 
-    //Metals tint specular reflections.
-    //https://docs.unrealengine.com/en-US/RenderingAndGraphics/Materials/PhysicallyBased/index.html 
+    // Metals tint specular reflections.
+    // https://docs.unrealengine.com/en-US/RenderingAndGraphics/Materials/PhysicallyBased/index.html 
     F0 = mix(F0, albedo.rgb, metal);
 
     lightDir = normalize(vec3(sin(time), 0.5, cos(time)));
 
     vec2 envBRDF = getBRDFIntegrationMap(vec2(dot_c(normal, -rayDir), roughness));
-    //https://google.github.io/filament/Filament.html#materialsystem/improvingthebrdfs/energylossinspecularreflectance
+    // https://google.github.io/filament/Filament.html#materialsystem/improvingthebrdfs/energylossinspecularreflectance
     vec3 energyCompensation = 1.0 + F0 * (1.0 / envBRDF.x - 1.0);
 
     vec3 h = normalize(-rayDir + lightDir);
     float cosTheta = dot_c(h, -rayDir);
 
-    //How reflective are the microfacets viewed from the current angle
+    // How reflective are the microfacets viewed from the current angle
     vec3 F = fresnelSchlickRoughness(cosTheta, F0, roughness);
 
-    //Specular reflectance
+    // Specular reflectance
     vec3 specular = F * specularBRDF(normal, -rayDir, lightDir, h, roughness); 
 
     // Scale the specular lobe to account for multiscattering
@@ -393,7 +393,7 @@ function getFragmentSource(){
     diffuse = mix(diffuse, transmitted, transmission);
 #endif
 
-    //Combine diffuse and specular
+    // Combine diffuse and specular
     vec3 kD = (1.0 - F) * (1.0 - metal);
     vec3 direct = kD * diffuse + specular;
 
@@ -425,7 +425,7 @@ function getFragmentSource(){
     return  occlusion * ambient + I;
   }
 
-  //https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+  // https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
   vec3 ACESFilm(vec3 x){
     return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
   }
@@ -440,8 +440,8 @@ function getFragmentSource(){
 #endif
 
 #ifdef HAS_NORMAL_TEXTURE
-    //https://learnopengl.com/Advanced-Lighting/Normal-Mapping
-    //Transform RGB normal map data from [0, 1] to [-1, 1]
+    // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+    // Transform RGB normal map data from [0, 1] to [-1, 1]
     vec3 normalColor = normalize(vec3(vec2(normalScale), 1.0) * (texture2D(normalTexture, vUV).rgb * 2.0 - 1.0));
 #ifdef HAS_TANGENTS
     // Transform the normal vector in the RGB channels to tangent space

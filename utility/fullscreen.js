@@ -33,7 +33,7 @@ var noFullscreenSupport = function() {
   alert('Your browser does not support the Fullscreen API.');
 };
 
-var gui_ = document.getElementById("gui_container");
+var gui_container = document.getElementById("gui_container");
 var fullscreenButton = document.getElementById('fullscreen-button');
 document.addEventListener('fullscreenchange', exitHandler);
 document.addEventListener('webkitfullscreenchange', exitHandler);
@@ -41,10 +41,14 @@ document.addEventListener('mozfullscreenchange', exitHandler);
 document.addEventListener('MSFullscreenChange', exitHandler);
 
 function exitHandler() {
-  gui_.classList.toggle("gui_c");
-  gui_.classList.toggle("fullscreen_gui_c");
-  fullscreenButton.classList.toggle("fullscreen-button");
-  fullscreenButton.classList.toggle("fullscreen-fullscreen-button");
+  if(gui_container != null){
+    gui_container.classList.toggle("gui_container");
+    gui_container.classList.toggle("fullscreen_gui_container");
+  }
+  if(!fullscreenButton.classList.contains("fullscreen-button-overlay")){
+    fullscreenButton.classList.toggle("fullscreen-button");
+    fullscreenButton.classList.toggle("fullscreen-fullscreen-button");
+  }
 }  
 
 function escHandler() {
@@ -57,7 +61,7 @@ function toggle_fullscreen(e) {
   if(isInFullscreen()) {
     exitFullscreen();
   } else {
-    enterFullscreen(document.getElementById("cc_1"));
+    enterFullscreen(document.getElementById("canvas_container"));
   } 
 }
 
@@ -81,11 +85,11 @@ var eventList = ["fullscreenchange", "MSFullscreenChange", "mozfullscreenchange"
 for(event of eventList) {
   window.addEventListener(event, function() {
       if(fullscreenButton.querySelector('.fa').classList.contains('fa-compress')) {
-      fullscreenButton.querySelector('.fa').classList.add('fa-expand');
-      fullscreenButton.querySelector('.fa').classList.remove('fa-compress');
+        fullscreenButton.querySelector('.fa').classList.add('fa-expand');
+        fullscreenButton.querySelector('.fa').classList.remove('fa-compress');
       } else if(fullscreenButton.querySelector('.fa').classList.contains('fa-expand')) {
-      fullscreenButton.querySelector('.fa').classList.remove('fa-expand');
-      fullscreenButton.querySelector('.fa').classList.add('fa-compress');
+        fullscreenButton.querySelector('.fa').classList.remove('fa-expand');
+        fullscreenButton.querySelector('.fa').classList.add('fa-compress');
       }
   });
 }

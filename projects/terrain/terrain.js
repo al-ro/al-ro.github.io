@@ -97,7 +97,7 @@ if(mobile){
   stats.domElement.style.bottom = '48px';
 
   if(!mobile){
-    document.getElementById('cc_1').appendChild(stats.domElement);
+    document.getElementById('canvas_container').appendChild(stats.domElement);
   }
 
   function getViewMatrixAsArray(){

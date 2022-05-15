@@ -1,7 +1,7 @@
 //Using textures by Ulrick Wery, Kuko Cai
 
 var canvas = document.getElementById("canvas_1");
-var cont = document.getElementById("cc_1");
+var cont = document.getElementById("canvas_container");
 
 const mobile = ( navigator.userAgent.match(/Android/i)
  || navigator.userAgent.match(/webOS/i)
@@ -118,7 +118,7 @@ const stats = new Stats();
 stats.showPanel(0);
 stats.domElement.style.position = 'relative';
 stats.domElement.style.bottom = '48px';
-document.getElementById('cc_1').appendChild(stats.domElement);
+document.getElementById('canvas_container').appendChild(stats.domElement);
 
 //Dat.gui library controls
 var gui = new dat.GUI({ autoPlace: false });

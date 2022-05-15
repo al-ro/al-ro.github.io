@@ -421,6 +421,20 @@ export class GLTF{
           materialParameters.transmissionFactor = transmission.transmissionFactor;
         }
       }
+      if(ext.KHR_texture_transform){
+        const transform = ext.KHR_texture_transform;
+        materialParameters.trans
+        if(transform.offset != null){
+          const textureID = jsonTextures[transform.transformTexture.index].source;
+          materialParameters.transformTexture = this.textures[textureID];
+        }
+        if(transform.rotation != null){
+          materialParameters.transformRotation = transform.rotation;
+        }
+        if(transform.scale != null){
+          materialParameters.transformScale= transform.scale;
+        }
+      }
     }
 
     let pbrDesc = material.pbrMetallicRoughness;
