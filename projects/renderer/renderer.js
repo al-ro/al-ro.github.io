@@ -58,9 +58,9 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 //      Basic geometries (sphere, quad, cylinder, cone, torus, knot)
 
 let models = new Map();
-models.set("Flight Helmet", "./gltf/flighthelmet/FlightHelmet.gltf");
+models.set("Flight Helmet", "https://gltf-al-ro.vercel.app/flighthelmet/FlightHelmet.gltf");
 models.set("Boombox", "./gltf/boombox/BoomBox.gltf");
-models.set("Sponza", "./gltf/sponza/Sponza.gltf");
+models.set("Sponza", "/Sponza.gltf");
 models.set("Damaged Helmet", "./gltf/helmet/DamagedHelmet.gltf");
 models.set("Toy Car", "./gltf/toycar/ToyCar.gltf");
 models.set("Fox", "./gltf/fox/Fox.gltf");

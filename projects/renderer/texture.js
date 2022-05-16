@@ -97,6 +97,7 @@ function loadTexture(url) {
     console.error("Error fetching image: ", this);
   }
 
+  image.crossOrigin = "";
   image.src = url;
   pushDownload();
 
