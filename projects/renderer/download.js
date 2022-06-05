@@ -72,9 +72,7 @@ function download(url, type, signal = null){
 }
 
 function handleError(e){
-  if(e.message == "The user aborted a request."){
-    console.log("Download aborted.");
-  }else{
+  if(!e.message == "The user aborted a request."){
     console.log('Download error: ' + e.message);
   }
 }
