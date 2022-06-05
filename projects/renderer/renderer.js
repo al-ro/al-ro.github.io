@@ -58,9 +58,9 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 //      Basic geometries (sphere, quad, cylinder, cone, torus, knot)
 
 let models = new Map();
-models.set("Flight Helmet", "https://gltf-al-ro.vercel.app/flighthelmet/FlightHelmet.gltf");
+models.set("Flight Helmet", "./gltf/flighthelmet/FlightHelmet.gltf");
 models.set("Boombox", "./gltf/boombox/BoomBox.gltf");
-models.set("Sponza", "https://gltf-al-ro.vercel.app/sponza/Sponza.gltf");
+models.set("Sponza", "./gltf/sponza/Sponza.gltf");
 models.set("Damaged Helmet", "./gltf/helmet/DamagedHelmet.gltf");
 models.set("Toy Car", "./gltf/toycar/ToyCar.gltf");
 models.set("Fox", "./gltf/fox/Fox.gltf");
@@ -86,7 +86,7 @@ environments.set("San Giuseppe Bridge", "./environmentMaps/san_giuseppe_bridge_1
 environments.set("Spruit Sunrise", "./environmentMaps/spruit_sunrise_1k.hdr");
 environments.set("Small Studio", "./environmentMaps/studio_small_03_1k.hdr");
 environments.set("Cape Hill", "./environmentMaps/cape_hill_1k.hdr");
-environments.set("Lilienstein", "./environmentMaps/1k.hdr");
+environments.set("Lilienstein", "./environmentMaps/lilienstein_1k.hdr");
 environments.set("Uffizi Gallery", "./environmentMaps/uffizi_probe.hdr");
 let environmentNames = Array.from(environments.keys());
 environmentNames.sort();
@@ -165,7 +165,7 @@ function loadGLTF(model){
   }
 
   let path = models.get(modelSelector.model);
-  gltf = new GLTF(path, environment);  
+  gltf = new GLTF(path, environment);
   
   gltf.ready.then(p => {
     if(gltf != null){
@@ -360,7 +360,6 @@ function draw(){
   }
 
   gl.disable(gl.BLEND);
-
 
   // Output render target colour texture to screen
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);

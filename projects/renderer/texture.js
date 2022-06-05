@@ -1,5 +1,5 @@
 import {gl} from "./canvas.js";
-import {pushDownload, popDownload} from "./download.js";
+import {download} from "./download.js"
 
 function createAndSetupTexture() {
   var texture = gl.createTexture();
@@ -46,10 +46,14 @@ function createAndSetupCubemap() {
 
 
 //
-// Initialize a texture and load an image.
-// When the image finished loading copy it into the texture.
-//
-function loadTexture(url) {
+/**
+ * Initialize a texture and load an image.
+ * When the image finished loading copy it into the texture.
+ * @param {string} url URL to data
+ * @param {AbortSignal} signal abort signal
+ * @returns WebGL Texture object
+ */
+function loadTexture(url, signal = null) {
 
   let texture = gl.createTexture();
 
@@ -68,9 +72,9 @@ function loadTexture(url) {
   gl.bindTexture(gl.TEXTURE_2D, null);
 
   const image = new Image();
+  let objectURL;
 
   image.onload = function() {
-    popDownload();
     if(texture != null && gl.isTexture(texture)){
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
@@ -89,17 +93,19 @@ function loadTexture(url) {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       }
+      URL.revokeObjectURL(objectURL);
       gl.bindTexture(gl.TEXTURE_2D, null);
     }
   };
 
-  image.onerror = function(){
-    console.error("Error fetching image: ", this);
-  }
-
-  image.crossOrigin = "";
-  image.src = url;
-  pushDownload();
+  download(url, "blob", signal).then(data => {
+    if(!!data){
+      objectURL = URL.createObjectURL(data);
+      image.src = objectURL;
+    }
+  }).catch(e => {
+    console.error("Error fetching image: ", e.message);
+  });
 
   return texture;
 }

@@ -576,62 +576,62 @@
         {
             "sampler": 0,
             "source": 0,
-            "name": "FlightHelmet_Materials_RubberWoodMat_Normal.png"
+            "name": "FlightHelmet_Materials_RubberWoodMat_Normal.jpg"
         },
         {
             "sampler": 0,
             "source": 1,
-            "name": "FlightHelmet_Materials_RubberWoodMat_OcclusionRoughMetal.png"
+            "name": "FlightHelmet_Materials_RubberWoodMat_OcclusionRoughMetal.jpg"
         },
         {
             "sampler": 0,
             "source": 2,
-            "name": "FlightHelmet_Materials_RubberWoodMat_BaseColor.png"
+            "name": "FlightHelmet_Materials_RubberWoodMat_BaseColor.jpg"
         },
         {
             "sampler": 0,
             "source": 3,
-            "name": "FlightHelmet_Materials_GlassPlasticMat_Normal.png"
+            "name": "FlightHelmet_Materials_GlassPlasticMat_Normal.jpg"
         },
         {
             "sampler": 0,
             "source": 4,
-            "name": "FlightHelmet_Materials_GlassPlasticMat_OcclusionRoughMetal.png"
+            "name": "FlightHelmet_Materials_GlassPlasticMat_OcclusionRoughMetal.jpg"
         },
         {
             "sampler": 0,
             "source": 5,
-            "name": "FlightHelmet_Materials_GlassPlasticMat_BaseColor.png"
+            "name": "FlightHelmet_Materials_GlassPlasticMat_BaseColor.jpg"
         },
         {
             "sampler": 0,
             "source": 6,
-            "name": "FlightHelmet_Materials_MetalPartsMat_Normal.png"
+            "name": "FlightHelmet_Materials_MetalPartsMat_Normal.jpg"
         },
         {
             "sampler": 0,
             "source": 7,
-            "name": "FlightHelmet_Materials_MetalPartsMat_OcclusionRoughMetal.png"
+            "name": "FlightHelmet_Materials_MetalPartsMat_OcclusionRoughMetal.jpg"
         },
         {
             "sampler": 0,
             "source": 8,
-            "name": "FlightHelmet_Materials_MetalPartsMat_BaseColor.png"
+            "name": "FlightHelmet_Materials_MetalPartsMat_BaseColor.jpg"
         },
         {
             "sampler": 0,
             "source": 9,
-            "name": "FlightHelmet_Materials_LeatherPartsMat_Normal.png"
+            "name": "FlightHelmet_Materials_LeatherPartsMat_Normal.jpg"
         },
         {
             "sampler": 0,
             "source": 10,
-            "name": "FlightHelmet_Materials_LeatherPartsMat_OcclusionRoughMetal.png"
+            "name": "FlightHelmet_Materials_LeatherPartsMat_OcclusionRoughMetal.jpg"
         },
         {
             "sampler": 0,
             "source": 11,
-            "name": "FlightHelmet_Materials_LeatherPartsMat_BaseColor.png"
+            "name": "FlightHelmet_Materials_LeatherPartsMat_BaseColor.jpg"
         },
         {
             "sampler": 0,
@@ -641,7 +641,7 @@
         {
             "sampler": 0,
             "source": 13,
-            "name": "FlightHelmet_Materials_LensesMat_OcclusionRoughMetal.png"
+            "name": "FlightHelmet_Materials_LensesMat_OcclusionRoughMetal.jpg"
         },
         {
             "sampler": 0,
@@ -651,46 +651,46 @@
     ],
     "images": [
         {
-            "uri": "FlightHelmet_Materials_RubberWoodMat_Normal.png"
+            "uri": "FlightHelmet_Materials_RubberWoodMat_Normal.jpg"
         },
         {
-            "uri": "FlightHelmet_Materials_RubberWoodMat_OcclusionRoughMetal.png"
+            "uri": "FlightHelmet_Materials_RubberWoodMat_OcclusionRoughMetal.jpg"
         },
         {
-            "uri": "FlightHelmet_Materials_RubberWoodMat_BaseColor.png"
+            "uri": "FlightHelmet_Materials_RubberWoodMat_BaseColor.jpg"
         },
         {
-            "uri": "FlightHelmet_Materials_GlassPlasticMat_Normal.png"
+            "uri": "FlightHelmet_Materials_GlassPlasticMat_Normal.jpg"
         },
         {
-            "uri": "FlightHelmet_Materials_GlassPlasticMat_OcclusionRoughMetal.png"
+            "uri": "FlightHelmet_Materials_GlassPlasticMat_OcclusionRoughMetal.jpg"
         },
         {
-            "uri": "FlightHelmet_Materials_GlassPlasticMat_BaseColor.png"
+            "uri": "FlightHelmet_Materials_GlassPlasticMat_BaseColor.jpg"
         },
         {
-            "uri": "FlightHelmet_Materials_MetalPartsMat_Normal.png"
+            "uri": "FlightHelmet_Materials_MetalPartsMat_Normal.jpg"
         },
         {
-            "uri": "FlightHelmet_Materials_MetalPartsMat_OcclusionRoughMetal.png"
+            "uri": "FlightHelmet_Materials_MetalPartsMat_OcclusionRoughMetal.jpg"
         },
         {
-            "uri": "FlightHelmet_Materials_MetalPartsMat_BaseColor.png"
+            "uri": "FlightHelmet_Materials_MetalPartsMat_BaseColor.jpg"
         },
         {
-            "uri": "FlightHelmet_Materials_LeatherPartsMat_Normal.png"
+            "uri": "FlightHelmet_Materials_LeatherPartsMat_Normal.jpg"
         },
         {
-            "uri": "FlightHelmet_Materials_LeatherPartsMat_OcclusionRoughMetal.png"
+            "uri": "FlightHelmet_Materials_LeatherPartsMat_OcclusionRoughMetal.jpg"
         },
         {
-            "uri": "FlightHelmet_Materials_LeatherPartsMat_BaseColor.png"
+            "uri": "FlightHelmet_Materials_LeatherPartsMat_BaseColor.jpg"
         },
         {
             "uri": "FlightHelmet_Materials_LensesMat_Normal.png"
         },
         {
-            "uri": "FlightHelmet_Materials_LensesMat_OcclusionRoughMetal.png"
+            "uri": "FlightHelmet_Materials_LensesMat_OcclusionRoughMetal.jpg"
         },
         {
             "uri": "FlightHelmet_Materials_LensesMat_BaseColor.png"

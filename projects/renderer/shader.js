@@ -1,7 +1,11 @@
 import {gl} from "./canvas.js"
 
-
-// Add hash defines to toggle specific parts of the shaders according to geometry and material data
+/**
+ * Generate hash defines to toggle specific parts of shaders according to geometry and material data
+ * @param {Material} material Material object
+ * @param {string[]} attributes array of vertex attribute names
+ * @returns prefix for shader string
+ */
 function getDefinePrefix(material, attributes){
 
   var prefix = "// " + material.constructor.name + " \n";
@@ -85,7 +89,7 @@ function getNormalTransform(parameters){
   let normalTransform = `
     vec4 transformedNormal = normalMatrix * vec4(vertexNormal, 0.0);
   `
-    if(parameters && parameters.hasOwnProperty("instanced") && parameters.instanced){
+    if(parameters != null && parameters.instanced){
       // For instancing, we apply the same rotation as for the positions but an inverted scaling
       // https://paroj.github.io/gltut/Illumination/Tut09%20Normal%20Transformation.html
       normalTransform = `
@@ -103,7 +107,7 @@ function getPositionTransform(parameters){
   let positionTransform = `
     vec4 pos = modelMatrix * vec4(position, 1.0);
   `;
-  if(parameters && parameters.hasOwnProperty("instanced") && parameters.instanced){
+  if(parameters != null && parameters.instanced){
     positionTransform = `
       vec4 pos = modelMatrix * vec4(position*scale, 1.0);
       pos.xyz = rotateVectorByQuaternion(pos.xyz, orientation);

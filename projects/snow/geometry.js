@@ -56,18 +56,18 @@ export class Geometry{
 
     this.geometryData = geometryData;
 
-    if(!geometryData.hasOwnProperty("vertices")){
+    if(geometryData.vertices == null){
       console.error("ERROR: no property \"vertices\" provided for geometry.");
     }
 
-    if(!geometryData.hasOwnProperty("length")){
+    if(geometryData.length == null){
       console.error("ERROR: no property \"length\" provided for geometry.");
     }
 
     this.vertices = geometryData.vertices;
     this.length = geometryData.length;
 
-    if(geometryData.hasOwnProperty("indices") && geometryData.indices){
+    if(geometryData.indices != null){
       this.hasIndices = true;
       this.indices = geometryData.indices;
       if(this.indices.BYTES_PER_ELEMENT == 1){
@@ -81,42 +81,42 @@ export class Geometry{
       this.length = this.vertices.length/3;
     }
 
-    if(geometryData.hasOwnProperty("primitiveType") && geometryData.primitiveType != null){
+    if(geometryData.primitiveType != null){
       this.primitiveType = geometryData.primitiveType;
     }
 
-    if(geometryData.hasOwnProperty("normals") && geometryData.normals){
+    if(geometryData.normals != null){
       this.hasNormals = true;
       this.normals = geometryData.normals;
     }
 
-    if(geometryData.hasOwnProperty("uvs") && geometryData.uvs){
+    if(geometryData.uvs != null){
       this.hasUVs = true;
       this.uvs = geometryData.uvs;
     }
 
-    if(geometryData.hasOwnProperty("tangents") && geometryData.tangents){
+    if(geometryData.tangents != null){
       this.hasTangents = true;
       this.tangents = geometryData.tangents;
     }
 
-    if(geometryData.hasOwnProperty("instances")){
+    if(geometryData.instances != null){
       this.instanced = true;
       this.instances = geometryData.instances;
     }
 
     if(this.instanced){
-      if(geometryData.hasOwnProperty("orientations")){
+      if(geometryData.orientations != null){
         this.hasOrientations = true;
         this.orientations = geometryData.orientations;
       }
 
-      if(geometryData.hasOwnProperty("offsets")){
+      if(geometryData.offsets != null){
         this.hasOffsets = true;
         this.offsets = geometryData.offsets;
       }
 
-      if(geometryData.hasOwnProperty("scales")){
+      if(geometryData.scales != null){
         this.hasScales = true;
         this.scales = geometryData.scales;
       }
@@ -186,7 +186,7 @@ export class Geometry{
 
     // ---------- Mandatory vertex data ----------
 
-    if(handles.hasOwnProperty("positionHandle")){
+    if(handles.positionHandle != null){
       gl.enableVertexAttribArray(handles.positionHandle);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
       gl.vertexAttribPointer(handles.positionHandle, 3, gl.FLOAT, false, 0, 0);
@@ -202,7 +202,7 @@ export class Geometry{
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
     }
 
-    if(handles.hasOwnProperty("vertexNormalHandle")){
+    if(handles.vertexNormalHandle != null){
       if(this.hasNormals){
         gl.enableVertexAttribArray(handles.vertexNormalHandle);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
@@ -212,7 +212,7 @@ export class Geometry{
       }
     }
 
-    if(handles.hasOwnProperty("vertexUVHandle")){
+    if(handles.vertexUVHandle != null){
       if(this.hasUVs){
         gl.enableVertexAttribArray(handles.vertexUVHandle);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
@@ -222,7 +222,7 @@ export class Geometry{
       }
     }
 
-    if(handles.hasOwnProperty("vertexTangentHandle")){
+    if(handles.vertexTangentHandle != null){
       if(this.hasTangents){
         gl.enableVertexAttribArray(handles.vertexTangentHandle);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.tangentBuffer);
@@ -234,7 +234,7 @@ export class Geometry{
 
     // ---------- Instanced geometry attributes ----------
 
-    if(handles.hasOwnProperty("orientationHandle")){
+    if(handles.orientationHandle != null){
       if(this.hasOrientations){
         gl.enableVertexAttribArray(handles.orientationHandle);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.orientationBuffer);
@@ -245,7 +245,7 @@ export class Geometry{
       }
     }
 
-    if(handles.hasOwnProperty("offsetHandle")){
+    if(handles.offsetHandle != null){
       if(this.hasOffsets){
         gl.enableVertexAttribArray(handles.offsetHandle);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.offsetBuffer);
@@ -256,7 +256,7 @@ export class Geometry{
       }
     }
 
-    if(handles.hasOwnProperty("scaleHandle")){
+    if(handles.scaleHandle != null){
       if(this.hasScales){
         gl.enableVertexAttribArray(handles.scaleHandle);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.scaleBuffer);

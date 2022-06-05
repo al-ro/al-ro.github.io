@@ -372,19 +372,19 @@
   ],
   "images": [
     {
-      "uri": "textures/jsf_mainMat_baseColor.png"
+      "uri": "textures/jsf_mainMat_baseColor.jpg"
     },
     {
-      "uri": "textures/jsf_mainMat_metallicRoughness.png"
+      "uri": "textures/jsf_mainMat_metallicRoughness.jpg"
     },
     {
       "uri": "textures/jsf_mainMat_normal.png"
     },
     {
-      "uri": "textures/jsf_auxMat_baseColor.png"
+      "uri": "textures/jsf_auxMat_baseColor.jpg"
     },
     {
-      "uri": "textures/jsf_auxMat_metallicRoughness.png"
+      "uri": "textures/jsf_auxMat_metallicRoughness.jpg"
     },
     {
       "uri": "textures/jsf_auxMat_normal.png"

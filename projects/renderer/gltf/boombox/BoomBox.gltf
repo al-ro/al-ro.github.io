@@ -79,16 +79,16 @@
   ],
   "images": [
     {
-      "uri": "BoomBox_baseColor.png"
+      "uri": "BoomBox_baseColor.jpg"
     },
     {
-      "uri": "BoomBox_occlusionRoughnessMetallic.png"
+      "uri": "BoomBox_occlusionRoughnessMetallic.jpg"
     },
     {
       "uri": "BoomBox_normal.png"
     },
     {
-      "uri": "BoomBox_emissive.png"
+      "uri": "BoomBox_emissive.jpg"
     }
   ],
   "meshes": [

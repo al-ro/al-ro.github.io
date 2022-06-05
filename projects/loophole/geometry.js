@@ -25,22 +25,22 @@ export class Geometry{
 
     this.geometryData = geometryData;
 
-    if(!geometryData.hasOwnProperty("vertices")){
+    if(geometryData.vertices == null){
       console.error("ERROR: no property \"vertices\" provided for geometry.");
     }
 
-    if(!geometryData.hasOwnProperty("length")){
+    if(!geometryData.length == null){
       console.error("ERROR: no property \"length\" provided for geometry.");
     }
 
     this.vertices = geometryData.vertices;
     this.length = geometryData.length;
 
-    if(geometryData.hasOwnProperty("primitiveType") && geometryData.primitiveType != null){
+    if(geometryData.primitiveType != null){
       this.primitiveType = geometryData.primitiveType;
     }
 
-    if(geometryData.hasOwnProperty("uvs") && geometryData.uvs){
+    if(geometryData.uvs != null){
       this.hasUVs = true;
       this.uvs = geometryData.uvs;
     }
@@ -68,7 +68,7 @@ export class Geometry{
 
     // ---------- Mandatory vertex data ----------
 
-    if(handles.hasOwnProperty("positionHandle")){
+    if(handles.positionHandle != null){
       gl.enableVertexAttribArray(handles.positionHandle);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
       gl.vertexAttribPointer(handles.positionHandle, 3, gl.FLOAT, false, 0, 0);
@@ -78,7 +78,7 @@ export class Geometry{
 
     // ---------- Optional attributes ----------
 
-    if(handles.hasOwnProperty("vertexUVHandle")){
+    if(handles.vertexUVHandle != null){
       if(this.hasUVs){
         gl.enableVertexAttribArray(handles.vertexUVHandle);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
