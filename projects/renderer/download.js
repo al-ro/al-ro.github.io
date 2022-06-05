@@ -28,31 +28,40 @@ function getDownloadingCount(){
  */
 function download(url, type, signal = null){
   pushDownload();
-  let d = fetch(url, {signal});
-  return d.then(response => {
+  let data = null;
+  return fetch(url, {signal}).then(response => {
+
     if(response.ok){
+
       switch(type){
         case "gltf":
         case "json":
-          let json = response.json();
-          json.then(p => {popDownload();});
-          return json;
+          data = response.json();
+          break;
         case "arrayBuffer":
-          let arrayBuffer = response.arrayBuffer();
-          arrayBuffer.then(p => {popDownload();});
-          return arrayBuffer;
+          data = response.arrayBuffer();
+          break;
         case "blob":          
-          let blob = response.blob();
-          blob.then(p => {popDownload();});
-          return blob;
+          data = response.blob();
+          break;
         default:
           popDownload();
           console.log("Unknown file type: ", url, type);
-          return null;
         }
+
+        if(!!data){
+          data.then(p => {
+            popDownload();
+          });
+        }
+        return data;
+
      }else{
+
       console.log("Error downloading: ", url);
+
     }
+
   }).catch(e => {
     popDownload();
     if(e.message == "The user aborted a request."){
