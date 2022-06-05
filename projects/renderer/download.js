@@ -52,6 +52,9 @@ function download(url, type, signal = null){
         if(!!data){
           data.then(p => {
             popDownload();
+          }).catch(e => {
+            popDownload();
+            handleError(e);
           });
         }
         return data;
@@ -64,12 +67,16 @@ function download(url, type, signal = null){
 
   }).catch(e => {
     popDownload();
-    if(e.message == "The user aborted a request."){
-      console.log("Download aborted.")
-    }else{
-      console.log('Download error: ' + e.message);
-    }
+    handleError(e);
   });
+}
+
+function handleError(e){
+  if(e.message == "The user aborted a request."){
+    console.log("Download aborted.");
+  }else{
+    console.log('Download error: ' + e.message);
+  }
 }
 
 export {download, getDownloadingCount, pushDownload, popDownload}
