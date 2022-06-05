@@ -1,5 +1,8 @@
 import {gl} from "./canvas.js"
 
+/**
+ * Wrapper for GL FrameBuffer with attached textures
+ */
 export class RenderTarget{
 
   colorTexture;
@@ -17,7 +20,7 @@ export class RenderTarget{
       this.attachTexture(depthTexture, gl.DEPTH_ATTACHMENT);
     }
     if(gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE){
-      console.log("Render target frambeuffer incomplete:", this);
+      console.log("Render target framebuffer incomplete:", this);
     }
   }
 

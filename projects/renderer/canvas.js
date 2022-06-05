@@ -8,7 +8,11 @@ const enums = {
   MASK: "mask",
 }
 
-// A factor to multiply the canvas dimensions with. Values > 1.0 give MSAA as the canvas is interpolated with CSS. Values < 1.0 produce lower resolution images stretched across the viewport.
+/** 
+ * A factor to multiply the canvas dimensions with. 
+ * Values > 1.0 give MSAA as the canvas is interpolated with CSS. 
+ * Values < 1.0 produce lower resolution images stretched across the viewport.
+*/
 var canvasMultiplier = 2.0;
 
 let w = canvas.clientWidth;
@@ -20,7 +24,11 @@ canvas.height = (canvas.width / 1.6);
 // Initialize the GL context
 // Antialias flag is not guaranteed to actually antialias anything
 // https://www.khronos.org/registry/webgl/specs/latest/1.0/
-// "The depth, stencil and antialias attributes, when set to true, are requests, not requirements. The WebGL implementation should make a best effort to honor them. When any of these attributes is set to false, however, the WebGL implementation must not provide the associated functionality."
+// "The depth, stencil and antialias attributes, when set to true, 
+//  are requests, not requirements. The WebGL implementation should 
+//  make a best effort to honor them. When any of these attributes 
+//  is set to false, however, the WebGL implementation must not 
+//  provide the associated functionality."
 var gl = canvas.getContext('webgl', {antialias: true});
 if(!gl){
   console.error("Unable to initialize WebGL.");

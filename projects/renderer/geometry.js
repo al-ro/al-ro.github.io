@@ -1,6 +1,4 @@
 import {gl, extINS} from "./canvas.js"
-import {Attribute, supportedAttributes} from "./attribute.js"
-import {Indices} from "./indices.js"
 
 export class Geometry{
 
@@ -27,13 +25,13 @@ export class Geometry{
 
     this.length = geometryData.length;
 
-    if(geometryData.hasOwnProperty("indices") && geometryData.indices != null){
+    if(geometryData.indices != null){
       this.hasIndices = true;
       this.indices = geometryData.indices;
       this.indexType = geometryData.indices.getType();
     }
 
-    if(geometryData.hasOwnProperty("primitiveType") && geometryData.primitiveType != null){
+    if(geometryData.primitiveType != null){
       this.primitiveType = geometryData.primitiveType;
     }
 
@@ -75,7 +73,7 @@ export class Geometry{
 /*
     // ---------- Instanced geometry attributes ----------
 
-    if(handles.hasOwnProperty("orientationHandle")){
+    if(handles.orientationHandle != null){
       if(this.hasOrientations){
         gl.enableVertexAttribArray(handles.orientationHandle);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.orientationBuffer);

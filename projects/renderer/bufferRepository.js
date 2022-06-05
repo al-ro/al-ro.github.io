@@ -6,15 +6,25 @@
 
 import {gl} from "./canvas.js"
 
+/**
+ * Class which holds unique WebGLBuffer objects to avoid storing the repeatedly referenced 
+ * data multiple times
+ */
 class BufferRepository{
 
+  /**
+   * Map of WebGLBuffer objects where the key is "index, byteOffset, byteLength" of the underlying data
+   */
   buffers = new Map();
 
   constructor(){}
 
-  // If attribute has been attached to a VAO, it must be bound
-  // for the deletion to work. Otherwise it fails silently.
-  // Trying to delete an already deleted buffer has no effect.
+  /**
+   * If attribute has been attached to a VAO, it must be bound
+   * for the deletion to work. Otherwise it fails silently
+   * 
+   * Trying to delete an already deleted buffer has no effect
+   */
   destroy(){
     this.buffers.forEach((buffer) => {
       gl.deleteBuffer(buffer);
@@ -22,17 +32,19 @@ class BufferRepository{
     this.buffers = new Map();
   }
 
-  // Return buffer corresponding to passed index and range 
-  // If one does not exist, create it, enter it to the map
-  // and return it.
-
-  // parameters
-  //  index
-  //  byteOffset
-  //  byteLength
-  //  data
-  //  target
-  //  usage
+  /**
+   * Return buffer corresponding to passed index and range
+   * 
+   * If one does not exist, create it, enter it to the map
+   * and return it
+   * @param {{index: number, 
+   *          byteOffset: number, 
+   *          byteLength: number, 
+   *          data: ArrayBuffer, 
+   *          target: gl.ARRAY_BUFFER | gl.ELEMENT_ARRAY_BUFFER, 
+   *          usage: gl.STATIC_DRAW | gl.DYNAMC_DRAW}} parameters 
+   * @returns WebGLBuffer
+   */
   getBuffer(parameters){
 
     // Create an index combining buffer index and region

@@ -216,15 +216,15 @@ export class PBRMaterial extends Material{
     this.needsCamera = true;
     this.needsTime = true;
 
-    if(parameters.hasOwnProperty("alphaMode") && parameters.alphaMode){
+    if(parameters.alphaMode != null){
       this.alphaMode = parameters.alphaMode;
     }
 
-    if(parameters.hasOwnProperty("alphaCutoff") && parameters.alphaCutoff){
+    if(parameters.alphaCutoff != null){
       this.alphaCutoff = parameters.alphaCutoff;
     }
 
-    if(parameters.hasOwnProperty("doubleSided") && parameters.doubleSided){
+    if(parameters.doubleSided != null){
       this.doubleSided = parameters.doubleSided;
     }
 
@@ -234,7 +234,7 @@ export class PBRMaterial extends Material{
 
     this.environmentTextureUnit = this.textureUnits++;
 
-    if(parameters.hasOwnProperty("environment") && parameters.environment){
+    if(parameters.environment != null){
 
       this.environment = parameters.environment;
 
@@ -247,44 +247,45 @@ export class PBRMaterial extends Material{
       this.shBluMatrix = shMatrices.blue;
     }
 
-    if(parameters.hasOwnProperty("baseColorTexture") && parameters.baseColorTexture){
+    if(parameters.baseColorTexture != null){
       this.baseColorTexture = parameters.baseColorTexture;
       this.hasBaseColorTexture = true;
       this.baseColorTextureUnit = this.textureUnits++;
     }
 
-    if(parameters.hasOwnProperty("baseColorFactor") && parameters.baseColorFactor){
+    if(parameters.baseColorFactor != null){
       this.baseColorFactor = parameters.baseColorFactor;
     }
 
-    if(parameters.hasOwnProperty("normalTexture") && parameters.normalTexture){
+    if(parameters.normalTexture != null){
       this.hasNormalTexture = true;
       this.normalTextureUnit = this.textureUnits++;
       this.normalTexture = parameters.normalTexture;
-      if(parameters.hasOwnProperty("normalScale") && parameters.normalScale != null){
+      if(parameters.normalScale != null){
         this.normalScale = parameters.normalScale;
       }
     }
 
-    if(parameters.hasOwnProperty("emissiveTexture") && parameters.emissiveTexture){
+    if(parameters.emissiveTexture != null){
       this.hasEmission = true;
       this.hasEmissiveTexture = true;
       this.emissiveTextureUnit = this.textureUnits++;
       this.emissiveTexture = parameters.emissiveTexture;
     }
-    if(parameters.hasOwnProperty("emissiveFactor") && parameters.emissiveFactor != null){
+    if(parameters.emissiveFactor != null){
       this.hasEmission = true;
       this.hasEmissiveFactor = true;
       this.emissiveFactor = parameters.emissiveFactor;
     }
 
-    if(parameters.hasOwnProperty("transmissionTexture") && parameters.transmissionTexture){
+    if(parameters.transmissionTexture != null){
       this.hasTransmission = true;
       this.hasTransmissionTexture = true;
       this.transmissionTextureUnit = this.textureUnits++;
       this.transmissionTexture = parameters.transmissionTexture;
     }
-    if(parameters.hasOwnProperty("transmissionFactor") && parameters.transmissionFactor != null){
+
+    if(parameters.transmissionFactor != null){
       this.hasTransmission = true;
       this.hasTransmissionFactor = true;
       this.transmissionFactor = parameters.transmissionFactor;
@@ -294,21 +295,21 @@ export class PBRMaterial extends Material{
       this.backgroundTextureUnit = this.textureUnits++;
     }
 
-    if(parameters.hasOwnProperty("metallicRoughnessTexture") && parameters.metallicRoughnessTexture){
+    if(parameters.metallicRoughnessTexture != null){
       this.hasMetallicRoughnessTexture = true;
       this.metallicRoughnessTextureUnit = this.textureUnits++;
       this.metallicRoughnessTexture = parameters.metallicRoughnessTexture;
     }
 
-    if(parameters.hasOwnProperty("metallicFactor") && parameters.metallicFactor != null){
+    if(parameters.metallicFactor != null){
       this.metallicFactor = parameters.metallicFactor;
     }
 
-    if(parameters.hasOwnProperty("roughnessFactor") && parameters.roughnessFactor != null){
+    if(parameters.roughnessFactor != null){
       this.roughnessFactor = parameters.roughnessFactor;
     }
 
-    if(parameters.hasOwnProperty("occlusionTexture") && parameters.occlusionTexture){
+    if(parameters.occlusionTexture != null){
       this.hasAO = true;
       if(parameters.occlusionTexture == this.metallicRoughnessTexture){
         this.hasAOTexture = false;
@@ -317,7 +318,7 @@ export class PBRMaterial extends Material{
         this.occlusionTextureUnit = this.textureUnits++;
         this.occlusionTexture = parameters.occlusionTexture;
       }
-      if(parameters.hasOwnProperty("occlusionStrength") && parameters.occlusionStrength != null){
+      if(parameters.occlusionStrength != null){
         this.occlusionStrength = parameters.occlusionStrength;
       }
     }

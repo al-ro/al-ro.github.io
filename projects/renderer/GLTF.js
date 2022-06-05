@@ -27,46 +27,62 @@ import {loadTexture} from "./texture.js"
 
 const supportedExtensions = ["KHR_materials_transmission"];
 
+/** A class to download a GLTF file and construct internal geometry and material objects */
 export class GLTF{
 
-  // Description of the GLTF
+  /**  Description of the GLTF */
   json;
 
-  // Binary data for vertices, indices, normals etc.
+  /** WebGLBuffer objects for vertex attribues */
   buffers = [];
 
-  // WebGL textures for albedo, roughness and emissive maps etc.
+  /** WebGL textures for albedo, roughness and emissive maps etc. */
   textures = [];
 
-  // Scene graphs of nodes
+  /** Scene graphs of Node objects */
   nodes = [];
 
-  // Default scene to display
+  /** Scene to display */
   scene = 0;
 
-  // Drawable mesh objects
+  /** Drawable Mesh objects */
   meshes = [];
 
-  // Repository of gl.Buffer objects
+  /** Repository of WebGLBuffer objects */
   bufferRepository;
 
-  // IBL data for PBR material
+  /** Environment object which holds IBL data for PBRMaterial */
   environment;
 
-  // Promise which resolves when all downloads and processing has completed
+  /** Promise which resolves when all downloads and processing has completed */
   ready;
 
-  // A reference to the resolve function of the ready promise so it can be called
-  // explicitly once gltf downloads and processing have completed
+  /**
+   * A reference to the resolve function of the ready promise so it can be called
+   * explicitly once gltf downloads and processing have completed
+   */ 
   setReady;
 
-  // Extent of model vertices
+  /** Minimum extent of model vertices */
   min;
+
+  /** Maximum extent of model vertices */
   max;
+
+  /** Centre of the model vertices extent */
   centre;
 
+  /** Multiplier for the model vertices extent */
   scale = 1.0;
 
+  /** AbortController to cancel unfinished downloads on destruction */
+  controller;
+
+  /**
+   * Download GLTF and construct Mesh objects with a PBRMaterial using passsed environment data
+   * @param {string} path 
+   * @param {Environment} environment 
+   */
   constructor(path, environment){
 
     let gltf = this;
@@ -76,11 +92,14 @@ export class GLTF{
 
     let workingDirectory = path.substring(0, path.lastIndexOf("/") + 1);
 
-    // Downlod gltf file and construct internal objects
-    download(path, "gltf").then(data => this.processGLTF(data, workingDirectory));
+    this.controller = new AbortController();
+
+    download(path, "gltf", this.controller.signal).then(data => this.processGLTF(data, workingDirectory));
   }
 
   destroy(){
+    this.controller.abort();
+    this.controller = null;
     this.ready.then(() => {
       for(let i = 0; i < this.buffers.length; i++){
         this.buffers[i] = null;
@@ -106,6 +125,9 @@ export class GLTF{
     });
   }
 
+  /**
+   * @param {number} scale uniform scale of all nodes
+   */
   setScale(scale){
     this.scale = scale;
     let modelMatrix = m4.create();
@@ -120,7 +142,12 @@ export class GLTF{
     }
   }
 
-  // Parse the json, download images and buffers, construct meshes
+  /**
+   * Parse the JSON, download images and buffers, construct meshes
+   * @param {JSON} json gltf object
+   * @param {string} workingDirectory string of gltf base folder
+   * @param {number} scene which scene to process
+   */
   processGLTF(json, workingDirectory, scene){
 
     this.bufferRepository = new BufferRepository();
@@ -131,9 +158,9 @@ export class GLTF{
       for(const extension of json.extensionsUsed){
         let supported = supportedExtensions.includes(extension);
         if(supported){
-          console.log(extension, "is supported");
+          console.log(extension, ": supported");
         }else{
-          console.log(extension, "is NOT SUPPORTED");
+          console.log(extension, ": not supported");
         }
       }
     };
@@ -142,7 +169,7 @@ export class GLTF{
       for(const extension of json.extensionsRequired){
         let supported = supportedExtensions.includes(extension);
         if(supported){
-          console.log(extension, "is supported");
+          console.log(extension, ": supported");
         }else{
           console.error("Required extension", extension, "is NOT SUPPORTED");
         }
@@ -155,10 +182,8 @@ export class GLTF{
       this.scene = this.json.scene;
     }
 
-    // Start buffer fetch
-    if(json.buffers){
-
-      // Populate buffer array with promises of each gltf buffer to fetch
+    // Populate buffer array with promises of each gltf buffer to fetch
+    if(!!json.buffers){
       for(const buffer of json.buffers){
         let prefix = "";
 
@@ -166,25 +191,26 @@ export class GLTF{
           prefix = workingDirectory;
         }
         
-        this.buffers.push(download(prefix.concat(buffer.uri), "arrayBuffer")); 
+        this.buffers.push(download(prefix.concat(buffer.uri), "arrayBuffer", this.controller.signal)); 
       }
     }else{
       console.error("GLTF file has no buffers: ", json);
     }
 
-    // Start processing images which may reference buffers
-    if(json.images){
-      // Create textures and trigger data downloads but don't wait for them to finish.
-      // Image files take long to fetch and we can create a single pixel texture,
-      // render the geometry and replace the data with the image file when it has loaded.
+    /**
+     * Create textures and trigger data downloads but don't wait for them to finish.
+     * Image files take long to fetch and we can create a single pixel texture,
+     * render the geometry and replace the data with the image file when it has loaded.
+     */ 
+    if(json.images != null){
       for(const image of json.images){
-        if(image.hasOwnProperty("uri") && image.uri != null){
+        if(image.uri != null){
           let prefix = "";
 
           if(image.uri.substring(0, 5) != "data:"){
             prefix = workingDirectory;
           }
-          this.textures.push(loadTexture(prefix.concat(image.uri)));
+          this.textures.push(loadTexture(prefix.concat(image.uri), this.controller.signal));
         }else{
           //TODO: image from bufferview. Might not have loaded yet.
           console.error("Image from buffer: ", image);
@@ -192,24 +218,26 @@ export class GLTF{
       }
     }
 
-    if(json.buffers){
+    if(json.buffers != null){
 
       // Once we have the buffers, we can process the gltf
       Promise.all(this.buffers).then(buffers => {
 
-        // Replace promises with data
-        this.buffers = buffers;
+        // If there are buffers and none is null and the download has not been cancelled
+        if(!!buffers && !buffers.some(b => b == null) && !this.controller.signal.aborted){
+          // Replace promises with data
+          this.buffers = buffers;
 
-        this.nodes = this.processNodes(this.json.nodes);
-        this.setChildren(this.nodes);
+          this.nodes = this.processNodes(this.json.nodes);
+          this.setChildren(this.nodes);
 
-        for(const node of this.json.scenes[this.scene].nodes){
-          this.nodes[node].updateChildren();
+          for(const node of this.json.scenes[this.scene].nodes){
+            this.nodes[node].updateChildren();
+          }
+
+          this.calculateCentre();
+          this.scaleAndCentre();
         }
-
-        //console.log("Nodes: ", this.nodes); 
-        this.calculateCentre();
-        this.scaleAndCentre();
 
         // Resolve ready promise
         this.setReady();
@@ -220,7 +248,11 @@ export class GLTF{
  
   }
 
-  // Create array of Mesh and Node objects from the GLTF
+  /**
+   * Create array of Mesh and Node objects from the GLTF
+   * @param {object} gltfNodes Nodes of GLTF JSON
+   * @returns 
+   */
   processNodes(gltfNodes){
 
     const nodes = [];
@@ -233,16 +265,16 @@ export class GLTF{
       const params = {localModelMatrix: transform, childIndices: indices};
 
       // If node describes a mesh, process it
-      if(gltfNode.hasOwnProperty("mesh") && gltfNode.mesh != null){
+      if(gltfNode.mesh != null){
 
         // Get the primitives of the gltf mesh
         const primitive = this.processMesh(this.json.meshes[gltfNode.mesh]);
 
         if(primitive.length > 1){
-          // When there are multiple primitives, set them as the children of a new empty node
+          // When there are multiple primitives, set them as the children of a new empty Node
           const node = new Node(params);
           node.setChildren(primitive);
-          // Add the node to the scene graph
+          // Add the Node to the scene graph
           nodes.push(node);
         }else{
           // Otherwise set the Mesh object as a node of the scene graph
@@ -260,6 +292,10 @@ export class GLTF{
     return nodes;
   }
 
+  /**
+   * Replace stored child indices with Node objects to complete scene graph
+   * @param {Node[]} nodes scene graph
+   */
   setChildren(nodes){
     for(const node of nodes){
       if(node.childIndices.length > 0){
@@ -270,7 +306,6 @@ export class GLTF{
       }
     }
   }
-
 
   scaleAndCentre(){
 
@@ -305,12 +340,17 @@ export class GLTF{
                     this.min[2] + 0.5 * (this.max[2] - this.min[2])];
   }
 
+  /**
+   * Get transform matrix from TRS values or a defined matrix
+   * @param {Node} node 
+   * @returns transform matrix of node
+   */
   getTransform(node){
 
     let modelMatrix = m4.create();
 
     // When matrix has been given, use it instead of TRS
-    if(node.hasOwnProperty("matrix") && node.matrix){
+    if(node.matrix != null){
 
       modelMatrix = node.matrix;
 
@@ -320,15 +360,15 @@ export class GLTF{
       let rotation = [0, 0, 0];
       let scale = [1, 1, 1];
 
-      if(node.hasOwnProperty("rotation") && node.rotation){
+      if(node.rotation != null){
         rotation = quaternionToEuler(node.rotation);
       }
 
-      if(node.hasOwnProperty("scale") && node.scale){
+      if(node.scale != null){
         scale = node.scale;
       }
 
-      if(node.hasOwnProperty("translation") && node.translation){
+      if(node.translation != null){
         translation = node.translation;
       }
 
@@ -344,10 +384,18 @@ export class GLTF{
     return modelMatrix;
   }
 
+  /**
+   * Create vertex index object
+   * @param {object} accessor GLTF accessor object
+   * @returns Indices object described by the accessor
+   */
   createIndices(accessor){
 
     const bufferView = this.json.bufferViews[accessor.bufferView];
     const buffer = this.buffers[bufferView.buffer];
+    if(!buffer){
+      return null;
+    }
 
     let offset = bufferView.byteOffset != null ? bufferView.byteOffset : 0;
     offset += (accessor.byteOffset != null) ? accessor.byteOffset : 0;
@@ -360,11 +408,19 @@ export class GLTF{
     return new Indices(data, accessor.componentType);
   }
 
+  /**
+   * Create vertex attribute object
+   * @param {string} name attribute name
+   * @param {object} accessor GLTF accessor object
+   * @returns 
+   */
   createAttribute(name, accessor){
 
     const bufferView = this.json.bufferViews[accessor.bufferView];
     const buffer = this.buffers[bufferView.buffer];
-
+    if(!buffer){
+      return null;
+    }
     const offset = bufferView.byteOffset != null ? bufferView.byteOffset : 0;
     const target = bufferView.target != null ? bufferView.target : gl.ARRAY_BUFFER;
 
@@ -402,6 +458,11 @@ export class GLTF{
     return new Attribute(name, glBuffer, descriptor);
   }
 
+  /**
+   * Construct a PBRMaterial object based on GLTF material info
+   * @param {number} index 
+   * @returns PBRMaterial described by GLTF
+   */
   getMaterial(index){
 
     const material = this.json.materials[index];
@@ -432,7 +493,7 @@ export class GLTF{
           materialParameters.transformRotation = transform.rotation;
         }
         if(transform.scale != null){
-          materialParameters.transformScale= transform.scale;
+          materialParameters.transformScale = transform.scale;
         }
       }
     }
@@ -512,10 +573,13 @@ export class GLTF{
     }
 
     return new PBRMaterial(materialParameters);
-
   }
 
-  // Construct Mesh objects described by the gltf mesh
+  /**
+   * Construct Mesh objects described by the GLTF mesh
+   * @param {object} mesh GLTF mesh object
+   * @returns Array of Mesh objects
+   */
   processMesh(mesh){ 
 
     const accessors = this.json.accessors;
@@ -538,16 +602,14 @@ export class GLTF{
       };
 
       const attributes = primitive.attributes;
+
       // ----- Create vertex indices ----- //
 
       if(primitive.indices != null){
-
         const accessor = accessors[primitive.indices];
         geometryParams.indices = this.createIndices(accessor);
-
         // If indices have been provided, geometry length is index count
         geometryParams.length = accessor.count;
-
       }else{
         // If indices have not been provided, geometry length is vertex count
         // This assumes that a GLTF will have at least POSITION defined which
@@ -555,8 +617,7 @@ export class GLTF{
         geometryParams.length = accessors[attributes.POSITION].count;
       }
 
-      // ----- Create vertex attributes ----- //
-
+      // ---- Create vertex attributes ---- //
 
       for(const name of supportedAttributes){
         if(attributes.hasOwnProperty(name)){
@@ -585,6 +646,11 @@ export class GLTF{
   }
 }
 
+/**
+ * Get JS array type from GL type enum
+ * @param {GLenum} type 
+ * @returns JS type of passed enum
+ */
 function getTypedArray(type){
 
   switch(type){
@@ -604,6 +670,11 @@ function getTypedArray(type){
   }
 }
 
+/**
+ * Get the number of bytes corresponding to a GLTF data type
+ * @param {string} type 
+ * @returns number of bytes held by passed data type
+ */
 function getComponentCount(type){
 
     switch (type){
