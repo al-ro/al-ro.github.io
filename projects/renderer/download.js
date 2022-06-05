@@ -30,20 +30,26 @@ function download(url, type, signal = null){
   pushDownload();
   let d = fetch(url, {signal});
   return d.then(response => {
-    popDownload();
     if(response.ok){
       switch(type){
         case "gltf":
         case "json":
-        return response.json();
-      case "arrayBuffer":
-        return response.arrayBuffer();
-      case "blob":
-        return response.blob();
-      default:
-        console.log("Unknown file type: ", url, type);
-        return null;
-      }
+          let json = response.json();
+          json.then(p => {popDownload();});
+          return json;
+        case "arrayBuffer":
+          let arrayBuffer = response.arrayBuffer();
+          arrayBuffer.then(p => {popDownload();});
+          return arrayBuffer;
+        case "blob":          
+          let blob = response.blob();
+          blob.then(p => {popDownload();});
+          return blob;
+        default:
+          popDownload();
+          console.log("Unknown file type: ", url, type);
+          return null;
+        }
      }else{
       console.log("Error downloading: ", url);
     }
