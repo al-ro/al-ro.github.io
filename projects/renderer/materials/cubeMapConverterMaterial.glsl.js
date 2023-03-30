@@ -2,8 +2,8 @@ function getVertexSource(parameters){
 
   var vertexSource = `
 
-  attribute vec3 POSITION;
-  varying vec3 vPosition;
+  in vec3 POSITION;
+  out vec3 vPosition;
 
   void main(){ 
     vPosition = POSITION;
@@ -26,7 +26,8 @@ function getFragmentSource(){
   uniform mat4 cameraMatrix;
   uniform sampler2D sphericalTexture;
   uniform float textureType;
-  varying vec3 vPosition;
+  in vec3 vPosition;
+  out vec4 fragColor;
 
   void main(){ 
     vec3 rayDir = normalize(vec3(vPosition.rg, -1.0));
@@ -40,8 +41,8 @@ function getFragmentSource(){
       float r = 1.0 / PI * acos(rayDir.z) / sqrt(pow(rayDir.x, 2.0) + pow(rayDir.y, 2.0));
       texCoord = 0.5 + 0.5 * vec2(rayDir.x * r, rayDir.y * r);
     }
-    vec4 data = texture2D(sphericalTexture, texCoord);
-    gl_FragColor = vec4(data.rgb, 1.0);
+    vec4 data = texture(sphericalTexture, texCoord);
+    fragColor = vec4(data.rgb, 1.0);
   }
   `;
 

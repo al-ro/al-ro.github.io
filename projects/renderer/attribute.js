@@ -11,7 +11,17 @@ const supportedAttributes = [
   "TANGENT",
   "TEXCOORD_0",
   "TEXCOORD_1",
-  "COLOR_0"
+  "COLOR_0",
+  "BARYCENTRIC"
+];
+
+/**
+ * Attibutes which are generated for geometry if not provided
+ * 
+ * [BARYCENTRIC]
+ */
+const dynamicAttributes = [
+  "BARYCENTRIC"
 ];
 
 /**
@@ -118,4 +128,4 @@ class Attribute{
 
 }
 
-export {supportedAttributes, Attribute}
+export {supportedAttributes, dynamicAttributes, Attribute}

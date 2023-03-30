@@ -8,7 +8,7 @@ import {gl} from "./canvas.js"
  */
 function getDefinePrefix(material, attributes){
 
-  var prefix = "// " + material.constructor.name + " \n";
+  var prefix = "#version 300 es\n// " + material.constructor.name + " \n";
 
 
   if(material.isInstanced()){

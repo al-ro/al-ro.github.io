@@ -2,20 +2,20 @@ function getVertexSource(parameters){
 
   var vertexSource = `
   
-  attribute vec3 POSITION;
-  attribute vec2 TEXCOORD_0;
+  in vec3 POSITION;
+  in vec2 TEXCOORD_0;
 
   uniform mat4 modelMatrix;
   uniform mat4 viewMatrix;
   uniform mat4 projectionMatrix;
 
 #ifdef INSTANCED 
-  attribute vec4 orientation;
-  attribute vec3 offset;
-  attribute vec3 scale;
+  in vec4 orientation;
+  in vec3 offset;
+  in vec3 scale;
 #endif
 
-  varying vec2 vUV;
+  out vec2 vUV;
 
   void main(){
   
@@ -45,10 +45,11 @@ function getFragmentSource(){
     precision highp float;
     
     uniform sampler2D tex;
-    varying vec2 vUV;
+    in vec2 vUV;
+    out vec4 fragColor;
   
     void main(){
-      gl_FragColor = texture2D(tex, vUV);
+      fragColor = texture(tex, vUV);
     }
   `;
 

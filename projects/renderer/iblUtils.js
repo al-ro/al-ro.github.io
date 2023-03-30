@@ -29,7 +29,7 @@ var upDirections = [
 
 function getSphericalHarmonicsMatrices(cubeMap){
   // Generate R, G and B matrices to represent the spherical harmonics (SH) of a cube map
-  // Read the values from the colour attachment and copy them into m4 matrices
+  // Read the values from the color attachment and copy them into m4 matrices
   // Return an object with the matrices for ambient lighting shading
 
   let shRedMatrix;
@@ -47,7 +47,7 @@ function getSphericalHarmonicsMatrices(cubeMap){
   let texture = gl.createTexture();
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4, 3, 0, gl.RGBA, gl.FLOAT, null);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 4, 3, 0, gl.RGBA, gl.FLOAT, null);
 
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
@@ -111,7 +111,7 @@ function convertToCubeMap(sphericalTexture, cubeMap, type = "equirectangular"){
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.FLOAT, null);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, size, size, 0, gl.RGBA, gl.FLOAT, null);
 
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
@@ -120,7 +120,7 @@ function convertToCubeMap(sphericalTexture, cubeMap, type = "equirectangular"){
     let target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + face;
 
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
-    gl.texImage2D(target, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.FLOAT, null);
+    gl.texImage2D(target, 0, gl.RGBA32F, size, size, 0, gl.RGBA, gl.FLOAT, null);
     gl.copyTexSubImage2D(target, 0, 0, 0, 0, 0, size, size);
   }
 
@@ -162,7 +162,7 @@ function getCubeMapConvolution(cubeMap){
 
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.FLOAT, null);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, size, size, 0, gl.RGBA, gl.FLOAT, null);
 
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 

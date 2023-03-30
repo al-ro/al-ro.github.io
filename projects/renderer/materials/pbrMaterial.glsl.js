@@ -2,21 +2,21 @@ function getVertexSource(){
 
   var vertexSource = `
 
-  attribute vec3 POSITION;
+  in vec3 POSITION;
 
 #ifdef INSTANCED 
-  attribute vec4 orientation;
-  attribute vec3 offset;
-  attribute vec3 scale;
+  in vec4 orientation;
+  in vec3 offset;
+  in vec3 scale;
 #endif
 
 #ifdef HAS_NORMALS
-  attribute vec3 NORMAL;
+  in vec3 NORMAL;
   uniform mat4 normalMatrix;
 #endif
 
 #ifdef HAS_UVS
-  attribute vec2 TEXCOORD_0;
+  in vec2 TEXCOORD_0;
 #endif
 
   uniform mat4 modelMatrix;
@@ -24,19 +24,19 @@ function getVertexSource(){
   uniform mat4 projectionMatrix;
 
 #ifdef HAS_NORMALS
-  varying vec3 vNormal;
+  out vec3 vNormal;
 #endif
 
 #ifdef HAS_UVS
-  varying vec2 vUV;
+  out vec2 vUV;
 #endif
 
 #ifdef HAS_TANGENTS
-  attribute vec4 TANGENT;
-  varying mat3 tbn;
+  in vec4 TANGENT;
+  out mat3 tbn;
 #endif
 
-  varying vec3  vPosition;
+  out vec3  vPosition;
 
   // https://www.geeks3d.com/20141201/how-to-rotate-a-vertex-by-a-quaternion-in-glsl/
   vec3 rotateVectorByQuaternion(vec3 v, vec4 q){
@@ -100,27 +100,35 @@ function getVertexSource(){
 function getFragmentSource(){
 
   var fragmentSource = `
-#extension GL_EXT_shader_texture_lod : enable
-#extension GL_OES_standard_derivatives : enable
 
   precision highp float;
+
+  out vec4 fragColor;
 
 #define PI 3.14159
 #define TWO_PI (2.0 * PI)
 #define HALF_PI (0.5 * PI)
 
 #ifdef HAS_NORMALS
-  varying vec3 vNormal;
+  in vec3 vNormal;
+#endif
+
+#define DEBUG
+#ifdef DEBUG
+  uniform int outputVariable;
 #endif
 
   uniform float exposure;
   uniform float time;
   uniform vec3 cameraPosition;
+
+#ifdef HAS_TRANSMISSION
   uniform vec2 resolution;
-  varying vec3 vPosition;
+#endif
+  in vec3 vPosition;
 
 #ifdef HAS_UVS
-  varying vec2 vUV;
+  in vec2 vUV;
 #endif
 
   uniform sampler2D brdfIntegrationMapTexture;
@@ -138,7 +146,7 @@ function getFragmentSource(){
 #endif
 
 #ifdef HAS_TANGENTS
-  varying mat3 tbn;
+  in mat3 tbn;
 #endif
 
 #ifdef HAS_EMISSION
@@ -221,7 +229,7 @@ function getFragmentSource(){
   }
 
   vec2 getBRDFIntegrationMap(vec2 texCoord){
-    return texture2D(brdfIntegrationMapTexture, texCoord).rg;
+    return texture(brdfIntegrationMapTexture, texCoord).rg;
   }
 
   vec3 getEnvironment(vec3 rayDir, float roughness){
@@ -230,14 +238,13 @@ function getFragmentSource(){
     float level = roughness * 5.0;
     level = max(0.0, min(level, 5.0));
 
-    return textureCubeLodEXT(cubeMap, rayDir, level).rgb;
+    return textureLod(cubeMap, rayDir, level).rgb;
   }
 
 #ifdef HAS_TRANSMISSION
   vec3 getBackground(vec2 uv, float roughness){
     float level = roughness * 10.0;
-
-    return pow(texture2DLodEXT(backgroundTexture, uv, level).rgb, vec3(2.2));
+    return pow(textureLod(backgroundTexture, uv, level).rgb, vec3(2.2));
   }
 #endif
 
@@ -324,15 +331,15 @@ function getFragmentSource(){
     float roughness = roughnessFactor;
 
 #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
-    vec3 data = texture2D(metallicRoughnessTexture, vUV).rgb;
+    vec3 data = texture(metallicRoughnessTexture, vUV).rgb;
     roughness *= data.g;
     metal *= data.b; 
-#endif 
+#endif
 
     float occlusion = 1.0;
 
 #ifdef HAS_AO_TEXTURE
-    occlusion = texture2D(occlusionTexture, vUV).r;
+    occlusion = texture(occlusionTexture, vUV).r;
     occlusion = 1.0 + occlusionStrength * (occlusion - 1.0);
 #else
 
@@ -387,7 +394,7 @@ function getFragmentSource(){
 #endif
 
 #ifdef HAS_TRANSMISSION_TEXTURE
-    transmission *= texture2D(transmissionTexture, vUV).r;
+    transmission *= texture(transmissionTexture, vUV).r;
 #endif
 
     diffuse = mix(diffuse, transmitted, transmission);
@@ -434,7 +441,7 @@ function getFragmentSource(){
 
     vec3 geometryNormal;
 #ifdef HAS_NORMALS
-    geometryNormal = vNormal;
+    geometryNormal = normalize(vNormal);
 #else
     geometryNormal = normalize(cross(dFdx(vPosition), dFdy(vPosition)));
 #endif
@@ -442,12 +449,8 @@ function getFragmentSource(){
 #ifdef HAS_NORMAL_TEXTURE
     // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     // Transform RGB normal map data from [0, 1] to [-1, 1]
-    vec3 normalColor = normalize(vec3(vec2(normalScale), 1.0) * (texture2D(normalTexture, vUV).rgb * 2.0 - 1.0));
-#ifdef HAS_TANGENTS
-    // Transform the normal vector in the RGB channels to tangent space
-    vec3 normal = normalize(tbn * normalColor.rgb);
-#else
-
+    vec3 normalColor = normalize(vec3(vec2(normalScale), 1.0) * (texture(normalTexture, vUV).rgb * 2.0 - 1.0));
+#ifndef HAS_TANGENTS
     vec3 uv_dx = dFdx(vec3(vUV, 0.0));
     vec3 uv_dy = dFdy(vec3(vUV, 0.0));
 
@@ -456,10 +459,13 @@ function getFragmentSource(){
     vec3 T = normalize(t_ - geometryNormal * dot(geometryNormal, t_));
     vec3 B = cross(geometryNormal, T);
 
-    vec3 normal = normalize(mat3(T, B, geometryNormal) * normalColor.rgb);
+    mat3 tbn = mat3(T, B, geometryNormal);
+
 #endif
+    // Transform the normal vector in the RGB channels to tangent space
+    vec3 normal = normalize(tbn * normalColor.rgb);
 #else
-    vec3 normal = normalize(geometryNormal);
+    vec3 normal = geometryNormal;
 #endif
 
     if(!gl_FrontFacing){
@@ -469,16 +475,16 @@ function getFragmentSource(){
     float alpha = 1.0;
 
 #ifdef HAS_BASE_COLOR_TEXTURE
-    vec4 data = texture2D(baseColorTexture, vUV);
-    vec4 col = baseColorFactor * vec4(vec3(pow(data.rgb, vec3(2.2))), data.a);
+    vec4 colorData = texture(baseColorTexture, vUV);
+    vec4 albedo = baseColorFactor * vec4(vec3(pow(colorData.rgb, vec3(2.2))), colorData.a);
 #else
-    vec4 col = baseColorFactor;
+    vec4 albedo = baseColorFactor;
 #endif
 
-    vec3 baseColor = col.rgb;
+    vec4 color = vec4(0);
 
     if(alphaMode != 0){
-      alpha = col.a;
+      alpha = albedo.a;
     }
 
     if(alphaMode == 2 && alpha < alphaCutoff){
@@ -486,50 +492,121 @@ function getFragmentSource(){
     }
 
     vec3 viewDirection = normalize(cameraPosition - vPosition);
-    col.rgb = getIrradiance(-viewDirection, normal, col);
+    color.rgb = getIrradiance(-viewDirection, normal, albedo);
+    color.a = alpha;
 
 #ifdef HAS_EMISSION
-    vec3 emissiveCol = vec3(1);
+    vec3 emissiveColor = vec3(1);
 #ifdef HAS_EMISSIVE_TEXTURE
-    vec3 emissiveData = texture2D(emissiveTexture, vUV).rgb;
-    emissiveCol = pow(emissiveData, vec3(2.2));
+    vec3 emissiveData = texture(emissiveTexture, vUV).rgb;
+    emissiveColor = pow(emissiveData, vec3(2.2));
 #endif
 #ifdef HAS_EMISSIVE_FACTOR
-    emissiveCol *= emissiveFactor;
+    emissiveColor *= emissiveFactor;
 #endif
     
-    col.rgb += emissiveCol.rgb;
+    color.rgb += emissiveColor.rgb;
 #endif
 
-    col.rgb *= exposure;  
+    color.rgb *= exposure;  
 
-    col.rgb = ACESFilm(col.rgb);
-    col.rgb = pow(col.rgb, vec3(0.4545));
-
-//#define DEBUG
-#ifdef DEBUG
-    float occlusion = 1.0;
-#ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
-    vec3 data_ = texture2D(metallicRoughnessTexture, vUV).rgb;
-    float roughness = data_.g;
-    float metal = data_.b;
-
-    //col = vec3(texture2D(brdfIntegrationMapTexture, gl_FragCoord.xy/256.0).rg, 0.0);
-#endif
-#ifdef HAS_BASE_COLOR_TEXTURE
-    vec4 baseColorData = texture2D(baseColorTexture, vUV);
-    col = baseColorFactor * vec4(vec3(pow(data.rgb, vec3(2.2))), baseColorData.a);
-#else
-    col = baseColorFactor;
-#endif
-
-#endif
+    color.rgb = ACESFilm(color.rgb);
+    color.rgb = pow(color.rgb, vec3(0.4545));
 
     if(alphaMode == 1){
-      col.rgb *= alpha;
+      color.rgb *= alpha;
     }
 
-    gl_FragColor = vec4(col.rgb, alpha);
+    fragColor = color;
+
+#ifdef DEBUG
+  if(outputVariable > 0){
+    // Magenta for missing data
+    vec3 debugColor = vec3(1, 0, 1);
+
+    float metal = metallicFactor;
+    float roughness = roughnessFactor;
+
+  #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
+      vec3 data = texture(metallicRoughnessTexture, vUV).rgb;
+      roughness *= data.g;
+      metal *= data.b; 
+  #endif
+
+      float occlusion = 1.0;
+
+  #ifdef HAS_AO_TEXTURE
+      occlusion = texture(occlusionTexture, vUV).r;
+      occlusion = 1.0 + occlusionStrength * (occlusion - 1.0);
+  #else
+
+  #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
+  #ifdef AO_IN_METALLIC_ROUGHNESS_TEXTURE
+      occlusion = data.r;
+      occlusion = 1.0 + occlusionStrength * (occlusion - 1.0);
+  #endif
+  #endif
+
+  #endif
+
+  #ifdef HAS_EMISSION
+      emissiveColor = vec3(1);
+  #ifdef HAS_EMISSIVE_TEXTURE
+      emissiveColor = texture(emissiveTexture, vUV).rgb;
+  #endif
+  #ifdef HAS_EMISSIVE_FACTOR
+      emissiveColor *= emissiveFactor;
+  #endif
+  #else
+      vec3 emissiveColor = debugColor;
+  #endif
+
+
+      vec3 transmissiveColor = debugColor;
+  #ifdef HAS_TRANSMISSION
+      float transmission = 1.0;
+  #ifdef HAS_TRANSMISSION_FACTOR
+      transmission = transmissionFactor;
+  #endif
+
+  #ifdef HAS_TRANSMISSION_TEXTURE
+      transmission *= texture(transmissionTexture, vUV).r;
+  #endif
+      transmissiveColor = vec3(transmission);
+  #endif
+
+      vec3 uvColor = debugColor;
+  #ifdef HAS_UVS
+      uvColor = vec3(vUV, 0.0);
+  #endif
+
+  vec3 tangentColor = debugColor;
+  vec3 bitangentColor = debugColor;
+
+  #ifdef HAS_NORMAL_TEXTURE
+      tangentColor = 0.5 + 0.5 * tbn[0];
+      bitangentColor = 0.5 + 0.5 * tbn[1];
+  #endif
+
+      switch(outputVariable){
+        case 1: debugColor = pow(albedo.rgb, vec3(0.4545)); break;
+        case 2: debugColor = vec3(metal); break;
+        case 3: debugColor = vec3(roughness); break;
+        case 4: debugColor = 0.5 + 0.5 * geometryNormal; break;
+        case 5: debugColor = 0.5 + 0.5 * normal; break;
+        case 6: debugColor = tangentColor; break;
+        case 7: debugColor = bitangentColor; break;
+        case 8: debugColor = vec3(occlusion); break;
+        case 9: debugColor = emissiveColor;; break;
+        case 10: debugColor = uvColor; break;
+        case 11: debugColor = vec3(alpha); break;
+        case 12: debugColor = transmissiveColor; break;
+        default: debugColor = vec3(1,0,1);
+      };
+
+      fragColor = vec4(debugColor, 1.0);
+}
+#endif
   }
   `;
 

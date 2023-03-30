@@ -11,9 +11,11 @@ class ProgramRepository{
 
   constructor(){}
 
-  // Return program corresponding to passed prefix and type
-  // If one does not exist, compile it, enter it to the map
-  // and return it.
+  /**
+  * Return program corresponding to passed prefix and type.
+  * If one does not exist, compile it, enter it to the map
+  * and return it.
+  */
   getProgram(material, attributes){
     
     const definePrefix = getDefinePrefix(material, attributes);

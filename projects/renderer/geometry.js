@@ -1,5 +1,9 @@
-import {gl, extINS} from "./canvas.js"
+import {Attribute} from "./attribute.js"
+import {gl} from "./canvas.js"
 
+/**
+ * A class for vertex data, primitive type and associated attributes
+ */
 export class Geometry{
 
   length;
@@ -8,17 +12,15 @@ export class Geometry{
 
   hasIndices = false;
 
-  indexType = gl.UNSIGNED_SHORT;
   primitiveType = gl.TRIANGLES;
 
   attributes;
   indices;
 
-  // geometryData
-  //  attributes
-  //  length
-  //  indices
-  //  primitiveType
+  /**
+   * 
+   * @param {{attributes: Attribute, length: int, indices?: Indices, primitiveType?: enum}} geometryData 
+   */
   constructor(geometryData){
 
     this.attributes = geometryData.attributes;
@@ -28,7 +30,6 @@ export class Geometry{
     if(geometryData.indices != null){
       this.hasIndices = true;
       this.indices = geometryData.indices;
-      this.indexType = geometryData.indices.getType();
     }
 
     if(geometryData.primitiveType != null){
@@ -47,13 +48,12 @@ export class Geometry{
     }
   } 
 
-  enableBuffers(attributes){
-    let geo = this;
-    for(const attribute of attributes){
-      if(geo.attributes.has(attribute)){
-        geo.attributes.get(attribute).enableBuffer();
+  enableBuffers(attributeNames){
+    for(const name of attributeNames){
+      if(this.attributes.has(name)){
+        this.attributes.get(name).enableBuffer();
       }else{
-        console.error("Attribute " + attribute + " does not exist in geometry: ", geo);
+        console.error("Attribute " + name + " does not exist in geometry: ", this);
       }
     }
     
@@ -63,6 +63,26 @@ export class Geometry{
 
   }
 
+  /**
+   * Add an attribute to the geometry.
+   * @param {Attribute} attribute
+   */
+  addAttribute(attribute){
+    this.attributes.set(attribute.getName(), attribute);
+  }
+
+  /**
+   * Remove a named attribute from the geometry
+   * @param {string} name
+   */
+  removeAttribute(name){
+    this.attributes.delete(name);
+  }
+
+  hasAttribute(name){
+    return this.attributes.has(name);
+  }
+
   getMin(){
     return this.attributes.get("POSITION").getMin();
   }
@@ -70,6 +90,45 @@ export class Geometry{
   getMax(){
     return this.attributes.get("POSITION").getMax();
   }
+
+  getPrimitiveType(){
+    return this.primitiveType;
+  }
+
+  getAttributes(){
+    return this.attributes;
+  }
+
+  getIndices(){
+    return this.indices;
+  }
+
+  getLength(){
+    return this.length;
+  }
+
+  calculateBarycentric(){
+    const data = [];
+    for (let i = 0; i < this.length; i++){
+      data.push(1, 0, 0, 0, 1, 0, 0, 0, 1);
+    }
+    const buffer = new Int8Array(data);
+    const glBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, glBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, buffer, gl.STATIC_DRAW);
+
+    const descriptor = {
+      target: gl.ARRAY_BUFFER,
+      componentType: gl.BYTE,
+      componentCount: 3,
+      normalized: false,
+      byteStride: 0,
+      offset: 0
+    };
+
+    return new Attribute("BARYCENTRIC", glBuffer, descriptor);
+  }
+
 /*
     // ---------- Instanced geometry attributes ----------
 

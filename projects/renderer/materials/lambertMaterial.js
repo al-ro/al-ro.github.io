@@ -1,4 +1,3 @@
-import {gl} from "../canvas.js"
 import {Material} from './material.js'
 import {getVertexSource, getFragmentSource} from './lambertMaterial.glsl.js'
 

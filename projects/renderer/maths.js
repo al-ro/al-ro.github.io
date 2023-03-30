@@ -10,6 +10,14 @@ function cross(a, b){
 	 ]; 
 }
 
+function dot(a, b){
+  let d = 0;
+  for(let i = 0; i < a.length; i++){
+    d += a[i] * b[i];
+  }
+  return d; 
+}
+
 function negate(a){
   return [-a[0], -a[1], -a[2]];
 }

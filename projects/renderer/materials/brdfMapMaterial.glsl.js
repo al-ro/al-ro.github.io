@@ -2,7 +2,7 @@ function getVertexSource(){
 
   var vertexSource = `
 
-  attribute vec3 POSITION;
+  in vec3 POSITION;
 
   void main(){ 
     gl_Position = vec4(POSITION, 1.0);
@@ -20,6 +20,7 @@ function getFragmentSource(){
 #define PI 3.14159
 
   uniform vec2 resolution;
+  out vec4 fragColor;
 
   const int sampleCount = 1024;
 
@@ -150,7 +151,7 @@ function getFragmentSource(){
     vec2 texCoord = gl_FragCoord.xy/resolution;
     vec2 c = integrateBRDF(texCoord.x, texCoord.y);
 
-    gl_FragColor = vec4(c, 0.0, 1.0);
+    fragColor = vec4(c, 0.0, 1.0);
   }
   `;
 

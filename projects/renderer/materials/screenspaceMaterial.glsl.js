@@ -2,10 +2,10 @@ function getVertexSource(parameters){
 
   var vertexSource = `
   
-  attribute vec3 POSITION;
-  attribute vec2 TEXCOORD_0;
+  in vec3 POSITION;
+  in vec2 TEXCOORD_0;
 
-  varying vec2 vUV;
+  out vec2 vUV;
 
   void main(){
     vUV = TEXCOORD_0;
@@ -22,12 +22,13 @@ function getFragmentSource(){
     precision highp float;
     
     uniform sampler2D tex;
-    varying vec2 vUV;
+    in vec2 vUV;
+    out vec4 fragColor;
   
     void main(){
       vec2 uv = vUV;
       uv.y = 1.0 - uv.y;
-      gl_FragColor = texture2D(tex, uv);
+      fragColor = texture(tex, uv);
     }
   `;
 

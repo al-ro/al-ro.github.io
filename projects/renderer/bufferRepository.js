@@ -42,13 +42,19 @@ class BufferRepository{
    *          byteLength: number, 
    *          data: ArrayBuffer, 
    *          target: gl.ARRAY_BUFFER | gl.ELEMENT_ARRAY_BUFFER, 
-   *          usage: gl.STATIC_DRAW | gl.DYNAMC_DRAW}} parameters 
+   *          usage: gl.STATIC_DRAW | gl.DYNAMC_DRAW,
+   *          sparseInfo: string}} parameters
    * @returns WebGLBuffer
    */
   getBuffer(parameters){
 
     // Create an index combining buffer index and region
-    const id = parameters.index + ", " + parameters.byteOffset + ", " + parameters.byteLength;
+    let id = [parameters.index, parameters.byteOffset, parameters.byteLength].join(', ');
+
+    // Include sparse information to differentiate base and constructed buffers
+    if(!!parameters.sparseInfo && !!parameters.sparseInfo != ""){
+      id += ", " + parameters.sparseInfo;
+    }
 
     if(this.buffers.has(id)){
       return this.buffers.get(id);
