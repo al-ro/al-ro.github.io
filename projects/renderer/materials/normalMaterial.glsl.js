@@ -2,9 +2,9 @@ function getVertexSource(parameters){
 
   var vertexSource = `
 
-  attribute vec3 POSITION;
+  in vec3 POSITION;
 #ifdef HAS_NORMALS
-  attribute vec3 NORMAL;
+  in vec3 NORMAL;
   uniform mat4 normalMatrix;
 #endif
 
@@ -13,15 +13,15 @@ function getVertexSource(parameters){
   uniform mat4 projectionMatrix;
 
 #ifdef INSTANCED 
-  attribute vec4 orientation;
-  attribute vec3 offset;
-  attribute vec3 scale;
+  in vec4 orientation;
+  in vec3 offset;
+  in vec3 scale;
 #endif
 
 #ifdef HAS_NORMALS
-  varying vec3 vNormal;
+  out vec3 vNormal;
 #else
-  varying vec3  vPosition;
+  out vec3  vPosition;
 #endif
 
   void main(){
@@ -64,14 +64,15 @@ function getVertexSource(parameters){
 function getFragmentSource(){
 
   var fragmentSource = `
-#extension GL_OES_standard_derivatives : enable
     precision highp float;
     
 #ifdef HAS_NORMALS
-  varying vec3 vNormal;
+  in vec3 vNormal;
 #else
-  varying vec3  vPosition;
+  in vec3  vPosition;
 #endif
+
+  out vec4 fragColor;
 
     void main(){ 
       vec3 normal;
@@ -85,7 +86,7 @@ function getFragmentSource(){
         normal *= -1.0;
       }
 
-      gl_FragColor = vec4( 0.5 + 0.5 * normal, 1.0);
+      fragColor = vec4( 0.5 + 0.5 * normal, 1.0);
     }
   `;
 

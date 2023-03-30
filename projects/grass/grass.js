@@ -249,7 +249,7 @@ const backgroundMaterial = new THREE.ShaderMaterial({
 });
 
 backgroundMaterial.depthWrite = false;
-var backgroundGeometry = new THREE.PlaneBufferGeometry(2, 2, 1, 1);
+var backgroundGeometry = new THREE.PlaneGeometry(2, 2, 1, 1);
 var background = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
 backgroundScene.add(background);
 
@@ -257,11 +257,11 @@ renderer.autoClear = false;
 
 //************** Ground **************
 //Ground material is a modification of the existing THREE.MeshPhongMaterial rather than one from scratch
-var groundBaseGeometry = new THREE.PlaneBufferGeometry(width, width, resolution, resolution);
+var groundBaseGeometry = new THREE.PlaneGeometry(width, width, resolution, resolution);
 groundBaseGeometry.lookAt(new THREE.Vector3(0,1,0));
 groundBaseGeometry.verticesNeedUpdate = true;
 
-var groundGeometry = new THREE.PlaneBufferGeometry(width, width, resolution, resolution);
+var groundGeometry = new THREE.PlaneGeometry(width, width, resolution, resolution);
 groundGeometry.setAttribute('basePosition', groundBaseGeometry.getAttribute("position"));
 groundGeometry.lookAt(new THREE.Vector3(0,1,0));
 groundGeometry.verticesNeedUpdate = true;
@@ -544,7 +544,7 @@ var grassFragmentSource = `
 `;
 
 //Define base geometry that will be instanced. We use a plane for an individual blade of grass
-var grassBaseGeometry = new THREE.PlaneBufferGeometry(bladeWidth, bladeHeight, 1, joints);
+var grassBaseGeometry = new THREE.PlaneGeometry(bladeWidth, bladeHeight, 1, joints);
 grassBaseGeometry.translate(0, bladeHeight/2, 0);
 
 //Define the bend of the grass blade as the combination of three quaternion rotations

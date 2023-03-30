@@ -2,7 +2,7 @@ function getVertexSource(){
 
   var vertexSource = `
   
-    attribute vec3 POSITION;
+    in vec3 POSITION;
 
     void main(){ 
       gl_Position = vec4(POSITION, 1.0);
@@ -15,7 +15,6 @@ function getVertexSource(){
 function getFragmentSource(){
    
   var fragmentSource = `
-#extension GL_EXT_shader_texture_lod : enable
 
     //
     //	Diffuse IBL using spherical harmonics
@@ -24,7 +23,7 @@ function getFragmentSource(){
     //	The coefficients will describe the low frequency data of the environment. We can use them
     //	to construct a matrix which, when multiplied with a view vector, will give the data in 
     //	that direction. The low frequency data is similar to a convoluted irradiance map and is 
-    //	used for diffuse image based lighting, which gives us the ambient colour for shading. 
+    //	used for diffuse image based lighting, which gives us the ambient color for shading. 
     //
     //	Based on:
     //	[1] https://cseweb.ucsd.edu/~ravir/papers/envmap/envmap.pdf
@@ -53,10 +52,12 @@ function getFragmentSource(){
     const float Y20 = 0.315392;
     const float Y22 = 0.546274;
 
+    out vec4 fragColor;
+
     #define PI 3.14159
 
     vec3 getRadiance(vec3 dir){
-      return textureCubeLodEXT(cubeMap, dir, 3.0).rgb;
+      return textureLod(cubeMap, dir, 3.0).rgb;
     }
 
     void main(){
@@ -187,7 +188,7 @@ function getFragmentSource(){
         }
       }
 
-      gl_FragColor = col;
+      fragColor = col;
     } 
   `;
 

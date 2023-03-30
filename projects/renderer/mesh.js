@@ -5,7 +5,8 @@
 // Calls to render() will activate the program, bind VAOs, uniforms, textures and call the 
 // appropriate draws function depending on the geometry (indexed, instanced, primitives)
 
-import {gl, extVAO, extINS} from "./canvas.js"
+import {dynamicAttributes} from "./attribute.js";
+import {gl} from "./canvas.js"
 import {Node} from "./node.js"
 
 export class Mesh extends Node{
@@ -41,11 +42,30 @@ export class Mesh extends Node{
 
     this.material = material;
 
+    let attributesToGenetate = [];
     this.activeAttributes = [];
     // Determine intersection of geometry and material attributes
     for(const attribute of this.material.getAttributes()){
-      if(this.geometry.attributes.has(attribute)){
+      if(this.geometry.getAttributes().has(attribute)){
         this.activeAttributes.push(attribute);
+      }else{
+        if(dynamicAttributes.includes(attribute)){
+          attributesToGenetate.push(attribute);
+        }
+      }
+    }
+
+    // Generate dynamic attributes if needed
+    for(const name of attributesToGenetate){
+      console.log("Generate: ", name);
+      let attribute;
+      switch(name){
+        case "BARYCENTRIC": attribute = this.geometry.calculateBarycentric("BARYCENTRIC"); break;
+        default: attribute = null;
+      }
+      if(!!attribute){
+        this.geometry.addAttribute(attribute);
+        this.activeAttributes.push(name);
       }
     }
 
@@ -54,13 +74,17 @@ export class Mesh extends Node{
 
     for(const attribute of this.activeAttributes){
       const handle = this.material.program.getAttribLocation(attribute);
-      this.geometry.attributes.get(attribute).setHandle(handle);
+      this.geometry.getAttributes().get(attribute).setHandle(handle);
     }
     this.createVAO();
   }
 
   setOverrideMaterial(material){
     this.overrideMaterial = material;
+  }
+
+  setOutput(output){
+    this.material.setOutput(output);
   }
 
   displayOverrideMaterial(){
@@ -78,7 +102,7 @@ export class Mesh extends Node{
       this.geometry.destroy();
       this.unbindVAO();
 
-      extVAO.deleteVertexArrayOES(this.vao);
+      gl.deleteVertexArray(this.vao);
       this.geometry = null;
     }
 
@@ -90,7 +114,7 @@ export class Mesh extends Node{
 
   createVAO(){
     if(this.vao == null){
-      this.vao = extVAO.createVertexArrayOES();
+      this.vao = gl.createVertexArray();
     }
 
     this.bindVAO();
@@ -101,11 +125,11 @@ export class Mesh extends Node{
   }
 
   bindVAO(){
-    extVAO.bindVertexArrayOES(this.vao);
+    gl.bindVertexArray(this.vao);
   }
 
   unbindVAO(){ 
-    extVAO.bindVertexArrayOES(null);
+    gl.bindVertexArray(null);
   }
 
   doubleSided(){
@@ -140,6 +164,8 @@ export class Mesh extends Node{
       this.material.setCamera(camera);
     }
 
+    this.animate(time);
+
     if(this.material.needsTime){
       this.material.setTime(time);
     }
@@ -148,33 +174,35 @@ export class Mesh extends Node{
 
     if(this.geometry.hasIndices){
       if(this.geometry.instanced){
-        extINS.drawElementsInstancedANGLE(this.geometry.primitiveType, 
-            this.geometry.length, 
-            this.geometry.indexType, 
+        gl.drawElementsInstanced(this.geometry.getPrimitiveType(), 
+            this.geometry.getLength(), 
+            this.geometry.getIndices().getType(), 
             0, 
             this.geometry.instances);
       }else{
-        gl.drawElements(this.geometry.primitiveType, this.geometry.length, this.geometry.indexType, 0);
+        gl.drawElements(this.geometry.getPrimitiveType(), this.geometry.getLength(), this.geometry.getIndices().getType(), 0);
       }
     }else{
-      gl.drawArrays(this.geometry.primitiveType, 0, this.geometry.length);
+      gl.drawArrays(this.geometry.getPrimitiveType(), 0, this.geometry.getLength());
     }
 
     this.unbindVAO();
   }
 
   getNormalMatrix(){
-    m4.invert(this.normalMatrix, this.modelMatrix)
-    m4.transpose(this.normalMatrix, this.normalMatrix)
-    return this.normalMatrix;
+    return m4.transpose(m4.inverse(this.getModelMatrix()));
   }
 
   getMin(){
-    return m4.transformVector(this.modelMatrix, this.geometry.getMin());
+    return m4.transformPoint(this.getModelMatrix(), this.geometry.getMin());
   }
 
   getMax(){
-    return m4.transformVector(this.modelMatrix, this.geometry.getMax());
+    return m4.transformPoint(this.getModelMatrix(), this.geometry.getMax());
+  }
+
+  isMesh(){
+    return true;
   }
 
 }

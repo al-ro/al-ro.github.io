@@ -1,24 +1,20 @@
 import {download} from "./download.js"
-import {gl, enums} from "./canvas.js"
+import {gl, enums, InterpolationType} from "./canvas.js"
 import {Node} from "./node.js"
 import {PBRMaterial} from "./materials/pbrMaterial.js"
-import {NormalMaterial} from "./materials/normalMaterial.js"
-import {TextureMaterial} from "./materials/textureMaterial.js"
-import {LambertMaterial} from "./materials/lambertMaterial.js"
-import {UVMaterial} from "./materials/uvMaterial.js"
 import {Geometry} from "./geometry.js"
 import {Mesh} from "./mesh.js"
 import {BufferRepository} from "./bufferRepository.js"
 import {Attribute, supportedAttributes} from "./attribute.js"
 import {Indices} from "./indices.js"
 import {loadTexture} from "./texture.js"
+import { Animation } from "./animation.js"
 
 // Download and process GLTF file and create scenes of drawable Mesh object with a geometry and PBR material
 
 // TODO:
 //  multiple scenes
 //  full spec conform (color_0, sampler)
-//  sparse accessor
 //  image from bufferView
 //  animation
 //  extensions
@@ -33,8 +29,11 @@ export class GLTF{
   /**  Description of the GLTF */
   json;
 
-  /** WebGLBuffer objects for vertex attribues */
+  /** WebGLBuffer objects for vertex attributes */
   buffers = [];
+
+  /** Sparse accessor data which needs to be freed */
+  sparseTypedArrays = [];
 
   /** WebGL textures for albedo, roughness and emissive maps etc. */
   textures = [];
@@ -122,24 +121,12 @@ export class GLTF{
       this.textures = null;
 
       this.nodes = null;
+
+      for(let i = 0; i < this.sparseTypedArrays.length; i++){
+        this.sparseTypedArrays[i] = null;
+      }
+      this.sparseTypedArrays = null;
     });
-  }
-
-  /**
-   * @param {number} scale uniform scale of all nodes
-   */
-  setScale(scale){
-    this.scale = scale;
-    let modelMatrix = m4.create();
-
-    const maxExtent = Math.max(Math.max(this.max[0] - this.min[0], this.max[1] - this.min[1]), this.max[2] - this.min[2]);
-
-    modelMatrix = m4.scale(modelMatrix, this.scale, this.scale, this.scale);
-    modelMatrix = m4.translate(modelMatrix, -this.centre[0], -this.centre[1], -this.centre[2]);
-
-    for(const node of this.json.scenes[this.scene].nodes){
-      this.nodes[node].updateMatrix(modelMatrix);
-    }
   }
 
   /**
@@ -231,8 +218,10 @@ export class GLTF{
           this.nodes = this.processNodes(this.json.nodes);
           this.setChildren(this.nodes);
 
+          this.setAnimations();
+
           for(const node of this.json.scenes[this.scene].nodes){
-            this.nodes[node].updateChildren();
+            this.nodes[node].updateModelMatrix();
           }
 
           this.calculateCentre();
@@ -293,6 +282,88 @@ export class GLTF{
   }
 
   /**
+   * Get the keyframe timestamps for an animation
+   * @param {animations.sampler} sampler 
+   * @returns Array of timestamps in seconds
+   */
+  getAnimationTimeStamps(sampler){
+    const inputAccesssor = this.json.accessors[sampler.input];
+    const inputBufferView = this.json.bufferViews[inputAccesssor.bufferView];
+    const inputBuffer = this.buffers[inputBufferView.buffer];
+
+    if(!inputBuffer){
+      return null;
+    }
+
+    let inputOffset = inputBufferView.byteOffset != null ? inputBufferView.byteOffset : 0;
+    inputOffset += (inputAccesssor.byteOffset != null) ? inputAccesssor.byteOffset : 0;
+
+    // Get a typed view of the buffer data. Must be scalar float.
+    const inputTypedArray = getTypedArray(inputAccesssor.componentType);
+    // Typed array is created of the underlying buffer. No memory is allocated.
+    const elements = inputAccesssor.count != null ? inputAccesssor.count : inputBufferView.byteLength / inputTypedArray.BYTES_PER_ELEMENT
+    return new inputTypedArray(inputBuffer, inputOffset, elements);
+  }
+
+  /**
+   * Get the keyframe values
+   * @param {animation.sampler} sampler 
+   * @returns Array of TRS values corresponding to timestamps
+   */
+  getAnimationValues(sampler){
+    const outputAccesssor = this.json.accessors[sampler.output];
+    const outputBufferView = this.json.bufferViews[outputAccesssor.bufferView];
+    const outputBuffer = this.buffers[outputBufferView.buffer];
+
+    if(!outputBuffer){
+      return null;
+    }
+
+    let outputOffset = outputBufferView.byteOffset != null ? outputBufferView.byteOffset : 0;
+    outputOffset += (outputAccesssor.byteOffset != null) ? outputAccesssor.byteOffset : 0;
+
+    // Get a typed view of the buffer data
+    const outputTypedArray = getTypedArray(outputAccesssor.componentType);
+    // Typed array is created of the underlying buffer. No memory is allocated.
+    let elements = outputAccesssor.count != null ? outputAccesssor.count : outputBufferView.byteLength / outputTypedArray.BYTES_PER_ELEMENT;
+    const count = getComponentCount(outputAccesssor.type);
+    elements *= count;
+    const outputData = new outputTypedArray(outputBuffer, outputOffset, elements);
+    
+    let output = [];
+    for(let i = 0; i < outputData.length; i += count){
+      let element = [];
+      for(let j = 0; j < count; j++){
+        element.push(outputData[i + j]);
+      }
+      output.push(element);
+    }
+    return output;
+  }
+
+  /**
+   * Set the animations of all nodes
+   */
+  setAnimations(){
+    const animations = this.json.animations;
+    if(animations == null){
+      return;
+    }
+    for(const animation of animations){
+      for(const channel of animation.channels){
+        const sampler = animation.samplers[channel.sampler];
+        const parameters = {
+          timeStamps: this.getAnimationTimeStamps(sampler), 
+          values: this.getAnimationValues(sampler), 
+          interpolation: !!sampler.interpolation ? sampler.interpolation : InterpolationType.LINEAR,
+          path: channel.target.path
+        };
+        this.nodes[channel.target.node].addAnimation(channel.target.path, new Animation(parameters));
+      }
+    }
+  }
+
+  /**
    * Replace stored child indices with Node objects to complete scene graph
    * @param {Node[]} nodes scene graph
    */
@@ -308,25 +379,23 @@ export class GLTF{
   }
 
   scaleAndCentre(){
-
-    let modelMatrix = m4.create();
-
     const maxExtent = Math.max(Math.max(this.max[0] - this.min[0], this.max[1] - this.min[1]), this.max[2] - this.min[2]);
+    this.scale = 1.0 / maxExtent;
 
-    this.scale /= maxExtent;
+    let translation = [-this.centre[0] * this.scale, -this.centre[1] * this.scale, -this.centre[2] * this.scale];
+    let rotation = [0, 0, 0, 1];
+    let scales = [this.scale, this.scale, this.scale];
 
-    modelMatrix = m4.scale(modelMatrix, this.scale, this.scale, this.scale);
-    modelMatrix = m4.translate(modelMatrix, -this.centre[0], -this.centre[1], -this.centre[2]);
+    let matrix = m4.compose(translation, rotation, scales);
 
     for(const node of this.json.scenes[this.scene].nodes){
-      this.nodes[node].updateMatrix(modelMatrix);
+      this.nodes[node].updateMatrix(matrix);
     }
-
   }
 
   calculateCentre(){
-    this.min = [1e5, 1e5, 1e5];
-    this.max = [-1e5, -1e5, -1e5];
+    this.min = [1e20, 1e20, 1e20];
+    this.max = [-1e20, -1e20, -1e20];
     for(const mesh of this.meshes){
       let meshMin = mesh.getMin();
       let meshMax = mesh.getMax();
@@ -357,11 +426,11 @@ export class GLTF{
     }else{
 
       let translation = [0, 0, 0];
-      let rotation = [0, 0, 0];
+      let rotation = [0, 0, 0, 1];
       let scale = [1, 1, 1];
 
       if(node.rotation != null){
-        rotation = quaternionToEuler(node.rotation);
+        rotation = node.rotation;
       }
 
       if(node.scale != null){
@@ -372,16 +441,60 @@ export class GLTF{
         translation = node.translation;
       }
 
-      modelMatrix = m4.translate(modelMatrix, translation[0], translation[1], translation[2]); 
-
-      modelMatrix = m4.zRotate(modelMatrix, rotation[2]);
-      modelMatrix = m4.yRotate(modelMatrix, rotation[1]);
-      modelMatrix = m4.xRotate(modelMatrix, rotation[0]); 
-
-      modelMatrix = m4.scale(modelMatrix, scale[0], scale[1], scale[2]);
+      modelMatrix = m4.compose(translation, rotation, scale);
     }
 
     return modelMatrix;
+  }
+
+  /**
+   * Create updated data from sparse representation
+   * @param {objct} accessor GLTF accessor object
+   * @param {TypedArray} data base buffer data
+   */
+  getModifiedData(accessor, data){
+    let sparse = accessor.sparse;
+
+    // ---- Values ---- //
+    const valuesBufferView = this.json.bufferViews[sparse.values.bufferView];
+    const valuesBuffer = this.buffers[valuesBufferView.buffer];
+    if(!valuesBuffer){
+      return data;
+    }
+    const valuesOffset = valuesBufferView.byteOffset != null ? valuesBufferView.byteOffset : 0;
+
+    // Get a typed view of the buffer data
+    const valuesTypedArray = getTypedArray(accessor.componentType);
+    const values = new valuesTypedArray(valuesBuffer, valuesOffset, valuesBufferView.byteLength / valuesTypedArray.BYTES_PER_ELEMENT);
+
+    // ---- Indices ---- //
+    const indicesBufferView = this.json.bufferViews[sparse.indices.bufferView];
+    const indicesBuffer = this.buffers[indicesBufferView.buffer];
+    if(!indicesBuffer){
+      return data;
+    }
+    const indicesOffset = indicesBufferView.byteOffset != null ? indicesBufferView.byteOffset : 0;
+
+    // Get a typed view of the buffer data
+    const indicesTypedArray = getTypedArray(sparse.indices.componentType);
+    const indices = new indicesTypedArray(indicesBuffer, indicesOffset, indicesBufferView.byteLength / indicesTypedArray.BYTES_PER_ELEMENT);
+
+    const count = getComponentCount(accessor.type);
+
+    // Allocation of memory which must be freed later
+    const newData = data.slice();
+
+    let valuesIndex = 0;
+    for(const index of indices){
+      for(let i = 0; i < count; i++){
+        newData[count * index + i] = values[valuesIndex++];
+      }
+    }
+
+    // This array is freed when the GLTF is deleted
+    this.sparseTypedArrays.push(newData);
+
+    return newData;
   }
 
   /**
@@ -393,6 +506,7 @@ export class GLTF{
 
     const bufferView = this.json.bufferViews[accessor.bufferView];
     const buffer = this.buffers[bufferView.buffer];
+    
     if(!buffer){
       return null;
     }
@@ -404,6 +518,10 @@ export class GLTF{
     const typedArray = getTypedArray(accessor.componentType);
     // Typed array is created of the underlying buffer. No memory is allocated.
     const data = new typedArray(buffer, offset, accessor.count);
+
+    if(!!accessor.sparse){
+      data = this.getModifiedData(accessor, data);
+    }
 
     return new Indices(data, accessor.componentType);
   }
@@ -418,16 +536,26 @@ export class GLTF{
 
     const bufferView = this.json.bufferViews[accessor.bufferView];
     const buffer = this.buffers[bufferView.buffer];
+
     if(!buffer){
       return null;
     }
+
     const offset = bufferView.byteOffset != null ? bufferView.byteOffset : 0;
     const target = bufferView.target != null ? bufferView.target : gl.ARRAY_BUFFER;
 
     // Get a typed view of the buffer data
     const typedArray = getTypedArray(accessor.componentType);
     // Typed array is created of the underlying buffer. No memory is allocated.
-    const data = new typedArray(buffer, offset, bufferView.byteLength / typedArray.BYTES_PER_ELEMENT);
+    let data = new typedArray(buffer, offset, bufferView.byteLength / typedArray.BYTES_PER_ELEMENT);
+
+    let sparseInfo = "";
+
+    if(!!accessor.sparse){
+      const sparse = accessor.sparse;
+      sparseInfo = [sparse.count, sparse.indices.bufferView, sparse.indices.byteOffset, sparse.values.bufferView, sparse.values.byteOffset].join(', ');
+      data = this.getModifiedData(accessor, data);
+    }
 
     const parameters = {
       index: bufferView.buffer,
@@ -435,7 +563,8 @@ export class GLTF{
       byteLength: bufferView.byteLength,
       data: data,
       target: target,
-      usage: gl.STATIC_DRAW
+      usage: gl.STATIC_DRAW,
+      sparseInfo: sparseInfo
     };
 
     const glBuffer = this.bufferRepository.getBuffer(parameters);
@@ -612,7 +741,7 @@ export class GLTF{
         geometryParams.length = accessor.count;
       }else{
         // If indices have not been provided, geometry length is vertex count
-        // This assumes that a GLTF will have at least POSITION defined which
+        // This assumes that a GLTF file will have at least POSITION defined which
         // is not required by the specification.
         geometryParams.length = accessors[attributes.POSITION].count;
       }
@@ -654,14 +783,16 @@ export class GLTF{
 function getTypedArray(type){
 
   switch(type){
-    case gl.SHORT:
-      return Int16Array;
-    case gl.FLOAT:
-      return Float32Array;
+    case gl.BYTE:
+        return Int8Array;
     case gl.UNSIGNED_BYTE:
       return Uint8Array;
+    case gl.SHORT:
+      return Int16Array;
     case gl.UNSIGNED_SHORT:
       return Uint16Array;
+    case gl.FLOAT:
+      return Float32Array;
     case gl.UNSIGNED_INT:
       return Uint32Array;
     default:

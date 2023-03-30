@@ -2,8 +2,8 @@ function getVertexSource(){
 
   var vertexSource = `
 
-    attribute vec3 POSITION;
-    varying vec3 vPosition;
+    in vec3 POSITION;
+    out vec3 vPosition;
 
     void main(){ 
       vPosition = POSITION;
@@ -17,7 +17,6 @@ function getVertexSource(){
 function getFragmentSource(){
 
   var fragmentSource = `
-#extension GL_EXT_shader_texture_lod : enable
     precision highp float;
     
     #define PI 3.14159
@@ -26,7 +25,8 @@ function getFragmentSource(){
     uniform mat4 cameraMatrix;
     uniform float roughness;
 
-    varying vec3 vPosition;
+    in vec3 vPosition;
+    out vec4 fragColor;
 
     const int sampleCount = 512;
 
@@ -49,7 +49,7 @@ function getFragmentSource(){
 
     //https://patapom.com/blog/Math/ImportanceSampling/
     //https://www.shadertoy.com/view/4dtBWH
-    vec2 Nth_weyl(vec2 p0, int n) {
+    vec2 nthWeyl(vec2 p0, int n) {
       return fract(p0 + vec2(n * 12664745, n * 9560333) / exp2(24.0));
     }
 
@@ -99,7 +99,7 @@ function getFragmentSource(){
       //specular lobe and add the environment map data into a weighted sum.
       for(int i = 0; i < sampleCount; i++){
 
-        vec2 randomHemisphere = Nth_weyl(vec2(0.0), i);
+        vec2 randomHemisphere = nthWeyl(vec2(0.0), i);
         vec3 H  = importanceSampleGGX(randomHemisphere, N, roughness);
         vec3 L  = normalize(2.0 * dot(V, H) * H - V);
 
@@ -127,7 +127,7 @@ function getFragmentSource(){
           float mipBias = 1.0;
           level = max(0.5 * log2(omegaS / omegaP) + mipBias, 0.0);
 
-          prefilteredColor += textureCubeLodEXT(cubeMap, L, level).rgb * NdotL;
+          prefilteredColor += textureLod(cubeMap, L, level).rgb * NdotL;
           totalWeight      += NdotL;
         }
       }
@@ -144,7 +144,7 @@ function getFragmentSource(){
       rayDir = normalize((cameraMatrix * vec4(rayDir, 1.0)).xyz);
       vec3 c = getPreFilteredColor(rayDir, roughness);
 
-      gl_FragColor = vec4(c, 1.0);
+      fragColor = vec4(c, 1.0);
     }
     `;
 

@@ -125,7 +125,7 @@ class Environment{
         let texture = createAndSetupTexture();
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, hdr.width, hdr.height, 0, gl.RGB, gl.FLOAT, hdr.dataFloat);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB32F, hdr.width, hdr.height, 0, gl.RGB, gl.FLOAT, hdr.dataFloat);
 
         let type = hdr.width == hdr.height ? "angular" : "equirectangular";
 

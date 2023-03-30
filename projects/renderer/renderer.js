@@ -1,23 +1,21 @@
 import {Camera} from "./camera.js"
 import {Controls} from "./controls.js"
-import {Program} from "./program.js"
-import {Geometry} from "./geometry.js"
+import {AmbientMaterial} from "./materials/ambientMaterial.js"
+import {WireframeMaterial} from "./materials/wireframeMaterial.js"
 import {NormalMaterial} from "./materials/normalMaterial.js"
-import {PBRMaterial} from "./materials/pbrMaterial.js"
 import {LambertMaterial} from "./materials/lambertMaterial.js"
 import {UVMaterial} from "./materials/uvMaterial.js"
 import {TextureMaterial} from "./materials/textureMaterial.js"
 import {ScreenspaceMaterial} from "./materials/screenspaceMaterial.js"
 import {Environment} from "./environment.js"
-import {loadTexture, createAndSetupCubemap, createAndSetupTexture} from "./texture.js"
+import {loadTexture, createAndSetupTexture} from "./texture.js"
 import {Mesh} from "./mesh.js";
-import {canvas, gl, enums, extMEM} from "./canvas.js";
+import {gl, enums, extMEM} from "./canvas.js";
 import {getScreenspaceQuad} from "./screenspace.js";
-import {getSphericalHarmonicsMatrices} from "./iblUtils.js";
-import {programRepository} from "./programRepository.js"
 import {GLTF} from "./GLTF.js"
 import {RenderTarget} from "./target.js"
 import {getDownloadingCount} from "./download.js"
+import {outputEnum} from "./materials/pbrMaterial.js"
 
 const stats = new Stats();
 stats.showPanel(0);
@@ -27,21 +25,23 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 // TODO:
 //      Pack uniforms to vec4
 //      Prefix hashes
-//      View PBR maps/output
 //      Physically based camera
 //
 //      Instancing
 //      Pipeline state (program, sidedness)
 //      Lights
 //      Shadow mapping
+//      Cascading shadow maps
 //
-//      Sparse accessor
+//      Object wrapper for positioning
+//      Render programs together
+//      Frustum culling (mesh vs object vs BVH)
+//
 //      Specular/Gloss
 //      Sheen
 //      Volume
 //      IOR
 //      Clearcoat
-//      Animations
 //      Morph targets
 //      Skinning
 //      Camera from gltf
@@ -52,13 +52,17 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 //      Particle class
 //      Postprocessing (bloom, depth of field, fog)
 //      Spherical Gaussian Irradiance
+//      Bent normals
+//      Edge rendering
+//      Mesh lines rendering
 //      OIT
-//      WebGL2
 //      Volumetrics
 //      Basic geometries (sphere, quad, cylinder, cone, torus, knot)
 
 let models = new Map();
 models.set("Flight Helmet", "./gltf/flighthelmet/FlightHelmet.gltf");
+models.set("Interpolation Test", "./gltf/interpolation/InterpolationTest.gltf");
+models.set("Sparse Accessor", "./gltf/sparse/SimpleSparseAccessor.gltf");
 models.set("Boombox", "./gltf/boombox/BoomBox.gltf");
 models.set("Sponza", "./gltf/sponza/Sponza.gltf");
 models.set("Damaged Helmet", "./gltf/helmet/DamagedHelmet.gltf");
@@ -73,6 +77,8 @@ models.set("Blend", "./gltf/blend/AlphaBlendModeTest.gltf");
 models.set("Camera", "./gltf/camera/Camera_01_1k.gltf");
 models.set("Minimal", "./gltf/minimal/scene.gltf");
 models.set("Collada Duck", "./gltf/duck/duck.gltf");
+models.set("Buster Drone", "./gltf/buster_drone/scene.gltf");
+models.set("Gyroscope", "./gltf/magical_gyroscope/scene.gltf");
 
 let modelNames = Array.from(models.keys());
 modelNames.sort();
@@ -93,8 +99,9 @@ environmentNames.sort();
 
 let texture_0 = loadTexture("./defaultResources/uv_grid.jpg");
 
-let materialNames = ["PBR", "Normal", "UV", "Texture", "Lambert"];
-let materialSelector = {material: "PBR"};
+let materialNames = ["PBR", "Normal", "UV", "Texture", "Lambert", "Ambient", "Wireframe"];
+materialNames.sort();
+let materialSelector = {material: "Wireframe"};
 
 let yaw = Math.PI / 3.0;
 let pitch = Math.PI / 2.0;
@@ -109,17 +116,18 @@ let zFar = 1000.0;
 let camera = new Camera(pitch, yaw, dist, [0, 0, 0], up, fov, aspect, zNear, zFar);
 let controls = new Controls(camera);
 
-//Time
 let time = 0.0;
 
 let opaqueMeshes = [];
 let transmissiveMeshes = [];
 let transparentMeshes = [];
+let allMeshes = [];
 
 let info = {memory: "0", buffers: "0", textures: "0", downloadingCount: getDownloadingCount()};
 
 let modelSelector = {model: "Flight Helmet"};
 let environmentSelector = {environment: "Venice Sunrise"};
+let outputSelector = {output: outputEnum.PBR};
 let environment;
 let gltf;
 let modelManipulation = {scale: 1};
@@ -134,8 +142,9 @@ gui.add(camera, 'exposure').min(0.0).max(2).step(0.01);
 gui.add(environmentSelector, 'environment').options(environmentNames).onChange(name => {environment.setHDR(environments.get(name));});
 gui.add(modelSelector, 'model').options(modelNames).onChange(name => {loadGLTF(name);});
 const materialControls = gui.add(materialSelector, 'material').options(materialNames).onChange(name => {setMaterial(name);});
-//gui.add(modelManipulation, 'scale').min(0.0).max(60).step(0.0001).listen().onChange(scale => {gltf.setScale(scale);});
-;
+const outputControls = gui.add(outputSelector, 'output').options(outputEnum).onChange(output => {setOutput(output)});
+gui.add(modelManipulation, 'scale').min(0.0).max(20).step(0.0001).listen().onChange(scale => {setScale(scale);});
+
 gui.add(info, 'buffers').disable().listen();
 gui.add(info, 'textures').disable().listen();
 gui.add(info, 'memory').disable().listen();
@@ -148,10 +157,38 @@ controls.onWindowResize();
 
 environment = new Environment({path: environments.get(environmentSelector.environment), type: "hdr", camera: camera});
 
+function setScale(scale){
+  scale = Math.max(1e-4, scale);
+  for(const mesh of allMeshes){  
+
+    let oldMatrix = mesh.getParentModelMatrix();
+
+    let T = [0, 0, 0];
+    let R = [0, 0, 0, 1];
+    let S = [1, 1, 1];
+
+    m4.decompose(oldMatrix, T, R, S);
+
+    let scales = [scale, scale, scale];
+
+    let matrix = m4.compose(T, R, scales);
+
+    m4.decompose(matrix, T, R, S);
+    mesh.updateMatrix(matrix);
+  }
+}
+
+function setOutput(output){
+  for(const mesh of allMeshes){
+    mesh.setOutput(output);
+  }
+}
+
 loadGLTF(modelSelector.model);
 
 function loadGLTF(model){
   materialControls.setValue("PBR");
+  outputControls.setValue("PBR")
   if(gltf != null){
     gltf.destroy();
     gltf = null;
@@ -159,6 +196,7 @@ function loadGLTF(model){
   opaqueMeshes = [];
   transmissiveMeshes = [];
   transparentMeshes = [];
+  allMeshes = [];
   
   if(model == "NONE"){
     return;
@@ -169,9 +207,11 @@ function loadGLTF(model){
   
   gltf.ready.then(p => {
     if(gltf != null){
+      gltf.nodes.forEach(n => n.animate(0));
       materialControls.setValue("PBR");
       modelManipulation.scale = gltf.scale;
       for(const mesh of gltf.meshes){
+        allMeshes.push(mesh);
         if(mesh.material.hasTransmission){
           transmissiveMeshes.push(mesh);
         }else if(mesh.material.alphaMode == enums.BLEND){
@@ -187,6 +227,8 @@ function loadGLTF(model){
 function setMaterial(name){
   let material;
   switch (name){
+    case "Ambient": material = new AmbientMaterial(environment);
+    break;
     case "PBR": material = null;
     break;
     case "Normal": material = new NormalMaterial();
@@ -197,29 +239,18 @@ function setMaterial(name){
     break;
     case "Texture": material = new TextureMaterial(texture_0);
     break;
+    case "Wireframe": material = new WireframeMaterial();
+    break;
     default: material = null;
   }
+
   if(material != null){
-    for(const mesh of opaqueMeshes){
-      mesh.setOverrideMaterial(material);
-      mesh.displayOverrideMaterial();
-    }
-    for(const mesh of transparentMeshes){
-      mesh.setOverrideMaterial(material);
-      mesh.displayOverrideMaterial();
-    }
-    for(const mesh of transmissiveMeshes){
+    for(const mesh of allMeshes){
       mesh.setOverrideMaterial(material);
       mesh.displayOverrideMaterial();
     }
   }else{
-    for(const mesh of opaqueMeshes){
-      mesh.displayOriginalMaterial();
-    }
-    for(const mesh of transparentMeshes){
-      mesh.displayOriginalMaterial();
-    }
-    for(const mesh of transmissiveMeshes){
+    for(const mesh of allMeshes){
       mesh.displayOriginalMaterial();
     }
   }
@@ -245,7 +276,7 @@ gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, sceneTexture);
 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 gl.bindTexture(gl.TEXTURE_2D, sceneDepthTexture);
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, width, height, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, width, height, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
 let sceneRenderTarget = new RenderTarget(sceneTexture, sceneDepthTexture);
 
 let sceneQuad = getScreenspaceQuad();
@@ -361,7 +392,7 @@ function draw(){
 
   gl.disable(gl.BLEND);
 
-  // Output render target colour texture to screen
+  // Output render target color texture to screen
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   sceneMesh.render(camera, time);

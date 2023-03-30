@@ -2,9 +2,9 @@ function getVertexSource(){
 
   var vertexSource = `
   
-  attribute vec3 POSITION;
+  in vec3 POSITION;
 #ifdef HAS_UVS
-  attribute vec2 TEXCOORD_0;
+  in vec2 TEXCOORD_0;
 #endif
 
   uniform mat4 modelMatrix;
@@ -12,13 +12,13 @@ function getVertexSource(){
   uniform mat4 projectionMatrix;
 
 #ifdef INSTANCED 
-  attribute vec4 orientation;
-  attribute vec3 offset;
-  attribute vec3 scale;
+  in vec4 orientation;
+  in vec3 offset;
+  in vec3 scale;
 #endif
 
 #ifdef HAS_UVS
-  varying vec2 vUV;
+  out vec2 vUV;
 #endif
 
   void main(){
@@ -51,15 +51,17 @@ function getFragmentSource(){
     precision highp float;
     
 #ifdef HAS_UVS
-  varying vec2 vUV;
+    in vec2 vUV;
 #endif
+
+    out vec4 fragColor;
   
     void main(){
       vec3 col = vec3(1, 0, 1);
 #ifdef HAS_UVS
       col = vec3(vUV, 0.0); 
 #endif
-      gl_FragColor = vec4(col, 1.0);
+      fragColor = vec4(col, 1.0);
     }
   `;
 

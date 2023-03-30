@@ -2,6 +2,25 @@ import {gl, enums} from "../canvas.js"
 import {Material} from './material.js'
 import {getVertexSource, getFragmentSource} from './pbrMaterial.glsl.js'
 
+// Which quantity to render for debugging
+export const outputEnum = {
+  PBR: 0,
+  ALBEDO: 1,
+  METALNESS: 2,
+  ROUGHNESS: 3,
+  GEOMETRY_NORMAL: 4,
+  NORMAL: 5,
+  TANGENT: 6,
+  BITANGENT: 7,
+  OCCLUSION: 8,
+  EMISSIVE: 9,
+  TEXCOORD_0: 10,
+  ALPHA: 11,
+  TRANSMISSION: 12
+  //VERTEX_COLOR: 13,
+  //TEXCOORD_1: 14,
+};
+
 export class PBRMaterial extends Material{
 
   projectionMatrixHandle;
@@ -35,9 +54,9 @@ export class PBRMaterial extends Material{
   metallicFactor = 1.0;
   roughnessFactor = 1.0;
 
-  // In the absence of a base colour texture, use a vec4 uniform
+  // In the absence of a base color texture, use a vec4 uniform
   // Either this or a texture must be supplied
-  // If both are given, the base colour values are used to multiply the texture values
+  // If both are given, the base color values are used to multiply the texture values
   baseColorFactor = [1, 1, 1, 1];
 
   alphaMode = enums.OPAQUE;
@@ -47,7 +66,7 @@ export class PBRMaterial extends Material{
 
   // --------- Textures ----------
 
-  // The base colour texture
+  // The base color texture
   // Optional
   baseColorTexture;
 
@@ -130,6 +149,8 @@ export class PBRMaterial extends Material{
   alphaCutoffHandle;
   alphaModeHandle;
 
+  outputVariableHandle;
+
   hasBaseColorTexture = false;
   hasNormalTexture = false;
   hasMetallicRoughnessTexture = false;
@@ -154,24 +175,7 @@ export class PBRMaterial extends Material{
 
   environment;
 
-  // Which quantity to render
-  // 0: final PBR colour
-  // 1: albedo
-  // 2: metalness
-  // 3: roughness
-  // 4: geometry normal
-  // 5: tangent
-  // 6: bitangent
-  // 7: normal texture
-  // 8: ambient occlusion
-  // 9: emissive
-  // 10: vertex colour
-  // 11: TEXCOORD_1
-  // 12: TEXCOORD_0
-  // 13: Alpha
-  // 14: Shading normal
-  // 15: transmissive
-  outputVariable = 0;
+  outputVariable = outputEnum.PBR;
 
   textureUnits = 0;
 
@@ -333,6 +337,8 @@ export class PBRMaterial extends Material{
   }
 
   getParameterHandles(parameters){
+    this.outputVariableHandle = this.program.getUniformLocation('outputVariable');
+
     this.projectionMatrixHandle = this.program.getUniformLocation('projectionMatrix');
     this.viewMatrixHandle = this.program.getUniformLocation('viewMatrix');
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
@@ -395,8 +401,11 @@ export class PBRMaterial extends Material{
       this.occlusionTextureHandle = this.program.getOptionalUniformLocation('occlusionTexture');
     }
 
-    this.timeHandle = this.program.getOptionalUniformLocation('time'); 
-    this.resolutionHandle = this.program.getOptionalUniformLocation('resolution'); 
+    this.timeHandle = this.program.getOptionalUniformLocation('time');
+
+    if(this.hasTransmission){
+      this.resolutionHandle = this.program.getOptionalUniformLocation('resolution');
+    }
     this.environmentTextureHandle = this.program.getUniformLocation('cubeMap');
     this.brdfTextureHandle = this.program.getUniformLocation('brdfIntegrationMapTexture');
   }
@@ -409,8 +418,12 @@ export class PBRMaterial extends Material{
 
   bindParameters(){
 
+    gl.uniform1i(this.outputVariableHandle, this.outputVariable);
+
     gl.uniform1f(this.timeHandle, this.time);
-    gl.uniform2fv(this.resolutionHandle, this.resolution);
+    if(this.hasTransmission){
+      gl.uniform2fv(this.resolutionHandle, this.resolution);
+    }
 
     this.brdfIntegrationMapTexture = this.environment.getBRDFIntegrationMap();
     this.environmentTexture = this.environment.getCubeMap();
@@ -526,6 +539,10 @@ export class PBRMaterial extends Material{
 
   setTime(time){
     this.time = time;
+  }
+
+  setOutput(output){
+    this.outputVariable = output;
   }
 
 }

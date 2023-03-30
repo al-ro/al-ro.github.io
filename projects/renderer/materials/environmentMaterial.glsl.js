@@ -2,7 +2,7 @@ function getVertexSource(parameters){
 
   var vertexSource = `
 
-  attribute vec3 POSITION;
+  in vec3 POSITION;
 
   void main(){ 
     gl_Position = vec4(POSITION, 1.0);
@@ -15,7 +15,6 @@ function getVertexSource(parameters){
 function getFragmentSource(){
 
   var fragmentSource = `
-#extension GL_EXT_shader_texture_lod : enable
 
   precision highp float;
 
@@ -24,6 +23,8 @@ function getFragmentSource(){
   uniform mat4 cameraMatrix;
   uniform float exposure;
   uniform samplerCube cubeMap;
+
+  out vec4 fragColor;
 /*
   uniform mat4 shRedMatrix;
   uniform mat4 shGrnMatrix;
@@ -54,11 +55,11 @@ function getFragmentSource(){
 
   void main(){ 
     vec3 rayDir = normalize(cameraMatrix * vec4(rayDirection(fov, gl_FragCoord.xy), 0.0)).rgb;
-    vec3 col = exposure * textureCubeLodEXT(cubeMap, normalize(rayDir), 0.0).rgb;
+    vec3 col = exposure * textureLod(cubeMap, normalize(rayDir), 0.0).rgb;
     col = ACESFilm(col);
     col = pow(col, vec3(0.4545));
 
-    gl_FragColor = vec4(col, 1.0);
+    fragColor = vec4(col, 1.0);
   }
   `;
 

@@ -26,7 +26,7 @@ function createAndSetupCubemap() {
     const target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + i;
 
     const level = 0;
-    const internalFormat = gl.RGBA;
+    const internalFormat = gl.RGBA32F;
     const width = cubeMapSize;
     const height = cubeMapSize;
     const format = gl.RGBA;
