@@ -23,14 +23,16 @@ var particleCount;
 if(mobile){
   particleCount = 2000;
 }else{
-  particleCount = 25000;
+  particleCount = 15000;
 }
 
-var speed = 10;
+var speed = 20;
 //Noise field zoom
 var step = 1500;
 //Camera rotate
 var rotate = true;
+
+var oldMethod = false;
 
 var w = canvas.clientWidth;
 var h = canvas.clientHeight;
@@ -72,6 +74,12 @@ controls = new THREE.OrbitControls( camera, renderer.domElement );
 controls.maxDistance = 200000-5*width;
 controls.minDistance = 100;
 controls.autoRotate = rotate;
+
+const stats = new Stats();
+stats.showPanel(0);
+stats.domElement.style.position = 'relative';
+stats.domElement.style.bottom = '48px';
+document.getElementById('canvas_container').appendChild(stats.domElement);
 
 //Particles
 var particles = [];
@@ -164,6 +172,7 @@ gui.add(this, 'speed').min(0).max(100).step(1).listen();
 gui.add(this, 'step').min(10).max(3000).step(10).listen();
 gui.add(this, 'size').min(1).max(300).step(1).listen().onChange(() => setSize() );
 gui.add(this, 'rotate').listen().onChange(() => {controls.autoRotate = rotate});
+gui.add(this, 'oldMethod');
 gui.add(reset_button, 'reset');
 if(!mobile){
   gui.addColor(this, 'colour').listen().onChange(function(value) { setColour();} );
@@ -178,14 +187,9 @@ function setColour(){
   material.color.setHex(colour);
 }
 
-//----------NOISE---------//
-
-//Use noise.js library to generate a grid of 3D simplex noise values
-try {
-  noise.seed(Math.random());
-}
-catch(err) {
-  console.log(err.message);
+function normalize(v){
+  var length = Math.hypot(v[0], v[1], v[2]);
+  return [v[0]/length, v[1]/length, v[2]/length];
 }
 
 function cross(a, b){
@@ -195,69 +199,98 @@ function cross(a, b){
 	 ]; 
 }
 
-function normalize(v){
-  var length = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-  return [v[0]/length, v[1]/length, v[2]/length];
+//Use noise.js library to generate a grid of 3D simplex noise values
+try {
+  noise.seed(Math.random());
+}
+catch(err) {
+  console.log(err.message);
 }
 
-function fbm(x, y, z){
-  var n = 0;
-  var l = 1.0;
-  var totalWeight = 0.0;
-  var amplitude = 1.0;
-  for(var i = 0; i < 1; i++){
-    n += amplitude * noise.simplex3(x*l, y*l, z*l);
-    totalWeight += amplitude;
-    amplitude *= 0.5;
-    l *= 2.0;
-  }
-  n /= totalWeight;
-  return n;
+function noise3D(x, y, z){
+  return[noise.simplex3(x, y, z), noise.simplex3(x, y, z+1000.0), noise.simplex3(x+1000.0, y, z)];
 }
-
 
 //Find the curl of the noise field based on on the noise value at the location of a particle
 function computeCurl(x, y, z){
   var eps = 1e-4;
 
-  var curl = new THREE.Vector3();
+  if(!oldMethod){
 
-  //Find rate of change in YZ plane
-  var n1 = fbm(x, y + eps, z); 
-  var n2 = fbm(x, y - eps, z); 
-  //Average to find approximate derivative
-  var a = (n1 - n2)/(2 * eps);
-  var n1 = fbm(x, y, z + eps); 
-  var n2 = fbm(x, y, z - eps); 
-  //Average to find approximate derivative
-  var b = (n1 - n2)/(2 * eps);
-  curl.x = a - b;
+    //Find rate of change in X plane
+    var n1 = noise.simplex3(x + eps, y, z); 
+    var n2 = noise.simplex3(x - eps, y, z); 
+    //Average to find approximate derivative
+    var a = (n1 - n2)/(2 * eps);
+  
+    //Find rate of change in Y plane
+    n1 = noise.simplex3(x, y + eps, z); 
+    n2 = noise.simplex3(x, y - eps, z); 
+    //Average to find approximate derivative
+    var b = (n1 - n2)/(2 * eps);
+  
+    //Find rate of change in Z plane
+    n1 = noise.simplex3(x, y, z + eps); 
+    n2 = noise.simplex3(x, y, z - eps); 
+    //Average to find approximate derivative
+    var c = (n1 - n2)/(2 * eps);
+  
+    var noiseGrad0 = [a, b, c];
+  
+    // Offset position for second noise read
+    x += 10.5;
+    y += 10.5;
+    z += 10.5;
+  
+    //Find rate of change in X
+    n1 = noise.simplex3(x + eps, y, z); 
+    n2 = noise.simplex3(x - eps, y, z); 
+    //Average to find approximate derivative
+    a = (n1 - n2)/(2 * eps);
+  
+    //Find rate of change in Y
+    n1 = noise.simplex3(x, y + eps, z); 
+    n2 = noise.simplex3(x, y - eps, z); 
+    //Average to find approximate derivative
+    b = (n1 - n2)/(2 * eps);
+  
+    //Find rate of change in Z
+    n1 = noise.simplex3(x, y, z + eps); 
+    n2 = noise.simplex3(x, y, z - eps); 
+    //Average to find approximate derivative
+    c = (n1 - n2)/(2 * eps);
+  
+    var noiseGrad1 = [a, b, c];
+  
+    noiseGrad1 = normalize(noiseGrad1);
+    noiseGrad1 = normalize(noiseGrad1);
+    var curl = cross(noiseGrad0, noiseGrad1);
 
-  x += 100.0;
-  //Find rate of change in ZX plane
-  n1 = fbm(x, y, z + eps); 
-  n2 = fbm(x, y, z - eps); 
-  //Average to find approximate derivative
-  a = (n1 - n2)/(2 * eps);
-  n1 = fbm(x + eps, y, z); 
-  n2 = fbm(x - eps, y, z); 
-  //Average to find approximate derivative
-  b = (n1 - n2)/(2 * eps);
-  curl.y = a - b;
+  }else{
 
-  y += 2000.0;
-  //Find rate of change in XY plane
-  n1 = fbm(x + eps, y, z); 
-  n2 = fbm(x - eps, y, z); 
-  //Average to find approximate derivative
-  a = (n1 - n2)/(2 * eps);
-  n1 = fbm(x, y + eps, z); 
-  n2 = fbm(x, y - eps, z); 
-  //Average to find approximate derivative
-  b = (n1 - n2)/(2 * eps);
-  curl.z = a - b;
+    var curl = [0, 0, 0];
 
-  return curl;
+    //Find rate of change in X
+    var n1 = noise3D(x + eps, y, z); 
+    var n2 = noise3D(x - eps, y, z);
+    var dx = [n1[0] - n2[0], n1[1] - n2[1], n1[2] - n2[2]];
+
+    //Find rate of change in Y
+    n1 = noise3D(x, y + eps, z); 
+    n2 = noise3D(x, y - eps, z);
+    var dy = [n1[0] - n2[0], n1[1] - n2[1], n1[2] - n2[2]];
+
+    //Find rate of change in Z
+    n1 = noise3D(x, y, z + eps); 
+    n2 = noise3D(x, y, z - eps);
+    var dz = [n1[0] - n2[0], n1[1] - n2[1], n1[2] - n2[2]];
+
+    curl[0] = (dy[2] - dz[1]) / (2.0*eps);
+    curl[1] = (dz[0] - dx[2]) / (2.0*eps);
+    curl[2] = (dx[1] - dy[0]) / (2.0*eps);
+
+  }
+  return normalize(curl);
 }
 
 //----------MOVE----------//
@@ -267,10 +300,13 @@ function move(dT){
     //Find curl value at partile location
     var curl = computeCurl(particles[i]/step, particles[i+1]/step, particles[i+2]/step);
 
+    if(curl[0] != curl[0] || curl[1] != curl[1] || curl[2] != curl[2]){
+      curl = [1,0,0];
+    }
     //Update particle velocity according to curl value and speed
-    velocities[i] = speed*curl.x;
-    velocities[i+1] = speed*curl.y;
-    velocities[i+2] = speed*curl.z;
+    velocities[i] = speed*curl[0]
+    velocities[i+1] = speed*curl[1];
+    velocities[i+2] = speed*curl[2];
 
     //Update particle position based on velocity
     particles[i] += velocities[i];
@@ -301,6 +337,9 @@ var time = 0;
 
 //----------DRAW----------//
 function draw(){
+
+  stats.begin();
+
 	if(rotate){
     controls.update();
   }
@@ -313,7 +352,10 @@ function draw(){
 
   move(dT);
   renderer.render(scene, camera);
+
+  stats.end();
+
   requestAnimationFrame(draw);
 }
 
-requestAnimationFrame(draw);
+draw();
