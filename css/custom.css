@@ -328,6 +328,10 @@ p.p_pre {
   to   { opacity: 1; }
 }
 
+.stlogo{
+  position:relative;
+  top: 3px;
+}
 
 .project{
   position: relative;
@@ -530,5 +534,11 @@ p.p_pre {
     background-color: rgb(20, 20, 20);
     color: #eee;
     white-space: pre; 
+  }
+  .stlogo{
+    position:relative;
+    top: 3px;
+    -webkit-filter: invert(100%); /* Safari/Chrome */
+    filter: invert(100%);
   }
 }
