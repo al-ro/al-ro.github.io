@@ -214,6 +214,7 @@ function noise3D(x, y, z){
 //Find the curl of the noise field based on on the noise value at the location of a particle
 function computeCurl(x, y, z){
   var eps = 1e-4;
+  var curl = [0, 0, 0];
 
   if(!oldMethod){
 
@@ -264,11 +265,9 @@ function computeCurl(x, y, z){
   
     noiseGrad1 = normalize(noiseGrad1);
     noiseGrad1 = normalize(noiseGrad1);
-    var curl = cross(noiseGrad0, noiseGrad1);
+    curl = cross(noiseGrad0, noiseGrad1);
 
   }else{
-
-    var curl = [0, 0, 0];
 
     //Find rate of change in X
     var n1 = noise3D(x + eps, y, z); 
