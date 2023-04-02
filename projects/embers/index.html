@@ -64,7 +64,7 @@
         aligned in the (1, 1, 1) direction. The correct method is to use a 3D vector field (a noise function that takes as input a 3D point and outputs a 3D vector). The correct code is listed at 
         the bottom of this page.</p>
 
-      <p>However, a cheaper formulation exists. As discussed in <a href="https://atyuwen.github.io/posts/bitangent-noise/">a post by atyuwen></a>, "<i>the divergence of the cross product of two gradient fields is always zero</i>". The cheaper
+      <p>However, a cheaper formulation exists. As discussed in <a href="https://atyuwen.github.io/posts/bitangent-noise/">a post by atyuwen</a>, "<i>the divergence of the cross product of two gradient fields is always zero</i>". The cheaper
         method is displayed by default and is shown in the listing below:</p>
 
 <pre><code>function computeCurl(x, y, z){
