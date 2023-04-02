@@ -129,6 +129,7 @@
 <pre><code>function computeCurl(x, y, z){
 
   var eps = 1e-4;
+  var curl = [0, 0, 0];
   
   //Find rate of change in X
   var n1 = noise3D(x + eps, y, z); 
