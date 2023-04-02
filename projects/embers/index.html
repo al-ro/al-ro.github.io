@@ -71,19 +71,19 @@
 
   var eps = 1e-4;
 
-  //Find rate of change in X plane
+  //Find rate of change in X
   var n1 = noise.simplex3(x + eps, y, z); 
   var n2 = noise.simplex3(x - eps, y, z); 
   //Average to find approximate derivative
   var a = (n1 - n2)/(2 * eps);
 
-  //Find rate of change in Y plane
+  //Find rate of change in Y
   n1 = noise.simplex3(x, y + eps, z); 
   n2 = noise.simplex3(x, y - eps, z); 
   //Average to find approximate derivative
   var b = (n1 - n2)/(2 * eps);
 
-  //Find rate of change in Z plane
+  //Find rate of change in Z
   n1 = noise.simplex3(x, y, z + eps); 
   n2 = noise.simplex3(x, y, z - eps); 
   //Average to find approximate derivative
@@ -96,19 +96,19 @@
   y += 10000.5;
   z += 10000.5;
 
-  //Find rate of change in X plane
+  //Find rate of change in X
   n1 = noise.simplex3(x + eps, y, z); 
   n2 = noise.simplex3(x - eps, y, z); 
   //Average to find approximate derivative
   a = (n1 - n2)/(2 * eps);
 
-  //Find rate of change in Y plane
+  //Find rate of change in Y
   n1 = noise.simplex3(x, y + eps, z); 
   n2 = noise.simplex3(x, y - eps, z); 
   //Average to find approximate derivative
   b = (n1 - n2)/(2 * eps);
 
-  //Find rate of change in Z plane
+  //Find rate of change in Z
   n1 = noise.simplex3(x, y, z + eps); 
   n2 = noise.simplex3(x, y, z - eps); 
   //Average to find approximate derivative
@@ -141,7 +141,7 @@
   n2 = noise3D(x, y - eps, z);
   var dy = [n1[0] - n2[0], n1[1] - n2[1], n1[2] - n2[2]];
 
-  //Find rate of change in Z plane
+  //Find rate of change in Z
   n1 = noise3D(x, y, z + eps); 
   n2 = noise3D(x, y, z - eps);
   var dz = [n1[0] - n2[0], n1[1] - n2[1], n1[2] - n2[2]];
