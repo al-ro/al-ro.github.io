@@ -320,7 +320,7 @@ function move(dT){
     if(dist > (25.0 * width * width) || times[Math.floor(i/3)] > lifetimes[Math.floor(i/3)]){
       particles[i] = positions[i] + times[Math.floor(i/3)];
       particles[i+1] = positions[i+1] + times[Math.floor(i/3)];
-      particles[i+2] = positions[i+2] +times[Math.floor(i/3)];
+      particles[i+2] = positions[i+2] + times[Math.floor(i/3)];
       times[Math.floor(i/3)] = 0.0;
     }
   }
