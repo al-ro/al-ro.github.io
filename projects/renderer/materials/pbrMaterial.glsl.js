@@ -122,9 +122,6 @@ function getFragmentSource(){
   uniform float time;
   uniform vec3 cameraPosition;
 
-#ifdef HAS_TRANSMISSION
-  uniform vec2 resolution;
-#endif
   in vec3 vPosition;
 
 #ifdef HAS_UVS
@@ -193,11 +190,13 @@ function getFragmentSource(){
   uniform int alphaMode;
   uniform float alphaCutoff;
 
-  // Normal mapping will lead to an impossible surface where the view ray and normal dot product
-  // is negative. Using PBR, this leads to negative radiance and black artefacts at detail 
-  // fringes. See "Microfacet-based Normal Mapping for Robust Monte Carlo Path Tracing" by 
-  // Schüssler et al. for a discussion of a physically correct solution. 
-  // We just clamp the dot product with a normal to some small value.
+  /*
+    Normal mapping will lead to an impossible surface where the view ray and normal dot product
+    is negative. Using PBR, this leads to negative radiance and black artefacts at detail 
+    fringes. See "Microfacet-based Normal Mapping for Robust Monte Carlo Path Tracing" by 
+    Schüssler et al. for a discussion of a physically correct solution. 
+    We just clamp the dot product with a normal to some small value.
+  */
   const float minDot = 1e-5;
 
   // Clamped dot product
@@ -242,8 +241,9 @@ function getFragmentSource(){
   }
 
 #ifdef HAS_TRANSMISSION
-  vec3 getBackground(vec2 uv, float roughness){
+  vec3 getBackground(float roughness){
     float level = roughness * 10.0;
+    vec2 uv = gl_FragCoord.xy / vec2(textureSize(backgroundTexture, 0));
     return pow(textureLod(backgroundTexture, uv, level).rgb, vec3(2.2));
   }
 #endif
@@ -414,7 +414,7 @@ function getFragmentSource(){
     diffuse = irradiance * albedo.rgb / PI;
 
 #ifdef HAS_TRANSMISSION
-    transmitted = albedo.rgb * getBackground(gl_FragCoord.xy / resolution, roughness);// * (1.0-(F * envBRDF.x + envBRDF.y));   
+    transmitted = albedo.rgb * getBackground(roughness);// * (1.0-(F * envBRDF.x + envBRDF.y));   
     diffuse = mix(diffuse, transmitted, transmission);
 #endif
 

@@ -64,7 +64,6 @@ function getVertexSource(parameters){
 function getFragmentSource(){
 
   var fragmentSource = `
-#extension GL_OES_standard_derivatives : enable
     precision highp float;
     
 #ifdef HAS_NORMALS

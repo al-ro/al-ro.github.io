@@ -1,8 +1,8 @@
-import {Material} from './material.js'
-import {getVertexSource, getFragmentSource} from './ambientMaterial.glsl.js'
-import {gl} from '../canvas.js'
+import { Material } from './material.js'
+import { getVertexSource, getFragmentSource } from './ambientMaterial.glsl.js'
+import { gl } from '../canvas.js'
 
-export class AmbientMaterial extends Material{
+export class AmbientMaterial extends Material {
 
   projectionMatrixHandle;
   viewMatrixHandle;
@@ -12,11 +12,13 @@ export class AmbientMaterial extends Material{
 
   environment;
 
-  // Spherical harmonics (SH) matrices for red, green and blue
-  // Must be generated every time a new environment map is used
-  // Stored on CPU table for use later on if the same environment
-  // is requested again
-  // Mandatory
+  /**
+   * Spherical harmonics (SH) matrices for red, green and blue
+   * Must be generated every time a new environment map is used
+   * Stored on CPU for use later on if the same environment
+   * is requested again
+   * Mandatory
+   */
   shRedMatrix = m4.create();
   shGrnMatrix = m4.create();
   shBluMatrix = m4.create();
@@ -25,10 +27,10 @@ export class AmbientMaterial extends Material{
   shGrnMatrixHandle;
   shBluMatrixHandle;
 
-  constructor(environment){
+  constructor(environment) {
     super();
     this.attributes = ["POSITION", "NORMAL"];
-    if(environment != null){
+    if (environment != null) {
 
       this.environment = environment;
 
@@ -39,15 +41,15 @@ export class AmbientMaterial extends Material{
     }
   }
 
-  getVertexShaderSource(parameters){
+  getVertexShaderSource(parameters) {
     return getVertexSource(parameters);
   }
 
-  getFragmentShaderSource(){
+  getFragmentShaderSource() {
     return getFragmentSource();
   }
 
-  getParameterHandles(){
+  getParameterHandles() {
 
     this.shRedMatrixHandle = this.program.getUniformLocation('shRedMatrix');
     this.shGrnMatrixHandle = this.program.getUniformLocation('shGrnMatrix');
@@ -59,7 +61,7 @@ export class AmbientMaterial extends Material{
     this.normalMatrixHandle = this.program.getUniformLocation('normalMatrix');
   }
 
-  bindParameters(){
+  bindParameters() {
     let shMatrices = this.environment.getSHMatrices();
     this.shRedMatrix = shMatrices.red;
     this.shGrnMatrix = shMatrices.green;

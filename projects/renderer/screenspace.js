@@ -1,16 +1,18 @@
-import {Attribute} from "./attribute.js"
-import {Geometry} from "./geometry.js";
-import {gl} from "./canvas.js";
-
 // Create two triangles in NDC space which spans [-1, -1] and where y points down 
 
-// Use 3D vertices for compatibility with camera matrices and the rest of the code
-// z is set to 0 which is the near plane of the space and corresponds to the screen area
+import { Attribute } from "./attribute.js"
+import { Geometry } from "./geometry.js";
+import { gl } from "./canvas.js";
+
+/**
+ * Use 3D vertices for compatibility with camera matrices and the rest of the code
+ * z is set to 0 which is the near plane of the space and corresponds to the screen area
+ */
 const vertexData = new Float32Array([
-  -1.0,  1.0, 0.0,  // top left
+  -1.0, 1.0, 0.0,  // top left
   -1.0, -1.0, 0.0,  // bottom left
-   1.0,  1.0, 0.0,  // top right
-   1.0, -1.0, 0.0   // bottom right
+  1.0, 1.0, 0.0,  // top right
+  1.0, -1.0, 0.0   // bottom right
 ]);
 
 const uvData = new Float32Array([
@@ -53,11 +55,11 @@ const uvDescriptor = {
   offset: 0
 };
 
-geometryParams.attributes.set("POSITION", new Attribute("POSITION", vertexBuffer, vertexDescriptor));
-geometryParams.attributes.set("TEXCOORD_0", new Attribute("TEXCOORD_0", uvBuffer, uvDescriptor));
+geometryParams.attributes.set("POSITION", new Attribute("POSITION", vertexBuffer, vertexData, vertexDescriptor));
+geometryParams.attributes.set("TEXCOORD_0", new Attribute("TEXCOORD_0", uvBuffer, uvData, uvDescriptor));
 
-function getScreenspaceQuad(){
+function getScreenspaceQuad() {
   return new Geometry(geometryParams);
 }
 
-export {getScreenspaceQuad}
+export { getScreenspaceQuad }

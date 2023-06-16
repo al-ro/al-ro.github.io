@@ -1,5 +1,5 @@
-import {gl} from "./canvas.js";
-import {download} from "./download.js"
+import { gl } from "./canvas.js";
+import { download } from "./download.js"
 
 function createAndSetupTexture() {
   var texture = gl.createTexture();
@@ -21,8 +21,8 @@ function createAndSetupCubemap() {
   var texture = gl.createTexture();
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
- 
-  for(let i = 0; i < 6; i++){
+
+  for (let i = 0; i < 6; i++) {
     const target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + i;
 
     const level = 0;
@@ -74,32 +74,21 @@ function loadTexture(url, signal = null) {
   const image = new Image();
   let objectURL;
 
-  image.onload = function() {
-    if(texture != null && gl.isTexture(texture)){
+  image.onload = function () {
+    if (texture != null && gl.isTexture(texture)) {
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
 
-      // WebGL1 has different requirements for power of 2 images
-      // vs non power of 2 images so check if the image is a
-      // power of 2 in both dimensions.
-      if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
-        // Yes, it's a power of 2. Generate mips.
-        gl.generateMipmap(gl.TEXTURE_2D);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-      } else {
-        // No, it's not a power of 2. Turn off mips and set
-        // wrapping to clamp to edge
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      }
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+
       URL.revokeObjectURL(objectURL);
       gl.bindTexture(gl.TEXTURE_2D, null);
     }
   };
 
   download(url, "blob", signal).then(data => {
-    if(!!data){
+    if (!!data) {
       objectURL = URL.createObjectURL(data);
       image.src = objectURL;
     }
@@ -110,8 +99,4 @@ function loadTexture(url, signal = null) {
   return texture;
 }
 
-function isPowerOf2(value) {
-  return (value & (value - 1)) == 0;
-}
-
-export {loadTexture, createAndSetupTexture, createAndSetupCubemap}
+export { loadTexture, createAndSetupTexture, createAndSetupCubemap }
