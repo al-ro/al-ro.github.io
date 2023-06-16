@@ -40,7 +40,7 @@ function getFragmentSource(){
     // Get orthonormal basis from surface normal
     // https://graphics.pixar.com/library/OrthonormalB/paper.pdf
     void pixarONB(vec3 n, out vec3 b1, out vec3 b2){
-      float sign_ = sign(n.z);
+      float sign_ = n.z >= 0.0 ? 1.0 : -1.0;
       float a = -1.0 / (sign_ + n.z);
       float b = n.x * n.y * a;
       b1 = vec3(1.0 + sign_ * n.x * n.x * a, sign_ * b, -sign_ * n.x);

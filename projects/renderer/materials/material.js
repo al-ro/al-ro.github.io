@@ -1,7 +1,7 @@
-import {gl} from "../canvas.js"
-import {programRepository} from "../programRepository.js"
+import { gl } from "../canvas.js"
+import { programRepository } from "../programRepository.js"
 
-export class Material{
+export class Material {
 
   attributeHandles = {};
 
@@ -14,46 +14,46 @@ export class Material{
   needTime = false;
   instanced = false;
 
-  constructor(){}
+  constructor() { }
 
-  destroy(){}
+  destroy() { }
 
-  createProgram(attributes){
+  createProgram(attributes) {
     this.program = programRepository.getProgram(this, attributes);
   }
 
-  getProgram(){
+  getProgram() {
     return this.program;
   }
 
-  bindMatrices(params){
+  bindMatrices(params) {
 
-    if(this.projectionMatrixHandle != null && params.projectionMatrix != null){
+    if (this.projectionMatrixHandle != null && params.projectionMatrix != null) {
       gl.uniformMatrix4fv(this.projectionMatrixHandle, false, params.projectionMatrix);
     }
 
-    if(this.viewMatrixHandle != null && params.viewMatrix != null){
+    if (this.viewMatrixHandle != null && params.viewMatrix != null) {
       gl.uniformMatrix4fv(this.viewMatrixHandle, false, params.viewMatrix);
     }
 
-    if(this.modelMatrixHandle != null && params.modelMatrix != null){
+    if (this.modelMatrixHandle != null && params.modelMatrix != null) {
       gl.uniformMatrix4fv(this.modelMatrixHandle, false, params.modelMatrix);
     }
 
-    if(this.normalMatrixHandle != null && params.normalMatrix != null){
+    if (this.normalMatrixHandle != null && params.normalMatrix != null) {
       gl.uniformMatrix4fv(this.normalMatrixHandle, false, params.normalMatrix);
     }
   }
 
-  getAttributes(){
+  getAttributes() {
     return this.attributes;
   }
 
-  bindParameters(){}
+  bindParameters() { }
 
-  isInstanced(){
+  isInstanced() {
     return this.instanced;
   }
 
-  setPipeline(){}
+  setPipeline() { }
 }

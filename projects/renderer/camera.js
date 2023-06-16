@@ -1,11 +1,11 @@
-export class Camera{
-  
+export class Camera {
+
   position = [0, 0, 1];
   target = [0, 0, 0];
   distance = 1;
 
-  viewDirection = [0,0,-1];
-  rightDirection = [1,0,0];
+  viewDirection = [0, 0, -1];
+  rightDirection = [1, 0, 0];
   pitch = 0;
   yaw = 0;
 
@@ -15,13 +15,13 @@ export class Camera{
   zNear = 0.1;
   zFar = 1.0;
 
-  perspectiveMatrix; 
-  cameraMatrix; 
-  viewMatrix; 
+  perspectiveMatrix;
+  cameraMatrix;
+  viewMatrix;
 
   exposure = 1.0;
 
-  constructor(pitch, yaw, distance, target, up, fov, aspect, zNear, zFar){
+  constructor(pitch, yaw, distance, target, up, fov, aspect, zNear, zFar) {
     this.pitch = pitch;
     this.yaw = yaw;
 
@@ -41,7 +41,7 @@ export class Camera{
     this.setViewMatrix();
   }
 
-  updatePosition(delta){
+  updatePosition(delta) {
     let yawChange = (delta[0] * 0.01) % (2.0 * Math.PI);
     this.yaw -= yawChange;
 
@@ -49,7 +49,7 @@ export class Camera{
     this.pitch += pitchChange;
 
     this.yaw = mod(this.yaw, 2.0 * Math.PI);
-    this.pitch = Math.max(0.01, Math.min(Math.PI-0.01, this.pitch));
+    this.pitch = Math.max(0.01, Math.min(Math.PI - 0.01, this.pitch));
 
     this.position[0] = Math.cos(this.yaw) * Math.sin(this.pitch);
     this.position[1] = Math.cos(this.pitch);
@@ -63,81 +63,85 @@ export class Camera{
     this.position = add(this.position, this.target);
   }
 
-  updateDistance(distance){
+  updateDistance(distance) {
     this.distance = distance;
-    this.updatePosition([0,0]);
+    this.updatePosition([0, 0]);
   }
 
+  // Fly camera
 
-// Fly camera
-
-/*
-  updatePosition(delta){
-
-    let yawChange = (delta[0] * 0.01) % (2.0 * Math.PI);
-    this.yaw  += yawChange;
-    this.viewDirection[0] = Math.sin(this.yaw);
-    this.viewDirection[2] = Math.cos(this.yaw);
-    let pitchChange = (delta[1] * 0.01) % (2.0 * Math.PI);
-    this.pitch += pitchChange;
-    this.pitch = Math.max(-Math.PI/2.0, Math.min(Math.PI/2.0, this.pitch));
-    this.viewDirection[1] = Math.sin(this.pitch);
-    this.viewDirection = normalize(this.viewDirection);
-
-    this.rightDirection = normalize(cross(this.up, this.viewDirection));
-    this.target = [this.position[0] + this.viewDirection[0], this.position[1] + this.viewDirection[1], this.position[2] + this.viewDirection[2]];
-
+  /*
+    updatePosition(delta){
+  
+      let yawChange = (delta[0] * 0.01) % (2.0 * Math.PI);
+      this.yaw  += yawChange;
+      this.viewDirection[0] = Math.sin(this.yaw);
+      this.viewDirection[2] = Math.cos(this.yaw);
+      let pitchChange = (delta[1] * 0.01) % (2.0 * Math.PI);
+      this.pitch += pitchChange;
+      this.pitch = Math.max(-Math.PI/2.0, Math.min(Math.PI/2.0, this.pitch));
+      this.viewDirection[1] = Math.sin(this.pitch);
+      this.viewDirection = normalize(this.viewDirection);
+  
+      this.rightDirection = normalize(cross(this.up, this.viewDirection));
+      this.target = [this.position[0] + this.viewDirection[0], this.position[1] + this.viewDirection[1], this.position[2] + this.viewDirection[2]];
+  
+    }
+  */
+  setPosition(pos) {
+    // this.position = pos;
+    // this.rightDirection = normalize(cross(this.up, this.viewDirection));
+    // this.target = [this.position[0] + this.viewDirection[0], this.position[1] + this.viewDirection[1], this.position[2] + this.viewDirection[2]];
   }
-*/
-  setPosition(pos){
-   // this.position = pos;
-   // this.rightDirection = normalize(cross(this.up, this.viewDirection));
-   // this.target = [this.position[0] + this.viewDirection[0], this.position[1] + this.viewDirection[1], this.position[2] + this.viewDirection[2]];
-  }
 
-  getPosition(){
+  getPosition() {
     return this.position;
   }
 
-  setProjectionMatrix(){
+  setProjectionMatrix() {
     this.projectionMatrix = m4.perspective(this.fov, this.aspect, this.zNear, this.zFar);
   }
 
-  getProjectionMatrix(){
+  getProjectionMatrix() {
     return this.projectionMatrix;
   }
 
-  setCameraMatrix(){
+  setCameraMatrix() {
     this.cameraMatrix = m4.lookAt(this.position, this.target, this.up);
   }
 
-  getCameraMatrix(){
+  getCameraMatrix() {
     return this.cameraMatrix;
   }
 
-  setViewMatrix(){
+  setViewMatrix() {
     this.viewMatrix = m4.inverse(this.cameraMatrix);
   }
 
-  getViewMatrix(){
+  getViewMatrix() {
     return this.viewMatrix;
   }
 
-  setAspect(aspect){
+  setAspect(aspect) {
     this.aspect = aspect;
   }
 
-  setTarget(target){
+  setTarget(target) {
     this.target = target;
   }
 
-  getFOV(){
+  getFOV() {
     return this.fov;
   }
 
-  getExposure(){
+  getExposure() {
     return this.exposure;
   }
-  
+
+  // Return whether any part of the AABB is inside the camera frustum
+  insideFrustum(AABB) {
+    return true;
+  }
+
 }
 

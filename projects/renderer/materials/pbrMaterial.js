@@ -1,6 +1,6 @@
-import {gl, enums} from "../canvas.js"
-import {Material} from './material.js'
-import {getVertexSource, getFragmentSource} from './pbrMaterial.glsl.js'
+import { gl, enums } from "../canvas.js"
+import { Material } from './material.js'
+import { getVertexSource, getFragmentSource } from './pbrMaterial.glsl.js'
 
 // Which quantity to render for debugging
 export const outputEnum = {
@@ -21,7 +21,7 @@ export const outputEnum = {
   //TEXCOORD_1: 14,
 };
 
-export class PBRMaterial extends Material{
+export class PBRMaterial extends Material {
 
   projectionMatrixHandle;
   viewMatrixHandle;
@@ -34,17 +34,16 @@ export class PBRMaterial extends Material{
   timeHandle;
   time = 0.0;
 
-  resolutionHandle;
-  resolution = [1, 1];
-
   cameraPositionHandle;
   cameraPosition = [10, 10, 10];
 
-  // Spherical harmonics (SH) matrices for red, green and blue
-  // Must be generated every time a new environment map is used
-  // Stored on CPU table for use later on if the same environment
-  // is requested again
-  // Mandatory
+  /**
+   * Spherical harmonics (SH) matrices for red, green and blue
+   * Must be generated every time a new environment map is used
+   * Stored on CPU for use later on if the same environment
+   * is requested again
+   * Mandatory
+   */
   shRedMatrix = m4.create();
   shGrnMatrix = m4.create();
   shBluMatrix = m4.create();
@@ -76,11 +75,13 @@ export class PBRMaterial extends Material{
   // Multiplier for normal texture X and Y values
   normalScale = 1.0;
 
-  // Combined texture of:
-  // 	occlusion   r
-  //	roughness   g
-  //	metal       b
-  // Optional
+  /**
+   * Combined texture of:
+   * 	occlusion   r
+   * 	roughness   g
+   * 	metal       b
+   * Optional
+   */
   metallicRoughnessTexture;
 
   // Ambient occlusion may have a separate texture or use the red channel of properties
@@ -98,21 +99,25 @@ export class PBRMaterial extends Material{
   transmissionTexture;
   transmissionFactor = 0.0;
 
-  // A cubemap or equirectangular texture where each mip map is a 
-  // prefiltered environment map of the source cubemap at level 0
-  // Must be generated every time a new environment map is used
-  // Mandatory
+  /**
+   * A cubemap or equirectangular texture where each mip map is a
+   * prefiltered environment map of the source cubemap at level 0
+   * Must be generated every time a new environment map is used
+   * Mandatory
+   */
   environmentTexture;
 
   // For transmissive materials, this holds a mipmapped square texture of the opaque scene
   // Mandatory if hasTransmission == true
   backgroundTexture;
 
-  // The precomputed Fresnel response table for given view ray
-  // and surface normal. Used in the split sum approach to specular BRDF
-  // This texture is independent from the environment and is computed
-  // and stored once any pbrMaterial is used
-  // Mandatory
+  /**
+   * The precomputed Fresnel response table for given view ray
+   * and surface normal. Used in the split sum approach to specular BRDF
+   * This texture is independent from the environment and is computed
+   * and stored once any pbrMaterial is used
+   * Mandatory
+   */
   brdfIntegrationMapTexture;
 
   // --------- PBR uniform handles ----------
@@ -179,34 +184,34 @@ export class PBRMaterial extends Material{
 
   textureUnits = 0;
 
-  destroy(){
-    if(this.baseColorTexture != null){
+  destroy() {
+    if (this.baseColorTexture != null) {
       gl.deleteTexture(this.baseColorTexture);
       this.baseColorTexture = null;
     }
-    if(this.metallicRoughnessTexture != null){
+    if (this.metallicRoughnessTexture != null) {
       gl.deleteTexture(this.metallicRoughnessTexture);
       this.metallicRoughnessTexture = null;
     }
-    if(this.normalTexture != null){
+    if (this.normalTexture != null) {
       gl.deleteTexture(this.normalTexture);
       this.normalTexture = null;
     }
-    if(this.emissiveTexture != null){
+    if (this.emissiveTexture != null) {
       gl.deleteTexture(this.emissiveTexture);
       this.emissiveTexture = null;
     }
-    if(this.occlusionTexture != null){
+    if (this.occlusionTexture != null) {
       gl.deleteTexture(this.occlusionTexture);
       this.occlusionTexture = null;
     }
-    if(this.transmissionTexture != null){
+    if (this.transmissionTexture != null) {
       gl.deleteTexture(this.transmissionTexture);
       this.transmissionTexture = null;
     }
   }
 
-  constructor(parameters){
+  constructor(parameters) {
 
     super();
 
@@ -220,15 +225,15 @@ export class PBRMaterial extends Material{
     this.needsCamera = true;
     this.needsTime = true;
 
-    if(parameters.alphaMode != null){
+    if (parameters.alphaMode != null) {
       this.alphaMode = parameters.alphaMode;
     }
 
-    if(parameters.alphaCutoff != null){
+    if (parameters.alphaCutoff != null) {
       this.alphaCutoff = parameters.alphaCutoff;
     }
 
-    if(parameters.doubleSided != null){
+    if (parameters.doubleSided != null) {
       this.doubleSided = parameters.doubleSided;
     }
 
@@ -238,7 +243,7 @@ export class PBRMaterial extends Material{
 
     this.environmentTextureUnit = this.textureUnits++;
 
-    if(parameters.environment != null){
+    if (parameters.environment != null) {
 
       this.environment = parameters.environment;
 
@@ -251,92 +256,92 @@ export class PBRMaterial extends Material{
       this.shBluMatrix = shMatrices.blue;
     }
 
-    if(parameters.baseColorTexture != null){
+    if (parameters.baseColorTexture != null) {
       this.baseColorTexture = parameters.baseColorTexture;
       this.hasBaseColorTexture = true;
       this.baseColorTextureUnit = this.textureUnits++;
     }
 
-    if(parameters.baseColorFactor != null){
+    if (parameters.baseColorFactor != null) {
       this.baseColorFactor = parameters.baseColorFactor;
     }
 
-    if(parameters.normalTexture != null){
+    if (parameters.normalTexture != null) {
       this.hasNormalTexture = true;
       this.normalTextureUnit = this.textureUnits++;
       this.normalTexture = parameters.normalTexture;
-      if(parameters.normalScale != null){
+      if (parameters.normalScale != null) {
         this.normalScale = parameters.normalScale;
       }
     }
 
-    if(parameters.emissiveTexture != null){
+    if (parameters.emissiveTexture != null) {
       this.hasEmission = true;
       this.hasEmissiveTexture = true;
       this.emissiveTextureUnit = this.textureUnits++;
       this.emissiveTexture = parameters.emissiveTexture;
     }
-    if(parameters.emissiveFactor != null){
+    if (parameters.emissiveFactor != null) {
       this.hasEmission = true;
       this.hasEmissiveFactor = true;
       this.emissiveFactor = parameters.emissiveFactor;
     }
 
-    if(parameters.transmissionTexture != null){
+    if (parameters.transmissionTexture != null) {
       this.hasTransmission = true;
       this.hasTransmissionTexture = true;
       this.transmissionTextureUnit = this.textureUnits++;
       this.transmissionTexture = parameters.transmissionTexture;
     }
 
-    if(parameters.transmissionFactor != null){
+    if (parameters.transmissionFactor != null) {
       this.hasTransmission = true;
       this.hasTransmissionFactor = true;
       this.transmissionFactor = parameters.transmissionFactor;
     }
 
-    if(this.hasTransmission){
+    if (this.hasTransmission) {
       this.backgroundTextureUnit = this.textureUnits++;
     }
 
-    if(parameters.metallicRoughnessTexture != null){
+    if (parameters.metallicRoughnessTexture != null) {
       this.hasMetallicRoughnessTexture = true;
       this.metallicRoughnessTextureUnit = this.textureUnits++;
       this.metallicRoughnessTexture = parameters.metallicRoughnessTexture;
     }
 
-    if(parameters.metallicFactor != null){
+    if (parameters.metallicFactor != null) {
       this.metallicFactor = parameters.metallicFactor;
     }
 
-    if(parameters.roughnessFactor != null){
+    if (parameters.roughnessFactor != null) {
       this.roughnessFactor = parameters.roughnessFactor;
     }
 
-    if(parameters.occlusionTexture != null){
+    if (parameters.occlusionTexture != null) {
       this.hasAO = true;
-      if(parameters.occlusionTexture == this.metallicRoughnessTexture){
+      if (parameters.occlusionTexture == this.metallicRoughnessTexture) {
         this.hasAOTexture = false;
-      }else{
+      } else {
         this.hasAOTexture = true;
         this.occlusionTextureUnit = this.textureUnits++;
         this.occlusionTexture = parameters.occlusionTexture;
       }
-      if(parameters.occlusionStrength != null){
+      if (parameters.occlusionStrength != null) {
         this.occlusionStrength = parameters.occlusionStrength;
       }
     }
   }
 
-  getVertexShaderSource(){
+  getVertexShaderSource() {
     return getVertexSource();
   }
 
-  getFragmentShaderSource(){
+  getFragmentShaderSource() {
     return getFragmentSource();
   }
 
-  getParameterHandles(parameters){
+  getParameterHandles(parameters) {
     this.outputVariableHandle = this.program.getUniformLocation('outputVariable');
 
     this.projectionMatrixHandle = this.program.getUniformLocation('projectionMatrix');
@@ -354,76 +359,70 @@ export class PBRMaterial extends Material{
     this.alphaCutoffHandle = this.program.getOptionalUniformLocation('alphaCutoff');
     this.alphaModeHandle = this.program.getOptionalUniformLocation('alphaMode');
 
-    if(this.hasBaseColorTexture){
+    if (this.hasBaseColorTexture) {
       this.baseColorTextureHandle = this.program.getOptionalUniformLocation('baseColorTexture');
     }
 
     this.baseColorHandle = this.program.getOptionalUniformLocation('baseColorFactor');
-    
-    if(this.hasNormalTexture){
+
+    if (this.hasNormalTexture) {
       this.normalTextureHandle = this.program.getOptionalUniformLocation('normalTexture');
       this.normalScaleHandle = this.program.getOptionalUniformLocation('normalScale');
     }
 
-    if(this.hasEmission){
-      if(this.hasEmissiveTexture){
+    if (this.hasEmission) {
+      if (this.hasEmissiveTexture) {
         this.emissiveTextureHandle = this.program.getOptionalUniformLocation('emissiveTexture');
       }
-      if(this.hasEmissiveFactor){
-        this.emissiveFactorHandle = this.program.getOptionalUniformLocation('emissiveFactor'); 
+      if (this.hasEmissiveFactor) {
+        this.emissiveFactorHandle = this.program.getOptionalUniformLocation('emissiveFactor');
       }
     }
 
-    if(this.hasTransmission){
-      if(this.hasTransmissionTexture){
+    if (this.hasTransmission) {
+      if (this.hasTransmissionTexture) {
         this.transmissionTextureHandle = this.program.getOptionalUniformLocation('transmissionTexture');
       }
 
-      if(this.hasTransmissionFactor){
-        this.transmissionFactorHandle = this.program.getOptionalUniformLocation('transmissionFactor'); 
+      if (this.hasTransmissionFactor) {
+        this.transmissionFactorHandle = this.program.getOptionalUniformLocation('transmissionFactor');
       }
 
-      this.backgroundTextureHandle = this.program.getOptionalUniformLocation('backgroundTexture'); 
-      
+      this.backgroundTextureHandle = this.program.getOptionalUniformLocation('backgroundTexture');
+
     }
 
-    if(this.hasMetallicRoughnessTexture){
+    if (this.hasMetallicRoughnessTexture) {
       this.metallicRoughnessTextureHandle = this.program.getOptionalUniformLocation('metallicRoughnessTexture');
     }
 
-    this.metallicFactorHandle = this.program.getOptionalUniformLocation('metallicFactor'); 
-    this.roughnessFactorHandle = this.program.getOptionalUniformLocation('roughnessFactor'); 
+    this.metallicFactorHandle = this.program.getOptionalUniformLocation('metallicFactor');
+    this.roughnessFactorHandle = this.program.getOptionalUniformLocation('roughnessFactor');
 
-    if(this.hasAO){
-      this.occlusionStrengthHandle = this.program.getOptionalUniformLocation('occlusionStrength'); 
+    if (this.hasAO) {
+      this.occlusionStrengthHandle = this.program.getOptionalUniformLocation('occlusionStrength');
     }
-    if(this.hasAOTexture){
+    if (this.hasAOTexture) {
       this.occlusionTextureHandle = this.program.getOptionalUniformLocation('occlusionTexture');
     }
 
     this.timeHandle = this.program.getOptionalUniformLocation('time');
 
-    if(this.hasTransmission){
-      this.resolutionHandle = this.program.getOptionalUniformLocation('resolution');
-    }
     this.environmentTextureHandle = this.program.getUniformLocation('cubeMap');
     this.brdfTextureHandle = this.program.getUniformLocation('brdfIntegrationMapTexture');
   }
 
-  getInstanceParameterHandles(){
+  getInstanceParameterHandles() {
     this.attributeHandles.orientationHandle = this.program.getAttribLocation('orientation');
     this.attributeHandles.offsetHandle = this.program.getAttribLocation('offset');
     this.attributeHandles.scaleHandle = this.program.getAttribLocation('scale');
   }
 
-  bindParameters(){
+  bindParameters() {
 
     gl.uniform1i(this.outputVariableHandle, this.outputVariable);
 
     gl.uniform1f(this.timeHandle, this.time);
-    if(this.hasTransmission){
-      gl.uniform2fv(this.resolutionHandle, this.resolution);
-    }
 
     this.brdfIntegrationMapTexture = this.environment.getBRDFIntegrationMap();
     this.environmentTexture = this.environment.getCubeMap();
@@ -436,7 +435,7 @@ export class PBRMaterial extends Material{
     gl.uniform1f(this.alphaCutoffHandle, this.alphaCutoff);
 
     let blendModeAsInt;
-    switch(this.alphaMode){
+    switch (this.alphaMode) {
       case enums.BLEND:
         blendModeAsInt = 1;
         break;
@@ -444,7 +443,7 @@ export class PBRMaterial extends Material{
         blendModeAsInt = 2;
         break;
       default:
-        blendModeAsInt = 0; 
+        blendModeAsInt = 0;
     }
 
     gl.uniform1i(this.alphaModeHandle, blendModeAsInt);
@@ -465,83 +464,79 @@ export class PBRMaterial extends Material{
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.environmentTexture);
     gl.uniform1i(this.environmentTextureHandle, this.environmentTextureUnit);
 
-    if(this.hasBaseColorTexture){
+    if (this.hasBaseColorTexture) {
       gl.activeTexture(gl.TEXTURE0 + this.baseColorTextureUnit);
       gl.bindTexture(gl.TEXTURE_2D, this.baseColorTexture);
       gl.uniform1i(this.baseColorTextureHandle, this.baseColorTextureUnit);
     }
 
-    gl.uniform4fv(this.baseColorHandle, this.baseColorFactor); 
+    gl.uniform4fv(this.baseColorHandle, this.baseColorFactor);
 
-    if(this.hasNormalTexture){
+    if (this.hasNormalTexture) {
       gl.activeTexture(gl.TEXTURE0 + this.normalTextureUnit);
       gl.bindTexture(gl.TEXTURE_2D, this.normalTexture);
       gl.uniform1i(this.normalTextureHandle, this.normalTextureUnit);
       gl.uniform1f(this.normalScaleHandle, this.normalScale);
     }
 
-    if(this.hasEmissiveTexture){
+    if (this.hasEmissiveTexture) {
       gl.activeTexture(gl.TEXTURE0 + this.emissiveTextureUnit);
       gl.bindTexture(gl.TEXTURE_2D, this.emissiveTexture);
       gl.uniform1i(this.emissiveTextureHandle, this.emissiveTextureUnit);
     }
 
-    if(this.hasEmissiveFactor){
+    if (this.hasEmissiveFactor) {
       gl.uniform3fv(this.emissiveFactorHandle, this.emissiveFactor);
     }
 
-    if(this.hasTransmissionTexture){
+    if (this.hasTransmissionTexture) {
       gl.activeTexture(gl.TEXTURE0 + this.transmissionTextureUnit);
       gl.bindTexture(gl.TEXTURE_2D, this.transmissionTexture);
       gl.uniform1i(this.transmissionTextureHandle, this.transmissionTextureUnit);
     }
-    if(this.hasTransmissionFactor){
+    if (this.hasTransmissionFactor) {
       gl.uniform1f(this.transmissionFactorHandle, this.transmissionFactor);
     }
-    if(this.hasTransmission){
+    if (this.hasTransmission) {
       gl.activeTexture(gl.TEXTURE0 + this.backgroundTextureUnit);
       gl.bindTexture(gl.TEXTURE_2D, this.backgroundTexture);
       gl.uniform1i(this.backgroundTextureHandle, this.backgroundTextureUnit);
     }
 
-    if(this.hasMetallicRoughnessTexture){
+    if (this.hasMetallicRoughnessTexture) {
       gl.activeTexture(gl.TEXTURE0 + this.metallicRoughnessTextureUnit);
       gl.bindTexture(gl.TEXTURE_2D, this.metallicRoughnessTexture);
       gl.uniform1i(this.metallicRoughnessTextureHandle, this.metallicRoughnessTextureUnit);
     }
-    
+
     gl.uniform1f(this.metallicFactorHandle, this.metallicFactor);
     gl.uniform1f(this.roughnessFactorHandle, this.roughnessFactor);
-    
 
-    if(this.hasAO){
+
+    if (this.hasAO) {
       gl.uniform1f(this.occlusionStrengthHandle, this.occlusionStrength);
     }
-    if(this.hasAOTexture){
+    if (this.hasAOTexture) {
       gl.activeTexture(gl.TEXTURE0 + this.occlusionTextureUnit);
       gl.bindTexture(gl.TEXTURE_2D, this.occlusionTexture);
       gl.uniform1i(this.occlusionTextureHandle, this.occlusionTextureUnit);
     }
   }
 
-  setCamera(camera){
+  setCamera(camera) {
     this.cameraPosition = camera.getPosition();
     this.exposure = camera.getExposure();
   }
 
-  setBackgroundTexture(backgroundTexture){
+  setBackgroundTexture(backgroundTexture) {
     this.backgroundTexture = backgroundTexture;
   }
 
-  setResolution(resolution){
-    this.resolution = resolution;
-  }
-
-  setTime(time){
+  setTime(time) {
     this.time = time;
   }
 
-  setOutput(output){
+  setOutput(output) {
     this.outputVariable = output;
   }
 

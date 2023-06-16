@@ -34,7 +34,7 @@ function getFragmentSource(){
   // Get orthonormal basis from surface normal
   // https://graphics.pixar.com/library/OrthonormalB/paper.pdf
   void pixarONB(vec3 n, out vec3 b1, out vec3 b2){
-    float sign_ = sign(n.z);
+    float sign_ = n.z >= 0.0 ? 1.0 : -1.0;
     float a = -1.0 / (sign_ + n.z);
     float b = n.x * n.y * a;
     b1 = vec3(1.0 + sign_ * n.x * n.x * a, sign_ * b, -sign_ * n.x);
@@ -43,12 +43,14 @@ function getFragmentSource(){
 
   // ------------- Hammersley sequence generation using radical inverse -------------
 
-  //  http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
-  //  http://www.pbr-book.org/3ed-2018/Sampling_and_Reconstruction/The_Halton_Sampler.html
+  /*
+    http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
+    http://www.pbr-book.org/3ed-2018/Sampling_and_Reconstruction/The_Halton_Sampler.html
 
-  //  While it looks like an arcane faerie incantation, it actually makes sense if you follow 
-  //  the references. Bring some tea.
-  /* 
+    While it looks like an arcane faerie incantation, it actually makes sense if you follow 
+    the references. Bring some tea.
+  */
+
      float radicalInverse(uint bits) {
      bits = (bits << 16u) | (bits >> 16u);
      bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
@@ -61,15 +63,6 @@ function getFragmentSource(){
      vec2 hammersley(int i){
      return vec2(float(i)/float(sampleCount), radicalInverse(uint(i)));
      }
-   */
-
-  //https://patapom.com/blog/Math/ImportanceSampling/
-  //https://www.shadertoy.com/view/4dtBWH
-  vec2 Nth_weyl(vec2 p0, int n) {
-
-    //return fract(p0 + float(n)*vec2(0.754877669, 0.569840296));
-    return fract(p0 + vec2(n*12664745, n*9560333)/exp2(24.));	// integer mul to avoid round-off
-  }
 
   // -------------------------------------------------------------------------------
 
@@ -124,9 +117,7 @@ function getFragmentSource(){
     vec3 N = vec3(0.0, 0.0, 1.0);
 
     for(int i = 0; i < sampleCount; i++){
-
-      vec2 randomHemisphere = Nth_weyl(vec2(0.), i);
-      //vec2 randomHemisphere = hammersley(i);
+      vec2 randomHemisphere = hammersley(i);
       vec3 H  = importanceSampleGGX(randomHemisphere, N, roughness);
       vec3 L  = normalize(2.0 * dot(V, H) * H - V);
 

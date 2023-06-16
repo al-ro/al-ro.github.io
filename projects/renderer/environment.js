@@ -1,17 +1,20 @@
-import {download} from "./download.js"
-import {gl} from "./canvas.js"
-import {createAndSetupCubemap} from "./texture.js"
-import {EnvironmentMaterial} from "./materials/environmentMaterial.js"
-import {Mesh} from "./mesh.js";
-import {getScreenspaceQuad} from "./screenspace.js";
-import {createAndSetupTexture} from "./texture.js"
+import { download } from "./download.js"
+import { gl } from "./canvas.js"
+import { createAndSetupCubemap } from "./texture.js"
+import { EnvironmentMaterial } from "./materials/environmentMaterial.js"
+import { Mesh } from "./mesh.js";
+import { getScreenspaceQuad } from "./screenspace.js";
+import { createAndSetupTexture } from "./texture.js"
 
-import {loadHDR} from "./hdrpng.js"
-import {getSphericalHarmonicsMatrices, getBRDFIntegrationMap, getCubeMapConvolution, convertToCubeMap} from "./iblUtils.js";
+import { loadHDR } from "./hdrpng.js"
+import { getSphericalHarmonicsMatrices, getBRDFIntegrationMap, getCubeMapConvolution, convertToCubeMap } from "./iblUtils.js";
 
-class Environment{
-  // Type of the file passed in
-  type = "cubemap"; // "cubemap" or "hdr"
+class Environment {
+  /**
+   * Type of the file passed in
+   *  "cubemap" or "hdr"
+   */
+  type = "cubemap";
 
   // Internal representation is a cube map
   cubeMap;
@@ -33,36 +36,36 @@ class Environment{
 
   loadFlags = [false, false, false, false, false, false];
 
-  constructor(parameters){
+  constructor(parameters) {
 
     let path = parameters.path;
     this.camera = parameters.camera;
 
-    if(!path){
+    if (!path) {
       console.error("Environment must be created with a file path. Parameter: ", parameters);
     }
 
     this.cubeMap = createAndSetupCubemap();
 
     this.environmentMaterial = new EnvironmentMaterial(this.cubeMap, this.camera, this);
-    this.environmentMesh = new Mesh(getScreenspaceQuad(), this.environmentMaterial);  
+    this.environmentMesh = new Mesh(getScreenspaceQuad(), this.environmentMaterial);
 
-    this.shMatrices = {red: this.shRedMatrix, green: this.shGrnMatrix, blue: this.shBluMatrix};
+    this.shMatrices = { red: this.shRedMatrix, green: this.shGrnMatrix, blue: this.shBluMatrix };
     this.setupBRDFIntegrationMap();
 
     this.type = parameters.type;
 
-    if(this.type == "cubemap"){
+    if (this.type == "cubemap") {
       this.setupCubemap(path);
-    }else if(this.type == "hdr"){
+    } else if (this.type == "hdr") {
       this.setHDR(path);
-    }else{
+    } else {
       console.log("Unknown or missing environement map type: ", this.type);
     }
 
   }
 
-  generateIBLData(){
+  generateIBLData() {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeMap);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
@@ -78,24 +81,24 @@ class Environment{
     this.updateHDR = false;
   }
 
-  updateFace = function(i, obj){
+  updateFace = function (i, obj) {
     obj.loadFlags[i] = true;
   }
 
-  needsUpdate(){
+  needsUpdate() {
     return this.updateHDR;
   }
 
-  setupCubemap(path){
+  setupCubemap(path) {
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeMap);
 
     let obj = this;
 
-    for(let i = 0; i < 6; i++){
+    for (let i = 0; i < 6; i++) {
       const image = new Image();
-      image.onload = function(){
+      image.onload = function () {
         const target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + i;
 
         const level = 0;
@@ -116,55 +119,54 @@ class Environment{
     }
   }
 
-  setHDR(path){
+  setHDR(path) {
 
     download(path, "arrayBuffer").then(data => {
 
-        let hdr = loadHDR(new Uint8Array(data));
+      let hdr = loadHDR(new Uint8Array(data));
 
-        let texture = createAndSetupTexture();
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB32F, hdr.width, hdr.height, 0, gl.RGB, gl.FLOAT, hdr.dataFloat);
+      let texture = createAndSetupTexture();
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB32F, hdr.width, hdr.height, 0, gl.RGB, gl.FLOAT, hdr.dataFloat);
 
-        let type = hdr.width == hdr.height ? "angular" : "equirectangular";
+      let type = hdr.width == hdr.height ? "angular" : "equirectangular";
 
-        convertToCubeMap(texture, this.cubeMap, type);
-        gl.deleteTexture(texture);
+      convertToCubeMap(texture, this.cubeMap, type);
+      gl.deleteTexture(texture);
 
-        this.updateHDR = true;
-        
+      this.updateHDR = true;
+
     });
   }
 
-  calculateSHMatrices(){
+  calculateSHMatrices() {
     this.shMatrices = getSphericalHarmonicsMatrices(this.cubeMap);
   }
 
-  convoluteCubeMap(){
+  convoluteCubeMap() {
     this.cubeMap = getCubeMapConvolution(this.cubeMap);
   }
 
-  setupBRDFIntegrationMap(){
+  setupBRDFIntegrationMap() {
     this.brdfIntegrationMap = getBRDFIntegrationMap();
   }
 
-  getSHMatrices(){
+  getSHMatrices() {
     return this.shMatrices;
   }
 
-  getCubeMap(){
+  getCubeMap() {
     return this.cubeMap;
   }
 
-  getBRDFIntegrationMap(){
+  getBRDFIntegrationMap() {
     return this.brdfIntegrationMap;
   }
 
-  render(camera, time){
-    gl.depthMask(false);
-    this.environmentMesh.render(camera, time);
+  getMesh() {
+    return this.environmentMesh;
   }
 }
 
-export {Environment}
+export { Environment }

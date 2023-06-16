@@ -1,36 +1,44 @@
-// Functions and arrays to create, store and manage IBL related data such as 
-// environment map convolution and spherical harmonics
+/**
+ * Functions and arrays to create, store and manage IBL related data such as
+ * environment map convolution and spherical harmonics
+ */
 
-import {gl} from "./canvas.js"
-import {SphericalHarmonicsMaterial} from "./materials/sphericalHarmonicsMaterial.js"
-import {BRDFMapMaterial} from "./materials/brdfMapMaterial.js"
-import {ConvolutionMaterial} from "./materials/convolutionMaterial.js"
-import {CubeMapConverterMaterial} from "./materials/cubeMapConverterMaterial.js"
-import {getScreenspaceQuad} from "./screenspace.js"
-import {Mesh} from "./mesh.js"
-import {createAndSetupTexture} from "./texture.js"
+import { gl, RenderPass } from "./canvas.js"
+import { SphericalHarmonicsMaterial } from "./materials/sphericalHarmonicsMaterial.js"
+import { BRDFMapMaterial } from "./materials/brdfMapMaterial.js"
+import { ConvolutionMaterial } from "./materials/convolutionMaterial.js"
+import { CubeMapConverterMaterial } from "./materials/cubeMapConverterMaterial.js"
+import { getScreenspaceQuad } from "./screenspace.js"
+import { Mesh } from "./mesh.js"
+import { createAndSetupTexture } from "./texture.js"
+import { render } from "./renderCall.js"
 
 //https://www.khronos.org/opengl/wiki/Cubemap_Texture
 var viewDirections = [
-    [ 1,  0,  0],
-    [-1,  0,  0],
-    [ 0,  1,  0],
-    [ 0, -1,  0],
-    [ 0,  0,  1],
-    [ 0,  0, -1]];
+  [1, 0, 0],
+  [-1, 0, 0],
+  [0, 1, 0],
+  [0, -1, 0],
+  [0, 0, 1],
+  [0, 0, -1]];
 
 var upDirections = [
-    [ 0, -1,  0],
-    [ 0, -1,  0],
-    [ 0,  0,  1],
-    [ 0,  0, -1],
-    [ 0, -1,  0],
-    [ 0, -1,  0]];
+  [0, -1, 0],
+  [0, -1, 0],
+  [0, 0, 1],
+  [0, 0, -1],
+  [0, -1, 0],
+  [0, -1, 0]];
 
-function getSphericalHarmonicsMatrices(cubeMap){
-  // Generate R, G and B matrices to represent the spherical harmonics (SH) of a cube map
-  // Read the values from the color attachment and copy them into m4 matrices
-  // Return an object with the matrices for ambient lighting shading
+/**
+ * Generate R, G and B matrices to represent the spherical harmonics (SH) of a cube map
+ * Read the values from the color attachment and copy them into m4 matrices
+ * Return an object with the matrices for ambient lighting shading
+ * @param {WebGLTexture} cubeMap 
+ * @returns 
+ */
+function getSphericalHarmonicsMatrices(cubeMap) {
+
 
   let shRedMatrix;
   let shGrnMatrix;
@@ -51,25 +59,27 @@ function getSphericalHarmonicsMatrices(cubeMap){
 
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
-  mesh.render();
+  render(RenderPass.OPAQUE, mesh);
 
   var pixels = new Float32Array(3 * 4 * 4);
-  gl.readPixels(0, 0, 4, 3, gl.RGBA, gl.FLOAT, pixels); 
+  gl.readPixels(0, 0, 4, 3, gl.RGBA, gl.FLOAT, pixels);
 
   gl.deleteFramebuffer(frameBuffer);
   gl.deleteTexture(texture);
 
-  // The shader outputs column major data
-  // SH matrices are symmetric so column vs row major are the same
-  for(let mat = 0; mat < 3; mat++){
+  /**
+   * The shader outputs column major data
+   * SH matrices are symmetric so column vs row major are the same
+   */
+  for (let mat = 0; mat < 3; mat++) {
     let matrix = [];
-    for(let column = 0; column < 4; column++){
-      for(let row = 0; row < 4; row++){
+    for (let column = 0; column < 4; column++) {
+      for (let row = 0; row < 4; row++) {
         let idx = mat * 16 + column * 4 + row;
         matrix.push(pixels[idx]);
       }
     }
-    switch(mat) {
+    switch (mat) {
       case 0:
         shRedMatrix = matrix;
         break;
@@ -85,10 +95,10 @@ function getSphericalHarmonicsMatrices(cubeMap){
   //console.log(shGrnMatrix);
   //console.log(shBluMatrix);
 
-  return {red: shRedMatrix, green: shGrnMatrix, blue: shBluMatrix};
+  return { red: shRedMatrix, green: shGrnMatrix, blue: shBluMatrix };
 }
 
-function convertToCubeMap(sphericalTexture, cubeMap, type = "equirectangular"){
+function convertToCubeMap(sphericalTexture, cubeMap, type = "equirectangular") {
 
   let texture = createAndSetupTexture();
 
@@ -103,7 +113,7 @@ function convertToCubeMap(sphericalTexture, cubeMap, type = "equirectangular"){
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
 
-  for(let face = 0; face < 6; face++){
+  for (let face = 0; face < 6; face++) {
 
     let cameraMatrix = m4.lookAt([0, 0, 0], viewDirections[face], upDirections[face]);
 
@@ -115,8 +125,8 @@ function convertToCubeMap(sphericalTexture, cubeMap, type = "equirectangular"){
 
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
-    mesh.render();
-  
+    render(RenderPass.OPAQUE, mesh);
+
     let target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + face;
 
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
@@ -130,10 +140,11 @@ function convertToCubeMap(sphericalTexture, cubeMap, type = "equirectangular"){
   return cubeMap;
 }
 
-function getCubeMapConvolution(cubeMap){
-
-  // For each cubemap mipmap level, run a convolution based on roughness
-  // Copy result into cubemap faces
+/**
+ * For each cubemap mipmap level, run a convolution based on roughness
+ * Copy result into cubemap faces
+ */
+function getCubeMapConvolution(cubeMap) {
 
   let texture = createAndSetupTexture();
 
@@ -144,7 +155,7 @@ function getCubeMapConvolution(cubeMap){
 
   let frameBuffer = gl.createFramebuffer();
 
-  for(let level = 1; level < 6; level++){
+  for (let level = 1; level < 6; level++) {
 
     let roughness = 0.2 * level;
     convolutionMaterial.roughness = roughness;
@@ -154,7 +165,7 @@ function getCubeMapConvolution(cubeMap){
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
 
-    for(let face = 0; face < 6; face++){
+    for (let face = 0; face < 6; face++) {
 
       let cameraMatrix = m4.lookAt([0, 0, 0], viewDirections[face], upDirections[face]);
 
@@ -166,7 +177,7 @@ function getCubeMapConvolution(cubeMap){
 
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
-      mesh.render();
+      render(RenderPass.OPAQUE, mesh);
       var target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + face;
 
       gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
@@ -180,7 +191,7 @@ function getCubeMapConvolution(cubeMap){
   return cubeMap;
 }
 
-function getBRDFIntegrationMap(){
+function getBRDFIntegrationMap() {
   let texture = createAndSetupTexture();
 
   let size = 256;
@@ -199,11 +210,11 @@ function getBRDFIntegrationMap(){
 
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
-  mesh.render();
+  render(RenderPass.OPAQUE, mesh);
 
   gl.deleteFramebuffer(frameBuffer);
 
   return texture;
 }
 
-export {getSphericalHarmonicsMatrices, getBRDFIntegrationMap, getCubeMapConvolution, convertToCubeMap}
+export { getSphericalHarmonicsMatrices, getBRDFIntegrationMap, getCubeMapConvolution, convertToCubeMap }

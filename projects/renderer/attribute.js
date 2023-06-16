@@ -1,4 +1,4 @@
-import {gl} from "./canvas.js"
+import { gl } from "./canvas.js"
 
 /**
  * Attibutes supported by the renderer
@@ -11,25 +11,16 @@ const supportedAttributes = [
   "TANGENT",
   "TEXCOORD_0",
   "TEXCOORD_1",
-  "COLOR_0",
-  "BARYCENTRIC"
+  "COLOR_0"
 ];
 
-/**
- * Attibutes which are generated for geometry if not provided
- * 
- * [BARYCENTRIC]
- */
-const dynamicAttributes = [
-  "BARYCENTRIC"
-];
 
 /**
  * Create, enable and bind vertex attribute.
  * Buffers are supplied externally as multiple attributes 
  * may refer to the same WebGLBuffer when using interleaved data.
- */ 
-class Attribute{
+ */
+class Attribute {
 
   /**
    * WebGLBuffer object
@@ -42,8 +33,13 @@ class Attribute{
   name;
 
   /**
+   * CPU-side ArrayBuffer
+   */
+  data;
+
+  /**
    * Location in program
-   */ 
+   */
   handle;
 
   /** 
@@ -61,11 +57,15 @@ class Attribute{
    */
   max;
 
-  // If attribute has been attached to a VAO, it must be bound
-  // for the deletion to work. Otherwise it fails silently.
-  // Trying to delete an already deleted buffer has no effect.
-  destroy(){
+  /**
+   * If attribute has been attached to a VAO, it must be bound
+   * for the deletion to work. Otherwise it fails silently.
+   * Trying to delete an already deleted buffer has no effect.
+   */
+
+  destroy() {
     gl.deleteBuffer(this.buffer);
+    this.data = null;
   }
 
   /**
@@ -81,51 +81,56 @@ class Attribute{
    *          min?: number[],  
    *          max?: number[]}} descriptor 
    */
-  constructor(name, buffer, descriptor){
+  constructor(name, buffer, data, descriptor) {
     this.name = name;
     this.buffer = buffer;
+    this.data = data;
     this.descriptor = descriptor;
 
-    if(descriptor.min != null){
+    if (descriptor.min != null) {
       this.min = descriptor.min;
     }
 
-    if(descriptor.max != null){
+    if (descriptor.max != null) {
       this.max = descriptor.max;
     }
 
   }
 
-  setHandle(handle){
+  setHandle(handle) {
     this.handle = handle;
   }
 
-  setBuffer(buffer){
+  setBuffer(buffer) {
     this.buffer = buffer;
   }
 
-  enableBuffer(){
-    if(this.handle == null){
+  enableBuffer() {
+    if (this.handle == null) {
       console.error("Handle is not defined: ", this);
-    }else{
+    } else {
       gl.enableVertexAttribArray(this.handle);
       gl.bindBuffer(this.descriptor.target, this.buffer);
       gl.vertexAttribPointer(this.handle, this.descriptor.componentCount, this.descriptor.componentType, this.descriptor.normalized, this.descriptor.byteStride, this.descriptor.offset);
     }
   }
 
-  getName(){
+  getName() {
     return this.name;
   }
 
-  getMin(){
+  getData() {
+    return this.data;
+  }
+
+  getMin() {
     return this.min;
   }
 
-  getMax(){
+  getMax() {
     return this.max;
   }
 
 }
 
-export {supportedAttributes, dynamicAttributes, Attribute}
+export { supportedAttributes, Attribute }

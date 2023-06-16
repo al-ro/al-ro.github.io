@@ -16,23 +16,25 @@ function getFragmentSource(){
    
   var fragmentSource = `
 
-    //
-    //	Diffuse IBL using spherical harmonics
-    //
-    // 	Read the environment map and calculate 9 spherical harmonics coefficients for each channel.
-    //	The coefficients will describe the low frequency data of the environment. We can use them
-    //	to construct a matrix which, when multiplied with a view vector, will give the data in 
-    //	that direction. The low frequency data is similar to a convoluted irradiance map and is 
-    //	used for diffuse image based lighting, which gives us the ambient color for shading. 
-    //
-    //	Based on:
-    //	[1] https://cseweb.ucsd.edu/~ravir/papers/envmap/envmap.pdf
-    //	[2] http://orlandoaguilar.github.io/sh/spherical/harmonics/irradiance/map/2017/02/12/SphericalHarmonics.html
-    //	[3] https://metashapes.com/blog/realtime-image-based-lighting-using-spherical-harmonics/
-    //	[4] https://stackoverflow.com/questions/9600801/evenly-distributing-n-points-on-a-sphere/26127012#26127012
-    //	[5] https://bduvenhage.me/geometry/2019/07/31/generating-equidistant-vectors.html
-    //  [6] https://andrew-pham.blog/2019/08/26/spherical-harmonics/
-    //
+/*
+    
+  Diffuse IBL using spherical harmonics
+
+  Read the environment map and calculate 9 spherical harmonics coefficients for each channel.
+  The coefficients will describe the low frequency data of the environment. We can use them
+  to construct a matrix which, when multiplied with a view vector, will give the data in 
+  that direction. The low frequency data is similar to a convoluted irradiance map and is 
+  used for diffuse image based lighting, which gives us the ambient color for shading. 
+
+  Based on:
+  [1] https://cseweb.ucsd.edu/~ravir/papers/envmap/envmap.pdf
+  [2] http://orlandoaguilar.github.io/sh/spherical/harmonics/irradiance/map/2017/02/12/SphericalHarmonics.html
+  [3] https://metashapes.com/blog/realtime-image-based-lighting-using-spherical-harmonics/
+  [4] https://stackoverflow.com/questions/9600801/evenly-distributing-n-points-on-a-sphere/26127012#26127012
+  [5] https://bduvenhage.me/geometry/2019/07/31/generating-equidistant-vectors.html
+  [6] https://andrew-pham.blog/2019/08/26/spherical-harmonics/
+
+*/
 
     precision highp float;
   
@@ -78,10 +80,12 @@ function getFragmentSource(){
         vec3 L21 = vec3(0);
         vec3 L22 = vec3(0);
 
-        // To make the sampling rate scalable and independent of the cubemap dimensions, 
-        // we can sample a set number of equidistant directions on a sphere. While this is 
-        // not doable for all number of directions, a good approximation is the Fibonacci 
-        // spiral on a sphere.
+        /*
+          To make the sampling rate scalable and independent of the cubemap dimensions, 
+          we can sample a set number of equidistant directions on a sphere. While this is 
+          not doable for all number of directions, a good approximation is the Fibonacci 
+          spiral on a sphere.
+        */
 
         // From [4]
         // Golden angle in radians
