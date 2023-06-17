@@ -102,6 +102,10 @@ export class Node {
     return this.worldMatrix;
   }
 
+  getLocalMatrix() {
+    return this.localMatrix;
+  }
+
   getParentMatrix() {
     return this.parentMatrix;
   }
@@ -129,6 +133,13 @@ export class Node {
   isMesh() {
     return false;
   }
+
+  destroy() {
+    for (const child of this.children) {
+      child.destroy();
+    }
+  }
+
 
   /**
    * Get local transform matrix from animated values

@@ -9,22 +9,19 @@ import { Attribute, supportedAttributes } from "./attribute.js"
 import { Indices } from "./indices.js"
 import { loadTexture } from "./texture.js"
 import { Animation } from "./animation.js"
-
-// Download and process GLTF file and create scenes of drawable Mesh object with a geometry and PBR material
+import { Object } from "./object.js"
 
 // TODO:
-//  multiple scenes
 //  full spec conform (color_0, sampler)
 //  image from bufferView
-//  animation
 //  extensions
 //  morph
 //  skins
 
 const supportedExtensions = ["KHR_materials_transmission"];
 
-/** A class to download a GLTF file and construct internal geometry and material objects */
-export class GLTF {
+/** A class to download a GLTF file and construct a scene graph with PBRMaterial */
+export class GLTFLoader {
 
   /**  Description of the GLTF */
   json;
@@ -37,6 +34,9 @@ export class GLTF {
 
   /** WebGL textures for albedo, roughness and emissive maps etc. */
   textures = [];
+
+  /** Indices of textures which were passed on to PBRMaterial objects */
+  usedTextures = [];
 
   /** Scene graphs of Node objects */
   nodes = [];
@@ -62,71 +62,93 @@ export class GLTF {
    */
   setReady;
 
-  /** Minimum extent of model vertices */
-  min;
-
-  /** Maximum extent of model vertices */
-  max;
-
-  /** Centre of the model vertices extent */
-  centre;
-
-  /** Multiplier for the model vertices extent */
-  scale = 1.0;
-
   /** AbortController to cancel unfinished downloads on destruction */
-  controller;
+  controller = new AbortController();
+
+  /** Created object */
+  object;
+
+  constructor() {
+    let loader = this;
+    this.ready = new Promise(function (resolve, reject) { loader.setReady = resolve; });
+  }
 
   /**
-   * Download GLTF and construct Mesh objects with a PBRMaterial using passsed environment data
+   * Download GLTF and construct Objects with PBRMaterial using passsed environment data
    * @param {string} path 
    * @param {Environment} environment 
+   * @param {number} scene If there are multiple scenes in the GLTF file, which one to return 
    */
-  constructor(path, environment) {
+  load(path, environment, scene) {
 
-    let gltf = this;
-    this.ready = new Promise(function (resolve, reject) { gltf.setReady = resolve; });
+    this.clear();
+    this.controller = new AbortController();
+
+    let loader = this;
+    this.ready = new Promise(function (resolve, reject) { loader.setReady = resolve; });
 
     this.environment = environment;
 
     let workingDirectory = path.substring(0, path.lastIndexOf("/") + 1);
 
-    this.controller = new AbortController();
-
-    download(path, "gltf", this.controller.signal).then(data => this.processGLTF(data, workingDirectory));
+    download(path, "gltf", this.controller.signal).then(data => this.processGLTF(data, workingDirectory, scene));
   }
 
-  destroy() {
-    this.controller.abort();
-    this.controller = null;
+  getObjects() {
+    if (this.ready) {
+      return this.object;
+    } else {
+      console.error("GLTFLoader has not yet finished.");
+    }
+  }
+
+  abort() {
+    this.clear();
+  }
+
+  clear() {
+    if (this.AbortController != null) {
+      this.controller.abort();
+      this.controller = null;
+    }
     this.ready.then(() => {
-      for (let i = 0; i < this.buffers.length; i++) {
-        this.buffers[i] = null;
-      }
-      this.buffers = null;
 
-      for (let i = 0; i < this.meshes.length; i++) {
-        this.meshes[i].destroy();
-        this.meshes[i] = null;
-      }
-      this.meshes = null;
+      this.json = null;
 
-      this.bufferRepository.destroy();
-      this.bufferRepository = null;
-
+      /**
+       * Delete textures which were not used
+       * All textures in the GLTF are downloaded and created and their ownership passes to the created materials.
+       * If a texture is not used or the feature that it is used by is not supported, the loader has to delete
+       * the texture to avoid a memory leak.
+      */
       for (let i = 0; i < this.textures.length; i++) {
-        gl.deleteTexture(this.textures[i]);
-        this.textures[i] = null;
+        if (!this.usedTextures.includes(i)) {
+          gl.deleteTexture(this.textures[i]);
+          this.textures[i] = null;
+        }
       }
-      this.textures = null;
 
-      this.nodes = null;
+      this.buffers = [];
+      this.meshes = [];
+      this.textures = [];
+      this.usedTextures = [];
+      this.nodes = [];
+
+      if (this.bufferRepository != null) {
+        this.bufferRepository.destroy();
+        this.bufferRepository = null;
+      }
 
       for (let i = 0; i < this.sparseTypedArrays.length; i++) {
         this.sparseTypedArrays[i] = null;
       }
-      this.sparseTypedArrays = null;
+      this.sparseTypedArrays = [];
+
     });
+  }
+
+  destroy() {
+    this.clear();
   }
 
   /**
@@ -220,12 +242,17 @@ export class GLTF {
 
           this.setAnimations();
 
+          // Trigger matrix generation from root nodes
           for (const node of this.json.scenes[this.scene].nodes) {
             this.nodes[node].updateWorldMatrix();
           }
 
-          this.calculateCentre();
-          this.scaleAndCentre();
+          let rootNodes = [];
+          for (const node of this.json.scenes[this.scene].nodes) {
+            rootNodes.push(this.nodes[node]);
+          }
+
+          this.object = new Object(rootNodes);
         }
 
         // Resolve ready promise
@@ -240,7 +267,7 @@ export class GLTF {
   /**
    * Create array of Mesh and Node objects from the GLTF
    * @param {object} gltfNodes Nodes of GLTF JSON
-   * @returns 
+   * @returns Populated scene graph
    */
   processNodes(gltfNodes) {
 
@@ -378,37 +405,6 @@ export class GLTF {
     }
   }
 
-  scaleAndCentre() {
-    const maxExtent = Math.max(Math.max(this.max[0] - this.min[0], this.max[1] - this.min[1]), this.max[2] - this.min[2]);
-    this.scale = 1.0 / maxExtent;
-
-    let translation = [-this.centre[0] * this.scale, -this.centre[1] * this.scale, -this.centre[2] * this.scale];
-    let rotation = [0, 0, 0, 1];
-    let scales = [this.scale, this.scale, this.scale];
-
-    let matrix = m4.compose(translation, rotation, scales);
-
-    for (const node of this.json.scenes[this.scene].nodes) {
-      this.nodes[node].updateMatrix(matrix);
-    }
-  }
-
-  calculateCentre() {
-    this.min = [1e20, 1e20, 1e20];
-    this.max = [-1e20, -1e20, -1e20];
-    for (const mesh of this.meshes) {
-      let meshMin = mesh.getMin();
-      let meshMax = mesh.getMax();
-      for (let i = 0; i < 3; i++) {
-        this.min[i] = Math.min(this.min[i], meshMin[i]);
-        this.max[i] = Math.max(this.max[i], meshMax[i]);
-      }
-    }
-    this.centre = [this.min[0] + 0.5 * (this.max[0] - this.min[0]),
-    this.min[1] + 0.5 * (this.max[1] - this.min[1]),
-    this.min[2] + 0.5 * (this.max[2] - this.min[2])];
-  }
-
   /**
    * Get transform matrix from TRS values or a defined matrix
    * @param {Node} node 
@@ -491,7 +487,7 @@ export class GLTF {
       }
     }
 
-    // This array is freed when the GLTF is deleted
+    // This array needs to be freed when the GLTF is cleared or deleted
     this.sparseTypedArrays.push(newData);
 
     return newData;
@@ -606,6 +602,7 @@ export class GLTF {
         if (transmission.transmissionTexture != null) {
           const textureID = jsonTextures[transmission.transmissionTexture.index].source;
           materialParameters.transmissionTexture = this.textures[textureID];
+          this.usedTextures.push(textureID);
         }
         if (transmission.transmissionFactor != null) {
           materialParameters.transmissionFactor = transmission.transmissionFactor;
@@ -613,10 +610,10 @@ export class GLTF {
       }
       if (ext.KHR_texture_transform) {
         const transform = ext.KHR_texture_transform;
-        materialParameters.trans
         if (transform.offset != null) {
           const textureID = jsonTextures[transform.transformTexture.index].source;
           materialParameters.transformTexture = this.textures[textureID];
+          this.usedTextures.push(textureID);
         }
         if (transform.rotation != null) {
           materialParameters.transformRotation = transform.rotation;
@@ -657,6 +654,7 @@ export class GLTF {
     if (pbrDesc.baseColorTexture != null) {
       const textureID = jsonTextures[pbrDesc.baseColorTexture.index].source;
       materialParameters.baseColorTexture = this.textures[textureID];
+      this.usedTextures.push(textureID);
     }
 
     if (pbrDesc.baseColorFactor != null) {
@@ -678,11 +676,13 @@ export class GLTF {
     if (pbrDesc.metallicRoughnessTexture != null) {
       const textureID = jsonTextures[pbrDesc.metallicRoughnessTexture.index].source;
       materialParameters.metallicRoughnessTexture = this.textures[textureID];
+      this.usedTextures.push(textureID);
     }
 
     if (material.occlusionTexture != null) {
       const textureID = jsonTextures[material.occlusionTexture.index].source;
       materialParameters.occlusionTexture = this.textures[textureID];
+      this.usedTextures.push(textureID);
       if (material.occlusionTexture.strength != null) {
         materialParameters.occlusionStrength = material.occlusionTexture.strength;
       }
@@ -691,6 +691,7 @@ export class GLTF {
     if (material.normalTexture != null) {
       const textureID = jsonTextures[material.normalTexture.index].source;
       materialParameters.normalTexture = this.textures[textureID];
+      this.usedTextures.push(textureID);
       if (material.normalTexture.scale != null) {
         materialParameters.normalScale = material.normalTexture.scale;
       }
@@ -699,6 +700,7 @@ export class GLTF {
     if (material.emissiveTexture != null) {
       const textureID = jsonTextures[material.emissiveTexture.index].source;
       materialParameters.emissiveTexture = this.textures[textureID];
+      this.usedTextures.push(textureID);
     }
 
     return new PBRMaterial(materialParameters);

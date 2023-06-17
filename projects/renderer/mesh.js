@@ -6,7 +6,7 @@
  * creating the appropriate WebGL program.
  */
 
-import { gl, RenderPass } from "./canvas.js"
+import { gl } from "./canvas.js"
 import { Node } from "./node.js"
 
 export class Mesh extends Node {
@@ -21,7 +21,6 @@ export class Mesh extends Node {
 
   instanced = false;
   activeAttributes = [];
-  renderPass;
 
   normalMatrix = m4.create();
 
@@ -86,6 +85,16 @@ export class Mesh extends Node {
 
       gl.deleteVertexArray(this.vao);
       this.geometry = null;
+    }
+
+    if (this.originalMaterial != null) {
+      this.originalMaterial.destroy();
+      this.originalMaterial = null;
+    }
+
+    if (this.overrideMaterial != null) {
+      this.overrideMaterial.destroy();
+      this.overrideMaterial = null;
     }
 
     if (this.material != null) {
