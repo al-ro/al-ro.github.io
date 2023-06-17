@@ -9,14 +9,15 @@ import { ScreenspaceMaterial } from "./materials/screenspaceMaterial.js"
 import { Environment } from "./environment.js"
 import { loadTexture, createAndSetupTexture } from "./texture.js"
 import { Mesh } from "./mesh.js";
-import { gl, enums, extMEM, RenderPass } from "./canvas.js";
+import { gl, extMEM, RenderPass } from "./canvas.js";
 import { getScreenspaceQuad } from "./screenspace.js";
-import { GLTF } from "./GLTF.js"
+import { GLTFLoader } from "./GLTFLoader.js"
 import { RenderTarget } from "./target.js"
 import { getDownloadingCount } from "./download.js"
 import { outputEnum } from "./materials/pbrMaterial.js"
 import { render } from "./renderCall.js"
 import { Scene } from "./scene.js"
+import { Object } from "./object.js"
 
 const stats = new Stats();
 stats.showPanel(0);
@@ -30,20 +31,35 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
       Pipeline state (program, sidedness)
       Render programs together
 
-      Object wrapper for positioning
-      Frustum culling (mesh vs object vs BVH)
+      Frustum culling (mesh vs object)
+        Report how many are drawn
+      Object picking
+        Primitive picking?
+      Scene descriptions with object scales in controls
 
+      Morph targets
+      Skinning
       Specular/Gloss
       Sheen
       Volume
       IOR
       Clearcoat
-      Morph targets
-      Skinning
+      Better roughness blur
 
       Particle class for GPU
-      Postprocessing (bloom, depth of field)
-      Volumetrics
+      Postprocessing (bloom, depth of field, SSAO)
+
+      Lights
+      Shadows
+
+      LOD
+
+      Materials:
+        Water
+        Lava
+        Clouds
+
+      Deferred rendering
 */
 
 let models = new Map();
@@ -105,17 +121,19 @@ let controls = new Controls(camera);
 
 let time = 0.0;
 
-let allMeshes = [];
-
-let info = { memory: "0", buffers: "0", textures: "0", downloadingCount: getDownloadingCount() };
+let info = { memory: "0", buffers: "0", textures: "0", Downloading: getDownloadingCount() };
 
 let modelSelector = { model: "Flight Helmet" };
 let environmentSelector = { environment: "Venice Sunrise" };
 let outputSelector = { output: outputEnum.PBR };
 let environment;
-let gltf;
+let gltfLoader;
 let scene = new Scene();
-let modelManipulation = { scale: 1 };
+let modelManipulation = {
+  translationX: 0, translationY: 0, translationZ: 0,
+  scaleX: 1, scaleY: 1, scaleZ: 1,
+  rotationX: 0, rotationY: 0, rotationZ: 0
+};
 
 //************* GUI ***************
 
@@ -123,17 +141,47 @@ let gui = new lil.GUI({ autoPlace: false });
 let customContainer = document.getElementById('canvas_overlay');
 customContainer.appendChild(gui.domElement);
 gui.domElement.style.cssText = "visibility: visible; position: absolute; top: 0px; right: 0;";
-gui.add(camera, 'exposure').min(0.0).max(2).step(0.01);
-gui.add(environmentSelector, 'environment').options(environmentNames).onChange(name => { environment.setHDR(environments.get(name)); });
-gui.add(modelSelector, 'model').options(modelNames).onChange(name => { loadGLTF(name); });
-const materialControls = gui.add(materialSelector, 'material').options(materialNames).onChange(name => { setMaterial(name); });
-const outputControls = gui.add(outputSelector, 'output').options(outputEnum).onChange(output => { setOutput(output) });
-gui.add(modelManipulation, 'scale').min(0.0).max(20).step(0.0001).listen().onChange(scale => { setScale(scale); });
 
-gui.add(info, 'buffers').disable().listen();
-gui.add(info, 'textures').disable().listen();
-gui.add(info, 'memory').disable().listen();
-gui.add(info, 'downloadingCount').disable().listen();
+gui.add(modelSelector, 'model').options(modelNames).onChange(name => { loadGLTF(name); });
+
+const materialFolder = gui.addFolder('Material');
+const materialControls = materialFolder.add(materialSelector, 'material').options(materialNames).onChange(name => { setMaterial(name); });
+const outputControls = materialFolder.add(outputSelector, 'output').options(outputEnum).onChange(output => { setOutput(output) });
+
+const environmentFolder = gui.addFolder('Environment');
+environmentFolder.add(environmentSelector, 'environment').options(environmentNames).onChange(name => { environment.setHDR(environments.get(name)); });
+
+const transformFolder = gui.addFolder('Transform');
+transformFolder.close();
+const translationFolder = transformFolder.addFolder('Translation');
+translationFolder.add(modelManipulation, 'translationX').min(-20).max(20).step(0.0001).listen().onChange(scale => { setScale(scale); });
+translationFolder.add(modelManipulation, 'translationY').min(-20).max(20).step(0.0001).listen().onChange(scale => { setScale(scale); });
+translationFolder.add(modelManipulation, 'translationZ').min(-20).max(20).step(0.0001).listen().onChange(scale => { setScale(scale); });
+translationFolder.close();
+
+const rotationFolder = transformFolder.addFolder('Rotation');
+rotationFolder.add(modelManipulation, 'rotationX').min(-3.1415).max(3.1415).step(0.0001).listen().onChange(scale => { setScale(scale); });
+rotationFolder.add(modelManipulation, 'rotationY').min(-3.1415).max(3.1415).step(0.0001).listen().onChange(scale => { setScale(scale); });
+rotationFolder.add(modelManipulation, 'rotationZ').min(-3.1415).max(3.1415).step(0.0001).listen().onChange(scale => { setScale(scale); });
+rotationFolder.close();
+
+const scaleFolder = transformFolder.addFolder('Scale');
+scaleFolder.add(modelManipulation, 'scaleX').min(1e-4).max(20).step(0.0001).listen().onChange(scale => { setScale(scale); });
+scaleFolder.add(modelManipulation, 'scaleX').min(1e-4).max(20).step(0.0001).listen().onChange(scale => { setScale(scale); });
+scaleFolder.add(modelManipulation, 'scaleX').min(1e-4).max(20).step(0.0001).listen().onChange(scale => { setScale(scale); });
+scaleFolder.close();
+
+const cameraFolder = gui.addFolder('Camera');
+cameraFolder.add(camera, 'exposure').min(0.0).max(2).step(0.01);
+cameraFolder.close();
+
+const memoryFolder = gui.addFolder('Memory');
+memoryFolder.add(info, 'buffers').disable().listen();
+memoryFolder.add(info, 'textures').disable().listen();
+memoryFolder.add(info, 'memory').disable().listen();
+memoryFolder.close();
+
+gui.add(info, 'Downloading').disable().listen();
 //gui.close();
 
 controls.onWindowResize();
@@ -142,64 +190,59 @@ controls.onWindowResize();
 
 environment = new Environment({ path: environments.get(environmentSelector.environment), type: "hdr", camera: camera });
 
-function setScale(scale) {
-  scale = Math.max(1e-4, scale);
-  for (const mesh of allMeshes) {
-
-    let oldMatrix = mesh.getParentMatrix();
-
-    let T = [0, 0, 0];
-    let R = [0, 0, 0, 1];
-    let S = [1, 1, 1];
-
-    m4.decompose(oldMatrix, T, R, S);
-
-    let scales = [scale, scale, scale];
-
-    let matrix = m4.compose(T, R, scales);
-
-    m4.decompose(matrix, T, R, S);
-    mesh.updateMatrix(matrix);
-  }
-}
-
-function setOutput(output) {
-  for (const mesh of allMeshes) {
-    mesh.setOutput(output);
-  }
-}
-
 loadGLTF(modelSelector.model);
 
 function loadGLTF(model) {
-  materialControls.setValue("PBR");
-  outputControls.setValue("PBR");
-  outputControls.show();
-  if (gltf != null) {
-    gltf.destroy();
-    gltf = null;
+  if (gltfLoader != null) {
+    gltfLoader.abort();
+  } else {
+    gltfLoader = new GLTFLoader();
   }
 
-  allMeshes = [];
+  scene.clear();
 
   if (model == "NONE") {
     return;
   }
 
   let path = models.get(modelSelector.model);
-  gltf = new GLTF(path, environment);
+  gltfLoader.load(path, environment, 0);
 
-  gltf.ready.then(p => {
-    scene.clear;
-    scene = new Scene(gltf.nodes);
-    if (gltf != null) {
+  gltfLoader.ready.then(p => {
+    let object = gltfLoader.getObjects();
+    centreAndScale(object);
+    scene.add(object);
+    if (scene.getObjects().length > 0) {
       materialControls.setValue("PBR");
-      modelManipulation.scale = gltf.scale;
-      for (const mesh of gltf.meshes) {
-        allMeshes.push(mesh);
-      }
+      modelManipulation.scale = scene.getObjects()[0].getScale();
     }
+    materialControls.setValue("PBR");
+    outputControls.setValue("PBR");
+    outputControls.show();
   });
+}
+
+function centreAndScale(object) {
+
+  object.calculateAABB();
+
+  let min = object.getMin();
+  let max = object.getMax();
+
+  let center = [
+    min[0] + 0.5 * (max[0] - min[0]),
+    min[1] + 0.5 * (max[1] - min[1]),
+    min[2] + 0.5 * (max[2] - min[2])
+  ];
+
+  const largestExtent = Math.max(Math.max(max[0] - min[0], max[1] - min[1]), max[2] - min[2]);
+  let scale = 1.0 / largestExtent;
+
+  let T = [-center[0] * scale, -center[1] * scale, -center[2] * scale];
+  let R = [0, 0, 0, 1];
+  let S = [scale, scale, scale];
+
+  object.setTRS(T, R, S);
 }
 
 function setMaterial(name) {
@@ -222,15 +265,24 @@ function setMaterial(name) {
 
   if (material != null) {
     outputControls.hide();
-    for (const mesh of allMeshes) {
-      mesh.setOverrideMaterial(material);
-      mesh.displayOverrideMaterial();
-    }
   } else {
     outputControls.show();
-    for (const mesh of allMeshes) {
-      mesh.displayOriginalMaterial();
-    }
+  }
+  for (const object of scene.getObjects()) {
+    object.setMaterial(material);
+  }
+}
+
+function setOutput(output) {
+  for (const object of scene.getObjects()) {
+    object.setOutput(output);
+  }
+}
+
+function setScale(scale) {
+  scale = Math.max(1e-4, scale);
+  for (const object of scene.getObjects()) {
+    object.setScale([scale, scale, scale]);
   }
 }
 
@@ -275,15 +327,14 @@ function draw() {
 
   stats.begin();
 
-  frame++;
-
-  if (getDownloadingCount() != 0) {
+  info.Downloading = getDownloadingCount();
+  if (info.Downloading != 0) {
     document.getElementById('loading_spinner').style.display = "inline-block";
   } else {
     document.getElementById('loading_spinner').style.display = "none";
   }
 
-  info.downloadingCount = getDownloadingCount();
+  frame++;
 
   if (frame % 30 == 0) {
     info.memory = (extMEM.getMemoryInfo().memory.total * 1e-6).toPrecision(4) + " MB";
@@ -301,7 +352,6 @@ function draw() {
   scene.animate(time);
 
   controls.move(dT);
-
   setCameraMatrices();
 
   sceneRenderTarget.setSize(gl.canvas.width, gl.canvas.height);
