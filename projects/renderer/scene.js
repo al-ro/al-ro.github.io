@@ -1,74 +1,76 @@
-import { render } from "./renderCall.js"
+/**
+ * A class which contains all individual Objects placed in a scene
+ */
 
 export class Scene {
-    // Array of all root nodes in the scene
-    nodes = [];
+    /**
+     * Elements in the scene
+     */
+    objects = [];
 
-    // A linear array of all drawable meshes in the scene
-    meshes = [];
-
-    constructor(nodes) {
-        if (nodes != null) {
-            this.nodes = nodes;
+    constructor(objects) {
+        if (objects != null) {
+            this.objects = objects;
         }
-        this.generateMeshList();
     }
 
     animate(time) {
-        for (const node of this.nodes) {
-            node.animate(time);
+        for (const object of this.objects) {
+            object.animate(time);
         }
     }
 
     render(renderPass, camera, time) {
-        for (const mesh of this.meshes) {
-            render(renderPass, mesh, camera, time);
+        for (const object of this.objects) {
+            object.render(renderPass, camera, time);
         }
     }
 
+    /**
+     * Set the generated background texture which is used to render transmission effects
+     * @param {Texture} texture 
+     */
     setBackgroundTexture(texture) {
-        for (const mesh of this.meshes) {
-            if (mesh != null && mesh.material != null && mesh.material.hasTransmission) {
-                mesh.material.setBackgroundTexture(texture);
+        for (const object of this.objects) {
+            object.setBackgroundTexture(texture);
+        }
+    }
+
+    getObjects() {
+        return this.objects;
+    }
+
+    /**
+     * Add a new element to the scene
+     * @param {Object | Object[]} objects Single instance or an array of Objects
+     */
+    add(objects) {
+        if (Array.isArray(objects)) {
+            for (const object of objects) {
+                this.objects.push(object);
             }
+        } else {
+            this.objects.push(objects);
         }
     }
 
-    // Traverse all nodes in the scene and collect drawable meshes into an array
-    generateMeshList() {
-        this.meshes = [];
-        for (const node of this.nodes) {
-            this.collectMeshes(node);
-        }
+    /**
+     * Remove referenced Object from the scene
+     * @param {Object} object 
+     * @returns Removed element
+     */
+    remove(object) {
+        const index = this.nodes.indexOf(object);
+        return this.objects.splice(index, 1);
     }
 
-    // Push node into meshes array if it is drawable and evaluate all child nodes
-    collectMeshes(node) {
-        if (node.isMesh) {
-            this.meshes.push(node);
-        }
-        for (const child of node.getChildren()) {
-            this.collectMeshes(child);
-        }
-    }
-
-    getNodes() {
-        return this.nodes;
-    }
-
-    add(node) {
-        this.nodes.push(node);
-        this.generateMeshList();
-    }
-
-    remove(node) {
-        const index = this.nodes.indexOf(node);
-        this.generateMeshList();
-        return this.nodes.splice(index, 1);
-    }
-
+    /**
+     * Empty the scene
+     */
     clear() {
-        this.nodes = [];
-        this.meshes = [];
+        for (const object of this.objects) {
+            object.destroy();
+        }
+        this.objects = [];
     }
 }

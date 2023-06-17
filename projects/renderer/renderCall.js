@@ -18,7 +18,7 @@ export function render(renderPass, mesh, camera, time) {
     return;
   }
 
-  if (camera != null && !camera.insideFrustum()) {
+  if (camera != null && !camera.insideFrustum(mesh)) {
     return;
   }
 

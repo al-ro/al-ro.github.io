@@ -209,6 +209,7 @@ export class PBRMaterial extends Material {
       gl.deleteTexture(this.transmissionTexture);
       this.transmissionTexture = null;
     }
+
   }
 
   constructor(parameters) {
