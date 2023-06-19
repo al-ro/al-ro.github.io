@@ -4,11 +4,12 @@ function rendersInPass(renderPass, material) {
   switch (renderPass) {
     case RenderPass.TRANSMISSIVE: return material.hasTransmission;
     case RenderPass.TRANSPARENT: return material.alphaMode == enums.BLEND;
-    default: return !material.hasTransmission && material.alphaMode != enums.BLEND;
+    case RenderPass.OPAQUE: return !material.hasTransmission && material.alphaMode != enums.BLEND;
+    default: return false;
   }
 }
 
-export function render(renderPass, mesh, camera, time) {
+export function render(renderPass, mesh, camera, time, cullCamera) {
 
   if (!(mesh != null && mesh.material != null && mesh.geometry != null)) {
     return;
@@ -18,8 +19,13 @@ export function render(renderPass, mesh, camera, time) {
     return;
   }
 
-  if (camera != null && !camera.insideFrustum(mesh)) {
-    return;
+  if (mesh.cullingEnabled()) {
+    if (cullCamera == null) {
+      cullCamera = camera;
+    }
+    if (cullCamera != null && !cullCamera.insideFrustum(mesh.getMin(), mesh.getMax())) {
+      return;
+    }
   }
 
   if (mesh.material.doubleSided) {

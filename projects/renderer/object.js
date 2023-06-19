@@ -24,6 +24,10 @@ export class Object {
         this.calculateAABB();
     }
 
+    getPrimitiveCount() {
+        return this.primitives.length;
+    }
+
     // Traverse all nodes in the scene and collect drawable meshes into an array
     generatePrimitiveList() {
         this.primitives = [];
@@ -42,12 +46,12 @@ export class Object {
         }
     }
 
-    render(renderPass, camera, time) {
+    render(renderPass, camera, time, cullCamera) {
         if (this.primitives.length < 1) {
             this.generatePrimitiveList();
         }
         for (const primitive of this.primitives) {
-            render(renderPass, primitive, camera, time);
+            render(renderPass, primitive, camera, time, cullCamera);
         }
     }
 

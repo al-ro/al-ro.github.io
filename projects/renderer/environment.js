@@ -49,6 +49,7 @@ class Environment {
 
     this.environmentMaterial = new EnvironmentMaterial(this.cubeMap, this.camera, this);
     this.environmentMesh = new Mesh(getScreenspaceQuad(), this.environmentMaterial);
+    this.environmentMesh.setCulling(false);
 
     this.shMatrices = { red: this.shRedMatrix, green: this.shGrnMatrix, blue: this.shBluMatrix };
     this.setupBRDFIntegrationMap();

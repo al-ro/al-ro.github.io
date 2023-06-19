@@ -19,6 +19,14 @@ export class Camera {
   cameraMatrix;
   viewMatrix;
 
+  // Frustum planes where xyz is normal and w is offset
+  left = [0, 0, 0, 0];
+  right = [0, 0, 0, 0];
+  bottom = [0, 0, 0, 0];
+  top = [0, 0, 0, 0];
+  near = [0, 0, 0, 0];
+  far = [0, 0, 0, 0];
+
   exposure = 1.0;
 
   constructor(pitch, yaw, distance, target, up, fov, aspect, zNear, zFar) {
@@ -138,9 +146,59 @@ export class Camera {
     return this.exposure;
   }
 
-  // Return whether any part of the AABB is inside the camera frustum
-  insideFrustum(AABB) {
-    return true;
+  // Return whether any part of the AABB is inside or overlaps the camera frustum
+  insideFrustum(min, max) {
+    let extrema = [min, max];
+    let corners = [];
+
+    // Extract the 8 corners of the AABB
+    for (let x = 0; x < 2; x++) {
+      for (let y = 0; y < 2; y++) {
+        for (let z = 0; z < 2; z++) {
+          corners.push([extrema[x][0], extrema[y][1], extrema[z][2]]);
+        }
+      }
+    }
+
+    // Record the largest dot product of all corners with all planes
+    let maxDotProducts = [-1, -1, -1, -1, -1, -1];
+    for (let i = 0; i < 8; i++) {
+      maxDotProducts[0] = Math.max(maxDotProducts[0], m4.dot([this.left[0], this.left[1], this.left[2]], corners[i]) + this.left[3]);
+      maxDotProducts[1] = Math.max(maxDotProducts[1], m4.dot([this.right[0], this.right[1], this.right[2]], corners[i]) + this.right[3]);
+      maxDotProducts[2] = Math.max(maxDotProducts[2], m4.dot([this.bottom[0], this.bottom[1], this.bottom[2]], corners[i]) + this.bottom[3]);
+      maxDotProducts[3] = Math.max(maxDotProducts[3], m4.dot([this.top[0], this.top[1], this.top[2]], corners[i]) + this.top[3]);
+      maxDotProducts[4] = Math.max(maxDotProducts[4], m4.dot([this.near[0], this.near[1], this.near[2]], corners[i]) + this.near[3]);
+      maxDotProducts[5] = Math.max(maxDotProducts[5], m4.dot([this.far[0], this.far[1], this.far[2]], corners[i]) + this.far[3]);
+    }
+
+    // AABB is is inside or overlaps the camera frustum if there are no planes of the frustum where all 
+    // corners of the AABB are on the negative side of the plane normal
+    return maxDotProducts.filter(x => x < 0).length == 0;
+  }
+
+  /**
+   * Calculate the frustum planes in world space from the combined view and projection matrices
+   * using the Gribb/Hartmann method
+   * https://www8.cs.umu.se/kurser/5DV051/HT12/lab/plane_extraction.pdf
+   * https://stackoverflow.com/questions/12836967/extracting-view-frustum-planes-gribb-hartmann-method
+   * 
+   * Plane normals are not normalized
+   */
+  calculateFrustumPlanes() {
+    let mat = m4.multiply(this.projectionMatrix, this.viewMatrix);
+    for (let i = 0; i < 4; i++) {
+      // 4th and 1st rows
+      this.left[i] = mat[3 + i * 4] + mat[i * 4];
+      this.right[i] = mat[3 + i * 4] - mat[i * 4];
+
+      // 4th and 2nd rows
+      this.bottom[i] = mat[3 + i * 4] + mat[1 + i * 4];
+      this.top[i] = mat[3 + i * 4] - mat[1 + i * 4];
+
+      // 4th and 3rd rows
+      this.near[i] = mat[3 + i * 4] + mat[2 + i * 4];
+      this.far[i] = mat[3 + i * 4] - mat[2 + i * 4];
+    }
   }
 
 }
