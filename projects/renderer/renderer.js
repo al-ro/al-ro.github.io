@@ -17,7 +17,6 @@ import { getDownloadingCount } from "./download.js"
 import { outputEnum } from "./materials/pbrMaterial.js"
 import { render } from "./renderCall.js"
 import { Scene } from "./scene.js"
-import { Object } from "./object.js"
 
 const stats = new Stats();
 stats.showPanel(0);
@@ -26,33 +25,33 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 
 /*
   TODO:
-      Instancing
 
       Pipeline state (program, sidedness)
       Render programs together
 
-      Frustum culling (mesh vs object)
-        Report how many are drawn
-      Object picking
-        Primitive picking?
-      Scene descriptions with object scales in controls
+      Object manipulation sliders
+      Scene format and scale for specific files?
+        Multi object scenes
+        Object culling
+        Camera pan
+
+      Sheen
+      Volume
+      IOR
+      Iridescence
+      Better roughness blur
 
       Morph targets
       Skinning
       Specular/Gloss
-      Sheen
-      Volume
-      IOR
       Clearcoat
-      Better roughness blur
 
+      Instancing
       Particle class for GPU
       Postprocessing (bloom, depth of field, SSAO)
 
       Lights
       Shadows
-
-      LOD
 
       Materials:
         Water
@@ -119,9 +118,11 @@ let zFar = 1000.0;
 let camera = new Camera(pitch, yaw, dist, [0, 0, 0], up, fov, aspect, zNear, zFar);
 let controls = new Controls(camera);
 
+let overviewCamera = new Camera(1.0, Math.PI / 2.0, 1.5, [0, 0, 0], up, fov, aspect, zNear, zFar);
+
 let time = 0.0;
 
-let info = { memory: "0", buffers: "0", textures: "0", Downloading: getDownloadingCount() };
+let info = { memory: "0", buffers: "0", textures: "0", downloading: getDownloadingCount(), primitives: "0" };
 
 let modelSelector = { model: "Flight Helmet" };
 let environmentSelector = { environment: "Venice Sunrise" };
@@ -181,7 +182,12 @@ memoryFolder.add(info, 'textures').disable().listen();
 memoryFolder.add(info, 'memory').disable().listen();
 memoryFolder.close();
 
-gui.add(info, 'Downloading').disable().listen();
+const cullingFolder = gui.addFolder('Culling');
+cullingFolder.add(info, 'primitives').name("primitive count").disable().listen();
+cullingFolder.add(info, 'primitives').name("drawn primitives").disable().listen();
+cullingFolder.close();
+
+gui.add(info, 'downloading').disable().listen();
 //gui.close();
 
 controls.onWindowResize();
@@ -289,10 +295,11 @@ function setScale(scale) {
 let lastFrame = Date.now();
 let thisFrame;
 
-function setCameraMatrices() {
-  camera.setProjectionMatrix();
-  camera.setCameraMatrix();
-  camera.setViewMatrix();
+function setCameraMatrices(c) {
+  c.setProjectionMatrix();
+  c.setCameraMatrix();
+  c.setViewMatrix();
+  c.calculateFrustumPlanes();
 }
 
 let frame = 0;
@@ -312,8 +319,9 @@ let sceneRenderTarget = new RenderTarget(sceneTexture, sceneDepthTexture);
 let sceneQuad = getScreenspaceQuad();
 let sceneMaterial = new ScreenspaceMaterial(sceneTexture);
 let sceneMesh = new Mesh(sceneQuad, sceneMaterial);
+sceneMesh.setCulling(false);
 
-// A square texture of the scene which can be mipmapped and blurred for transmission background
+// A texture of the opaque scene which is mipmapped and blurred for transmission background
 let blurredSceneTexture = createAndSetupTexture();
 gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, blurredSceneTexture);
@@ -322,13 +330,14 @@ gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.canvas.width, gl.canvas.height, 0, g
 let blurredSceneRenderTarget = new RenderTarget(blurredSceneTexture);
 let blurredSceneMaterial = new ScreenspaceMaterial(sceneTexture);
 let blurredSceneMesh = new Mesh(sceneQuad, blurredSceneMaterial);
+blurredSceneMesh.setCulling(false);
 
 function draw() {
 
   stats.begin();
 
-  info.Downloading = getDownloadingCount();
-  if (info.Downloading != 0) {
+  info.downloading = getDownloadingCount();
+  if (info.downloading != 0) {
     document.getElementById('loading_spinner').style.display = "inline-block";
   } else {
     document.getElementById('loading_spinner').style.display = "none";
@@ -342,17 +351,25 @@ function draw() {
     info.textures = extMEM.getMemoryInfo().resources.texture;
   }
 
+  info.primitives = scene.getPrimitiveCount();
+
   thisFrame = Date.now();
 
   let dT = (thisFrame - lastFrame) / 1000;
   time += dT;
   lastFrame = thisFrame;
 
-  // Animate all nodes in the scene graph and update world matrices
+  // Animate all objects with defined animations in the scene
   scene.animate(time);
-
   controls.move(dT);
-  setCameraMatrices();
+
+  if (environment.needsUpdate()) {
+    environment.generateIBLData();
+  }
+
+  let renderCamera = camera;
+
+  setCameraMatrices(renderCamera);
 
   sceneRenderTarget.setSize(gl.canvas.width, gl.canvas.height);
   sceneRenderTarget.bind();
@@ -366,15 +383,13 @@ function draw() {
   gl.enable(gl.CULL_FACE);
   gl.cullFace(gl.BACK);
 
-  if (environment.needsUpdate()) {
-    environment.generateIBLData();
-  }
-
+  // Render background from cubemap
   gl.depthMask(false);
-  render(RenderPass.OPAQUE, environment.getMesh(), camera, time);
+  render(RenderPass.OPAQUE, environment.getMesh(), renderCamera, time);
   gl.depthMask(true);
 
-  scene.render(RenderPass.OPAQUE, camera, time);
+  // Render opaque meshes
+  scene.render(RenderPass.OPAQUE, renderCamera, time, camera);
 
   // Generate background texture for transmissive objects
   blurredSceneRenderTarget.setSize(gl.canvas.width, gl.canvas.height);
@@ -387,22 +402,25 @@ function draw() {
   gl.generateMipmap(gl.TEXTURE_2D);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 
-  // Render transmissive objects into the scene
+  // Render transmissive objects onto the scene
   sceneRenderTarget.bind();
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   scene.setBackgroundTexture(blurredSceneTexture);
-  scene.render(RenderPass.TRANSMISSIVE, camera, time);
+  scene.render(RenderPass.TRANSMISSIVE, renderCamera, time, camera);
 
-  // Render transparent
+  // Render transparent meshes using alpha blending
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  scene.render(RenderPass.TRANSPARENT, camera, time);
+  scene.render(RenderPass.TRANSPARENT, renderCamera, time, camera);
   gl.disable(gl.BLEND);
 
   // Output render target color texture to screen
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  render(RenderPass.OPAQUE, sceneMesh, camera, time);
+  gl.clearDepth(1.0);
+  gl.clear(gl.DEPTH_BUFFER_BIT);
+
+  render(RenderPass.OPAQUE, sceneMesh, renderCamera, time, camera);
 
   stats.end();
   requestAnimationFrame(draw);

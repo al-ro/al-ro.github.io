@@ -55,7 +55,7 @@ function getFragmentSource(){
 
   void main(){ 
     vec3 rayDir = normalize(cameraMatrix * vec4(rayDirection(fov, gl_FragCoord.xy), 0.0)).rgb;
-    vec3 col = exposure * textureLod(cubeMap, normalize(rayDir), 0.0).rgb;
+    vec3 col = exposure * texture(cubeMap, normalize(rayDir)).rgb;
     col = ACESFilm(col);
     col = pow(col, vec3(0.4545));
 

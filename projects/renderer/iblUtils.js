@@ -46,6 +46,7 @@ function getSphericalHarmonicsMatrices(cubeMap) {
 
   let shMaterial = new SphericalHarmonicsMaterial(cubeMap);
   let mesh = new Mesh(getScreenspaceQuad(), shMaterial);
+  mesh.setCulling(false);
 
   // Create a 4x3 framebuffer and render into it using the SH material
   let frameBuffer = gl.createFramebuffer();
@@ -105,6 +106,7 @@ function convertToCubeMap(sphericalTexture, cubeMap, type = "equirectangular") {
   let cubeMapConverterMaterial = new CubeMapConverterMaterial(sphericalTexture);
   cubeMapConverterMaterial.setTextureType(type);
   let mesh = new Mesh(getScreenspaceQuad(), cubeMapConverterMaterial);
+  mesh.setCulling(false);
 
   let frameBuffer = gl.createFramebuffer();
 
@@ -152,6 +154,7 @@ function getCubeMapConvolution(cubeMap) {
 
   let convolutionMaterial = new ConvolutionMaterial(cubeMap);
   let mesh = new Mesh(getScreenspaceQuad(), convolutionMaterial);
+  mesh.setCulling(false);
 
   let frameBuffer = gl.createFramebuffer();
 
@@ -198,6 +201,7 @@ function getBRDFIntegrationMap() {
 
   let brdfMaterial = new BRDFMapMaterial([size, size]);
   let mesh = new Mesh(getScreenspaceQuad(), brdfMaterial);
+  mesh.setCulling(false);
 
   // Create a 256x256 framebuffer and render into it using the BRDF integration material
   let frameBuffer = gl.createFramebuffer();
