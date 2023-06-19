@@ -8,9 +8,14 @@ export class Scene {
      */
     objects = [];
 
+    primitiveCount = 0;
+
     constructor(objects) {
         if (objects != null) {
             this.objects = objects;
+        }
+        for (const object of this.objects) {
+            this.primitiveCount += object.getPrimitiveCount();
         }
     }
 
@@ -20,9 +25,9 @@ export class Scene {
         }
     }
 
-    render(renderPass, camera, time) {
+    render(renderPass, camera, time, cullCamera) {
         for (const object of this.objects) {
-            object.render(renderPass, camera, time);
+            object.render(renderPass, camera, time, cullCamera);
         }
     }
 
@@ -40,6 +45,10 @@ export class Scene {
         return this.objects;
     }
 
+    getPrimitiveCount() {
+        return this.primitiveCount;
+    }
+
     /**
      * Add a new element to the scene
      * @param {Object | Object[]} objects Single instance or an array of Objects
@@ -48,9 +57,11 @@ export class Scene {
         if (Array.isArray(objects)) {
             for (const object of objects) {
                 this.objects.push(object);
+                this.primitiveCount += object.getPrimitiveCount();
             }
         } else {
             this.objects.push(objects);
+            this.primitiveCount += objects.getPrimitiveCount();
         }
     }
 
@@ -61,6 +72,7 @@ export class Scene {
      */
     remove(object) {
         const index = this.nodes.indexOf(object);
+        this.primitiveCount -= object.getPrimitiveCount();
         return this.objects.splice(index, 1);
     }
 
@@ -72,5 +84,6 @@ export class Scene {
             object.destroy();
         }
         this.objects = [];
+        this.primitiveCount = 0;
     }
 }

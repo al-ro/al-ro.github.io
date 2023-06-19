@@ -19,6 +19,8 @@ export class Mesh extends Node {
   originalMaterial;
   overrideMaterial;
 
+  cull = true;
+
   instanced = false;
   activeAttributes = [];
 
@@ -132,15 +134,31 @@ export class Mesh extends Node {
   }
 
   getMin() {
-    return m4.transformPoint(this.getWorldMatrix(), this.geometry.getMin());
+    if (this.geometry.getMin() != null) {
+      return m4.transformPoint(this.getWorldMatrix(), this.geometry.getMin());
+    } else {
+      return [0, 0, 0];
+    }
   }
 
   getMax() {
-    return m4.transformPoint(this.getWorldMatrix(), this.geometry.getMax());
+    if (this.geometry.getMax() != null) {
+      return m4.transformPoint(this.getWorldMatrix(), this.geometry.getMax());
+    } else {
+      return [0, 0, 0];
+    }
   }
 
   isMesh() {
     return true;
+  }
+
+  cullingEnabled() {
+    return this.cull;
+  }
+
+  setCulling(cull) {
+    this.cull = cull;
   }
 
 }
