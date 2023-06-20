@@ -110,7 +110,7 @@ export class Object {
         this.setTRS(T, R, scale);
     }
 
-    setPosition(position) {
+    setTranslation(position) {
         let localMatrix = this.node.getLocalMatrix();
 
         let T = [0, 0, 0];

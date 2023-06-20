@@ -26,10 +26,6 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 /*
   TODO:
 
-      Pipeline state (program, sidedness)
-      Render programs together
-
-      Object manipulation sliders
       Scene format and scale for specific files?
         Multi object scenes
         Object culling
@@ -43,12 +39,15 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 
       Morph targets
       Skinning
+      Multiple animations
+
       Specular/Gloss
       Clearcoat
 
       Instancing
       Particle class for GPU
       Postprocessing (bloom, depth of field, SSAO)
+      PBR camera
 
       Lights
       Shadows
@@ -58,7 +57,6 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
         Lava
         Clouds
 
-      Deferred rendering
 */
 
 let models = new Map();
@@ -118,7 +116,8 @@ let zFar = 1000.0;
 let camera = new Camera(pitch, yaw, dist, [0, 0, 0], up, fov, aspect, zNear, zFar);
 let controls = new Controls(camera);
 
-let overviewCamera = new Camera(1.0, Math.PI / 2.0, 1.5, [0, 0, 0], up, fov, aspect, zNear, zFar);
+// For rendering the scene from above to test frustum culling of the main camera
+// let overviewCamera = new Camera(1.0, Math.PI / 2.0, 1.5, [0, 0, 0], up, fov, aspect, zNear, zFar);
 
 let time = 0.0;
 
@@ -131,9 +130,7 @@ let environment;
 let gltfLoader;
 let scene = new Scene();
 let modelManipulation = {
-  translationX: 0, translationY: 0, translationZ: 0,
-  scaleX: 1, scaleY: 1, scaleZ: 1,
-  rotationX: 0, rotationY: 0, rotationZ: 0
+  translationX: 0, translationY: 0, translationZ: 0, scale: 1, rotationX: 0, rotationY: 0, rotationZ: 0
 };
 
 //************* GUI ***************
@@ -155,21 +152,19 @@ environmentFolder.add(environmentSelector, 'environment').options(environmentNam
 const transformFolder = gui.addFolder('Transform');
 transformFolder.close();
 const translationFolder = transformFolder.addFolder('Translation');
-translationFolder.add(modelManipulation, 'translationX').min(-20).max(20).step(0.0001).listen().onChange(scale => { setScale(scale); });
-translationFolder.add(modelManipulation, 'translationY').min(-20).max(20).step(0.0001).listen().onChange(scale => { setScale(scale); });
-translationFolder.add(modelManipulation, 'translationZ').min(-20).max(20).step(0.0001).listen().onChange(scale => { setScale(scale); });
+translationFolder.add(modelManipulation, 'translationX').min(-5).max(5).step(0.0001).listen().onChange(x => { setTranslation(modelManipulation); });
+translationFolder.add(modelManipulation, 'translationY').min(-5).max(5).step(0.0001).listen().onChange(y => { setTranslation(modelManipulation); });
+translationFolder.add(modelManipulation, 'translationZ').min(-5).max(5).step(0.0001).listen().onChange(z => { setTranslation(modelManipulation); });
 translationFolder.close();
 
 const rotationFolder = transformFolder.addFolder('Rotation');
-rotationFolder.add(modelManipulation, 'rotationX').min(-3.1415).max(3.1415).step(0.0001).listen().onChange(scale => { setScale(scale); });
-rotationFolder.add(modelManipulation, 'rotationY').min(-3.1415).max(3.1415).step(0.0001).listen().onChange(scale => { setScale(scale); });
-rotationFolder.add(modelManipulation, 'rotationZ').min(-3.1415).max(3.1415).step(0.0001).listen().onChange(scale => { setScale(scale); });
+rotationFolder.add(modelManipulation, 'rotationX').min(-Math.PI).max(Math.PI).step(0.0001).listen().onChange(x => { setRotation(modelManipulation); });
+rotationFolder.add(modelManipulation, 'rotationY').min(-Math.PI).max(Math.PI).step(0.0001).listen().onChange(y => { setRotation(modelManipulation); });
+rotationFolder.add(modelManipulation, 'rotationZ').min(-Math.PI).max(Math.PI).step(0.0001).listen().onChange(z => { setRotation(modelManipulation); });
 rotationFolder.close();
 
 const scaleFolder = transformFolder.addFolder('Scale');
-scaleFolder.add(modelManipulation, 'scaleX').min(1e-4).max(20).step(0.0001).listen().onChange(scale => { setScale(scale); });
-scaleFolder.add(modelManipulation, 'scaleX').min(1e-4).max(20).step(0.0001).listen().onChange(scale => { setScale(scale); });
-scaleFolder.add(modelManipulation, 'scaleX').min(1e-4).max(20).step(0.0001).listen().onChange(scale => { setScale(scale); });
+scaleFolder.add(modelManipulation, 'scale').min(1e-4).max(10).step(0.0001).listen().onChange(scale => { setScale(scale); });
 scaleFolder.close();
 
 const cameraFolder = gui.addFolder('Camera');
@@ -181,11 +176,6 @@ memoryFolder.add(info, 'buffers').disable().listen();
 memoryFolder.add(info, 'textures').disable().listen();
 memoryFolder.add(info, 'memory').disable().listen();
 memoryFolder.close();
-
-const cullingFolder = gui.addFolder('Culling');
-cullingFolder.add(info, 'primitives').name("primitive count").disable().listen();
-cullingFolder.add(info, 'primitives').name("drawn primitives").disable().listen();
-cullingFolder.close();
 
 gui.add(info, 'downloading').disable().listen();
 //gui.close();
@@ -249,6 +239,16 @@ function centreAndScale(object) {
   let S = [scale, scale, scale];
 
   object.setTRS(T, R, S);
+
+  modelManipulation.translationX = T[0];
+  modelManipulation.translationY = T[1];
+  modelManipulation.translationZ = T[2];
+
+  modelManipulation.rotationX = 0;
+  modelManipulation.rotationY = 0;
+  modelManipulation.rotationZ = 0;
+
+  modelManipulation.scale = scale;
 }
 
 function setMaterial(name) {
@@ -289,6 +289,18 @@ function setScale(scale) {
   scale = Math.max(1e-4, scale);
   for (const object of scene.getObjects()) {
     object.setScale([scale, scale, scale]);
+  }
+}
+
+function setTranslation(modelManipulation) {
+  for (const object of scene.getObjects()) {
+    object.setTranslation([modelManipulation.translationX, modelManipulation.translationY, modelManipulation.translationZ]);
+  }
+}
+
+function setRotation(modelManipulation) {
+  for (const object of scene.getObjects()) {
+    object.setRotation(eulerToQuaternion(modelManipulation.rotationX, modelManipulation.rotationY, modelManipulation.rotationZ));
   }
 }
 
