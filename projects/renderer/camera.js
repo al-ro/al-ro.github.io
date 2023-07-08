@@ -148,17 +148,7 @@ export class Camera {
 
   // Return whether any part of the AABB is inside or overlaps the camera frustum
   insideFrustum(min, max) {
-    let extrema = [min, max];
-    let corners = [];
-
-    // Extract the 8 corners of the AABB
-    for (let x = 0; x < 2; x++) {
-      for (let y = 0; y < 2; y++) {
-        for (let z = 0; z < 2; z++) {
-          corners.push([extrema[x][0], extrema[y][1], extrema[z][2]]);
-        }
-      }
-    }
+    let corners = getAABBFromExtent(min, max);
 
     // Record the largest dot product of all corners with all planes
     let maxDotProducts = [-1, -1, -1, -1, -1, -1];

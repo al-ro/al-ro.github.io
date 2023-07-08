@@ -1,107 +1,6 @@
-function getVertexSource(){ 
-
-  var vertexSource = `
-
-  in vec3 POSITION;
-
-#ifdef INSTANCED 
-  in vec4 orientation;
-  in vec3 offset;
-  in vec3 scale;
-#endif
-
-#ifdef HAS_NORMALS
-  in vec3 NORMAL;
-  uniform mat4 normalMatrix;
-#endif
-
-#ifdef HAS_UVS
-  in vec2 TEXCOORD_0;
-#endif
-
-  uniform mat4 modelMatrix;
-  uniform mat4 viewMatrix;
-  uniform mat4 projectionMatrix;
-
-#ifdef HAS_NORMALS
-  out vec3 vNormal;
-#endif
-
-#ifdef HAS_UVS
-  out vec2 vUV;
-#endif
-
-#ifdef HAS_TANGENTS
-  in vec4 TANGENT;
-  out mat3 tbn;
-#endif
-
-  out vec3  vPosition;
-
-  // https://www.geeks3d.com/20141201/how-to-rotate-a-vertex-by-a-quaternion-in-glsl/
-  vec3 rotateVectorByQuaternion(vec3 v, vec4 q){
-    return 2.0 * cross(q.xyz, v * q.w + cross(q.xyz, v)) + v;
-  }
-
-  void main(){
-
-#ifdef HAS_UVS
-    vUV = TEXCOORD_0;
-#endif
-
-#ifdef HAS_NORMALS
-    vec4 transformedNormal;
-
-#ifdef INSTANCED
-    transformedNormal = normalMatrix * vec4(normalize(normalize(NORMAL)/scale), 0.0);
-    transformedNormal.xyz = rotateVectorByQuaternion(transformedNormal.xyz, orientation);
-#else
-    transformedNormal = normalMatrix * vec4(NORMAL, 0.0);
-#endif
-
-    vNormal = transformedNormal.xyz;
-#endif
-
-#ifdef HAS_TANGENTS
-    vec3 N = normalize(vec3(modelMatrix * vec4(NORMAL, 0.0)));
-    // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
-    // Create matrix to transform normal to tangent space i.e. transform static normal map data into the underlying triangle frame
-    vec3 T = normalize(vec3(modelMatrix * vec4(TANGENT.xyz, 0.0)));
-    // The triangle normal
-    // Re-orthogonalize T with respect to N (for small optional correction)
-    T = normalize(T - dot(T, N) * N);
-    // The bitangent vector is perpendicular to N and T
-    // The w value of the tangent is the "handedness"
-    vec3 B = normalize(cross(N, T)) * TANGENT.w;
-    // Create matrix from three vectors
-    tbn = mat3(T, B, N);
-#endif 
-
-    vec4 pos;
-
-#ifdef INSTANCED
-    pos = modelMatrix * vec4(POSITION * scale, 1.0);
-    pos.xyz = rotateVectorByQuaternion(pos.xyz, orientation);
-    pos.xyz += offset; 
-#else
-    pos = modelMatrix * vec4(POSITION, 1.0);
-#endif
-
-    vPosition = vec3((modelMatrix * vec4(POSITION, 1.0)));
-
-    pos = projectionMatrix * viewMatrix * pos;
-    gl_Position = pos;
-  }
-  `;
-
-  return vertexSource;
-}
-
-function getFragmentSource(){
+function getFragmentSource() {
 
   var fragmentSource = `
-
-  precision highp float;
 
   out vec4 fragColor;
 
@@ -454,10 +353,9 @@ function getFragmentSource(){
     vec3 uv_dx = dFdx(vec3(vUV, 0.0));
     vec3 uv_dy = dFdy(vec3(vUV, 0.0));
 
-    vec3 t_ = (uv_dy.t * dFdx(vPosition) - uv_dx.t * dFdy(vPosition)) /
-      (uv_dx.s * uv_dy.t - uv_dy.s * uv_dx.t);
+    vec3 t_ = (uv_dy.t * dFdx(vPosition) - uv_dx.t * dFdy(vPosition)) / (uv_dx.s * uv_dy.t - uv_dy.s * uv_dx.t);
     vec3 T = normalize(t_ - geometryNormal * dot(geometryNormal, t_));
-    vec3 B = cross(geometryNormal, T);
+    vec3 B = normalize(cross(geometryNormal, T));
 
     mat3 tbn = mat3(T, B, geometryNormal);
 
@@ -613,4 +511,4 @@ function getFragmentSource(){
   return fragmentSource;
 }
 
-export {getVertexSource, getFragmentSource};
+export { getFragmentSource };

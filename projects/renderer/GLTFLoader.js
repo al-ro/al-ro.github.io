@@ -10,12 +10,12 @@ import { Indices } from "./indices.js"
 import { loadTexture } from "./texture.js"
 import { Animation } from "./animation.js"
 import { Object } from "./object.js"
+import { MorphTarget } from "./morphTarget.js"
 
 // TODO:
 //  full spec conform (color_0, sampler)
 //  image from bufferView
 //  extensions
-//  morph
 //  skins
 
 const supportedExtensions = ["KHR_materials_transmission"];
@@ -169,7 +169,7 @@ export class GLTFLoader {
         if (supported) {
           console.log(extension, ": supported");
         } else {
-          console.log(extension, ": not supported");
+          console.error(extension, ": not supported");
         }
       }
     };
@@ -335,9 +335,10 @@ export class GLTFLoader {
   /**
    * Get the keyframe values
    * @param {animation.sampler} sampler 
-   * @returns Array of TRS values corresponding to timestamps
+   * @param {number} weightCount number of weights 
+   * @returns Array of T, R, S or weight values corresponding to timestamps
    */
-  getAnimationValues(sampler) {
+  getAnimationValues(sampler, weightCount = null) {
     const outputAccesssor = this.json.accessors[sampler.output];
     const outputBufferView = this.json.bufferViews[outputAccesssor.bufferView];
     const outputBuffer = this.buffers[outputBufferView.buffer];
@@ -353,10 +354,13 @@ export class GLTFLoader {
     const outputTypedArray = getTypedArray(outputAccesssor.componentType);
     // Typed array is created of the underlying buffer. No memory is allocated.
     let elements = outputAccesssor.count != null ? outputAccesssor.count : outputBufferView.byteLength / outputTypedArray.BYTES_PER_ELEMENT;
-    const count = getComponentCount(outputAccesssor.type);
+    let count = getComponentCount(outputAccesssor.type);
     elements *= count;
     const outputData = new outputTypedArray(outputBuffer, outputOffset, elements);
 
+    if (weightCount != null) {
+      count = weightCount;
+    }
     let output = [];
     for (let i = 0; i < outputData.length; i += count) {
       let element = [];
@@ -379,9 +383,17 @@ export class GLTFLoader {
     for (const animation of animations) {
       for (const channel of animation.channels) {
         const sampler = animation.samplers[channel.sampler];
+        let outputValues = [];
+        if (channel.target.path == "weights") {
+          // Find the number of weights on the node
+          let weightCount = this.json.meshes[this.json.nodes[channel.target.node].mesh].weights.length;
+          outputValues = this.getAnimationValues(sampler, weightCount);
+        } else {
+          outputValues = this.getAnimationValues(sampler)
+        }
         const parameters = {
           timeStamps: this.getAnimationTimeStamps(sampler),
-          values: this.getAnimationValues(sampler),
+          values: outputValues,
           interpolation: !!sampler.interpolation ? sampler.interpolation : InterpolationType.LINEAR,
           path: channel.target.path
         };
@@ -729,7 +741,8 @@ export class GLTFLoader {
         attributes: new Map(),
         length: 0,
         indices: null,
-        primitiveType: primitive.mode != null ? primitive.mode : gl.TRIANGLES
+        primitiveType: primitive.mode != null ? primitive.mode : gl.TRIANGLES,
+        morphTargets: null
       };
 
       const attributes = primitive.attributes;
@@ -757,6 +770,23 @@ export class GLTFLoader {
         }
       }
 
+      // ---- Create morph targets  ---- //
+      if (primitive.hasOwnProperty("targets")) {
+        let morphTargets = [];
+
+        for (const target of primitive.targets) {
+          let attributes = new Map();
+          for (const name of supportedAttributes) {
+            if (target.hasOwnProperty(name)) {
+              const accessor = accessors[target[name]];
+              attributes.set(name, this.createAttribute(name, accessor));
+            }
+          }
+          morphTargets.push(new MorphTarget(attributes));
+        }
+        geometryParams.morphTargets = morphTargets;
+      }
+
       const geometry = new Geometry(geometryParams);
 
       let material;
@@ -766,7 +796,7 @@ export class GLTFLoader {
         material = new PBRMaterial({ environment: this.environment });
       }
 
-      primitives.push(new Mesh(geometry, material));
+      primitives.push(new Mesh(geometry, material, mesh.weights));
     }
 
     for (const primitive of primitives) {

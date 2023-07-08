@@ -140,7 +140,6 @@ export class Node {
     }
   }
 
-
   /**
    * Get local transform matrix from animated values
    * @param {number} time
