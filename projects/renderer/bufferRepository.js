@@ -54,7 +54,7 @@ class BufferRepository {
     let id = [parameters.index, parameters.byteOffset, parameters.byteLength].join(', ');
 
     // Include sparse information to differentiate base and constructed buffers
-    if (!!parameters.sparseInfo && !!parameters.sparseInfo != "") {
+    if (!!parameters.sparseInfo && parameters.sparseInfo != "") {
       id += ", " + parameters.sparseInfo;
     }
 

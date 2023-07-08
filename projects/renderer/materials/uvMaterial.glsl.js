@@ -11,12 +11,6 @@ function getVertexSource(){
   uniform mat4 viewMatrix;
   uniform mat4 projectionMatrix;
 
-#ifdef INSTANCED 
-  in vec4 orientation;
-  in vec3 offset;
-  in vec3 scale;
-#endif
-
 #ifdef HAS_UVS
   out vec2 vUV;
 #endif
@@ -27,15 +21,7 @@ function getVertexSource(){
     vUV = TEXCOORD_0;
 #endif
 
-    vec4 pos;
-
-#ifdef INSTANCED
-    pos = modelMatrix * vec4(POSITION*scale, 1.0);
-    pos.xyz = rotateVectorByQuaternion(pos.xyz, orientation);
-    pos.xyz += offset; 
-#else
-    pos = modelMatrix * vec4(POSITION, 1.0);
-#endif
+    vec4 pos = modelMatrix * vec4(POSITION, 1.0);
   
     pos = projectionMatrix * viewMatrix * pos;
     gl_Position = vec4(pos);
@@ -48,7 +34,7 @@ function getVertexSource(){
 function getFragmentSource(){
    
   var fragmentSource = `
-    precision highp float;
+    
     
 #ifdef HAS_UVS
     in vec2 vUV;

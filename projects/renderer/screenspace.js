@@ -39,7 +39,9 @@ const vertexDescriptor = {
   componentCount: 3,
   normalized: false,
   byteStride: 0,
-  offset: 0
+  offset: 0,
+  min: [-1, -1, 0],
+  max: [1, 1, 0]
 };
 
 const uvBuffer = gl.createBuffer();

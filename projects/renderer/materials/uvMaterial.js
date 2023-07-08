@@ -1,27 +1,27 @@
-import {gl} from "../canvas.js"
-import {Material} from './material.js'
-import {getVertexSource, getFragmentSource} from './uvMaterial.glsl.js'
+import { gl } from "../canvas.js"
+import { Material } from './material.js'
+import { getVertexSource, getFragmentSource } from './uvMaterial.glsl.js'
 
-export class UVMaterial extends Material{
+export class UVMaterial extends Material {
 
   projectionMatrixHandle;
   viewMatrixHandle;
   modelMatrixHandle;
 
-  constructor(){
+  constructor() {
     super();
     this.attributes = ["POSITION", "TEXCOORD_0"];
   }
 
-  getVertexShaderSource(parameters){
-    return getVertexSource(parameters);
+  getVertexShaderSource(parameters) {
+    return getVertexSource();
   }
-  
-  getFragmentShaderSource(){
+
+  getFragmentShaderSource() {
     return getFragmentSource();
   }
 
-  getParameterHandles(){
+  getParameterHandles() {
     this.projectionMatrixHandle = this.program.getUniformLocation('projectionMatrix');
     this.viewMatrixHandle = this.program.getUniformLocation('viewMatrix');
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');

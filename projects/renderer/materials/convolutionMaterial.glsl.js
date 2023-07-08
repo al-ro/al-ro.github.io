@@ -17,7 +17,7 @@ function getVertexSource(){
 function getFragmentSource(){
 
   var fragmentSource = `
-    precision highp float;
+    
     
     #define PI 3.14159
     

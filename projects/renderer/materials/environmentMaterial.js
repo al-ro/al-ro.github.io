@@ -1,8 +1,8 @@
-import {gl} from "../canvas.js"
-import {Material} from './material.js'
-import {getVertexSource, getFragmentSource} from './environmentMaterial.glsl.js'
+import { gl } from "../canvas.js"
+import { Material } from './material.js'
+import { getVertexSource, getFragmentSource } from './environmentMaterial.glsl.js'
 
-export class EnvironmentMaterial extends Material{
+export class EnvironmentMaterial extends Material {
 
   cameraMatrixHandle;
   cameraMatrix;
@@ -18,7 +18,7 @@ export class EnvironmentMaterial extends Material{
 
   resolutionHandle;
 
-  constructor(cubeMap, camera, environment){
+  constructor(cubeMap, camera, environment) {
 
     super();
 
@@ -28,9 +28,9 @@ export class EnvironmentMaterial extends Material{
 
     this.needsCamera = true;
 
-    if(cubeMap != null){
+    if (cubeMap != null) {
       this.cubeMap = cubeMap;
-    }else{
+    } else {
       console.error("Environment material must be created with a cube map texture. Parameter: ", cubeMap);
     }
 
@@ -39,28 +39,28 @@ export class EnvironmentMaterial extends Material{
     this.fov = camera.getFOV();
   }
 
-  getVertexShaderSource(parameters){
-    return getVertexSource(parameters);
+  getVertexShaderSource(parameters) {
+    return getVertexSource();
   }
-  
-  getFragmentShaderSource(){
+
+  getFragmentShaderSource() {
     return getFragmentSource();
   }
 
-  getParameterHandles(){
+  getParameterHandles() {
     this.cameraMatrixHandle = this.program.getUniformLocation('cameraMatrix');
     this.cubeMapHandle = this.program.getUniformLocation('cubeMap');
     this.fovHandle = this.program.getUniformLocation('fov');
     this.resolutionHandle = this.program.getUniformLocation('resolution');
     this.exposureHandle = this.program.getUniformLocation('exposure');
-/*
-    this.shRedMatrixHandle = this.program.getUniformLocation('shRedMatrix');
-    this.shGrnMatrixHandle = this.program.getUniformLocation('shGrnMatrix');
-    this.shBluMatrixHandle = this.program.getUniformLocation('shBluMatrix');
-*/
+    /*
+        this.shRedMatrixHandle = this.program.getUniformLocation('shRedMatrix');
+        this.shGrnMatrixHandle = this.program.getUniformLocation('shGrnMatrix');
+        this.shBluMatrixHandle = this.program.getUniformLocation('shBluMatrix');
+    */
   }
 
-  bindParameters(){
+  bindParameters() {
     gl.uniformMatrix4fv(this.cameraMatrixHandle, false, this.cameraMatrix);
     gl.uniform1f(this.fovHandle, this.fov);
     gl.uniform2f(this.resolutionHandle, gl.canvas.width, gl.canvas.height);
@@ -69,19 +69,19 @@ export class EnvironmentMaterial extends Material{
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeMap);
     gl.uniform1i(this.cubeMapHandle, 0);
-/*
-    let shMatrices = this.environment.getSHMatrices();
-    this.shRedMatrix = shMatrices.red;
-    this.shGrnMatrix = shMatrices.green;
-    this.shBluMatrix = shMatrices.blue;
-
-    gl.uniformMatrix4fv(this.shRedMatrixHandle, false, this.shRedMatrix);
-    gl.uniformMatrix4fv(this.shGrnMatrixHandle, false, this.shGrnMatrix);
-    gl.uniformMatrix4fv(this.shBluMatrixHandle, false, this.shBluMatrix);
-*/
+    /*
+        let shMatrices = this.environment.getSHMatrices();
+        this.shRedMatrix = shMatrices.red;
+        this.shGrnMatrix = shMatrices.green;
+        this.shBluMatrix = shMatrices.blue;
+    
+        gl.uniformMatrix4fv(this.shRedMatrixHandle, false, this.shRedMatrix);
+        gl.uniformMatrix4fv(this.shGrnMatrixHandle, false, this.shGrnMatrix);
+        gl.uniformMatrix4fv(this.shBluMatrixHandle, false, this.shBluMatrix);
+    */
   }
 
-  setCamera(camera){
+  setCamera(camera) {
     this.cameraMatrix = camera.getCameraMatrix();
     this.exposure = camera.getExposure();
     this.fov = camera.getFOV();;

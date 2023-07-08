@@ -134,6 +134,19 @@ export class Object {
         this.setTRS(T, rotation, S);
     }
 
+
+    getRotation() {
+        let localMatrix = this.node.getLocalMatrix();
+
+        let T = [0, 0, 0];
+        let R = [0, 0, 0, 1];
+        let S = [1, 1, 1];
+
+        m4.decompose(localMatrix, T, R, S);
+
+        return R;
+    }
+
     setTRS(T, R, S) {
         let matrix = m4.compose(T, R, S);
         this.node.setLocalMatrix(matrix);

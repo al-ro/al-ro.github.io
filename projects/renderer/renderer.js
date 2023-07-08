@@ -20,16 +20,22 @@ import { Scene } from "./scene.js"
 
 const stats = new Stats();
 stats.showPanel(0);
-stats.dom.style.cssText = "visibility: visible; position: absolute; bottom: 0px; left: 0; cursor: pointer; opacity: 1.0; z-index: 10000";
+stats.dom.style.cssText = "visibility: visible; position: absolute; bottom: 0px; left: 0; cursor: pointer; opacity: 0.8; z-index: 10000";
 document.getElementById('canvas_overlay').appendChild(stats.dom);
 
 /*
   TODO:
 
+      Uniform buffer object for material and camera matrices
+      Order material draw
+
       Scene format and scale for specific files?
         Multi object scenes
         Object culling
         Camera pan
+
+      Multiple animation
+        Control animation and select
 
       Sheen
       Volume
@@ -37,9 +43,7 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
       Iridescence
       Better roughness blur
 
-      Morph targets
       Skinning
-      Multiple animations
 
       Specular/Gloss
       Clearcoat
@@ -79,6 +83,11 @@ models.set("Minimal", "./gltf/minimal/scene.gltf");
 models.set("Collada Duck", "./gltf/duck/duck.gltf");
 models.set("Buster Drone", "./gltf/buster_drone/scene.gltf");
 models.set("Gyroscope", "./gltf/magical_gyroscope/scene.gltf");
+models.set("MorphAnimation", "./gltf/animatedMorphCube/AnimatedMorphCube.gltf");
+models.set("MorphPrimitivesTest", "./gltf/morphPrimitivesTest/MorphPrimitivesTest.gltf");
+models.set("MorphStressTest", "./gltf/morphStressTest/MorphStressTest.gltf");
+models.set("MorphInterpolation", "./gltf/morphInterpolation/fourCube.gltf");
+
 
 let modelNames = Array.from(models.keys());
 modelNames.sort();
@@ -97,7 +106,7 @@ environments.set("Uffizi Gallery", "./environmentMaps/uffizi_probe.hdr");
 let environmentNames = Array.from(environments.keys());
 environmentNames.sort();
 
-let texture_0 = loadTexture("./defaultResources/uv_grid.jpg");
+let uvGridTexture = loadTexture("./defaultResources/uv_grid.jpg");
 
 let materialNames = ["PBR", "Normal", "UV", "Texture", "Lambert", "Ambient"];
 materialNames.sort();
@@ -138,7 +147,7 @@ let modelManipulation = {
 let gui = new lil.GUI({ autoPlace: false });
 let customContainer = document.getElementById('canvas_overlay');
 customContainer.appendChild(gui.domElement);
-gui.domElement.style.cssText = "visibility: visible; position: absolute; top: 0px; right: 0;";
+gui.domElement.style.cssText = "visibility: visible; position: absolute; top: 0px; right: 0; opacity: 0.8";
 
 gui.add(modelSelector, 'model').options(modelNames).onChange(name => { loadGLTF(name); });
 
@@ -213,7 +222,7 @@ function loadGLTF(model) {
       modelManipulation.scale = scene.getObjects()[0].getScale();
     }
     materialControls.setValue("PBR");
-    outputControls.setValue("PBR");
+    outputControls.setValue(outputEnum.PBR);
     outputControls.show();
   });
 }
@@ -235,7 +244,7 @@ function centreAndScale(object) {
   let scale = 1.0 / largestExtent;
 
   let T = [-center[0] * scale, -center[1] * scale, -center[2] * scale];
-  let R = [0, 0, 0, 1];
+  let R = object.getRotation();
   let S = [scale, scale, scale];
 
   object.setTRS(T, R, S);
@@ -244,9 +253,11 @@ function centreAndScale(object) {
   modelManipulation.translationY = T[1];
   modelManipulation.translationZ = T[2];
 
-  modelManipulation.rotationX = 0;
-  modelManipulation.rotationY = 0;
-  modelManipulation.rotationZ = 0;
+
+  let rE = quaternionToEuler(R);
+  modelManipulation.rotationX = rE[0];
+  modelManipulation.rotationY = rE[1];
+  modelManipulation.rotationZ = rE[2];
 
   modelManipulation.scale = scale;
 }
@@ -264,7 +275,7 @@ function setMaterial(name) {
       break;
     case "Lambert": material = new LambertMaterial();
       break;
-    case "Texture": material = new TextureMaterial(texture_0);
+    case "Texture": material = new TextureMaterial(uvGridTexture);
       break;
     default: material = null;
   }

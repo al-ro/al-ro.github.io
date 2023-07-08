@@ -17,7 +17,8 @@ const InterpolationType = {
 const AnimationType = {
   TRANSLATON: "translation",
   ROTATION: "rotation",
-  SCALE: "scale"
+  SCALE: "scale",
+  WEIGHTS: "weights"
 }
 
 const RenderPass = {

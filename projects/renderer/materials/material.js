@@ -13,13 +13,14 @@ export class Material {
   needsCamera = false;
   needTime = false;
   instanced = false;
+  supportsMorphTargets = false;
 
   constructor() { }
 
   destroy() { }
 
-  createProgram(attributes) {
-    this.program = programRepository.getProgram(this, attributes);
+  createProgram(attributes, morphTargets) {
+    this.program = programRepository.getProgram(this, attributes, morphTargets);
   }
 
   getProgram() {

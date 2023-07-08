@@ -1,8 +1,8 @@
-import {gl} from "../canvas.js"
-import {Material} from './material.js'
-import {getVertexSource, getFragmentSource} from './cubeMapConverterMaterial.glsl.js'
+import { gl } from "../canvas.js"
+import { Material } from './material.js'
+import { getVertexSource, getFragmentSource } from './cubeMapConverterMaterial.glsl.js'
 
-export class CubeMapConverterMaterial extends Material{
+export class CubeMapConverterMaterial extends Material {
 
   cameraMatrixHandle;
 
@@ -11,33 +11,33 @@ export class CubeMapConverterMaterial extends Material{
   textureType = "equirectangular";
   texture;
 
-  constructor(texture){
+  constructor(texture) {
 
     super();
 
     this.attributes = ["POSITION"];
 
-    if(!texture){
+    if (!texture) {
       console.error("Cube map converter material must be created with a texture. Parameter: ", texture);
     }
     this.texture = texture;
   }
 
-  getVertexShaderSource(parameters){
-    return getVertexSource(parameters);
+  getVertexShaderSource(parameters) {
+    return getVertexSource();
   }
-  
-  getFragmentShaderSource(){
+
+  getFragmentShaderSource() {
     return getFragmentSource();
   }
 
-  getParameterHandles(){
+  getParameterHandles() {
     this.cameraMatrixHandle = this.program.getUniformLocation('cameraMatrix');
     this.textureHandle = this.program.getUniformLocation('sphericalTexture');
     this.textureTypeHandle = this.program.getUniformLocation('textureType');
   }
 
-  bindParameters(){
+  bindParameters() {
     gl.uniformMatrix4fv(this.cameraMatrixHandle, false, this.cameraMatrix);
 
     gl.activeTexture(gl.TEXTURE0);
@@ -46,11 +46,11 @@ export class CubeMapConverterMaterial extends Material{
     gl.uniform1f(this.textureTypeHandle, this.textureType == "equirectangular" ? 0 : 1);
   }
 
-  setCameraMatrix(cameraMatrix){
+  setCameraMatrix(cameraMatrix) {
     this.cameraMatrix = cameraMatrix;
   }
 
-  setTextureType(type){
+  setTextureType(type) {
     this.textureType = type;
   }
 

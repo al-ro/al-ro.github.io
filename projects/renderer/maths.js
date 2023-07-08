@@ -33,8 +33,31 @@ function mod(m, n) {
   return ((m % n) + n) % n;
 }
 
+/**
+ * Extract the 8 corners of an AABB from the mininum and maximum extents
+ * @param {number[]} min smallest extent of data
+ * @param {number[]} max largest extent of data
+ * @returns an array of 8 corners in 3D
+ */
+function getAABBFromExtent(min, max) {
+  let extent = [min, max];
+  let corners = [];
 
-// https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+  for (let x = 0; x < 2; x++) {
+    for (let y = 0; y < 2; y++) {
+      for (let z = 0; z < 2; z++) {
+        corners.push([extent[x][0], extent[y][1], extent[z][2]]);
+      }
+    }
+  }
+  return corners;
+}
+
+/**
+ * https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+ * @param {quaternion} q 
+ * @returns array of 3 Euler angles [x, y, z]
+ */
 function quaternionToEuler(q) {
 
   // roll (x-axis rotation)
@@ -59,6 +82,13 @@ function quaternionToEuler(q) {
   return [x, y, z];
 }
 
+/**
+ * 
+ * @param {number} roll 
+ * @param {number} pitch 
+ * @param {number} yaw 
+ * @returns resulting quaternion
+ */
 function eulerToQuaternion(roll, pitch, yaw) {
 
   // Abbreviations for the various angular functions
@@ -77,4 +107,48 @@ function eulerToQuaternion(roll, pitch, yaw) {
   ];
 
   return q;
+}
+
+/**
+ * Spherical linear interpolation between two quaternions
+ * https://www.mrpt.org/tutorials/programming/maths-and-geometry/slerp-interpolation/
+ * @param {quaternion} q0 
+ * @param {quaternion} q1 
+ * @param {number} t fraction
+ * @returns resulting quaternion
+ */
+function slerpQuaternion(q0, q1, t) {
+
+  let qr = [];
+
+  let cosHalfTheta = dot(q0, q1);
+
+  if (Math.abs(cosHalfTheta) >= 1.0) {
+    return q0;
+  }
+
+  if (cosHalfTheta < 0.0) {
+    for (let i = 0; i < 4; i++) {
+      q1[i] = -q1[i];
+    }
+    cosHalfTheta = -cosHalfTheta;
+  }
+
+  let halfTheta = Math.acos(cosHalfTheta);
+  let sinHalfTheta = Math.sin(halfTheta);
+
+  if (Math.abs(sinHalfTheta) < 0.001) {
+    for (let i = 0; i < 4; i++) {
+      qr.push((1 - t) * q0[i] + t * q1[i]);
+    }
+    return qr;
+  }
+
+  let ratioA = (Math.sin((1 - t) * halfTheta) / sinHalfTheta);
+  let ratioB = (Math.sin(t * halfTheta) / sinHalfTheta);
+  for (let i = 0; i < 4; i++) {
+    qr.push(ratioA * q0[i] + ratioB * q1[i]);
+  }
+  return qr;
+
 }

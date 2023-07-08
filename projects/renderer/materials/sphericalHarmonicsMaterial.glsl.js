@@ -36,7 +36,7 @@ function getFragmentSource(){
 
 */
 
-    precision highp float;
+    
   
     uniform samplerCube cubeMap;
     

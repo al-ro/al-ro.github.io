@@ -18,7 +18,7 @@ function getFragmentSource(){
 
   var fragmentSource = `
 
-  precision highp float;
+  
 
   #define PI 3.14159
   #define TWO_PI (2.0 * PI)

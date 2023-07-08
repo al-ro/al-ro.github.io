@@ -16,7 +16,7 @@ function getFragmentSource(){
 
   var fragmentSource = `
 
-  precision highp float;
+  
 
   uniform float fov;
   uniform vec2 resolution;

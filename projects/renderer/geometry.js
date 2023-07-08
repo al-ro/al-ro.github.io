@@ -1,5 +1,6 @@
 import { Attribute } from "./attribute.js"
 import { gl } from "./canvas.js"
+import { MorphTarget } from "./morphTarget.js";
 
 /**
  * A class for vertex data, primitive type and associated attributes
@@ -17,13 +18,30 @@ export class Geometry {
   attributes;
   indices;
 
+  // Extent of untransformed geometry vertices
+  min = null;
+  max = null;
+
+  /**
+   * Optional array of MorphTarget objects which can be used for vertex animation
+   */
+  morphTargets;
+
   /**
    * 
-   * @param {{attributes: Attribute, length: int, indices?: Indices, primitiveType?: enum}} geometryData 
+   * @param {{
+   * attributes: Map<string,Attribute>, 
+   * length: int, 
+   * indices?: Indices, 
+   * primitiveType?: enum, 
+   * morphTargets?: MorphTarget[]} geometryData 
    */
   constructor(geometryData) {
 
     this.attributes = geometryData.attributes;
+    if (!!geometryData.morphTargets) {
+      this.morphTargets = geometryData.morphTargets.slice(0, 6);
+    }
 
     this.length = geometryData.length;
 
@@ -46,41 +64,37 @@ export class Geometry {
     if (this.hasIndices) {
       this.indices.destroy();
     }
+
+    if (this.morphTargets != null) {
+      for (let morphTarget of this.morphTargets) {
+        morphTarget.destroy();
+        morphTarget = null;
+      };
+    }
   }
 
-  enableBuffers(attributeNames) {
+  /**
+   * 
+   * @param {string[]} attributeNames active attributes for drawable mesh
+   */
+  enableBuffers(attributeNames, enableMorphTargets = false) {
     for (const name of attributeNames) {
       if (this.attributes.has(name)) {
         this.attributes.get(name).enableBuffer();
       } else {
         console.error("Attribute " + name + " does not exist in geometry: ", this);
       }
+      if (enableMorphTargets) {
+        if (this.morphTargets != null) {
+          for (const morphTarget of this.morphTargets) {
+            morphTarget.enableBuffers(name);
+          }
+        }
+      }
     }
-
     if (this.hasIndices) {
       this.indices.bind();
     }
-
-  }
-
-  /**
-   * Add an attribute to the geometry.
-   * @param {Attribute} attribute
-   */
-  addAttribute(attribute) {
-    this.attributes.set(attribute.getName(), attribute);
-  }
-
-  /**
-   * Remove a named attribute from the geometry
-   * @param {string} name
-   */
-  removeAttribute(name) {
-    this.attributes.delete(name);
-  }
-
-  hasAttribute(name) {
-    return this.attributes.has(name);
   }
 
   getMin() {
@@ -99,6 +113,10 @@ export class Geometry {
     return this.attributes;
   }
 
+  getMorphTargets() {
+    return this.morphTargets;
+  }
+
   getIndices() {
     return this.indices;
   }
@@ -106,21 +124,5 @@ export class Geometry {
   getLength() {
     return this.length;
   }
-
-  /*
-      // ---------- Instanced geometry attributes ----------
-  
-      if(handles.orientationHandle != null){
-        if(this.hasOrientations){
-          gl.enableVertexAttribArray(handles.orientationHandle);
-          gl.bindBuffer(gl.ARRAY_BUFFER, this.orientationBuffer);
-          gl.vertexAttribPointer(handles.orientationHandle, 4, gl.FLOAT, false, 0, 0);
-          extINS.vertexAttribDivisorANGLE(handles.orientationHandle, 1);
-        }else{
-          console.error("ERROR: geometry does not have instance orientations.");
-        }
-      }
-  
-  */
 
 }

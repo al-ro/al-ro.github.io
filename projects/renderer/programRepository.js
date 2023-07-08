@@ -18,23 +18,21 @@ class ProgramRepository {
   * If one does not exist, compile it, enter it to the map
   * and return it.
   */
-  getProgram(material, attributes) {
+  getProgram(material, attributes, morphTargets) {
 
-    const definePrefix = getDefinePrefix(material, attributes);
+    const definePrefix = getDefinePrefix(material, attributes, morphTargets);
 
     if (this.programs.has(definePrefix)) {
       return this.programs.get(definePrefix);
     }
 
-    const vertexSource = definePrefix + material.getVertexShaderSource();
-
+    const vertexSource = definePrefix + material.getVertexShaderSource({ morphTargets: morphTargets });
     const vertexShader = compileShader(vertexSource, gl.VERTEX_SHADER);
 
     const fragmentSource = definePrefix + material.getFragmentShaderSource();
-
     const fragmentShader = compileShader(fragmentSource, gl.FRAGMENT_SHADER);
 
-    const program = new Program(vertexShader, fragmentShader);
+    const program = new Program(vertexShader, fragmentShader, vertexSource, fragmentSource);
     this.programs.set(definePrefix, program);
 
     return program;

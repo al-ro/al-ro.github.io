@@ -19,7 +19,7 @@ export class Animation {
     looping = true;
 
     /**
-     * Translation, rotation, scale
+     * Translation, rotation, scale, weights
      */
     type = AnimationType.TRANSLATON;
 
@@ -36,7 +36,8 @@ export class Animation {
             case AnimationType.TRANSLATON: this.type = AnimationType.TRANSLATON; break;
             case AnimationType.ROTATION: this.type = AnimationType.ROTATION; break;
             case AnimationType.SCALE: this.type = AnimationType.SCALE; break;
-            default: console.error("Animation type not supported:", parameters.path); break;
+            case AnimationType.WEIGHTS: this.type = AnimationType.WEIGHTS; break;
+            default: console.error("Animation type not supported:", parameters.path); this.type = null;
         }
     }
 
@@ -46,30 +47,13 @@ export class Animation {
         this.interpolation = null;
     }
 
-    getSlerpRotation(lowerIdx, upperIdx, fraction) {
-        let v0 = this.values[lowerIdx];
-        let v1 = this.values[upperIdx];
-        let d = dot(v0, v1);
-        let ad = Math.abs(d);
-        if (ad < 1e-5) {
-            return [0, 0, 0, 1];
-        } else {
-            let a = Math.acos(ad);
-            let s = d / ad;
-            let value = [];
-            for (let i = 0; i < 4; i++) {
-                value.push((Math.sin(a * (1 - fraction)) / Math.sin(a)) * v0[i] + s * (Math.sin(a * fraction) / Math.sin(a)) * v1[i]);
-            }
-            return value;
-        }
-    }
-
     /**
      * Return the value at a given time
      * @param {number} time the animation time
      * @returns the value at the specified time
      */
     getValue(time) {
+        time *= this.speed;
         let stamp = this.timeStamps[0];
         if (time <= stamp || this.timeStamps.length < 2) {
             return this.values[0];
@@ -96,7 +80,9 @@ export class Animation {
         switch (this.interpolation) {
             case InterpolationType.LINEAR:
                 if (this.type == AnimationType.ROTATION) {
-                    value = this.getSlerpRotation(lowerIdx, upperIdx, fraction);
+                    let q0 = this.values[lowerIdx];
+                    let q1 = this.values[upperIdx];
+                    value = fraction == 0.0 ? q0 : (fraction == 1.0 ? q1 : slerpQuaternion(q0, q1, fraction));
                     break;
                 }
                 for (let i = 0; i < this.values[0].length; i++) {
@@ -116,7 +102,7 @@ export class Animation {
                 let f3 = fraction * fraction * fraction;
 
                 for (let i = 0; i < this.values[0].length; i++) {
-                    // The data is laid out as [..., inTangent, value, outTangent, ...]
+                    // The data is laid out as [..., inTangents[], values[], outTangents[], ...]
                     let v0 = this.values[3 * lowerIdx + 1][i];
                     let v1 = this.values[3 * upperIdx + 1][i];
                     let inTangent = this.values[3 * upperIdx][i];

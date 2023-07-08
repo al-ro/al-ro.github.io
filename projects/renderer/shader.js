@@ -1,15 +1,18 @@
 import { gl } from "./canvas.js"
+import { MorphTarget } from "./morphTarget.js";
 
 /**
- * Generate hash defines to toggle specific parts of shaders according to geometry and material data
+ * Generate hash defines to toggle specific parts of shaders according to
+ * geometry and material data
  * @param {Material} material Material object
  * @param {string[]} attributes array of vertex attribute names
  * @returns prefix for shader string
  */
-function getDefinePrefix(material, attributes) {
+function getDefinePrefix(material, attributes, morphTargets) {
 
   var prefix = "#version 300 es\n// " + material.constructor.name + " \n";
 
+  prefix += "precision highp float;\n";
 
   if (material.isInstanced()) {
     prefix += "#define INSTANCED \n";
@@ -67,58 +70,118 @@ function getDefinePrefix(material, attributes) {
     prefix += "#define HAS_TRANSMISSION_FACTOR \n";
   }
 
+  if (material.supportsMorphTargets) {
+    prefix += getMorphTargetDeclarationString({ morphTargets: morphTargets });
+  }
 
   return prefix;
-
 }
 
-var instancePrefix = `
-
-attribute vec4 orientation;
-attribute vec3 offset;
-attribute vec3 scale;
-
-//https://www.geeks3d.com/20141201/how-to-rotate-a-vertex-by-a-quaternion-in-glsl/
-vec3 rotateVectorByQuaternion(vec3 v, vec4 q){
-  return 2.0 * cross(q.xyz, v * q.w + cross(q.xyz, v)) + v;
-}
-`;
-
-function getNormalTransform(parameters) {
-
-  let normalTransform = `
-    vec4 transformedNormal = normalMatrix * vec4(vertexNormal, 0.0);
-  `
-  if (parameters != null && parameters.instanced) {
-    /**
-     * For instancing, we apply the same rotation as for the positions but an inverted scaling
-     * https://paroj.github.io/gltut/Illumination/Tut09%20Normal%20Transformation.html
-    */
-    normalTransform = `
-        vec4 transformedNormal = normalMatrix * vec4(normalize(normalize(vertexNormal)/scale), 0.0);
-        transformedNormal.xyz = rotateVectorByQuaternion(transformedNormal.xyz, orientation);
-      `
+/**
+ * Construct a glsl string for morph target attributes and weight uniforms
+ * @param {any} parameters
+ * @returns shader string of attribute and uniform declaration
+ */
+function getMorphTargetDeclarationString(parameters) {
+  let declarationString = "";
+  if (parameters != null && parameters.morphTargets != null) {
+    // Weight uniforms (w0, w1, etc.)
+    for (let i = 0; i < parameters.morphTargets.length; i++) {
+      declarationString += "uniform float w" + i + ";\n"
+    }
+    // Morph target attributes (POSITION0, POSITION1, etc.)
+    for (let i = 0; i < parameters.morphTargets.length; i++) {
+      parameters.morphTargets[i].getAttributes().forEach((attribute) => {
+        declarationString += "in vec3 " + attribute.getName() + i + ";\n"
+      });
+    }
   }
-
-  return normalTransform;
-
+  return declarationString;
 }
 
-function getPositionTransform(parameters) {
+/**
+ * Construct a glsl string for morphed attribute calculations
+ * @param {any} parameters 
+ * @param {string} name 
+ * @returns shader string of morphed attributes
+ */
+function getMorphedAttributeString(parameters, name) {
+  let morphString = "vec3 " + name.toLowerCase() + " = " + name + ".xyz";
+  if (parameters != null && parameters.morphTargets != null) {
+    for (let i = 0; i < parameters.morphTargets.length; i++) {
+      if (parameters.morphTargets[i].getAttributes().has(name)) {
+        morphString += "\n + w" + i + " * " + name + i;
+      }
+    }
+  }
+  return morphString + ";\n";
+}
 
-  let positionTransform = `
-    vec4 pos = modelMatrix * vec4(position, 1.0);
+function getVertexSource(parameters) {
+
+  var vertexSource = `
+
+  in vec3 POSITION;
+
+#ifdef HAS_NORMALS
+  in vec3 NORMAL;
+  uniform mat4 normalMatrix;
+#endif
+
+#ifdef HAS_UVS
+  in vec2 TEXCOORD_0;
+#endif
+
+  uniform mat4 modelMatrix;
+  uniform mat4 viewMatrix;
+  uniform mat4 projectionMatrix;
+
+#ifdef HAS_NORMALS
+  out vec3 vNormal;
+#endif
+
+#ifdef HAS_UVS
+  out vec2 vUV;
+#endif
+
+#ifdef HAS_TANGENTS
+  in vec4 TANGENT;
+  out mat3 tbn;
+#endif
+
+  out vec3  vPosition;
+
+  void main(){
+
+#ifdef HAS_UVS
+    vUV = TEXCOORD_0;
+#endif
+
+#ifdef HAS_NORMALS
+    `+ getMorphedAttributeString(parameters, "NORMAL") + `
+    vec4 transformedNormal = normalMatrix * vec4(normal, 0.0);
+    vNormal = transformedNormal.xyz;
+#endif
+
+#ifdef HAS_TANGENTS
+    // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+    vec3 N = normalize(vec3(transformedNormal));
+    `+ getMorphedAttributeString(parameters, "TANGENT") + `
+    vec3 T = normalize(vec3(normalMatrix * vec4(tangent.xyz, 0.0)));
+    T = normalize(T - dot(T, N) * N);
+    vec3 B = normalize(cross(N, T)) * TANGENT.w;
+    tbn = mat3(T, B, N);
+#endif 
+
+    `+ getMorphedAttributeString(parameters, "POSITION") + `
+    vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
+    vPosition = transformedPosition.xyz;
+
+    gl_Position = projectionMatrix * viewMatrix * transformedPosition;
+  }
   `;
-  if (parameters != null && parameters.instanced) {
-    positionTransform = `
-      vec4 pos = modelMatrix * vec4(position*scale, 1.0);
-      pos.xyz = rotateVectorByQuaternion(pos.xyz, orientation);
-      pos.xyz += offset; 
-    `
-  }
 
-  return positionTransform;
-
+  return vertexSource;
 }
 
 function compileShader(shaderSource, shaderType) {
@@ -126,12 +189,17 @@ function compileShader(shaderSource, shaderType) {
   var shader = gl.createShader(shaderType);
 
   gl.shaderSource(shader, shaderSource);
-  gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    throw "Shader compile failed with: " + gl.getShaderInfoLog(shader);
+  try {
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      throw "Shader compile failed with: " + gl.getShaderInfoLog(shader) +
+      "\n <------ Shader source ------> \n" + shaderSource.split('\n').map((line, index) => `${index + 1}. ${line}`).join('\n');
+    }
+  } catch (error) {
+    console.error(error);
   }
 
   return shader;
 }
 
-export { compileShader, getDefinePrefix, getNormalTransform, getPositionTransform }
+export { compileShader, getDefinePrefix, getVertexSource }

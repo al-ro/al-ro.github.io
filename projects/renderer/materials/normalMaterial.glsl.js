@@ -12,12 +12,6 @@ function getVertexSource(parameters){
   uniform mat4 viewMatrix;
   uniform mat4 projectionMatrix;
 
-#ifdef INSTANCED 
-  in vec4 orientation;
-  in vec3 offset;
-  in vec3 scale;
-#endif
-
 #ifdef HAS_NORMALS
   out vec3 vNormal;
 #else
@@ -27,27 +21,12 @@ function getVertexSource(parameters){
   void main(){
 
 #ifdef HAS_NORMALS
-    vec4 transformedNormal;
-
-#ifdef INSTANCED
-    transformedNormal = normalMatrix * vec4(normalize(normalize(NORMAL)/scale), 0.0);
-    transformedNormal.xyz = rotateVectorByQuaternion(transformedNormal.xyz, orientation);
-#else
-    transformedNormal = normalMatrix * vec4(NORMAL, 0.0);
-#endif
+    vec4 transformedNormal = normalMatrix * vec4(NORMAL, 0.0);
 
     vNormal = transformedNormal.xyz;
 #endif
 
-    vec4 pos;
-
-#ifdef INSTANCED
-    pos = modelMatrix * vec4(POSITION*scale, 1.0);
-    pos.xyz = rotateVectorByQuaternion(pos.xyz, orientation);
-    pos.xyz += offset; 
-#else
-    pos = modelMatrix * vec4(POSITION, 1.0);
-#endif
+    vec4 pos = modelMatrix * vec4(POSITION, 1.0);
 
 #ifndef HAS_NORMALS
     vPosition = vec3((modelMatrix * vec4(POSITION, 1.0)));
@@ -64,7 +43,7 @@ function getVertexSource(parameters){
 function getFragmentSource(){
 
   var fragmentSource = `
-    precision highp float;
+    
     
 #ifdef HAS_NORMALS
   in vec3 vNormal;

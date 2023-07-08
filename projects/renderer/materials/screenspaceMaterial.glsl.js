@@ -19,7 +19,7 @@ function getVertexSource(parameters){
 function getFragmentSource(){
    
   var fragmentSource = `
-    precision highp float;
+    
     
     uniform sampler2D tex;
     in vec2 vUV;

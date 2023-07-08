@@ -26,11 +26,28 @@ export class Mesh extends Node {
 
   normalMatrix = m4.create();
 
-  constructor(geometry, material, params) {
+  // The 8 corners of the AABB of the untransformed mesh
+  aabb = [];
 
-    super(params);
+  // The extent of the transformed mesh. Must be kept updated when transforming
+  min;
+  max;
+
+  //Optional morph target weights
+  weights = [];
+  hasWeights = false;
+
+  constructor(geometry, material, weights) {
+
+    super();
+
+    if (weights != null) {
+      this.weights = weights;
+      this.hasWeights = true;
+    }
 
     this.geometry = geometry;
+    this.aabb = getAABBFromExtent(this.geometry.getMin(), this.geometry.getMax());
 
     this.originalMaterial = material;
     this.overrideMaterial = material;
@@ -52,12 +69,23 @@ export class Mesh extends Node {
       }
     }
 
-    this.material.createProgram(this.activeAttributes);
+    this.material.createProgram(this.activeAttributes, this.geometry.getMorphTargets());
+    if (this.material.supportsMorphTargets) {
+      this.material.setWeights(this.weights);
+    }
     this.material.getParameterHandles();
 
     for (const attribute of this.activeAttributes) {
       const handle = this.material.program.getAttribLocation(attribute);
       this.geometry.getAttributes().get(attribute).setHandle(handle);
+      if (this.geometry.getMorphTargets() != null && this.material.supportsMorphTargets) {
+        for (let i = 0; i < this.geometry.getMorphTargets().length; i++) {
+          if (this.geometry.getMorphTargets()[i].getAttributes().has(attribute)) {
+            let morphTargetHandle = this.material.program.getAttribLocation(attribute + "" + i);
+            this.geometry.getMorphTargets()[i].getAttributes().get(attribute).setHandle(morphTargetHandle);
+          }
+        }
+      }
     }
     this.createVAO();
   }
@@ -112,7 +140,7 @@ export class Mesh extends Node {
 
     this.bindVAO();
 
-    this.geometry.enableBuffers(this.activeAttributes);
+    this.geometry.enableBuffers(this.activeAttributes, this.material.supportsMorphTargets);
 
     this.unbindVAO();
   }
@@ -133,19 +161,71 @@ export class Mesh extends Node {
     return m4.transpose(m4.inverse(this.getWorldMatrix()));
   }
 
-  getMin() {
-    if (this.geometry.getMin() != null) {
-      return m4.transformPoint(this.getWorldMatrix(), this.geometry.getMin());
-    } else {
-      return [0, 0, 0];
+  setMin() {
+    let min = [1e10, 1e10, 1e10];
+    for (const corner of this.aabb) {
+      let transformedCorner = m4.transformPoint(this.getWorldMatrix(), corner);
+      for (let i = 0; i < 3; i++) {
+        min[i] = Math.min(transformedCorner[i], min[i]);
+      }
     }
+    this.min = min;
+  }
+
+  setMax() {
+    let max = [-1e10, -1e10, -1e10];
+    for (const corner of this.aabb) {
+      let transformedCorner = m4.transformPoint(this.getWorldMatrix(), corner);
+      for (let i = 0; i < 3; i++) {
+        max[i] = Math.max(transformedCorner[i], max[i]);
+      }
+    }
+    this.max = max;
+  }
+
+  getMin() {
+    return this.min;
   }
 
   getMax() {
-    if (this.geometry.getMax() != null) {
-      return m4.transformPoint(this.getWorldMatrix(), this.geometry.getMax());
-    } else {
-      return [0, 0, 0];
+    return this.max;
+  }
+
+  /**
+   * Override of Node function to update min and max data
+   * Combine ancestor transforms, local matrix and animation matrix
+   */
+  updateWorldMatrix() {
+    this.worldMatrix = m4.multiply(this.parentMatrix, this.localMatrix);
+    this.setMin();
+    this.setMax();
+    this.updateChildren();
+  }
+  /**
+   * Override of Node function to animate morph targets
+   */
+  animate(time) {
+    if (this.animations.size > 0) {
+      this.localMatrix = this.getAnimatedTransform(time);
+      if (this.hasWeights) {
+        this.getAnimatedWeights(time);
+      }
+      this.updateWorldMatrix();
+    }
+    for (const child of this.children) {
+      child.animate(time);
+    }
+  }
+
+  /**
+   * Get morph target weight values at the given time
+   * @param {number} time 
+   * @returns array of weights
+   */
+  getAnimatedWeights(time) {
+    const weights = this.animations.get("weights");
+    if (weights != null) {
+      this.weights = weights.getValue(time);
     }
   }
 
@@ -159,6 +239,10 @@ export class Mesh extends Node {
 
   setCulling(cull) {
     this.cull = cull;
+  }
+
+  getWeights() {
+    return this.weights;
   }
 
 }

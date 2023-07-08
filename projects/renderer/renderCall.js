@@ -54,6 +54,9 @@ export function render(renderPass, mesh, camera, time, cullCamera) {
     mesh.material.setTime(time);
   }
 
+  if (mesh.hasWeights && mesh.material.supportsMorphTargets) {
+    mesh.material.setWeights(mesh.getWeights());
+  }
   mesh.material.bindParameters();
 
   if (mesh.geometry.hasIndices) {

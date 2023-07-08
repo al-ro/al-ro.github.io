@@ -18,7 +18,7 @@ export class BRDFMapMaterial extends Material {
     this.resolution = resolution;
   }
 
-  getVertexShaderSource() {
+  getVertexShaderSource(parameters) {
     return getVertexSource();
   }
 
