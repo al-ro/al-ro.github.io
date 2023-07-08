@@ -1,6 +1,7 @@
 import { gl, enums } from "../canvas.js"
 import { Material } from './material.js'
-import { getVertexSource, getFragmentSource } from './pbrMaterial.glsl.js'
+import { getFragmentSource } from './pbrMaterial.glsl.js'
+import { getVertexSource } from '../shader.js'
 
 // Which quantity to render for debugging
 export const outputEnum = {
@@ -184,6 +185,9 @@ export class PBRMaterial extends Material {
 
   textureUnits = 0;
 
+  weights = [];
+  weightHandles = [];
+
   destroy() {
     if (this.baseColorTexture != null) {
       gl.deleteTexture(this.baseColorTexture);
@@ -225,6 +229,7 @@ export class PBRMaterial extends Material {
 
     this.needsCamera = true;
     this.needsTime = true;
+    this.supportsMorphTargets = true;
 
     if (parameters.alphaMode != null) {
       this.alphaMode = parameters.alphaMode;
@@ -334,15 +339,26 @@ export class PBRMaterial extends Material {
     }
   }
 
-  getVertexShaderSource() {
-    return getVertexSource();
+  getVertexShaderSource(parameters) {
+    return getVertexSource(parameters);
   }
 
   getFragmentShaderSource() {
     return getFragmentSource();
   }
 
-  getParameterHandles(parameters) {
+  setWeights(weights) {
+    this.weights = weights;
+  }
+
+  getParameterHandles() {
+
+    if (this.weights != null) {
+      for (let i = 0; i < this.weights.length; i++) {
+        this.weightHandles.push(this.program.getOptionalUniformLocation("w" + i));
+      }
+    }
+
     this.outputVariableHandle = this.program.getUniformLocation('outputVariable');
 
     this.projectionMatrixHandle = this.program.getUniformLocation('projectionMatrix');
@@ -420,6 +436,12 @@ export class PBRMaterial extends Material {
   }
 
   bindParameters() {
+
+    if (this.weights != null) {
+      for (let i = 0; i < this.weights.length; i++) {
+        gl.uniform1f(this.weightHandles[i], this.weights[i]);
+      }
+    }
 
     gl.uniform1i(this.outputVariableHandle, this.outputVariable);
 

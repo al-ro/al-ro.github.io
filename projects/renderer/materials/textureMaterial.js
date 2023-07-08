@@ -1,8 +1,8 @@
-import {gl} from "../canvas.js"
-import {Material} from './material.js'
-import {getVertexSource, getFragmentSource} from './textureMaterial.glsl.js'
+import { gl } from "../canvas.js"
+import { Material } from './material.js'
+import { getVertexSource, getFragmentSource } from './textureMaterial.glsl.js'
 
-export class TextureMaterial extends Material{
+export class TextureMaterial extends Material {
 
   projectionMatrixHandle;
   viewMatrixHandle;
@@ -11,34 +11,34 @@ export class TextureMaterial extends Material{
   textureHandle;
   texture;
 
-  constructor(texture){
+  constructor(texture) {
 
     super();
 
     this.attributes = ["POSITION", "TEXCOORD_0"];
 
-    if(texture == null){
+    if (texture == null) {
       console.error("TextureMaterial requires a texture during construction. Provided: ", texture);
     }
     this.texture = texture;
   }
 
-  getVertexShaderSource(parameters){
-    return getVertexSource(parameters);
+  getVertexShaderSource(parameters) {
+    return getVertexSource();
   }
-  
-  getFragmentShaderSource(){
+
+  getFragmentShaderSource() {
     return getFragmentSource();
   }
 
-  getParameterHandles(){
+  getParameterHandles() {
     this.projectionMatrixHandle = this.program.getUniformLocation('projectionMatrix');
     this.viewMatrixHandle = this.program.getUniformLocation('viewMatrix');
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
     this.textureHandle = this.program.getUniformLocation('tex');
   }
 
-  bindParameters(){
+  bindParameters() {
 
     // Tell WebGL we want to affect texture unit 0
     gl.activeTexture(gl.TEXTURE0);

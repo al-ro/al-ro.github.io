@@ -1,38 +1,38 @@
-import {gl} from "../canvas.js"
-import {Material} from './material.js'
-import {getVertexSource, getFragmentSource} from './screenspaceMaterial.glsl.js'
+import { gl } from "../canvas.js"
+import { Material } from './material.js'
+import { getVertexSource, getFragmentSource } from './screenspaceMaterial.glsl.js'
 
-export class ScreenspaceMaterial extends Material{
+export class ScreenspaceMaterial extends Material {
 
   textureHandle;
   texture;
 
-  constructor(texture){
+  constructor(texture) {
 
     super();
 
     this.attributes = ["POSITION", "TEXCOORD_0"];
 
-    if(texture == null){
+    if (texture == null) {
       console.error("ScreenspaceMaterial requires a texture during construction. Provided: ", texture);
     }
 
     this.texture = texture;
   }
 
-  getVertexShaderSource(parameters){
+  getVertexShaderSource(parameters) {
     return getVertexSource(parameters);
   }
-  
-  getFragmentShaderSource(){
+
+  getFragmentShaderSource() {
     return getFragmentSource();
   }
 
-  getParameterHandles(){
+  getParameterHandles() {
     this.textureHandle = this.program.getUniformLocation('tex');
   }
 
-  bindParameters(){
+  bindParameters() {
 
     // Tell WebGL we want to affect texture unit 0
     gl.activeTexture(gl.TEXTURE0);

@@ -1,7 +1,7 @@
-import {Material} from './material.js'
-import {getVertexSource, getFragmentSource} from './lambertMaterial.glsl.js'
+import { Material } from './material.js'
+import { getVertexSource, getFragmentSource } from './lambertMaterial.glsl.js'
 
-export class LambertMaterial extends Material{
+export class LambertMaterial extends Material {
 
   projectionMatrixHandle;
   viewMatrixHandle;
@@ -9,20 +9,20 @@ export class LambertMaterial extends Material{
 
   normalMatrixHandle;
 
-  constructor(){
+  constructor() {
     super();
     this.attributes = ["POSITION", "NORMAL"];
   }
 
-  getVertexShaderSource(parameters){
-    return getVertexSource(parameters);
+  getVertexShaderSource(parameters) {
+    return getVertexSource();
   }
 
-  getFragmentShaderSource(){
+  getFragmentShaderSource() {
     return getFragmentSource();
   }
 
-  getParameterHandles(){
+  getParameterHandles() {
     this.projectionMatrixHandle = this.program.getUniformLocation('projectionMatrix');
     this.viewMatrixHandle = this.program.getUniformLocation('viewMatrix');
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
