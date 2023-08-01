@@ -128,6 +128,8 @@ function getFragmentSource() {
     return max(vec3(0), min(x, vec3(1)));
   }
 
+#if defined(HAS_UV_0) || defined(HAS_UV_1)
+
   // Helper function for multiple UV attributes
   vec4 readTexture(sampler2D tex, int uv){
     vec2 vUV;
@@ -142,6 +144,8 @@ function getFragmentSource() {
 
     return texture(tex, vUV);
   }
+
+#endif
 
   // ------------------------- Environment -------------------------
 

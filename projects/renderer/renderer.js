@@ -39,9 +39,6 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
       Multiple animation
         Animation array of maps
         Control animation and select
-        Correct animations from splitting nodes
-      
-      Assign UV to texture
 
       Separate GUI to file
 

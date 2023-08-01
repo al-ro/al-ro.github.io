@@ -283,19 +283,21 @@ export class GLTFLoader {
       if (gltfNode.mesh != null) {
 
         // Get the primitives of the gltf mesh
-        const primitive = this.processMesh(this.json.meshes[gltfNode.mesh]);
+        const primitives = this.processMesh(this.json.meshes[gltfNode.mesh]);
 
-        if (primitive.length > 1) {
+        if (primitives.length > 1) {
           // When there are multiple primitives, set them as the children of a new empty Node
+          // Keep track which children were created to apply animations correctly
+          params.splitChildren = primitives;
           const node = new Node(params);
-          node.setChildren(primitive);
+          node.setChildren(primitives);
           // Add the Node to the scene graph
           nodes.push(node);
         } else {
           // Otherwise set the Mesh object as a node of the scene graph
-          primitive[0].setChildIndices(params.childIndices);
-          primitive[0].setLocalMatrix(params.localMatrix);
-          nodes.push(primitive[0]);
+          primitives[0].setChildIndices(params.childIndices);
+          primitives[0].setLocalMatrix(params.localMatrix);
+          nodes.push(primitives[0]);
         }
 
       } else {
@@ -396,7 +398,14 @@ export class GLTFLoader {
           interpolation: !!sampler.interpolation ? sampler.interpolation : InterpolationType.LINEAR,
           path: channel.target.path
         };
-        this.nodes[channel.target.node].setAnimation(channel.target.path, new Animation(parameters));
+        const node = this.nodes[channel.target.node];
+        if (node.splitChildren.length > 0) {
+          for (const child of node.splitChildren) {
+            child.setAnimation(channel.target.path, new Animation(parameters));
+          }
+        } else {
+          node.setAnimation(channel.target.path, new Animation(parameters));
+        }
       }
     }
   }
@@ -410,7 +419,7 @@ export class GLTFLoader {
       if (node.childIndices.length > 0) {
         // Add child references to nodes which exist in the scene graph
         for (const childIdx of node.childIndices) {
-          node.children.push(nodes[childIdx]);
+          node.addChild(nodes[childIdx]);
         }
       }
     }
