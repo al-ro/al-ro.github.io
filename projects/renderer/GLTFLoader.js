@@ -15,7 +15,6 @@ import { MorphTarget } from "./morphTarget.js"
 // TODO:
 //  full spec conform (color_0, sampler)
 //  image from bufferView
-//  extensions
 //  skins
 
 const supportedExtensions = ["KHR_materials_transmission"];
@@ -614,6 +613,9 @@ export class GLTFLoader {
         if (transmission.transmissionTexture != null) {
           const textureID = jsonTextures[transmission.transmissionTexture.index].source;
           materialParameters.transmissionTexture = this.textures[textureID];
+          if (transmission.transmissionTexture.texCoord != null) {
+            materialParameters.transmissionTextureUV = transmission.transmissionTexture.texCoord;
+          }
           this.usedTextures.push(textureID);
         }
         if (transmission.transmissionFactor != null) {
@@ -666,6 +668,9 @@ export class GLTFLoader {
     if (pbrDesc.baseColorTexture != null) {
       const textureID = jsonTextures[pbrDesc.baseColorTexture.index].source;
       materialParameters.baseColorTexture = this.textures[textureID];
+      if (pbrDesc.baseColorTexture.texCoord != null) {
+        materialParameters.baseColorTextureTextureUV = pbrDesc.baseColorTexture.texCoord;
+      }
       this.usedTextures.push(textureID);
     }
 
@@ -688,12 +693,18 @@ export class GLTFLoader {
     if (pbrDesc.metallicRoughnessTexture != null) {
       const textureID = jsonTextures[pbrDesc.metallicRoughnessTexture.index].source;
       materialParameters.metallicRoughnessTexture = this.textures[textureID];
+      if (pbrDesc.metallicRoughnessTexture.texCoord != null) {
+        materialParameters.metallicRoughnessTextureUV = pbrDesc.metallicRoughnessTexture.texCoord;
+      }
       this.usedTextures.push(textureID);
     }
 
     if (material.occlusionTexture != null) {
       const textureID = jsonTextures[material.occlusionTexture.index].source;
       materialParameters.occlusionTexture = this.textures[textureID];
+      if (material.occlusionTexture.texCoord != null) {
+        materialParameters.occlusionTextureUV = material.occlusionTexture.texCoord;
+      }
       this.usedTextures.push(textureID);
       if (material.occlusionTexture.strength != null) {
         materialParameters.occlusionStrength = material.occlusionTexture.strength;
@@ -704,6 +715,9 @@ export class GLTFLoader {
       const textureID = jsonTextures[material.normalTexture.index].source;
       materialParameters.normalTexture = this.textures[textureID];
       this.usedTextures.push(textureID);
+      if (material.normalTexture.texCoord != null) {
+        materialParameters.normalTextureUV = material.normalTexture.texCoord;
+      }
       if (material.normalTexture.scale != null) {
         materialParameters.normalScale = material.normalTexture.scale;
       }
@@ -713,6 +727,9 @@ export class GLTFLoader {
       const textureID = jsonTextures[material.emissiveTexture.index].source;
       materialParameters.emissiveTexture = this.textures[textureID];
       this.usedTextures.push(textureID);
+      if (material.emissiveTexture.texCoord != null) {
+        materialParameters.emissiveTextureUV = material.emissiveTexture.texCoord;
+      }
     }
 
     return new PBRMaterial(materialParameters);
