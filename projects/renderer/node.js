@@ -27,6 +27,12 @@ export class Node {
    */
   children = [];
 
+
+  /**
+   * Nodes in children which were created from a multi-primitive GLTF node
+   */
+  splitChildren = [];
+
   /**
    * Indices of other nodes in the scene graph which are children of this node
    */
@@ -43,6 +49,10 @@ export class Node {
 
       if (params.children != null) {
         this.children = params.children;
+      }
+
+      if (params.splitChildren != null) {
+        this.splitChildren = params.splitChildren;
       }
 
       if (params.childIndices != null) {
