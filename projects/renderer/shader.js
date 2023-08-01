@@ -23,7 +23,11 @@ function getDefinePrefix(material, attributes, morphTargets) {
   }
 
   if (attributes.includes("TEXCOORD_0")) {
-    prefix += "#define HAS_UVS \n";
+    prefix += "#define HAS_UV_0 \n";
+  }
+
+  if (attributes.includes("TEXCOORD_1")) {
+    prefix += "#define HAS_UV_1 \n";
   }
 
   if (attributes.includes("TANGENT")) {
@@ -128,8 +132,12 @@ function getVertexSource(parameters) {
   uniform mat4 normalMatrix;
 #endif
 
-#ifdef HAS_UVS
+#ifdef HAS_UV_0
   in vec2 TEXCOORD_0;
+#endif
+
+#ifdef HAS_UV_1
+  in vec2 TEXCOORD_1;
 #endif
 
   uniform mat4 modelMatrix;
@@ -140,8 +148,12 @@ function getVertexSource(parameters) {
   out vec3 vNormal;
 #endif
 
-#ifdef HAS_UVS
-  out vec2 vUV;
+#ifdef HAS_UV_0
+  out vec2 vUV0;
+#endif
+
+#ifdef HAS_UV_1
+  out vec2 vUV1;
 #endif
 
 #ifdef HAS_TANGENTS
@@ -153,8 +165,12 @@ function getVertexSource(parameters) {
 
   void main(){
 
-#ifdef HAS_UVS
-    vUV = TEXCOORD_0;
+#ifdef HAS_UV_0
+    vUV0 = TEXCOORD_0;
+#endif
+
+#ifdef HAS_UV_1
+    vUV1 = TEXCOORD_1;
 #endif
 
 #ifdef HAS_NORMALS

@@ -30,12 +30,20 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
       Order material draw
 
       Scene format and scale for specific files?
-        Multi object scenes
+        Multi-object scenes
         Object culling
         Camera pan
 
+      Morph target stress test and correct clamp
+
       Multiple animation
+        Animation array of maps
         Control animation and select
+        Correct animations from splitting nodes
+      
+      Assign UV to texture
+
+      Separate GUI to file
 
       Sheen
       Volume
@@ -65,6 +73,7 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 
 let models = new Map();
 models.set("Flight Helmet", "./gltf/flighthelmet/FlightHelmet.gltf");
+models.set("Multiple UVs", "./gltf/multiUVTest/MultiUVTest.gltf");
 models.set("Interpolation Test", "./gltf/interpolation/InterpolationTest.gltf");
 models.set("Sparse Accessor", "./gltf/sparse/SimpleSparseAccessor.gltf");
 models.set("Boombox", "./gltf/boombox/BoomBox.gltf");

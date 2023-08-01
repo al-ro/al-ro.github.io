@@ -23,8 +23,12 @@ function getFragmentSource() {
 
   in vec3 vPosition;
 
-#ifdef HAS_UVS
-  in vec2 vUV;
+#ifdef HAS_UV_0
+  in vec2 vUV0;
+#endif
+
+#ifdef HAS_UV_1
+  in vec2 vUV1;
 #endif
 
   uniform sampler2D brdfIntegrationMapTexture;
@@ -32,12 +36,14 @@ function getFragmentSource() {
 
 #ifdef HAS_BASE_COLOR_TEXTURE
   uniform sampler2D baseColorTexture;
+  uniform int baseColorTextureUV;
 #endif
   
   uniform vec4 baseColorFactor;
 
 #ifdef HAS_NORMAL_TEXTURE
   uniform sampler2D normalTexture;
+  uniform int normalTextureUV;
   uniform float normalScale;
 #endif
 
@@ -48,6 +54,7 @@ function getFragmentSource() {
 #ifdef HAS_EMISSION
 #ifdef HAS_EMISSIVE_TEXTURE
   uniform sampler2D emissiveTexture;
+  uniform int emissiveTextureUV;
 #endif
 
 #ifdef HAS_EMISSIVE_FACTOR
@@ -59,6 +66,7 @@ function getFragmentSource() {
   uniform sampler2D backgroundTexture;
 #ifdef HAS_TRANSMISSION_TEXTURE
   uniform sampler2D transmissionTexture;
+  uniform int transmissionTextureUV;
 #endif
 
 #ifdef HAS_TRANSMISSION_FACTOR
@@ -68,6 +76,7 @@ function getFragmentSource() {
 
 #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
   uniform sampler2D metallicRoughnessTexture;
+  uniform int metallicRoughnessTextureUV;
 #endif
 
   uniform float metallicFactor;
@@ -75,6 +84,7 @@ function getFragmentSource() {
 
 #ifdef HAS_AO_TEXTURE
   uniform sampler2D occlusionTexture;
+  uniform int occlusionTextureUV;
   uniform float occlusionStrength;
 #endif
 
@@ -88,6 +98,9 @@ function getFragmentSource() {
 
   uniform int alphaMode;
   uniform float alphaCutoff;
+
+
+  // ------------------------- Utility -------------------------
 
   /*
     Normal mapping will lead to an impossible surface where the view ray and normal dot product
@@ -114,6 +127,23 @@ function getFragmentSource() {
   vec3 saturate(vec3 x){
     return max(vec3(0), min(x, vec3(1)));
   }
+
+  // Helper function for multiple UV attributes
+  vec4 readTexture(sampler2D tex, int uv){
+    vec2 vUV;
+
+#if defined(HAS_UV_0) && defined(HAS_UV_1)
+    vUV = uv == 0 ? vUV0 : vUV1;
+#elif defined(HAS_UV_0)
+    vUV = vUV0;
+#else
+    vUV = vUV1;
+#endif
+
+    return texture(tex, vUV);
+  }
+
+  // ------------------------- Environment -------------------------
 
   vec3 getSHIrradiance(vec3 normal){
 
@@ -230,7 +260,7 @@ function getFragmentSource() {
     float roughness = roughnessFactor;
 
 #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
-    vec3 data = texture(metallicRoughnessTexture, vUV).rgb;
+    vec3 data = readTexture(metallicRoughnessTexture, metallicRoughnessTextureUV).rgb;
     roughness *= data.g;
     metal *= data.b; 
 #endif
@@ -238,7 +268,7 @@ function getFragmentSource() {
     float occlusion = 1.0;
 
 #ifdef HAS_AO_TEXTURE
-    occlusion = texture(occlusionTexture, vUV).r;
+    occlusion = readTexture(occlusionTexture, occlusionTextureUV).r;
     occlusion = 1.0 + occlusionStrength * (occlusion - 1.0);
 #else
 
@@ -293,7 +323,7 @@ function getFragmentSource() {
 #endif
 
 #ifdef HAS_TRANSMISSION_TEXTURE
-    transmission *= texture(transmissionTexture, vUV).r;
+    transmission *= readTexture(transmissionTexture, transmissionTextureUV).r;
 #endif
 
     diffuse = mix(diffuse, transmitted, transmission);
@@ -331,10 +361,16 @@ function getFragmentSource() {
     return  occlusion * ambient + I;
   }
 
+
+  // ------------------------- Tonemapping -------------------------
+
   // https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
   vec3 ACESFilm(vec3 x){
     return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
   }
+
+
+  // --------------------------- Render ----------------------------
 
   void main(){
 
@@ -348,10 +384,20 @@ function getFragmentSource() {
 #ifdef HAS_NORMAL_TEXTURE
     // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     // Transform RGB normal map data from [0, 1] to [-1, 1]
-    vec3 normalColor = normalize(vec3(vec2(normalScale), 1.0) * (texture(normalTexture, vUV).rgb * 2.0 - 1.0));
+    vec3 normalColor = normalize(vec3(vec2(normalScale), 1.0) * (readTexture(normalTexture, normalTextureUV).rgb * 2.0 - 1.0));
 #ifndef HAS_TANGENTS
-    vec3 uv_dx = dFdx(vec3(vUV, 0.0));
-    vec3 uv_dy = dFdy(vec3(vUV, 0.0));
+
+    vec2 tangentUV;
+#if defined(HAS_UV_0) && defined(HAS_UV_1)
+    tangentUV = normalTextureUV == 0 ? vUV0 : vUV1;
+#elif defined(HAS_UV_0)
+    tangentUV = vUV0;
+#else
+    tangentUV = vUV1;
+#endif
+
+    vec3 uv_dx = dFdx(vec3(tangentUV, 0.0));
+    vec3 uv_dy = dFdy(vec3(tangentUV, 0.0));
 
     vec3 t_ = (uv_dy.t * dFdx(vPosition) - uv_dx.t * dFdy(vPosition)) / (uv_dx.s * uv_dy.t - uv_dy.s * uv_dx.t);
     vec3 T = normalize(t_ - geometryNormal * dot(geometryNormal, t_));
@@ -373,7 +419,7 @@ function getFragmentSource() {
     float alpha = 1.0;
 
 #ifdef HAS_BASE_COLOR_TEXTURE
-    vec4 colorData = texture(baseColorTexture, vUV);
+    vec4 colorData = readTexture(baseColorTexture, baseColorTextureUV);
     vec4 albedo = baseColorFactor * vec4(vec3(pow(colorData.rgb, vec3(2.2))), colorData.a);
 #else
     vec4 albedo = baseColorFactor;
@@ -396,7 +442,7 @@ function getFragmentSource() {
 #ifdef HAS_EMISSION
     vec3 emissiveColor = vec3(1);
 #ifdef HAS_EMISSIVE_TEXTURE
-    vec3 emissiveData = texture(emissiveTexture, vUV).rgb;
+    vec3 emissiveData = readTexture(emissiveTexture, emissiveTextureUV).rgb;
     emissiveColor = pow(emissiveData, vec3(2.2));
 #endif
 #ifdef HAS_EMISSIVE_FACTOR
@@ -417,6 +463,8 @@ function getFragmentSource() {
 
     fragColor = color;
 
+  // ------------------------- Debug -------------------------
+
 #ifdef DEBUG
   if(outputVariable > 0){
     // Magenta for missing data
@@ -426,7 +474,7 @@ function getFragmentSource() {
     float roughness = roughnessFactor;
 
   #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
-      vec3 data = texture(metallicRoughnessTexture, vUV).rgb;
+      vec3 data = readTexture(metallicRoughnessTexture, metallicRoughnessTextureUV).rgb;
       roughness *= data.g;
       metal *= data.b; 
   #endif
@@ -434,7 +482,7 @@ function getFragmentSource() {
       float occlusion = 1.0;
 
   #ifdef HAS_AO_TEXTURE
-      occlusion = texture(occlusionTexture, vUV).r;
+      occlusion = readTexture(occlusionTexture, occlusionTextureUV).r;
       occlusion = 1.0 + occlusionStrength * (occlusion - 1.0);
   #else
 
@@ -450,7 +498,7 @@ function getFragmentSource() {
   #ifdef HAS_EMISSION
       emissiveColor = vec3(1);
   #ifdef HAS_EMISSIVE_TEXTURE
-      emissiveColor = texture(emissiveTexture, vUV).rgb;
+      emissiveColor = readTexture(emissiveTexture, emissiveTextureUV).rgb;
   #endif
   #ifdef HAS_EMISSIVE_FACTOR
       emissiveColor *= emissiveFactor;
@@ -468,14 +516,19 @@ function getFragmentSource() {
   #endif
 
   #ifdef HAS_TRANSMISSION_TEXTURE
-      transmission *= texture(transmissionTexture, vUV).r;
+      transmission *= readTexture(transmissionTexture, transmissionTextureUV).r;
   #endif
       transmissiveColor = vec3(transmission);
   #endif
 
-      vec3 uvColor = debugColor;
-  #ifdef HAS_UVS
-      uvColor = vec3(vUV, 0.0);
+      vec3 uvColor0 = debugColor;
+  #ifdef HAS_UV_0
+      uvColor0 = vec3(vUV0, 0.0);
+  #endif
+
+      vec3 uvColor1 = debugColor;
+  #ifdef HAS_UV_1
+      uvColor1 = vec3(vUV1, 0.0);
   #endif
 
   vec3 tangentColor = debugColor;
@@ -496,9 +549,10 @@ function getFragmentSource() {
         case 7: debugColor = bitangentColor; break;
         case 8: debugColor = vec3(occlusion); break;
         case 9: debugColor = emissiveColor;; break;
-        case 10: debugColor = uvColor; break;
-        case 11: debugColor = vec3(alpha); break;
-        case 12: debugColor = transmissiveColor; break;
+        case 10: debugColor = uvColor0; break;
+        case 11: debugColor = uvColor1; break;
+        case 12: debugColor = vec3(alpha); break;
+        case 13: debugColor = transmissiveColor; break;
         default: debugColor = vec3(1,0,1);
       };
 
