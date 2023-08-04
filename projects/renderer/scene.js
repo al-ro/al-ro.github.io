@@ -25,6 +25,20 @@ export class Scene {
         }
     }
 
+    setIdle() {
+        for (const object of this.objects) {
+            object.setIdle();
+        }
+    }
+
+    getAnimations() {
+        let animations = [];
+        for (const object of this.objects) {
+            animations = animations.concat(object.getAnimations());
+        }
+        return animations;
+    }
+
     render(renderPass, camera, time, cullCamera) {
         for (const object of this.objects) {
             object.render(renderPass, camera, time, cullCamera);

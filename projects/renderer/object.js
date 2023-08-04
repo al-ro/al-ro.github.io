@@ -15,13 +15,36 @@ export class Object {
     minExtent = [-1, -1, -1];
     maxExtent = [1, 1, 1];
 
+    animations = [];
+
     constructor(children) {
         this.node = new Node({ children: children });
     }
 
     animate(time) {
-        this.node.animate(time);
+        for (const animation of this.animations) {
+            if (animation.isActive()) {
+                this.node.animate(Math.max(0, time - animation.getStart()), animation.getName());
+            }
+        }
         this.calculateAABB();
+    }
+
+    setIdle() {
+        this.node.setIdle();
+        this.calculateAABB();
+    }
+
+    setIdleMatrix(matrix) {
+        this.node.setIdleMatrix(matrix);
+    }
+
+    setAnimations(animations) {
+        this.animations = animations;
+    }
+
+    getAnimations() {
+        return this.animations;
     }
 
     getPrimitiveCount() {
@@ -156,6 +179,10 @@ export class Object {
 
     destroy() {
         this.node.destroy();
+        for (let animation of this.animations) {
+            animation = null;
+        }
+        this.animations = [];
     }
 
     calculateAABB() {
@@ -175,9 +202,11 @@ export class Object {
         this.minExtent = min;
         this.maxExtent = max;
     }
+
     getMin() {
         return this.minExtent;
     }
+
     getMax() {
         return this.maxExtent;
     }
