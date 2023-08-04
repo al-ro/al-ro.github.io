@@ -11,6 +11,11 @@ export class Node {
   localMatrix = m4.create();
 
   /**
+   * Local transform independent of parent nodes when no animation is applied
+   */
+  idleMatrix = m4.create();
+
+  /**
    * Accumulated ancestor node transforms.
    */
   parentMatrix = m4.create();
@@ -27,7 +32,6 @@ export class Node {
    */
   children = [];
 
-
   /**
    * Nodes in children which were created from a multi-primitive GLTF node
    */
@@ -39,7 +43,7 @@ export class Node {
   childIndices = [];
 
   /**
-   * A map of Animation objects for the translation, rotation and scale properties
+   * An map of maps of PropertyAnimation objects for translation, rotation, scale and weights properties
    */
   animations = new Map();
 
@@ -63,23 +67,33 @@ export class Node {
         this.localMatrix = params.localMatrix;
       }
 
+      this.idleMatrix = this.localMatrix;
+
       this.worldMatrix = this.localMatrix;
     }
 
   }
 
-  animate(time) {
-    if (this.animations.size > 0) {
-      this.localMatrix = this.getAnimatedTransform(time);
-      this.updateWorldMatrix();
+  animate(time, name) {
+    if (this.animations.get(name) != null) {
+      if (this.animations.get(name).size > 0) {
+        this.localMatrix = this.getAnimatedTransform(time, name);
+        this.updateWorldMatrix();
+      }
     }
     for (const child of this.children) {
-      child.animate(time);
+      child.animate(time, name);
     }
   }
 
   setAnimation(path, animation) {
-    this.animations.set(path, animation);
+    if (this.animations.get(animation.getName()) != null) {
+      this.animations.get(animation.getName()).set(path, animation);
+    } else {
+      let newAnimation = new Map();
+      newAnimation.set(path, animation);
+      this.animations.set(animation.getName(), newAnimation);
+    }
   }
 
   /**
@@ -114,6 +128,22 @@ export class Node {
 
   getLocalMatrix() {
     return this.localMatrix;
+  }
+
+  setIdleMatrix(matrix) {
+    this.idleMatrix = matrix;
+  }
+
+  setIdle() {
+    this.setIdleTransform();
+    for (const child of this.children) {
+      child.setIdle();
+    }
+  }
+
+  setIdleTransform() {
+    this.localMatrix = this.idleMatrix;
+    this.updateWorldMatrix();
   }
 
   getParentMatrix() {
@@ -155,7 +185,7 @@ export class Node {
    * @param {number} time
    * @returns local transform matrix of node
    */
-  getAnimatedTransform(time) {
+  getAnimatedTransform(time, name) {
     let T = [0, 0, 0];
     let R = [0, 0, 0, 1];
     let S = [1, 1, 1];
@@ -163,9 +193,9 @@ export class Node {
     m4.decompose(this.localMatrix, T, R, S);
 
     // Animation overwrites TRS values instead of manipulating them
-    const translation = this.animations.get("translation");
-    const rotation = this.animations.get("rotation");
-    const scale = this.animations.get("scale");
+    const translation = this.animations.get(name).get("translation");
+    const rotation = this.animations.get(name).get("rotation");
+    const scale = this.animations.get(name).get("scale");
 
     if (translation != null) {
       T = translation.getValue(time);

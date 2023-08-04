@@ -33,38 +33,27 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
         Multi-object scenes
         Object culling
         Camera pan
+        Specify active animations in files
 
       Morph target stress test and correct clamp
 
-      Multiple animation
-        Animation array of maps
-        Control animation and select
-
-      Separate GUI to file
+      Separate GUI code to a new file
 
       Sheen
       Volume
       IOR
       Iridescence
-      Better roughness blur
-
-      Skinning
-
+      Better roughness blur (bicubic)
       Specular/Gloss
       Clearcoat
 
+      Skinning
+
       Instancing
       Particle class for GPU
+
       Postprocessing (bloom, depth of field, SSAO)
       PBR camera
-
-      Lights
-      Shadows
-
-      Materials:
-        Water
-        Lava
-        Clouds
 
 */
 
@@ -157,6 +146,8 @@ gui.domElement.style.cssText = "visibility: visible; position: absolute; top: 0p
 
 gui.add(modelSelector, 'model').options(modelNames).onChange(name => { loadGLTF(name); });
 
+const animationFolder = gui.addFolder('Animation');
+
 const materialFolder = gui.addFolder('Material');
 const materialControls = materialFolder.add(materialSelector, 'material').options(materialNames).onChange(name => { setMaterial(name); });
 const outputControls = materialFolder.add(outputSelector, 'output').options(outputEnum).onChange(output => { setOutput(output) });
@@ -201,6 +192,33 @@ controls.onWindowResize();
 
 environment = new Environment({ path: environments.get(environmentSelector.environment), type: "hdr", camera: camera });
 
+let animationElements = [];
+let animationInterfaces = [];
+const idleState = { state: true, name: "Idle" };
+const playAllState = { state: false, name: "All" };
+
+function setSceneIdle() {
+  for (const animation of scene.getAnimations()) {
+    animation.disable();
+  }
+  scene.setIdle();
+  for (const animationInterface of animationInterfaces) {
+    animationInterface.state = false;
+  }
+  playAllState.state = false;
+}
+
+function playAllAnimations() {
+  for (const animation of scene.getAnimations()) {
+    animation.enable(time);
+  }
+  for (const animationInterface of animationInterfaces) {
+    animationInterface.state = true;
+  }
+  idleState.state = false;
+}
+
+
 loadGLTF(modelSelector.model);
 
 function loadGLTF(model) {
@@ -211,6 +229,14 @@ function loadGLTF(model) {
   }
 
   scene.clear();
+  animationFolder.hide();
+  for (let element of animationElements) {
+    element.destroy();
+  }
+  animationElements = [];
+  animationInterfaces = [];
+  playAllState.state = false;
+  idleState.state = true;
 
   if (model == "NONE") {
     return;
@@ -226,6 +252,19 @@ function loadGLTF(model) {
     if (scene.getObjects().length > 0) {
       materialControls.setValue("PBR");
       modelManipulation.scale = scene.getObjects()[0].getScale();
+    }
+    if (scene.getAnimations().length > 0) {
+      animationElements.push(animationFolder.add(idleState, 'state').name("Idle").listen().onChange(e => { idleState.state = true; if (e) { setSceneIdle() }; }));
+      if (scene.getAnimations().length > 1) {
+        animationElements.push(animationFolder.add(playAllState, 'state').name("All").listen().onChange(e => { playAllState.state = true; if (e) { playAllAnimations() }; }));
+      }
+      let animations = scene.getAnimations();
+      for (const animation of animations) {
+        let animationInterface = { state: animation.isActive(), name: animation.getName(), toggle: (e) => { animation.setActive(e, time) } };
+        animationInterfaces.push(animationInterface);
+        animationElements.push(animationFolder.add(animationInterface, 'state').name(animationInterface.name).listen().onChange(e => { animationInterface.toggle(e); idleState.state = false; playAllState.state = false; }));
+      }
+      animationFolder.show();
     }
     materialControls.setValue("PBR");
     outputControls.setValue(outputEnum.PBR);
@@ -254,11 +293,11 @@ function centreAndScale(object) {
   let S = [scale, scale, scale];
 
   object.setTRS(T, R, S);
+  object.setIdleMatrix(m4.compose(T, R, S));
 
   modelManipulation.translationX = T[0];
   modelManipulation.translationY = T[1];
   modelManipulation.translationZ = T[2];
-
 
   let rE = quaternionToEuler(R);
   modelManipulation.rotationX = rE[0];
