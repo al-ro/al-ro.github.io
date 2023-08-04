@@ -204,16 +204,27 @@ export class Mesh extends Node {
   /**
    * Override of Node function to animate morph targets
    */
-  animate(time) {
-    if (this.animations.size > 0) {
-      this.localMatrix = this.getAnimatedTransform(time);
-      if (this.hasWeights) {
-        this.getAnimatedWeights(time);
+  animate(time, name) {
+    if (this.animations.get(name) != null) {
+      if (this.animations.get(name).size > 0) {
+        this.localMatrix = this.getAnimatedTransform(time, name);
+        if (this.hasWeights) {
+          this.getAnimatedWeights(time, name);
+        }
+        this.updateWorldMatrix();
       }
-      this.updateWorldMatrix();
     }
     for (const child of this.children) {
       child.animate(time);
+    }
+  }
+
+
+  setIdle() {
+    this.setIdleWeights();
+    this.setIdleTransform();
+    for (const child of this.children) {
+      child.setIdle();
     }
   }
 
@@ -222,8 +233,8 @@ export class Mesh extends Node {
    * @param {number} time 
    * @returns array of weights
    */
-  getAnimatedWeights(time) {
-    const weights = this.animations.get("weights");
+  getAnimatedWeights(time, name) {
+    const weights = this.animations.get(name).get("weights");
     if (weights != null) {
       this.weights = weights.getValue(time);
     }
@@ -243,6 +254,10 @@ export class Mesh extends Node {
 
   getWeights() {
     return this.weights;
+  }
+
+  setIdleWeights() {
+    this.weights = new Array(this.weights.length).fill(0);
   }
 
 }

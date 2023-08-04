@@ -8,6 +8,7 @@ import { BufferRepository } from "./bufferRepository.js"
 import { Attribute, supportedAttributes } from "./attribute.js"
 import { Indices } from "./indices.js"
 import { loadTexture } from "./texture.js"
+import { PropertyAnimation } from "./propertyAnimation.js"
 import { Animation } from "./animation.js"
 import { Object } from "./object.js"
 import { MorphTarget } from "./morphTarget.js"
@@ -66,6 +67,9 @@ export class GLTFLoader {
 
   /** Created object */
   object;
+
+  /** All animations from the GLTF */
+  animations = [];
 
   constructor() {
     let loader = this;
@@ -142,6 +146,7 @@ export class GLTFLoader {
         this.sparseTypedArrays[i] = null;
       }
       this.sparseTypedArrays = [];
+      this.animations = [];
 
     });
   }
@@ -246,12 +251,18 @@ export class GLTFLoader {
             this.nodes[node].updateWorldMatrix();
           }
 
+          // Record current local matrix as idle state
+          for (const node of this.nodes) {
+            node.setIdleMatrix(node.getLocalMatrix());
+          }
+
           let rootNodes = [];
           for (const node of this.json.scenes[this.scene].nodes) {
             rootNodes.push(this.nodes[node]);
           }
 
           this.object = new Object(rootNodes);
+          this.object.setAnimations(this.animations);
         }
 
         // Resolve ready promise
@@ -377,11 +388,19 @@ export class GLTFLoader {
    * Set the animations of all nodes
    */
   setAnimations() {
-    const animations = this.json.animations;
-    if (animations == null) {
+    const gltfAnimations = this.json.animations;
+    if (gltfAnimations == null) {
       return;
     }
-    for (const animation of animations) {
+    let animationIdx = 0;
+    let animations = [];
+    for (const animation of gltfAnimations) {
+      let animationName = animation.name != null ? animation.name : "animation_" + animationIdx;
+      if (animations.includes(animationName)) {
+        animationName += "_" + animationIdx;
+      }
+      let animationSet = new Animation(animationName);
+
       for (const channel of animation.channels) {
         const sampler = animation.samplers[channel.sampler];
         let outputValues = [];
@@ -396,18 +415,28 @@ export class GLTFLoader {
           timeStamps: this.getAnimationTimeStamps(sampler),
           values: outputValues,
           interpolation: !!sampler.interpolation ? sampler.interpolation : InterpolationType.LINEAR,
-          path: channel.target.path
+          path: channel.target.path,
+          name: animationName
         };
         const node = this.nodes[channel.target.node];
-        if (node.splitChildren.length > 0) {
+        // If the node was created by splitting a multi-primitive node, set morph animations for the created children
+        // TRS animations are translated to children via world matrix updates
+        if (node.splitChildren.length > 0 && channel.target.path == "weights") {
           for (const child of node.splitChildren) {
-            child.setAnimation(channel.target.path, new Animation(parameters));
+            let propertyAnimation = new PropertyAnimation(parameters);
+            animationSet.addPropertyAnimation(propertyAnimation);
+            child.setAnimation(channel.target.path, propertyAnimation);
           }
         } else {
-          node.setAnimation(channel.target.path, new Animation(parameters));
+          let propertyAnimation = new PropertyAnimation(parameters);
+          animationSet.addPropertyAnimation(propertyAnimation);
+          node.setAnimation(channel.target.path, propertyAnimation);
         }
       }
+      animations.push(animationSet);
+      animationIdx++;
     }
+    this.animations = animations;
   }
 
   /**
