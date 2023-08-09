@@ -83,7 +83,6 @@ models.set("MorphPrimitivesTest", "./gltf/morphPrimitivesTest/MorphPrimitivesTes
 models.set("MorphStressTest", "./gltf/morphStressTest/MorphStressTest.gltf");
 models.set("MorphInterpolation", "./gltf/morphInterpolation/fourCube.gltf");
 
-
 let modelNames = Array.from(models.keys());
 modelNames.sort();
 modelNames.push("NONE");
@@ -251,14 +250,13 @@ function loadGLTF(model) {
     scene.add(object);
     if (scene.getObjects().length > 0) {
       materialControls.setValue("PBR");
-      modelManipulation.scale = scene.getObjects()[0].getScale();
     }
-    if (scene.getAnimations().length > 0) {
+    let animations = scene.getAnimations();
+    if (animations.length > 0) {
       animationElements.push(animationFolder.add(idleState, 'state').name("Idle").listen().onChange(e => { idleState.state = true; if (e) { setSceneIdle() }; }));
-      if (scene.getAnimations().length > 1) {
+      if (animations.length > 1) {
         animationElements.push(animationFolder.add(playAllState, 'state').name("All").listen().onChange(e => { playAllState.state = true; if (e) { playAllAnimations() }; }));
       }
-      let animations = scene.getAnimations();
       for (const animation of animations) {
         let animationInterface = { state: animation.isActive(), name: animation.getName(), toggle: (e) => { animation.setActive(e, time) } };
         animationInterfaces.push(animationInterface);
