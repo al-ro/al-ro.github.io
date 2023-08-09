@@ -173,6 +173,7 @@ export class Object {
     setTRS(T, R, S) {
         let matrix = m4.compose(T, R, S);
         this.node.setLocalMatrix(matrix);
+        this.node.setIdleMatrix(matrix);
         this.node.updateWorldMatrix();
         this.calculateAABB();
     }
