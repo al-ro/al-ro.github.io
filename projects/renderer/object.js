@@ -4,6 +4,9 @@
 
 import { render } from "./renderCall.js"
 import { Node } from "./node.js"
+import { RenderPass } from "./enums.js";
+import { DepthMaterial } from "./materials/depthMaterial.js";
+import { AlphaModes } from "./enums.js";
 
 export class Object {
     // The root of the local Node graph which is used to transform the object placement
@@ -69,6 +72,29 @@ export class Object {
         }
     }
 
+
+    renderDepthPrepass(camera, time, cullCamera) {
+        if (this.primitives.length < 1) {
+            this.generatePrimitiveList();
+        }
+        for (const primitive of this.primitives) {
+            let material = primitive.getMaterial();
+            let depthMaterial = new DepthMaterial({
+                baseColorFactor: material.baseColorFactor,
+                baseColorTexture: material.baseColorTexture,
+                baseColorTextureUV: material.baseColorTextureUV,
+                alphaMode: material.alphaMode,
+                alphaCutoff: material.alphaCutoff,
+                doubleSided: material.doubleSided
+            });
+            if (!material.hasTransmission && material.alphaMode != AlphaModes.BLEND) {
+                primitive.setMaterial(depthMaterial);
+                render(RenderPass.ALWAYS, primitive, camera, time, cullCamera);
+                primitive.setMaterial(material);
+            }
+        }
+    }
+
     render(renderPass, camera, time, cullCamera) {
         if (this.primitives.length < 1) {
             this.generatePrimitiveList();
@@ -104,8 +130,8 @@ export class Object {
             this.generatePrimitiveList();
         }
         for (const primitive of this.primitives) {
-            if (primitive != null && primitive.material != null && primitive.material.hasTransmission) {
-                primitive.material.setBackgroundTexture(texture);
+            if (primitive != null && primitive.getMaterial() != null && primitive.getMaterial().hasTransmission) {
+                primitive.getMaterial().setBackgroundTexture(texture);
             }
         }
     }

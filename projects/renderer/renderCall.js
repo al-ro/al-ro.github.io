@@ -1,21 +1,23 @@
-import { gl, enums, RenderPass } from "./canvas.js"
+import { gl } from "./canvas.js"
+import { AlphaModes, RenderPass } from "./enums.js"
 
 function rendersInPass(renderPass, material) {
   switch (renderPass) {
     case RenderPass.TRANSMISSIVE: return material.hasTransmission;
-    case RenderPass.TRANSPARENT: return material.alphaMode == enums.BLEND;
-    case RenderPass.OPAQUE: return !material.hasTransmission && material.alphaMode != enums.BLEND;
+    case RenderPass.TRANSPARENT: return material.alphaMode == AlphaModes.BLEND;
+    case RenderPass.OPAQUE: return !material.hasTransmission && material.alphaMode != AlphaModes.BLEND;
+    case RenderPass.ALWAYS: return true;
     default: return false;
   }
 }
 
 export function render(renderPass, mesh, camera, time, cullCamera) {
 
-  if (!(mesh != null && mesh.material != null && mesh.geometry != null)) {
+  if (!(mesh != null && mesh.getMaterial() != null && mesh.getGeometry() != null)) {
     return;
   }
 
-  if (!rendersInPass(renderPass, mesh.material)) {
+  if (!rendersInPass(renderPass, mesh.getMaterial())) {
     return;
   }
 
@@ -28,17 +30,17 @@ export function render(renderPass, mesh, camera, time, cullCamera) {
     }
   }
 
-  if (mesh.material.doubleSided) {
+  if (mesh.getMaterial().doubleSided) {
     gl.disable(gl.CULL_FACE);
   } else {
     gl.enable(gl.CULL_FACE);
   }
 
-  gl.useProgram(mesh.material.getProgram().program);
+  gl.useProgram(mesh.getMaterial().getProgram().program);
   mesh.bindVAO();
 
   if (camera != null) {
-    mesh.material.bindMatrices({
+    mesh.getMaterial().bindMatrices({
       projectionMatrix: camera.getProjectionMatrix(),
       viewMatrix: camera.getViewMatrix(),
       modelMatrix: mesh.getWorldMatrix(),
@@ -46,31 +48,31 @@ export function render(renderPass, mesh, camera, time, cullCamera) {
     });
   }
 
-  if (mesh.material.needsCamera) {
-    mesh.material.setCamera(camera);
+  if (mesh.getMaterial().needsCamera) {
+    mesh.getMaterial().setCamera(camera);
   }
 
-  if (mesh.material.needsTime) {
-    mesh.material.setTime(time);
+  if (mesh.getMaterial().needsTime) {
+    mesh.getMaterial().setTime(time);
   }
 
-  if (mesh.hasWeights && mesh.material.supportsMorphTargets) {
-    mesh.material.setWeights(mesh.getWeights());
+  if (mesh.hasWeights && mesh.getMaterial().supportsMorphTargets) {
+    mesh.getMaterial().setWeights(mesh.getWeights());
   }
-  mesh.material.bindParameters();
+  mesh.getMaterial().bindParameters();
 
-  if (mesh.geometry.hasIndices) {
-    if (mesh.geometry.instanced) {
-      gl.drawElementsInstanced(mesh.geometry.getPrimitiveType(),
-        mesh.geometry.getLength(),
-        mesh.geometry.getIndices().getType(),
+  if (mesh.getGeometry().hasIndices) {
+    if (mesh.getGeometry().instanced) {
+      gl.drawElementsInstanced(mesh.getGeometry().getPrimitiveType(),
+        mesh.getGeometry().getLength(),
+        mesh.getGeometry().getIndices().getType(),
         0,
-        mesh.geometry.instances);
+        mesh.getGeometry().instances);
     } else {
-      gl.drawElements(mesh.geometry.getPrimitiveType(), mesh.geometry.getLength(), mesh.geometry.getIndices().getType(), 0);
+      gl.drawElements(mesh.getGeometry().getPrimitiveType(), mesh.getGeometry().getLength(), mesh.getGeometry().getIndices().getType(), 0);
     }
   } else {
-    gl.drawArrays(mesh.geometry.getPrimitiveType(), 0, mesh.geometry.getLength());
+    gl.drawArrays(mesh.getGeometry().getPrimitiveType(), 0, mesh.getGeometry().getLength());
   }
 
   mesh.unbindVAO();

@@ -21,6 +21,7 @@ export class Material {
 
   createProgram(attributes, morphTargets) {
     this.program = programRepository.getProgram(this, attributes, morphTargets);
+    this.bindUniformBlocks();
   }
 
   getProgram() {
@@ -51,6 +52,8 @@ export class Material {
   }
 
   bindParameters() { }
+
+  bindUniformBlocks() { }
 
   isInstanced() {
     return this.instanced;

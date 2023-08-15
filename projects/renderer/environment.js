@@ -1,5 +1,6 @@
 import { download } from "./download.js"
 import { gl } from "./canvas.js"
+import { UniformBufferBindPoints } from "./enums.js"
 import { createAndSetupCubemap } from "./texture.js"
 import { EnvironmentMaterial } from "./materials/environmentMaterial.js"
 import { Mesh } from "./mesh.js";
@@ -24,10 +25,6 @@ class Environment {
   environmentMaterial;
   environmentMesh;
 
-  shRedMatrix = m4.create();
-  shGrnMatrix = m4.create();
-  shBluMatrix = m4.create();
-
   shMatrices;
 
   brdfIntegrationMap;
@@ -35,6 +32,10 @@ class Environment {
   updateHDR = false;
 
   loadFlags = [false, false, false, false, false, false];
+
+  // [mat4, mat4, mat4]
+  shUniformBuffer;
+  shArray = new Float32Array(3 * 16);
 
   constructor(parameters) {
 
@@ -51,7 +52,7 @@ class Environment {
     this.environmentMesh = new Mesh(getScreenspaceQuad(), this.environmentMaterial);
     this.environmentMesh.setCulling(false);
 
-    this.shMatrices = { red: this.shRedMatrix, green: this.shGrnMatrix, blue: this.shBluMatrix };
+    this.shMatrices = { red: m4.create(), green: m4.create(), blue: m4.create() };
     this.setupBRDFIntegrationMap();
 
     this.type = parameters.type;
@@ -61,8 +62,12 @@ class Environment {
     } else if (this.type == "hdr") {
       this.setHDR(path);
     } else {
-      console.log("Unknown or missing environement map type: ", this.type);
+      console.log("Unknown or missing environment map type: ", this.type);
     }
+
+    this.shUniformBuffer = gl.createBuffer();
+    gl.bindBufferBase(gl.UNIFORM_BUFFER, UniformBufferBindPoints.SPHERICAL_HARMONICS, this.shUniformBuffer);
+    this.uploadSHMatrices();
 
   }
 
@@ -143,6 +148,20 @@ class Environment {
 
   calculateSHMatrices() {
     this.shMatrices = getSphericalHarmonicsMatrices(this.cubeMap);
+    this.uploadSHMatrices();
+  }
+
+  /**
+   * Copy spherical harmonics matrices into the uniform buffer on the GPU
+   */
+  uploadSHMatrices() {
+    gl.bindBuffer(gl.UNIFORM_BUFFER, this.shUniformBuffer);
+    this.shArray.set(this.shMatrices.red, 0);
+    this.shArray.set(this.shMatrices.green, 16);
+    this.shArray.set(this.shMatrices.blue, 32);
+    gl.bufferData(gl.UNIFORM_BUFFER, this.shArray, gl.STATIC_DRAW);
+
+    gl.bindBuffer(gl.UNIFORM_BUFFER, null);
   }
 
   convoluteCubeMap() {

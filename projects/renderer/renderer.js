@@ -2,6 +2,7 @@ import { Camera } from "./camera.js"
 import { Controls } from "./controls.js"
 import { AmbientMaterial } from "./materials/ambientMaterial.js"
 import { NormalMaterial } from "./materials/normalMaterial.js"
+import { DepthMaterial } from "./materials/depthMaterial.js"
 import { LambertMaterial } from "./materials/lambertMaterial.js"
 import { UVMaterial } from "./materials/uvMaterial.js"
 import { TextureMaterial } from "./materials/textureMaterial.js"
@@ -9,10 +10,11 @@ import { ScreenspaceMaterial } from "./materials/screenspaceMaterial.js"
 import { Environment } from "./environment.js"
 import { loadTexture, createAndSetupTexture } from "./texture.js"
 import { Mesh } from "./mesh.js";
-import { gl, extMEM, RenderPass } from "./canvas.js";
+import { gl, extMEM } from "./canvas.js";
+import { RenderPass } from "./enums.js"
 import { getScreenspaceQuad } from "./screenspace.js";
 import { GLTFLoader } from "./GLTFLoader.js"
-import { RenderTarget } from "./target.js"
+import { RenderTarget } from "./renderTarget.js"
 import { getDownloadingCount } from "./download.js"
 import { outputEnum } from "./materials/pbrMaterial.js"
 import { render } from "./renderCall.js"
@@ -26,7 +28,6 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 /*
   TODO:
 
-      Uniform buffer object for material and camera matrices
       Order material draw
 
       Scene format and scale for specific files?
@@ -102,7 +103,7 @@ environmentNames.sort();
 
 let uvGridTexture = loadTexture("./defaultResources/uv_grid.jpg");
 
-let materialNames = ["PBR", "Normal", "UV", "Texture", "Lambert", "Ambient"];
+let materialNames = ["PBR", "Normal", "Depth", "UV", "Texture", "Lambert", "Ambient"];
 materialNames.sort();
 let materialSelector = { material: "PBR" };
 
@@ -314,6 +315,8 @@ function setMaterial(name) {
       break;
     case "Normal": material = new NormalMaterial();
       break;
+    case "Depth": material = new DepthMaterial();
+      break;
     case "UV": material = new UVMaterial();
       break;
     case "Lambert": material = new LambertMaterial();
@@ -360,13 +363,6 @@ function setRotation(modelManipulation) {
 
 let lastFrame = Date.now();
 let thisFrame;
-
-function setCameraMatrices(c) {
-  c.setProjectionMatrix();
-  c.setCameraMatrix();
-  c.setViewMatrix();
-  c.calculateFrustumPlanes();
-}
 
 let frame = 0;
 
@@ -435,7 +431,7 @@ function draw() {
 
   let renderCamera = camera;
 
-  setCameraMatrices(renderCamera);
+  renderCamera.update();
 
   sceneRenderTarget.setSize(gl.canvas.width, gl.canvas.height);
   sceneRenderTarget.bind();
@@ -448,16 +444,26 @@ function draw() {
   gl.enable(gl.DEPTH_TEST);
   gl.enable(gl.CULL_FACE);
   gl.cullFace(gl.BACK);
+  gl.depthFunc(gl.ALWAYS);
 
-  // Render background from cubemap
+  // Render background from cubemap without writing to depth
   gl.depthMask(false);
   render(RenderPass.OPAQUE, environment.getMesh(), renderCamera, time);
   gl.depthMask(true);
 
-  // Render opaque meshes
+  // Render all opaque meshes with a simple shader to populate the depth texture
+  // Do not write to color target
+  gl.depthFunc(gl.LESS);
+  gl.colorMask(false, false, false, false);
+  scene.renderDepthPrepass(renderCamera, time, camera);
+  gl.colorMask(true, true, true, true);
+
+  // Render opaque meshes corresponding the the depth values in the depth texture
+  gl.depthFunc(gl.EQUAL);
   scene.render(RenderPass.OPAQUE, renderCamera, time, camera);
 
   // Generate background texture for transmissive objects
+  gl.depthFunc(gl.ALWAYS);
   blurredSceneRenderTarget.setSize(gl.canvas.width, gl.canvas.height);
   blurredSceneRenderTarget.bind();
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -469,6 +475,7 @@ function draw() {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 
   // Render transmissive objects onto the scene
+  gl.depthFunc(gl.LEQUAL);
   sceneRenderTarget.bind();
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   scene.setBackgroundTexture(blurredSceneTexture);
@@ -481,11 +488,9 @@ function draw() {
   gl.disable(gl.BLEND);
 
   // Output render target color texture to screen
+  gl.depthFunc(gl.ALWAYS);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  gl.clearDepth(1.0);
-  gl.clear(gl.DEPTH_BUFFER_BIT);
-
   render(RenderPass.OPAQUE, sceneMesh, renderCamera, time, camera);
 
   stats.end();
