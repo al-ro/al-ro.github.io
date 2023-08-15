@@ -1,3 +1,5 @@
+import { gl } from "./canvas.js"
+import { UniformBufferBindPoints } from "./enums.js"
 export class Camera {
 
   position = [0, 0, 1];
@@ -29,6 +31,14 @@ export class Camera {
 
   exposure = 1.0;
 
+  // [mat4, mat4]
+  matrixUniformBuffer;
+  matrixUniformArray = new Float32Array(32);
+
+  // [vec3, float]
+  fragmentUniformBuffer;
+  fragmentUniformArray = new Float32Array(4);
+
   constructor(pitch, yaw, distance, target, up, fov, aspect, zNear, zFar) {
     this.pitch = pitch;
     this.yaw = yaw;
@@ -47,6 +57,12 @@ export class Camera {
     this.setProjectionMatrix();
     this.setCameraMatrix();
     this.setViewMatrix();
+
+    this.matrixUniformBuffer = gl.createBuffer();
+    gl.bindBufferBase(gl.UNIFORM_BUFFER, UniformBufferBindPoints.CAMERA_MATRICES, this.matrixUniformBuffer);
+    this.fragmentUniformBuffer = gl.createBuffer();
+    gl.bindBufferBase(gl.UNIFORM_BUFFER, UniformBufferBindPoints.CAMERA_UNIFORMS, this.fragmentUniformBuffer);
+    this.uploadUniformBuffers();
   }
 
   updatePosition(delta) {
@@ -74,32 +90,6 @@ export class Camera {
   updateDistance(distance) {
     this.distance = distance;
     this.updatePosition([0, 0]);
-  }
-
-  // Fly camera
-
-  /*
-    updatePosition(delta){
-  
-      let yawChange = (delta[0] * 0.01) % (2.0 * Math.PI);
-      this.yaw  += yawChange;
-      this.viewDirection[0] = Math.sin(this.yaw);
-      this.viewDirection[2] = Math.cos(this.yaw);
-      let pitchChange = (delta[1] * 0.01) % (2.0 * Math.PI);
-      this.pitch += pitchChange;
-      this.pitch = Math.max(-Math.PI/2.0, Math.min(Math.PI/2.0, this.pitch));
-      this.viewDirection[1] = Math.sin(this.pitch);
-      this.viewDirection = normalize(this.viewDirection);
-  
-      this.rightDirection = normalize(cross(this.up, this.viewDirection));
-      this.target = [this.position[0] + this.viewDirection[0], this.position[1] + this.viewDirection[1], this.position[2] + this.viewDirection[2]];
-  
-    }
-  */
-  setPosition(pos) {
-    // this.position = pos;
-    // this.rightDirection = normalize(cross(this.up, this.viewDirection));
-    // this.target = [this.position[0] + this.viewDirection[0], this.position[1] + this.viewDirection[1], this.position[2] + this.viewDirection[2]];
   }
 
   getPosition() {
@@ -144,6 +134,31 @@ export class Camera {
 
   getExposure() {
     return this.exposure;
+  }
+
+  update() {
+    this.setProjectionMatrix();
+    this.setCameraMatrix();
+    this.setViewMatrix();
+    this.calculateFrustumPlanes();
+    this.uploadUniformBuffers();
+  }
+
+  /**
+   * Upload camera data into GPU buffers
+   */
+  uploadUniformBuffers() {
+    gl.bindBuffer(gl.UNIFORM_BUFFER, this.matrixUniformBuffer);
+    this.matrixUniformArray.set(this.viewMatrix, 0);
+    this.matrixUniformArray.set(this.projectionMatrix, 16);
+    gl.bufferData(gl.UNIFORM_BUFFER, this.matrixUniformArray, gl.DYNAMIC_DRAW);
+
+    gl.bindBuffer(gl.UNIFORM_BUFFER, this.fragmentUniformBuffer);
+    this.fragmentUniformArray.set(this.position, 0);
+    this.fragmentUniformArray.set([this.exposure], 3);
+    gl.bufferData(gl.UNIFORM_BUFFER, this.fragmentUniformArray, gl.DYNAMIC_DRAW);
+
+    gl.bindBuffer(gl.UNIFORM_BUFFER, null);
   }
 
   // Return whether any part of the AABB is inside or overlaps the camera frustum

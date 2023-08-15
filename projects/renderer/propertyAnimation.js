@@ -1,4 +1,4 @@
-import { AnimationType, InterpolationType } from "./canvas.js"
+import { AnimationType, InterpolationType } from "./enums.js"
 
 /**
  * Animation for the TRS and weight properties of nodes and meshes

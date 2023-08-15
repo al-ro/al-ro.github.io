@@ -39,6 +39,12 @@ export class Scene {
         return animations;
     }
 
+    renderDepthPrepass(camera, time, cullCamera) {
+        for (const object of this.objects) {
+            object.renderDepthPrepass(camera, time, cullCamera);
+        }
+    }
+
     render(renderPass, camera, time, cullCamera) {
         for (const object of this.objects) {
             object.render(renderPass, camera, time, cullCamera);

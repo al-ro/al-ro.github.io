@@ -191,6 +191,14 @@ export class Mesh extends Node {
     return this.max;
   }
 
+  getMaterial() {
+    return this.material;
+  }
+
+  getGeometry() {
+    return this.geometry;
+  }
+
   /**
    * Override of Node function to update min and max data
    * Combine ancestor transforms, local matrix and animation matrix
