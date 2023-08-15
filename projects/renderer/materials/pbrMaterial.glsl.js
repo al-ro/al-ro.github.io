@@ -1,3 +1,87 @@
+import { getMorphedAttributeString } from "../shader.js"
+
+function getVertexSource(parameters) {
+
+  var vertexSource = `
+
+  in vec3 POSITION;
+
+#ifdef HAS_NORMALS
+  in vec3 NORMAL;
+  uniform mat4 normalMatrix;
+#endif
+
+#ifdef HAS_UV_0
+  in vec2 TEXCOORD_0;
+#endif
+
+#ifdef HAS_UV_1
+  in vec2 TEXCOORD_1;
+#endif
+
+layout(std140) uniform cameraMatrices{
+    mat4 viewMatrix;
+    mat4 projectionMatrix;
+};
+
+  uniform mat4 modelMatrix;
+
+#ifdef HAS_NORMALS
+  out vec3 vNormal;
+#endif
+
+#ifdef HAS_UV_0
+  out vec2 vUV0;
+#endif
+
+#ifdef HAS_UV_1
+  out vec2 vUV1;
+#endif
+
+#ifdef HAS_TANGENTS
+  in vec4 TANGENT;
+  out mat3 tbn;
+#endif
+
+  out vec3  vPosition;
+
+  void main(){
+
+#ifdef HAS_UV_0
+    vUV0 = TEXCOORD_0;
+#endif
+
+#ifdef HAS_UV_1
+    vUV1 = TEXCOORD_1;
+#endif
+
+#ifdef HAS_NORMALS
+    `+ getMorphedAttributeString(parameters, "NORMAL") + `
+    vec4 transformedNormal = normalMatrix * vec4(normal, 0.0);
+    vNormal = transformedNormal.xyz;
+#endif
+
+#ifdef HAS_TANGENTS
+    // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+    vec3 N = normalize(vec3(transformedNormal));
+    `+ getMorphedAttributeString(parameters, "TANGENT") + `
+    vec3 T = normalize(vec3(normalMatrix * vec4(tangent.xyz, 0.0)));
+    T = normalize(T - dot(T, N) * N);
+    vec3 B = normalize(cross(N, T)) * TANGENT.w;
+    tbn = mat3(T, B, N);
+#endif 
+
+    `+ getMorphedAttributeString(parameters, "POSITION") + `
+    vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
+    vPosition = transformedPosition.xyz;
+
+    gl_Position = projectionMatrix * viewMatrix * transformedPosition;
+  }
+  `;
+
+  return vertexSource;
+}
+
 function getFragmentSource() {
 
   var fragmentSource = `
@@ -8,20 +92,11 @@ function getFragmentSource() {
 #define TWO_PI (2.0 * PI)
 #define HALF_PI (0.5 * PI)
 
+  in vec3 vPosition;
+
 #ifdef HAS_NORMALS
   in vec3 vNormal;
 #endif
-
-#define DEBUG
-#ifdef DEBUG
-  uniform int outputVariable;
-#endif
-
-  uniform float exposure;
-  uniform float time;
-  uniform vec3 cameraPosition;
-
-  in vec3 vPosition;
 
 #ifdef HAS_UV_0
   in vec2 vUV0;
@@ -30,6 +105,28 @@ function getFragmentSource() {
 #ifdef HAS_UV_1
   in vec2 vUV1;
 #endif
+
+#ifdef HAS_TANGENTS
+  in mat3 tbn;
+#endif
+
+#define DEBUG
+#ifdef DEBUG
+  uniform int outputVariable;
+#endif
+
+layout(std140) uniform cameraUniforms{
+  vec3 cameraPosition;
+  float cameraExposure;
+};
+
+layout(std140) uniform sphericalHarmonicsUniforms{
+  uniform mat4 shRedMatrix;
+  uniform mat4 shGrnMatrix;
+  uniform mat4 shBluMatrix;
+};
+
+  uniform float time;
 
   uniform sampler2D brdfIntegrationMapTexture;
   uniform samplerCube cubeMap;
@@ -45,10 +142,6 @@ function getFragmentSource() {
   uniform sampler2D normalTexture;
   uniform int normalTextureUV;
   uniform float normalScale;
-#endif
-
-#ifdef HAS_TANGENTS
-  in mat3 tbn;
 #endif
 
 #ifdef HAS_EMISSION
@@ -91,10 +184,6 @@ function getFragmentSource() {
 #ifdef AO_IN_METALLIC_ROUGHNESS_TEXTURE
   uniform float occlusionStrength;
 #endif
-
-  uniform mat4 shRedMatrix;
-  uniform mat4 shGrnMatrix;
-  uniform mat4 shBluMatrix;
 
   uniform int alphaMode;
   uniform float alphaCutoff;
@@ -340,7 +429,6 @@ function getFragmentSource() {
     I += direct * radiance * dot_c(normal, lightDir);
 
     // Find ambient diffuse IBL component
-
     F = fresnelSchlickRoughness(dot_c(normal, -rayDir), F0, roughness);
     kD = saturate(1.0 - F) * (1.0 - metal);	
     vec3 irradiance = getSHIrradiance(normal);
@@ -351,6 +439,7 @@ function getFragmentSource() {
     diffuse = mix(diffuse, transmitted, transmission);
 #endif
 
+    // Find ambient specular IBL component
     vec3 R = reflect(rayDir, normal);
 
     vec3 prefilteredColor = getEnvironment(R, roughness);   
@@ -456,7 +545,7 @@ function getFragmentSource() {
     color.rgb += emissiveColor.rgb;
 #endif
 
-    color.rgb *= exposure;  
+    color.rgb *= cameraExposure;  
 
     color.rgb = ACESFilm(color.rgb);
     color.rgb = pow(color.rgb, vec3(0.4545));
@@ -569,4 +658,4 @@ function getFragmentSource() {
   return fragmentSource;
 }
 
-export { getFragmentSource };
+export { getFragmentSource, getVertexSource };

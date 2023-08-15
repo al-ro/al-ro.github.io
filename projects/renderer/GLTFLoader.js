@@ -1,5 +1,5 @@
 import { download } from "./download.js"
-import { gl, enums, InterpolationType } from "./canvas.js"
+import { gl } from "./canvas.js"
 import { Node } from "./node.js"
 import { PBRMaterial } from "./materials/pbrMaterial.js"
 import { Geometry } from "./geometry.js"
@@ -12,6 +12,7 @@ import { PropertyAnimation } from "./propertyAnimation.js"
 import { Animation } from "./animation.js"
 import { Object } from "./object.js"
 import { MorphTarget } from "./morphTarget.js"
+import { AlphaModes, InterpolationType } from "./enums.js"
 
 // TODO:
 //  full spec conform (color_0, sampler)
@@ -685,13 +686,13 @@ export class GLTFLoader {
     if (material.alphaMode != null) {
       switch (material.alphaMode) {
         case "BLEND":
-          materialParameters.alphaMode = enums.BLEND;
+          materialParameters.alphaMode = AlphaModes.BLEND;
           break;
         case "MASK":
-          materialParameters.alphaMode = enums.MASK;
+          materialParameters.alphaMode = AlphaModes.MASK;
           break;
         default:
-          materialParameters.alphaMode = enums.OPAQUE;
+          materialParameters.alphaMode = AlphaModes.OPAQUE;
       }
     }
 

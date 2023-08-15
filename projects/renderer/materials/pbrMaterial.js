@@ -1,7 +1,7 @@
-import { gl, enums } from "../canvas.js"
+import { gl } from "../canvas.js"
+import { AlphaModes, UniformBufferBindPoints } from "../enums.js"
 import { Material } from './material.js'
-import { getFragmentSource } from './pbrMaterial.glsl.js'
-import { getVertexSource } from '../shader.js'
+import { getFragmentSource, getVertexSource } from './pbrMaterial.glsl.js'
 
 // Which quantity to render for debugging
 export const outputEnum = {
@@ -24,30 +24,15 @@ export const outputEnum = {
 
 export class PBRMaterial extends Material {
 
-  projectionMatrixHandle;
-  viewMatrixHandle;
+  // CPU-side buffer for uniform buffer objects
+  vertexUniformBuffer;
+  fragmentUniformBuffer;
+
   modelMatrixHandle;
   normalMatrixHandle;
 
-  exposureHandle;
-  exposure = 1.0;
-
   timeHandle;
   time = 0.0;
-
-  cameraPositionHandle;
-  cameraPosition = [10, 10, 10];
-
-  /**
-   * Spherical harmonics (SH) matrices for red, green and blue
-   * Must be generated every time a new environment map is used
-   * Stored on CPU for use later on if the same environment
-   * is requested again
-   * Mandatory
-   */
-  shRedMatrix = m4.create();
-  shGrnMatrix = m4.create();
-  shBluMatrix = m4.create();
 
   // In the absence of metallicRoughnessTexture, use float uniforms
   // Either these or a texture must be supplied
@@ -59,7 +44,7 @@ export class PBRMaterial extends Material {
   // If both are given, the base color values are used to multiply the texture values
   baseColorFactor = [1, 1, 1, 1];
 
-  alphaMode = enums.OPAQUE;
+  alphaMode = AlphaModes.OPAQUE;
   alphaCutoff = 0.5;
 
   doubleSided = false;
@@ -135,6 +120,7 @@ export class PBRMaterial extends Material {
 
   baseColorTextureHandle;
   baseColorTextureUVHandle;
+
   metallicRoughnessTextureHandle;
   metallicRoughnessTextureUVHandle;
 
@@ -155,12 +141,7 @@ export class PBRMaterial extends Material {
   transmissionFactorHandle;
 
   backgroundTextureHandle;
-
   environmentTextureHandle;
-
-  shRedMatrixHandle;
-  shGrnMatrixHandle;
-  shBluMatrixHandle;
 
   brdfTextureHandle;
 
@@ -240,7 +221,6 @@ export class PBRMaterial extends Material {
       "TEXCOORD_1"
     ];
 
-    this.needsCamera = true;
     this.needsTime = true;
     this.supportsMorphTargets = true;
 
@@ -268,11 +248,6 @@ export class PBRMaterial extends Material {
 
       this.brdfIntegrationMapTexture = this.environment.getBRDFIntegrationMap();
       this.environmentTexture = this.environment.getCubeMap();
-
-      let shMatrices = this.environment.getSHMatrices();
-      this.shRedMatrix = shMatrices.red;
-      this.shGrnMatrix = shMatrices.green;
-      this.shBluMatrix = shMatrices.blue;
     }
 
     if (parameters.baseColorTexture != null) {
@@ -382,6 +357,12 @@ export class PBRMaterial extends Material {
     this.weights = weights;
   }
 
+  bindUniformBlocks() {
+    this.program.bindUniformBlock("cameraMatrices", UniformBufferBindPoints.CAMERA_MATRICES);
+    this.program.bindUniformBlock("cameraUniforms", UniformBufferBindPoints.CAMERA_UNIFORMS);
+    this.program.bindUniformBlock("sphericalHarmonicsUniforms", UniformBufferBindPoints.SPHERICAL_HARMONICS);
+  }
+
   getParameterHandles() {
 
     if (this.weights != null) {
@@ -392,17 +373,8 @@ export class PBRMaterial extends Material {
 
     this.outputVariableHandle = this.program.getUniformLocation('outputVariable');
 
-    this.projectionMatrixHandle = this.program.getUniformLocation('projectionMatrix');
-    this.viewMatrixHandle = this.program.getUniformLocation('viewMatrix');
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
     this.normalMatrixHandle = this.program.getUniformLocation('normalMatrix');
-
-    this.cameraPositionHandle = this.program.getUniformLocation('cameraPosition');
-    this.exposureHandle = this.program.getUniformLocation('exposure');
-
-    this.shRedMatrixHandle = this.program.getUniformLocation('shRedMatrix');
-    this.shGrnMatrixHandle = this.program.getUniformLocation('shGrnMatrix');
-    this.shBluMatrixHandle = this.program.getUniformLocation('shBluMatrix');
 
     this.alphaCutoffHandle = this.program.getOptionalUniformLocation('alphaCutoff');
     this.alphaModeHandle = this.program.getOptionalUniformLocation('alphaMode');
@@ -472,6 +444,12 @@ export class PBRMaterial extends Material {
     this.attributeHandles.scaleHandle = this.program.getAttribLocation('scale');
   }
 
+  /* 
+    Programs can be shared between multiple materials which makes it necessary to update 
+    material specific uniforms each draw call. A more detailed implementation would 
+    track GPU-side uniform values and update only uniforms which have changed since the last
+    draw call. Updating this number of uniforms is likely not the current bottleneck.
+   */
   bindParameters() {
 
     if (this.weights != null) {
@@ -487,34 +465,21 @@ export class PBRMaterial extends Material {
     this.brdfIntegrationMapTexture = this.environment.getBRDFIntegrationMap();
     this.environmentTexture = this.environment.getCubeMap();
 
-    let shMatrices = this.environment.getSHMatrices();
-    this.shRedMatrix = shMatrices.red;
-    this.shGrnMatrix = shMatrices.green;
-    this.shBluMatrix = shMatrices.blue;
-
     gl.uniform1f(this.alphaCutoffHandle, this.alphaCutoff);
 
-    let blendModeAsInt;
+    let alphaModeAsInt;
     switch (this.alphaMode) {
-      case enums.BLEND:
-        blendModeAsInt = 1;
+      case AlphaModes.BLEND:
+        alphaModeAsInt = 1;
         break;
-      case enums.MASK:
-        blendModeAsInt = 2;
+      case AlphaModes.MASK:
+        alphaModeAsInt = 2;
         break;
       default:
-        blendModeAsInt = 0;
+        alphaModeAsInt = 0;
     }
 
-    gl.uniform1i(this.alphaModeHandle, blendModeAsInt);
-
-    gl.uniformMatrix4fv(this.shRedMatrixHandle, false, this.shRedMatrix);
-    gl.uniformMatrix4fv(this.shGrnMatrixHandle, false, this.shGrnMatrix);
-    gl.uniformMatrix4fv(this.shBluMatrixHandle, false, this.shBluMatrix);
-
-    gl.uniform3fv(this.cameraPositionHandle, this.cameraPosition);
-
-    gl.uniform1f(this.exposureHandle, this.exposure);
+    gl.uniform1i(this.alphaModeHandle, alphaModeAsInt);
 
     gl.activeTexture(gl.TEXTURE0 + this.brdfTextureUnit);
     gl.bindTexture(gl.TEXTURE_2D, this.brdfIntegrationMapTexture);
@@ -587,11 +552,6 @@ export class PBRMaterial extends Material {
       gl.uniform1i(this.occlusionTextureHandle, this.occlusionTextureUnit);
       gl.uniform1i(this.occlusionTextureUVHandle, this.occlusionTextureUV);
     }
-  }
-
-  setCamera(camera) {
-    this.cameraPosition = camera.getPosition();
-    this.exposure = camera.getExposure();
   }
 
   setBackgroundTexture(backgroundTexture) {

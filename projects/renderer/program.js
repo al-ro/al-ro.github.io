@@ -47,10 +47,16 @@ export class Program {
     }
     return attributeLocation;
   }
+
   getOptionalAttribLocation(name) {
     return gl.getAttribLocation(this.program, name);
   }
+
   getOptionalUniformLocation(name) {
     return gl.getUniformLocation(this.program, name);
+  }
+
+  bindUniformBlock(name, bindPoint) {
+    gl.uniformBlockBinding(this.program, gl.getUniformBlockIndex(this.program, name), bindPoint);
   }
 }

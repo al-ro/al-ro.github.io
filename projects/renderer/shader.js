@@ -140,9 +140,12 @@ function getVertexSource(parameters) {
   in vec2 TEXCOORD_1;
 #endif
 
+layout(std140) uniform cameraMatrices{
+    mat4 viewMatrix;
+    mat4 projectionMatrix;
+};
+
   uniform mat4 modelMatrix;
-  uniform mat4 viewMatrix;
-  uniform mat4 projectionMatrix;
 
 #ifdef HAS_NORMALS
   out vec3 vNormal;
@@ -208,6 +211,7 @@ function compileShader(shaderSource, shaderType) {
   try {
     gl.compileShader(shader);
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      // Print the error followed by the source with line numbers
       throw "Shader compile failed with: " + gl.getShaderInfoLog(shader) +
       "\n <------ Shader source ------> \n" + shaderSource.split('\n').map((line, index) => `${index + 1}. ${line}`).join('\n');
     }
@@ -218,4 +222,4 @@ function compileShader(shaderSource, shaderType) {
   return shader;
 }
 
-export { compileShader, getDefinePrefix, getVertexSource }
+export { compileShader, getDefinePrefix, getVertexSource, getMorphedAttributeString }

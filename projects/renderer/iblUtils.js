@@ -3,7 +3,8 @@
  * environment map convolution and spherical harmonics
  */
 
-import { gl, RenderPass } from "./canvas.js"
+import { gl } from "./canvas.js"
+import { RenderPass } from "./enums.js"
 import { SphericalHarmonicsMaterial } from "./materials/sphericalHarmonicsMaterial.js"
 import { BRDFMapMaterial } from "./materials/brdfMapMaterial.js"
 import { ConvolutionMaterial } from "./materials/convolutionMaterial.js"
