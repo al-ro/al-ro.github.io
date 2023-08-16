@@ -19,7 +19,7 @@ import { AlphaModes, InterpolationType } from "./enums.js"
 //  image from bufferView
 //  skins
 
-const supportedExtensions = ["KHR_materials_transmission"];
+const supportedExtensions = ["KHR_materials_transmission", "KHR_materials_ior"];
 
 /** A class to download a GLTF file and construct a scene graph with PBRMaterial */
 export class GLTFLoader {
@@ -659,6 +659,12 @@ export class GLTFLoader {
         }
         if (transmission.transmissionFactor != null) {
           materialParameters.transmissionFactor = transmission.transmissionFactor;
+        }
+      }
+      if (ext.KHR_materials_ior) {
+        const ior = ext.KHR_materials_ior.ior;
+        if (ior != null) {
+          materialParameters.ior = ior;
         }
       }
       if (ext.KHR_texture_transform) {

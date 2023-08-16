@@ -49,6 +49,10 @@ export class PBRMaterial extends Material {
 
   doubleSided = false;
 
+  // Typical index of refraction for dielectrics. Corresponds to F0 0.04
+  // Overwritten by KHR_materials_ior
+  ior = 1.5;
+
   // --------- Textures ----------
 
   // The base color texture
@@ -147,6 +151,8 @@ export class PBRMaterial extends Material {
 
   alphaCutoffHandle;
   alphaModeHandle;
+
+  iorHandle;
 
   outputVariableHandle;
 
@@ -343,6 +349,9 @@ export class PBRMaterial extends Material {
         this.occlusionTextureUV = parameters.occlusionTextureUV;
       }
     }
+    if (parameters.ior != null) {
+      this.ior = parameters.ior;
+    }
   }
 
   getVertexShaderSource(parameters) {
@@ -378,6 +387,8 @@ export class PBRMaterial extends Material {
 
     this.alphaCutoffHandle = this.program.getOptionalUniformLocation('alphaCutoff');
     this.alphaModeHandle = this.program.getOptionalUniformLocation('alphaMode');
+
+    this.iorHandle = this.program.getOptionalUniformLocation('IOR');
 
     if (this.hasBaseColorTexture) {
       this.baseColorTextureHandle = this.program.getOptionalUniformLocation('baseColorTexture');
@@ -466,6 +477,8 @@ export class PBRMaterial extends Material {
     this.environmentTexture = this.environment.getCubeMap();
 
     gl.uniform1f(this.alphaCutoffHandle, this.alphaCutoff);
+
+    gl.uniform1f(this.iorHandle, this.ior);
 
     let alphaModeAsInt;
     switch (this.alphaMode) {
