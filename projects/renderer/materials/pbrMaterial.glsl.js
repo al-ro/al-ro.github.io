@@ -188,6 +188,8 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   uniform int alphaMode;
   uniform float alphaCutoff;
 
+  uniform float IOR;
+
 
   // ------------------------- Utility -------------------------
 
@@ -338,6 +340,9 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   }
 
   vec4 getRoughTransmission(sampler2D s, vec2 uv, float roughness){
+    if(roughness == 0.0){
+      return texture(s, uv);
+    }
     vec2 size = vec2(textureSize(s, 0).xy);
     float maxLod = floor(log2(min(size.x, size.y)));
 
@@ -460,9 +465,6 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     vec3 I = vec3(0);
     vec3 radiance = vec3(0);
     vec3 lightDir = vec3(0);
-
-    // Index of refraction for common dielectrics. Corresponds to f0 4%
-    float IOR = 1.5;
 
     // Reflectance of the surface when looking straight at it along the negative normal
     vec3 F0 = vec3(pow(IOR - 1.0, 2.0) / pow(IOR + 1.0, 2.0));
