@@ -67,7 +67,7 @@ function getFragmentSource() {
     uniform sampler2D baseColorTexture;
     uniform int baseColorTextureUV;
 #endif
-  
+
     uniform vec4 baseColorFactor;
     uniform int alphaMode;
     uniform float alphaCutoff;
@@ -100,14 +100,15 @@ function getFragmentSource() {
 #else
       vec4 albedo = baseColorFactor;
 #endif
-  
+
       if(alphaMode != 0){
         alpha = albedo.a;
       }
-  
+
       if(alphaMode == 2 && alpha < alphaCutoff){
         discard;
       }
+
       fragColor = vec4(vec3(gl_FragCoord.z), 1.0);
     }
   `;

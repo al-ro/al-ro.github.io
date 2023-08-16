@@ -44,7 +44,6 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
       Volume
       IOR
       Iridescence
-      Better roughness blur (bicubic)
       Specular/Gloss
       Clearcoat
 
