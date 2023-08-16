@@ -263,10 +263,93 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   }
 
 #ifdef HAS_TRANSMISSION
+
+//---------------------------- Transmission ----------------------------
+/*
+  https://developer.download.nvidia.com/SDK/9.5/Samples/DEMOS/OpenGL/src/fast_third_order/docs/Gems2_ch20_SDK.pdf
+  https://0xef.wordpress.com/2013/01/12/third-order-texture-filtering-using-linear-interpolation/
+  https://www.shadertoy.com/view/Dl2SDW
+*/
+
+  // Cubic B-spline weighting
+  vec2 w0(vec2 a){
+      return (1.0/6.0)*(a*(a*(-a + 3.0) - 3.0) + 1.0);
+  }
+
+  vec2 w1(vec2 a){
+      return (1.0/6.0)*(a*a*(3.0*a - 6.0) + 4.0);
+  }
+
+  vec2 w2(vec2 a){
+      return (1.0/6.0)*(a*(a*(-3.0*a + 3.0) + 3.0) + 1.0);
+  }
+
+  vec2 w3(vec2 a){
+      return (1.0/6.0)*(a*a*a);
+  }
+
+  // g0 is the amplitude function
+  vec2 g0(vec2 a){
+      return w0(a) + w1(a);
+  }
+
+  // h0 and h1 are the two offset functions
+  vec2 h0(vec2 a){
+      return -1.0 + w1(a) / (w0(a) + w1(a));
+  }
+
+  vec2 h1(vec2 a){
+      return 1.0 + w3(a) / (w2(a) + w3(a));
+  }
+
+  vec4 bicubic(sampler2D tex, vec2 uv, vec2 textureLodSize, float lod){
+    
+    uv = uv * textureLodSize + 0.5;
+      
+    vec2 iuv = floor(uv);
+    vec2 f = fract(uv);
+
+    // Find offset in texel
+    vec2 h0 = h0(f);
+    vec2 h1 = h1(f);
+
+    // Four sample points
+    vec2 p0 = (iuv + h0 - 0.5) / textureLodSize;
+    vec2 p1 = (iuv + vec2(h1.x, h0.y) - 0.5) / textureLodSize;
+    vec2 p2 = (iuv + vec2(h0.x, h1.y) - 0.5) / textureLodSize;
+    vec2 p3 = (iuv + h1 - 0.5) / textureLodSize;
+    
+    // Weighted linear interpolation
+    // g0 + g1 = 1 so only one is needed for a mix
+    vec2 g0 = g0(f);
+    return mix( mix(textureLod(tex, p3, lod), textureLod(tex, p2, lod), g0.x),
+                mix(textureLod(tex, p1, lod), textureLod(tex, p0, lod), g0.x), g0.y);
+  }
+
+  vec4 textureBicubic(sampler2D s, vec2 uv, float lod) {
+
+    vec2 lodSizeFloor = vec2(textureSize(s, int(lod)));
+    vec2 lodSizeCeil = vec2(textureSize(s, int(lod + 1.0)));
+
+    vec4 floorSample = bicubic(s, uv, lodSizeFloor.xy, floor(lod));
+    vec4 ceilSample = bicubic(s, uv, lodSizeCeil.xy, ceil(lod));
+
+    return mix(floorSample, ceilSample, fract(lod));
+  }
+
+  vec4 getRoughTransmission(sampler2D s, vec2 uv, float roughness){
+    vec2 size = vec2(textureSize(s, 0).xy);
+    float maxLod = floor(log2(min(size.x, size.y)));
+
+    // Should this be roughness^2 ?
+    float lod = mix(0.0, maxLod-1.0, roughness);
+    
+    return textureBicubic(s, uv, lod);
+  }
+
   vec3 getBackground(float roughness){
-    float level = roughness * 10.0;
     vec2 uv = gl_FragCoord.xy / vec2(textureSize(backgroundTexture, 0));
-    return pow(textureLod(backgroundTexture, uv, level).rgb, vec3(2.2));
+    return pow(getRoughTransmission(backgroundTexture, uv, roughness).rgb, vec3(2.2));
   }
 #endif
 
@@ -435,7 +518,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     diffuse = irradiance * albedo.rgb / PI;
 
 #ifdef HAS_TRANSMISSION
-    transmitted = albedo.rgb * getBackground(roughness);// * (1.0-(F * envBRDF.x + envBRDF.y));   
+    transmitted = albedo.rgb * getBackground(roughness);
     diffuse = mix(diffuse, transmitted, transmission);
 #endif
 
@@ -599,7 +682,6 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   #else
       vec3 emissiveColor = debugColor;
   #endif
-
 
       vec3 transmissiveColor = debugColor;
   #ifdef HAS_TRANSMISSION
