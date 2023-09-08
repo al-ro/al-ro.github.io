@@ -1,4 +1,4 @@
-function getVertexSource(){ 
+function getVertexSource() {
 
   var vertexSource = `
 
@@ -12,12 +12,11 @@ function getVertexSource(){
   return vertexSource;
 }
 
-function getFragmentSource(){
+function getFragmentSource() {
 
   var fragmentSource = `
   
-
-#define PI 3.14159
+  #define PI 3.14159
 
   uniform vec2 resolution;
   out vec4 fragColor;
@@ -46,9 +45,6 @@ function getFragmentSource(){
   /*
     http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
     http://www.pbr-book.org/3ed-2018/Sampling_and_Reconstruction/The_Halton_Sampler.html
-
-    While it looks like an arcane faerie incantation, it actually makes sense if you follow 
-    the references. Bring some tea.
   */
 
   float radicalInverse(uint bits) {
@@ -60,8 +56,8 @@ function getFragmentSource(){
     return float(bits) * 2.3283064365386963e-10; // / 0x100000000
     }
 
-    vec2 hammersley(int i){
-    return vec2(float(i)/float(sampleCount), radicalInverse(uint(i)));
+  vec2 hammersley(int i, int N){
+    return vec2(float(i)/float(N), radicalInverse(uint(i)));
   }
 
   // -------------------------------------------------------------------------------
@@ -70,17 +66,8 @@ function getFragmentSource(){
   //  and the roughness of the surface.
   //  https://google.github.io/filament/Filament.html#annex/choosingimportantdirectionsforsamplingthebrdf
 
-  vec3 importanceSampleGGX(vec2 randomHemisphere, vec3 N, float roughness){
-    float a = roughness*roughness;
-
-    float phi = 2.0 * PI * randomHemisphere.x;
-    float cosTheta = sqrt((1.0 - randomHemisphere.y) / (1.0 + (a*a - 1.0) * randomHemisphere.y));
-    float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
-
-    //From spherical coordinates to cartesian coordinates
-    vec3 H = vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
-
-    //From tangent-space vector to world-space sample vector
+  // From tangent-space vector to world-space sample vector
+  vec3 rotateToNormal(vec3 L, vec3 N){
     vec3 tangent;
     vec3 bitangent;
 
@@ -89,49 +76,70 @@ function getFragmentSource(){
     tangent = normalize(tangent);
     bitangent = normalize(bitangent);
 
-    vec3 sampleDir = tangent * H.x + bitangent * H.y + N * H.z;
-    return normalize(sampleDir);
+    return normalize(tangent * L.x + bitangent * L.y + N * L.z);
   }
 
-  // GGX and Schlick-Beckmann
+  // Return a world-space halfway vector H around N which corresponds to the GGX normal
+  // distribution. Reflecting the view ray on H will give a light sample direction
+  vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness){
+    float a = roughness*roughness;
+
+    // GGX importance sampling
+    float cosTheta = sqrt((1.0 - Xi.x) / (1.0 + (a * a - 1.0) * Xi.x));
+    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+    float phi = Xi.y * 2.0 * PI;
+
+    vec3 L = normalize(vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta));
+
+    return rotateToNormal(L, N);
+  }
+
+  // Schlick-Beckmann
   float geometry(float cosTheta, float k){
-    return (cosTheta)/(cosTheta*(1.0-k)+k);
+    return (cosTheta) / (cosTheta * (1.0 - k) + k);
   }
 
-  // Geometry for IBL uses a different k than direct lighting
-  float smithsIBL(float NdotV, float NdotL, float roughness){
-    float k = (roughness * roughness) / 2.0;; 
+  float smithShadowing(float NdotV, float NdotL, float roughness){
+    // IBL uses a different k than direct lighting
+    float k = (roughness * roughness) / 2.0; 
     return geometry(NdotV, k) * geometry(NdotL, k);
   }
 
   // https://google.github.io/filament/Filament.html#toc9.5
   vec2 integrateBRDF(float NdotV, float roughness){
-
-    vec3 V;
-    V.x = sqrt(1.0 - NdotV*NdotV);
-    V.y = 0.0;
-    V.z = NdotV;
-
-    vec2 result = vec2(0);
-
+    
+    // Surface normal
     vec3 N = vec3(0.0, 0.0, 1.0);
 
-    for(int i = 0; i < sampleCount; i++){
-      vec2 randomHemisphere = hammersley(i);
-      vec3 H  = importanceSampleGGX(randomHemisphere, N, roughness);
-      vec3 L  = normalize(2.0 * dot(V, H) * H - V);
+    // Generate view direction for fragment such that dot(N, V) is uv.x
+    vec3 V = normalize(vec3(sqrt(1.0 - NdotV * NdotV), 0.0, NdotV));
 
-      float NdotL = max(L.z, 0.0);
-      float NdotH = max(H.z, 0.0);
+    // To accumulate
+    vec2 result = vec2(0);
+    
+    for(int i = 0; i < sampleCount; i++){
+
+      // Low discrepancy random point in uniform square
+      vec2 Xi = hammersley(i, sampleCount);
+      // Halfway vector
+      vec3 H = importanceSampleGGX(Xi, N, roughness);
+      // Light vector
+      vec3 L = normalize(reflect(-V, H));
+
+      float NdotL = dot_c(N, L);
+      float NdotH = dot_c(N, H);
       float VdotH = dot_c(V, H);
 
       if(NdotL > 0.0){
-        float G = smithsIBL(NdotV, NdotL, roughness);
-        float G_Vis = (G * VdotH) / (NdotH * NdotV);
-        float Fc = pow(1.0 - VdotH, 5.0);
+        float G = smithShadowing(NdotV, NdotL, roughness);
+        float S = (G * VdotH) / (NdotH * NdotV);
+        
+        // Fresnel-Schlick
+        float F = pow(1.0 - VdotH, 5.0);
 
-        result.x += (1.0 - Fc) * G_Vis;
-        result.y += Fc * G_Vis;
+        // Multiple scattering approach from Filament
+        result.x += F * S;
+        result.y += S;
       }
     }
 
@@ -140,7 +148,7 @@ function getFragmentSource(){
 
   void main(){
     vec2 texCoord = gl_FragCoord.xy/resolution;
-    vec2 c = integrateBRDF(texCoord.x, texCoord.y);
+    vec2 c = integrateBRDF(texCoord.x, sqrt(texCoord.y));
 
     fragColor = vec4(c, 0.0, 1.0);
   }
@@ -149,4 +157,4 @@ function getFragmentSource(){
   return fragmentSource;
 }
 
-export {getVertexSource, getFragmentSource};
+export { getVertexSource, getFragmentSource };

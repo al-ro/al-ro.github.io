@@ -47,10 +47,22 @@ function getFragmentSource(){
       b2 = vec3(b, sign_ + n.y * n.y * a, -n.y);
     }
 
-    //https://patapom.com/blog/Math/ImportanceSampling/
-    //https://www.shadertoy.com/view/4dtBWH
-    vec2 nthWeyl(vec2 p0, int n) {
-      return fract(p0 + vec2(n * 12664745, n * 9560333) / exp2(24.0));
+    // ------------- Hammersley sequence generation using radical inverse -------------
+
+    //  http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
+    //  http://www.pbr-book.org/3ed-2018/Sampling_and_Reconstruction/The_Halton_Sampler.html
+
+    float radicalInverse(uint bits) {
+      bits = (bits << 16u) | (bits >> 16u);
+      bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+      bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+      bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+      bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+      return float(bits) * 2.3283064365386963e-10; // / 0x100000000
+    }
+
+    vec2 hammersley(int i, int N){
+      return vec2(float(i)/float(N), radicalInverse(uint(i)));
     }
 
     // -------------------------------------------------------------------------------
@@ -59,17 +71,8 @@ function getFragmentSource(){
     //  and the roughness of the surface.
     //  https://google.github.io/filament/Filament.html#annex/choosingimportantdirectionsforsamplingthebrdf
 
-    vec3 importanceSampleGGX(vec2 randomHemisphere, vec3 N, float roughness){
-      float a = roughness * roughness;
-
-      float phi = 2.0 * PI * randomHemisphere.x;
-      float cosTheta = sqrt((1.0 - randomHemisphere.y) / (1.0 + (a*a - 1.0) * randomHemisphere.y));
-      float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
-
-      //From spherical coordinates to cartesian coordinates
-      vec3 H = vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
-
-      //From tangent-space vector to world-space sample vector
+    // From tangent-space vector to world-space sample vector
+    vec3 rotateToNormal(vec3 L, vec3 N){
       vec3 tangent;
       vec3 bitangent;
 
@@ -78,30 +81,48 @@ function getFragmentSource(){
       tangent = normalize(tangent);
       bitangent = normalize(bitangent);
 
-      vec3 sampleDir = tangent * H.x + bitangent * H.y + N * H.z;
-      return normalize(sampleDir);
+      return normalize(tangent * L.x + bitangent * L.y + N * L.z);
     }
 
-    float D_GGX(float NoH, float roughness) {
-      float a = NoH * roughness;
-      float k = roughness / (1.0 - NoH * NoH + a * a);
-      return k * k * (1.0 / PI);
+    // Return a world-space halfway vector H around N which corresponds to the GGX normal
+    // distribution. Reflecting the view ray on H will give a light sample direction
+    vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness){
+      float a = roughness*roughness;
+
+      // GGX importance sampling
+      float cosTheta = sqrt((1.0 - Xi.x) / (1.0 + (a * a - 1.0) * Xi.x));
+      float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+      float phi = Xi.y * 2.0 * PI;
+
+      vec3 L = normalize(vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta));
+
+      return rotateToNormal(L, N);
     }
+
+    // Trowbridge-Reitz AKA GGX
+    float distribution(float NdotH, float roughness){
+      float a2 = roughness * roughness;
+      return a2 /(PI * pow(NdotH * NdotH * (a2 - 1.0) + 1.0, 2.0));
+    }
+
 
     vec3 getPreFilteredColor(vec3 N, float roughness){
       vec3 R = N;
       vec3 V = R;
-
+      
       float totalWeight = 0.0;
       vec3 prefilteredColor = vec3(0.0);    
-
-      //Generate sampleCount number of a low discrepancy random directions in the 
-      //specular lobe and add the environment map data into a weighted sum.
+      
+      // Generate sampleCount number of a low discrepancy random directions in the 
+      // specular lobe and add the environment map data into a weighted sum.
       for(int i = 0; i < sampleCount; i++){
-
-        vec2 randomHemisphere = nthWeyl(vec2(0.0), i);
-        vec3 H  = importanceSampleGGX(randomHemisphere, N, roughness);
-        vec3 L  = normalize(2.0 * dot(V, H) * H - V);
+    
+        // Low discrepancy random point in uniform square
+        vec2 Xi = hammersley(i, sampleCount);
+        // Halfway vector
+        vec3 H = importanceSampleGGX(Xi, N, roughness);
+        // Light vector
+        vec3 L = normalize(reflect(-V, H));
 
         float NdotL = dot(N, L);
         if(NdotL > 0.0){
@@ -114,8 +135,7 @@ function getFragmentSource(){
           float NdotH = dot(N, H);
           float VdotH = dot(V, H);
 
-          // Probability distribution function
-          float pdf = D_GGX(NdotH, roughness * roughness) * NdotH / (4.0 * VdotH);
+          float pdf = distribution(NdotH, roughness * roughness) * NdotH / (4.0 * VdotH);
 
           // Solid angle represented by this sample
           float omegaS = 1.0 / (float(sampleCount) * pdf);

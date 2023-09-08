@@ -42,7 +42,6 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 
       Sheen
       Volume
-      IOR
       Iridescence
       Specular/Gloss
       Clearcoat
