@@ -477,7 +477,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
 
     vec2 envBRDF = getBRDFIntegrationMap(vec2(dot_c(normal, -rayDir), roughness));
     // https://google.github.io/filament/Filament.html#materialsystem/improvingthebrdfs/energylossinspecularreflectance
-    vec3 energyCompensation = 1.0 + F0 * (1.0 / envBRDF.x - 1.0);
+    vec3 energyCompensation = 1.0 + F0 * (1.0 / envBRDF.y - 1.0);
 
     vec3 h = normalize(-rayDir + lightDir);
     float cosTheta = dot_c(h, -rayDir);
@@ -528,7 +528,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     vec3 R = reflect(rayDir, normal);
 
     vec3 prefilteredColor = getEnvironment(R, roughness);   
-    specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+    specular = prefilteredColor * mix(envBRDF.xxx, envBRDF.yyy, F0);
 
     // Scale the specular lobe to account for multiscattering
     specular *= energyCompensation;
