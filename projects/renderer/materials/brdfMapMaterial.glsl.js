@@ -128,7 +128,7 @@ function getFragmentSource() {
       float NdotH = dot_c(n, h);
       float D = sheenDistribution(NdotH, roughness);
       float V = sheenVisibility(n, v, l);
-      return clamp(D * V, 0.0, 1.0);
+      return D * V;
     }
 
     // https://google.github.io/filament/Filament.html#toc9.5
@@ -186,7 +186,7 @@ function getFragmentSource() {
 
     void main(){
       vec2 texCoord = gl_FragCoord.xy/resolution;
-      fragColor = vec4(integrateBRDF(texCoord.x, sqrt(texCoord.y)), 1.0);
+      fragColor = vec4(integrateBRDF(texCoord.x, texCoord.y), 1.0);
     }
   `;
 
