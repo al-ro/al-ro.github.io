@@ -1,5 +1,5 @@
-import {canvas, gl, canvasMultiplier} from "./canvas.js"
-export class Controls{
+import { canvas, gl, canvasMultiplier } from "./canvas.js"
+export class Controls {
 
   isMouseDown = false;
   lastPosition = [0, 0];
@@ -10,7 +10,7 @@ export class Controls{
 
   camera;
 
-  constructor(camera){
+  constructor(camera) {
     this.camera = camera;
 
     //https://stackoverflow.com/questions/49091584/javascript-es6-addeventlistener-inside-class
@@ -23,23 +23,23 @@ export class Controls{
     document.addEventListener('keyup', this.keyUp.bind(this));
   }
 
-  getPos(canvas, evt){
+  getPos(canvas, evt) {
     let rect = canvas.getBoundingClientRect();
     return [evt.clientX - rect.left, evt.clientY - rect.top];
   }
 
-  mouseDown(event){
+  mouseDown(event) {
     this.isMouseDown = true;
     this.lastPosition = this.getPos(canvas, event);
   }
 
-  mouseUp(event){
+  mouseUp(event) {
     this.isMouseDown = false;
     this.mouseDelta = [0, 0];
   }
 
-  mouseMove(event){
-    if(this.isMouseDown){
+  mouseMove(event) {
+    if (this.isMouseDown) {
       let pos = this.getPos(canvas, event);
       this.mouseDelta[0] = this.lastPosition[0] - pos[0];
       this.mouseDelta[1] = this.lastPosition[1] - pos[1];
@@ -50,7 +50,7 @@ export class Controls{
     }
   }
 
-  onScroll(event){
+  onScroll(event) {
     event.preventDefault();
     let dist = this.camera.distance;
     dist += event.deltaY * 0.001;
@@ -64,63 +64,63 @@ export class Controls{
   backward = false;
   left = false;
   right = false;
-  
-  keyDown(e){
-    if(e.keyCode == 38 || e.keyCode == 40){
+
+  keyDown(e) {
+    if (e.keyCode == 38 || e.keyCode == 40) {
       e.preventDefault();
     }
-    if(e.keyCode == 87 || e.keyCode == 38) {
+    if (e.keyCode == 87 || e.keyCode == 38) {
       this.forward = true;
     }
-    if(e.keyCode == 83 || e.keyCode == 40) {
+    if (e.keyCode == 83 || e.keyCode == 40) {
       this.backward = true;
     }
-    if(e.keyCode == 65 || e.keyCode == 37) {
+    if (e.keyCode == 65 || e.keyCode == 37) {
       this.left = true;
     }
-    if(e.keyCode == 68 || e.keyCode == 39) {
+    if (e.keyCode == 68 || e.keyCode == 39) {
       this.right = true;
     }
   };
 
-  keyUp(e){
-    if(e.keyCode == 87 || e.keyCode == 38) {
+  keyUp(e) {
+    if (e.keyCode == 87 || e.keyCode == 38) {
       this.forward = false;
     }
-    if(e.keyCode == 83 || e.keyCode == 40) {
+    if (e.keyCode == 83 || e.keyCode == 40) {
       this.backward = false;
     }
-    if(e.keyCode == 65 || e.keyCode == 37) {
+    if (e.keyCode == 65 || e.keyCode == 37) {
       this.left = false;
     }
-    if(e.keyCode == 68 || e.keyCode == 39) {
+    if (e.keyCode == 68 || e.keyCode == 39) {
       this.right = false;
     }
   };
 
-  move(dT){
+  move(dT) {
 
     let speed = 10.0;
     let viewDirection = this.camera.viewDirection;
     let rightDirection = this.camera.rightDirection;
     let pos = this.camera.position;
 
-    if(this.forward){
+    if (this.forward) {
       pos[0] += dT * speed * viewDirection[0];
       pos[1] += dT * speed * viewDirection[1];
       pos[2] += dT * speed * viewDirection[2];
     }
-    if(this.backward){
+    if (this.backward) {
       pos[0] -= dT * speed * viewDirection[0];
       pos[1] -= dT * speed * viewDirection[1];
       pos[2] -= dT * speed * viewDirection[2];
     }
-    if(this.left){
+    if (this.left) {
       pos[0] += dT * speed * rightDirection[0];
       pos[1] += dT * speed * rightDirection[1];
       pos[2] += dT * speed * rightDirection[2];
     }
-    if(this.right){
+    if (this.right) {
       pos[0] -= dT * speed * rightDirection[0];
       pos[1] -= dT * speed * rightDirection[1];
       pos[2] -= dT * speed * rightDirection[2];
@@ -130,7 +130,7 @@ export class Controls{
 
   }
 
-  setPageLayout(w, h){
+  setPageLayout(w, h) {
     let canvasOverlay = document.getElementById("canvas_overlay");
     canvasOverlay.style.width = w + "px";
     canvasOverlay.style.height = h + "px";
@@ -141,10 +141,10 @@ export class Controls{
     canvasContainer.style.height = h + "px";
   }
 
-  onWindowResize(){
+  onWindowResize() {
     var w = canvas.clientWidth;
     var h = canvas.clientHeight;
-    if(!isInFullscreen()){
+    if (!isInFullscreen()) {
       h = w / 1.6;
     }
     canvas.width = w * canvasMultiplier;

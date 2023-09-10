@@ -667,20 +667,6 @@ export class GLTFLoader {
           materialParameters.ior = ior;
         }
       }
-      if (ext.KHR_texture_transform) {
-        const transform = ext.KHR_texture_transform;
-        if (transform.offset != null) {
-          const textureID = jsonTextures[transform.transformTexture.index].source;
-          materialParameters.transformTexture = this.textures[textureID];
-          this.usedTextures.push(textureID);
-        }
-        if (transform.rotation != null) {
-          materialParameters.transformRotation = transform.rotation;
-        }
-        if (transform.scale != null) {
-          materialParameters.transformScale = transform.scale;
-        }
-      }
       if (ext.KHR_materials_sheen) {
         const sheen = ext.KHR_materials_sheen;
         if (sheen.sheenColorTexture != null) {

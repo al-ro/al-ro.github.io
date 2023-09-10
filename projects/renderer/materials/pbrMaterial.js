@@ -78,7 +78,7 @@ export class PBRMaterial extends Material {
   metallicRoughnessTexture;
   metallicRoughnessTextureUV = 0;
 
-  // Ambient occlusion may have a separate texture or use the red channel of properties
+  // Ambient occlusion may have a separate texture or use the red channel of metallicRoughnessTexture
   occlusionTexture;
   occlusionTextureUV = 0;
 

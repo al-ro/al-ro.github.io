@@ -40,7 +40,6 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 
       Separate GUI code to a new file
 
-      Sheen
       Volume
       Iridescence
       Specular/Gloss
@@ -422,7 +421,6 @@ function draw() {
 
   // Animate all objects with defined animations in the scene
   scene.animate(time);
-  controls.move(dT);
 
   if (environment.needsUpdate()) {
     environment.generateIBLData();
