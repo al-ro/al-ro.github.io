@@ -60,10 +60,12 @@ export class PBRMaterial extends Material {
   // Optional
   baseColorTexture;
   baseColorTextureUV = 0;
+  baseColorTextureTransform;
 
   // Optional
   normalTexture;
   normalTextureUV = 0;
+  normalTextureTransform;
 
   // Multiplier for normal texture X and Y values
   normalScale = 1.0;
@@ -129,12 +131,14 @@ export class PBRMaterial extends Material {
 
   baseColorTextureHandle;
   baseColorTextureUVHandle;
+  baseColorTextureTransformHandle;
 
   metallicRoughnessTextureHandle;
   metallicRoughnessTextureUVHandle;
 
   normalTextureHandle;
   normalTextureUVHandle;
+  normalTextureTransformHandle;
   normalScaleHandle;
 
   occlusionTextureHandle;
@@ -166,7 +170,9 @@ export class PBRMaterial extends Material {
   outputVariableHandle;
 
   hasBaseColorTexture = false;
+  hasBaseColorTextureTransform = false;
   hasNormalTexture = false;
+  hasNormalTextureTransform = false;
   hasMetallicRoughnessTexture = false;
   hasAO = false;
   hasAOTexture = false;
@@ -278,6 +284,10 @@ export class PBRMaterial extends Material {
       if (parameters.baseColorTextureUV != null) {
         this.baseColorTextureUV = parameters.baseColorTextureUV;
       }
+      if (parameters.baseColorTextureTransform != null) {
+        this.baseColorTextureTransform = parameters.baseColorTextureTransform;
+        this.hasBaseColorTextureTransform = true;
+      }
     }
 
     if (parameters.baseColorFactor != null) {
@@ -315,6 +325,10 @@ export class PBRMaterial extends Material {
       }
       if (parameters.normalTextureUV != null) {
         this.normalTextureUV = parameters.normalTextureUV;
+      }
+      if (parameters.normalTextureTransform != null) {
+        this.normalTextureTransform = parameters.normalTextureTransform;
+        this.hasNormalTextureTransform = true;
       }
     }
 
@@ -430,6 +444,9 @@ export class PBRMaterial extends Material {
     if (this.hasBaseColorTexture) {
       this.baseColorTextureHandle = this.program.getOptionalUniformLocation('baseColorTexture');
       this.baseColorTextureUVHandle = this.program.getOptionalUniformLocation('baseColorTextureUV');
+      if (this.hasBaseColorTextureTransform) {
+        this.baseColorTextureTransformHandle = this.program.getOptionalUniformLocation('baseColorTextureTransform');
+      }
     }
 
     this.baseColorHandle = this.program.getOptionalUniformLocation('baseColorFactor');
@@ -438,6 +455,9 @@ export class PBRMaterial extends Material {
       this.normalTextureHandle = this.program.getOptionalUniformLocation('normalTexture');
       this.normalTextureUVHandle = this.program.getOptionalUniformLocation('normalTextureUV');
       this.normalScaleHandle = this.program.getOptionalUniformLocation('normalScale');
+      if (this.hasNormalTextureTransform) {
+        this.normalTextureTransformHandle = this.program.getOptionalUniformLocation('normalTextureTransform');
+      }
     }
 
     if (this.hasEmission) {
@@ -553,6 +573,9 @@ export class PBRMaterial extends Material {
       gl.bindTexture(gl.TEXTURE_2D, this.baseColorTexture);
       gl.uniform1i(this.baseColorTextureHandle, this.baseColorTextureUnit);
       gl.uniform1i(this.baseColorTextureUVHandle, this.baseColorTextureUV);
+      if (this.hasBaseColorTextureTransform) {
+        gl.uniformMatrix3fv(this.baseColorTextureTransformHandle, false, this.baseColorTextureTransform);
+      }
     }
 
     gl.uniform4fv(this.baseColorHandle, this.baseColorFactor);
@@ -563,6 +586,9 @@ export class PBRMaterial extends Material {
       gl.uniform1i(this.normalTextureHandle, this.normalTextureUnit);
       gl.uniform1i(this.normalTextureUVHandle, this.normalTextureUV);
       gl.uniform1f(this.normalScaleHandle, this.normalScale);
+      if (this.hasNormalTextureTransform) {
+        gl.uniformMatrix3fv(this.normalTextureTransformHandle, false, this.normalTextureTransform);
+      }
     }
 
     if (this.hasEmissiveTexture) {
