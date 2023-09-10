@@ -19,7 +19,7 @@ import { AlphaModes, InterpolationType } from "./enums.js"
 //  image from bufferView
 //  skins
 
-const supportedExtensions = ["KHR_materials_transmission", "KHR_materials_ior"];
+const supportedExtensions = ["KHR_materials_transmission", "KHR_materials_ior", "KHR_materials_sheen"];
 
 /** A class to download a GLTF file and construct a scene graph with PBRMaterial */
 export class GLTFLoader {
@@ -679,6 +679,23 @@ export class GLTFLoader {
         }
         if (transform.scale != null) {
           materialParameters.transformScale = transform.scale;
+        }
+      }
+      if (ext.KHR_materials_sheen) {
+        const sheen = ext.KHR_materials_sheen;
+        if (sheen.sheenColorTexture != null) {
+          const textureID = jsonTextures[sheen.sheenColorTexture.index].source;
+          materialParameters.sheenTexture = this.textures[textureID];
+          if (sheen.sheenColorTexture.texCoord != null) {
+            materialParameters.sheenTextureUV = sheen.sheenColorTexture.texCoord;
+          }
+          this.usedTextures.push(textureID);
+        }
+        if (sheen.sheenColorFactor != null) {
+          materialParameters.sheenColorFactor = sheen.sheenColorFactor;
+        }
+        if (sheen.sheenRoughnessFactor != null) {
+          materialParameters.sheenRoughnessFactor = sheen.sheenRoughnessFactor;
         }
       }
     }

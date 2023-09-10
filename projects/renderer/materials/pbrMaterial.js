@@ -18,8 +18,9 @@ export const outputEnum = {
   TEXCOORD_0: 10,
   TEXCOORD_1: 11,
   ALPHA: 12,
-  TRANSMISSION: 13
-  //VERTEX_COLOR: 14
+  TRANSMISSION: 13,
+  SHEEN_COLOR: 14,
+  SHEEN_ROUGHNESS: 15
 };
 
 export class PBRMaterial extends Material {
@@ -95,6 +96,10 @@ export class PBRMaterial extends Material {
   transmissionTextureUV = 0;
   transmissionFactor = 0.0;
 
+  sheenTexture;
+  sheenTextureUV = 0;
+  sheenFactor = [1, 1, 1, 1];
+
   /**
    * A cubemap or equirectangular texture where each mip map is a
    * prefiltered environment map of the source cubemap at level 0
@@ -144,6 +149,10 @@ export class PBRMaterial extends Material {
   transmissionTextureUVHandle;
   transmissionFactorHandle;
 
+  sheenTextureHandle;
+  sheenTextureUVHandle;
+  sheenFactorHandle;
+
   backgroundTextureHandle;
   environmentTextureHandle;
 
@@ -167,6 +176,8 @@ export class PBRMaterial extends Material {
   hasTransmission = false;
   hasTransmissionTexture = false;
   hasTransmissionFactor = false;
+  hasSheen = false;
+  hasSheenTexture = false;
 
   brdfTextureUnit;
   environmentTextureUnit;
@@ -211,6 +222,10 @@ export class PBRMaterial extends Material {
     if (this.transmissionTexture != null) {
       gl.deleteTexture(this.transmissionTexture);
       this.transmissionTexture = null;
+    }
+    if (this.sheenTexture != null) {
+      gl.deleteTexture(this.sheenTexture);
+      this.sheenTexture = null;
     }
 
   }
@@ -267,6 +282,28 @@ export class PBRMaterial extends Material {
 
     if (parameters.baseColorFactor != null) {
       this.baseColorFactor = parameters.baseColorFactor;
+    }
+
+    if (parameters.sheenTexture != null) {
+      this.sheenTexture = parameters.sheenTexture;
+      this.hasSheenTexture = true;
+      this.hasSheen = true;
+      this.sheenTextureUnit = this.textureUnits++;
+      if (parameters.sheenTextureUV != null) {
+        this.sheenTextureUV = parameters.sheenTextureUV;
+      }
+    }
+
+    if (parameters.sheenColorFactor != null) {
+      this.hasSheen = true;
+      this.sheenFactor[0] = parameters.sheenColorFactor[0];
+      this.sheenFactor[1] = parameters.sheenColorFactor[1];
+      this.sheenFactor[2] = parameters.sheenColorFactor[2];
+    }
+
+    if (parameters.sheenRoughnessFactor != null) {
+      this.hasSheen = true;
+      this.sheenFactor[3] = parameters.sheenRoughnessFactor;
     }
 
     if (parameters.normalTexture != null) {
@@ -443,6 +480,15 @@ export class PBRMaterial extends Material {
       this.occlusionTextureUVHandle = this.program.getOptionalUniformLocation('occlusionTextureUV');
     }
 
+    if (this.hasSheenTexture) {
+      this.sheenTextureHandle = this.program.getOptionalUniformLocation('sheenTexture');
+      this.sheenTextureUVHandle = this.program.getOptionalUniformLocation('sheenTextureUV');
+    }
+
+    if (this.hasSheen) {
+      this.sheenFactorHandle = this.program.getOptionalUniformLocation('sheenFactor');
+    }
+
     this.timeHandle = this.program.getOptionalUniformLocation('time');
 
     this.environmentTextureHandle = this.program.getUniformLocation('cubeMap');
@@ -564,6 +610,16 @@ export class PBRMaterial extends Material {
       gl.bindTexture(gl.TEXTURE_2D, this.occlusionTexture);
       gl.uniform1i(this.occlusionTextureHandle, this.occlusionTextureUnit);
       gl.uniform1i(this.occlusionTextureUVHandle, this.occlusionTextureUV);
+    }
+
+    if (this.hasSheenTexture) {
+      gl.activeTexture(gl.TEXTURE0 + this.sheenTextureUnit);
+      gl.bindTexture(gl.TEXTURE_2D, this.sheenTexture);
+      gl.uniform1i(this.sheenTextureHandle, this.sheenTextureUnit);
+      gl.uniform1i(this.sheenTextureUVHandle, this.sheenTextureUV);
+    }
+    if (this.hasSheen) {
+      gl.uniform4fv(this.sheenFactorHandle, this.sheenFactor);
     }
   }
 
