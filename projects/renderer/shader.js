@@ -38,6 +38,14 @@ function getDefinePrefix(material, attributes, morphTargets) {
     prefix += "#define HAS_BASE_COLOR_TEXTURE \n";
   }
 
+  if (material.hasSheen) {
+    prefix += "#define HAS_SHEEN \n";
+  }
+
+  if (material.hasSheenTexture) {
+    prefix += "#define HAS_SHEEN_TEXTURE \n";
+  }
+
   if (material.hasNormalTexture) {
     prefix += "#define HAS_NORMAL_TEXTURE \n";
   }
