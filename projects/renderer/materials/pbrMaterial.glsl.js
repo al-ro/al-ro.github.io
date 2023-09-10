@@ -134,6 +134,9 @@ layout(std140) uniform sphericalHarmonicsUniforms{
 #ifdef HAS_BASE_COLOR_TEXTURE
   uniform sampler2D baseColorTexture;
   uniform int baseColorTextureUV;
+#ifdef HAS_BASE_COLOR_TEXTURE_TRANSFORM
+  uniform mat3 baseColorTextureTransform;
+#endif
 #endif
 
 #ifdef HAS_SHEEN_TEXTURE
@@ -151,6 +154,9 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   uniform sampler2D normalTexture;
   uniform int normalTextureUV;
   uniform float normalScale;
+#ifdef HAS_NORMAL_TEXTURE_TRANSFORM
+  uniform mat3 normalTextureTransform;
+#endif
 #endif
 
 #ifdef HAS_EMISSION
@@ -241,6 +247,22 @@ layout(std140) uniform sphericalHarmonicsUniforms{
 #else
     vUV = vUV1;
 #endif
+
+    return texture(tex, vUV);
+  }
+
+  vec4 readTexture(sampler2D tex, int uv, mat3 transform){
+    vec2 vUV;
+
+#if defined(HAS_UV_0) && defined(HAS_UV_1)
+    vUV = uv == 0 ? vUV0 : vUV1;
+#elif defined(HAS_UV_0)
+    vUV = vUV0;
+#else
+    vUV = vUV1;
+#endif
+
+    vUV = (transform * vec3(vUV, 1.0)).xy;
 
     return texture(tex, vUV);
   }
@@ -617,9 +639,15 @@ layout(std140) uniform sphericalHarmonicsUniforms{
 #endif
 
 #ifdef HAS_NORMAL_TEXTURE
-    // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+
+#ifdef HAS_NORMAL_TEXTURE_TRANSFORM
+    vec3 normalData = readTexture(normalTexture, normalTextureUV, normalTextureTransform).rgb;
+#else
+    vec3 normalData = readTexture(normalTexture, normalTextureUV).rgb;
+#endif
+
     // Transform RGB normal map data from [0, 1] to [-1, 1]
-    vec3 normalColor = normalize(vec3(vec2(normalScale), 1.0) * (readTexture(normalTexture, normalTextureUV).rgb * 2.0 - 1.0));
+    vec3 normalColor = normalize(vec3(vec2(normalScale), 1.0) * (normalData * 2.0 - 1.0));
 #ifndef HAS_TANGENTS
 
     vec2 tangentUV;
@@ -654,7 +682,13 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     float alpha = 1.0;
 
 #ifdef HAS_BASE_COLOR_TEXTURE
+
+#ifdef HAS_BASE_COLOR_TEXTURE_TRANSFORM
+    vec4 colorData = readTexture(baseColorTexture, baseColorTextureUV, baseColorTextureTransform);
+#else
     vec4 colorData = readTexture(baseColorTexture, baseColorTextureUV);
+#endif
+
     vec4 albedo = baseColorFactor * vec4(vec3(pow(colorData.rgb, vec3(2.2))), colorData.a);
 #else
     vec4 albedo = baseColorFactor;

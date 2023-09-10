@@ -19,7 +19,12 @@ import { AlphaModes, InterpolationType } from "./enums.js"
 //  image from bufferView
 //  skins
 
-const supportedExtensions = ["KHR_materials_transmission", "KHR_materials_ior", "KHR_materials_sheen"];
+const supportedExtensions = [
+  "KHR_materials_transmission",
+  "KHR_materials_ior",
+  "KHR_materials_sheen"];
+
+const partiallySupportedExtensions = ["KHR_texture_transform"];
 
 /** A class to download a GLTF file and construct a scene graph with PBRMaterial */
 export class GLTFLoader {
@@ -171,8 +176,11 @@ export class GLTFLoader {
     if (json.extensionsUsed) {
       for (const extension of json.extensionsUsed) {
         let supported = supportedExtensions.includes(extension);
+        let partiallySupported = partiallySupportedExtensions.includes(extension);
         if (supported) {
           console.log(extension, ": supported");
+        } else if (partiallySupported) {
+          console.log(extension, ": partially supported");
         } else {
           console.error(extension, ": not supported");
         }
@@ -182,8 +190,11 @@ export class GLTFLoader {
     if (json.extensionsRequired) {
       for (const extension of json.extensionsRequired) {
         let supported = supportedExtensions.includes(extension);
+        let partiallySupported = partiallySupportedExtensions.includes(extension);
         if (supported) {
           console.log(extension, ": supported");
+        } else if (partiallySupported) {
+          console.log("Required extension", extension, "is only PARTIALLY supported");
         } else {
           console.error("Required extension", extension, "is NOT SUPPORTED");
         }
@@ -634,6 +645,36 @@ export class GLTFLoader {
   }
 
   /**
+   * Create an affine matrix from a transform description
+   * @param {JSON} transform 
+   */
+  getTextureTransformMatrix(transform) {
+
+    let offset = [0, 0];
+    let rotation = 0;
+    let scale = [1, 1];
+
+    if (transform.offset != null) {
+      offset = transform.offset;
+    }
+
+    if (transform.rotation != null) {
+      rotation = transform.rotation;
+    }
+
+    if (transform.scale != null) {
+      scale = transform.scale;
+    }
+
+    let translationMatrix = m3.translation(offset[0], offset[1]);
+    let rotationMatrix = m3.rotation(rotation);
+    let scaleMatrix = m3.scaling(scale[0], scale[1]);
+
+    let transformMatrix = m3.multiply(rotationMatrix, scaleMatrix);
+    return m3.multiply(translationMatrix, transformMatrix);
+  }
+
+  /**
    * Construct a PBRMaterial object based on GLTF material info
    * @param {number} index 
    * @returns PBRMaterial described by GLTF
@@ -716,9 +757,20 @@ export class GLTFLoader {
     if (pbrDesc.baseColorTexture != null) {
       const textureID = jsonTextures[pbrDesc.baseColorTexture.index].source;
       materialParameters.baseColorTexture = this.textures[textureID];
+
       if (pbrDesc.baseColorTexture.texCoord != null) {
-        materialParameters.baseColorTextureTextureUV = pbrDesc.baseColorTexture.texCoord;
+        materialParameters.baseColorTextureUV = pbrDesc.baseColorTexture.texCoord;
       }
+
+      const ext = pbrDesc.baseColorTexture.extensions;
+      if (ext != null && ext.KHR_texture_transform) {
+        const transform = ext.KHR_texture_transform;
+        materialParameters.baseColorTextureTransform = this.getTextureTransformMatrix(transform);
+        if (transform.texCoord != null) {
+          materialParameters.baseColorTextureUV = transform.texCoord;
+        }
+      }
+
       this.usedTextures.push(textureID);
     }
 
@@ -768,6 +820,14 @@ export class GLTFLoader {
       }
       if (material.normalTexture.scale != null) {
         materialParameters.normalScale = material.normalTexture.scale;
+      }
+      const ext = material.normalTexture.extensions;
+      if (ext != null && ext.KHR_texture_transform) {
+        const transform = ext.KHR_texture_transform;
+        materialParameters.normalTextureTransform = this.getTextureTransformMatrix(transform);
+        if (transform.texCoord != null) {
+          materialParameters.normalTextureUV = transform.texCoord;
+        }
       }
     }
 
