@@ -135,6 +135,15 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   uniform sampler2D baseColorTexture;
   uniform int baseColorTextureUV;
 #endif
+
+#ifdef HAS_SHEEN_TEXTURE
+  uniform sampler2D sheenTexture;
+  uniform int sheenTextureUV;
+#endif
+
+#ifdef HAS_SHEEN
+  uniform vec4 sheenFactor;
+#endif
   
   uniform vec4 baseColorFactor;
 
@@ -251,8 +260,8 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     return max(vec3(r, g, b), vec3(0));
   }
 
-  vec2 getBRDFIntegrationMap(vec2 texCoord){
-    return texture(brdfIntegrationMapTexture, texCoord).rg;
+  vec3 getBRDFIntegrationMap(vec2 texCoord){
+    return texture(brdfIntegrationMapTexture, texCoord).rgb;
   }
 
   vec3 getEnvironment(vec3 rayDir, float roughness){
@@ -433,9 +442,37 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     return D * V;
   }
 
+#ifdef HAS_SHEEN
+  // Charlie
+  float sheenDistribution(float NdotH, float roughness){
+      float a = clamp(roughness * roughness, 1e-5, 1.0);
+      float invR = 1.0 / a;
+      float cos2h = NdotH * NdotH;
+      float sin2h = 1.0 - cos2h;
+      return (2.0 + invR) * pow(sin2h, invR * 0.5) / (2.0 * PI);
+  }
+
+  float sheenVisibility(vec3 n, vec3 v, vec3 l){
+      float NdotL = dot_c(n, l);
+      float NdotV = dot_c(n, v);
+      // Neubelt and Pettineo
+      return clamp(1.0 / (4.0 * (NdotL + NdotV - NdotL * NdotV)), 0.0, 1.0);
+  }
+
+  float sheenBRDF(vec3 n, vec3 v, vec3 l, float roughness){
+      vec3 h = normalize(v + l);
+      float NdotH = dot_c(n, h);
+      float D = sheenDistribution(NdotH, roughness);
+      float V = sheenVisibility(n, v, l);
+      return clamp(D * V, 0.0, 1.0);
+  }
+
+  float max3(vec3 v) { return max(max(v.x, v.y), v.z); }
+#endif
+
   // ---------------------------- Lighting ----------------------------
 
-  vec3 getIrradiance(vec3 rayDir, vec3 normal, vec4 albedo){
+  vec3 getIrradiance(vec3 viewDir, vec3 normal, vec4 albedo){
 
     float metal = metallicFactor;
     float roughness = roughnessFactor;
@@ -462,7 +499,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
 
 #endif
 
-    vec3 I = vec3(0);
+    vec3 directIllumination = vec3(0);
     vec3 radiance = vec3(0);
     vec3 lightDir = vec3(0);
 
@@ -475,18 +512,19 @@ layout(std140) uniform sphericalHarmonicsUniforms{
 
     lightDir = normalize(vec3(sin(time), 0.5, cos(time)));
 
-    vec2 envBRDF = getBRDFIntegrationMap(vec2(dot_c(normal, -rayDir), roughness));
+    vec2 envBRDF = getBRDFIntegrationMap(vec2(dot_c(normal, viewDir), roughness)).rg;
+
     // https://google.github.io/filament/Filament.html#materialsystem/improvingthebrdfs/energylossinspecularreflectance
     vec3 energyCompensation = 1.0 + F0 * (1.0 / envBRDF.y - 1.0);
 
-    vec3 h = normalize(-rayDir + lightDir);
-    float cosTheta = dot_c(h, -rayDir);
+    vec3 h = normalize(viewDir + lightDir);
+    float cosTheta = dot_c(h, viewDir);
 
     // How reflective are the microfacets viewed from the current angle
     vec3 F = fresnelSchlickRoughness(cosTheta, F0, roughness);
 
     // Specular reflectance
-    vec3 specular = F * specularBRDF(normal, -rayDir, lightDir, h, roughness); 
+    vec3 specular = F * specularBRDF(normal, viewDir, lightDir, h, roughness);
 
     // Scale the specular lobe to account for multiscattering
     specular *= energyCompensation;
@@ -511,10 +549,26 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     vec3 kD = (1.0 - F) * (1.0 - metal);
     vec3 direct = kD * diffuse + specular;
 
-    I += direct * radiance * dot_c(normal, lightDir);
+    directIllumination += direct * radiance * dot_c(normal, lightDir);
+
+#ifdef HAS_SHEEN
+    vec3 sheenColor = sheenFactor.rgb;
+    float sheenRoughness = sheenFactor.a;
+
+#ifdef HAS_SHEEN_TEXTURE
+    vec4 sheenData = readTexture(sheenTexture, sheenTextureUV);
+    sheenColor *= sheenData.rgb;
+    sheenRoughness *= sheenData.a;
+#endif
+
+    float directionalAlbedo = getBRDFIntegrationMap(vec2(dot_c(normal, viewDir), sheenRoughness)).b;
+    float albedoScaling = 1.0 - max3(sheenColor) * directionalAlbedo;
+    vec3 directSheen = radiance * sheenColor * sheenBRDF(normal, viewDir, lightDir, sheenRoughness) * dot_c(normal, lightDir);
+    directIllumination = directSheen + albedoScaling * directIllumination;
+#endif
 
     // Find ambient diffuse IBL component
-    F = fresnelSchlickRoughness(dot_c(normal, -rayDir), F0, roughness);
+    F = fresnelSchlickRoughness(dot_c(normal, viewDir), F0, roughness);
     kD = saturate(1.0 - F) * (1.0 - metal);	
     vec3 irradiance = getSHIrradiance(normal);
     diffuse = irradiance * albedo.rgb / PI;
@@ -525,7 +579,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
 #endif
 
     // Find ambient specular IBL component
-    vec3 R = reflect(rayDir, normal);
+    vec3 R = reflect(-viewDir, normal);
 
     vec3 prefilteredColor = getEnvironment(R, roughness);   
     specular = prefilteredColor * mix(envBRDF.xxx, envBRDF.yyy, F0);
@@ -535,10 +589,14 @@ layout(std140) uniform sphericalHarmonicsUniforms{
 
     vec3 ambient = kD * diffuse + specular;
 
-    // Combine direct and IBL lighting
-    return  occlusion * ambient + I;
-  }
+#ifdef HAS_SHEEN
+    vec3 ambientSheen = sheenColor * getEnvironment(R, sheenRoughness) * directionalAlbedo;
+    ambient = ambientSheen + albedoScaling * ambient;
+#endif
 
+    // Combine direct and IBL lighting
+    return occlusion * ambient + directIllumination;
+  }
 
   // ------------------------- Tonemapping -------------------------
 
@@ -546,7 +604,6 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   vec3 ACESFilm(vec3 x){
     return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
   }
-
 
   // --------------------------- Render ----------------------------
 
@@ -614,7 +671,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     }
 
     vec3 viewDirection = normalize(cameraPosition - vPosition);
-    color.rgb = getIrradiance(-viewDirection, normal, albedo);
+    color.rgb = getIrradiance(viewDirection, normal, albedo);
     color.a = alpha;
 
 #ifdef HAS_EMISSION
@@ -716,6 +773,20 @@ layout(std140) uniform sphericalHarmonicsUniforms{
       bitangentColor = 0.5 + 0.5 * tbn[1];
   #endif
 
+  #ifdef HAS_SHEEN
+    vec3 sheenColorFactor = sheenFactor.rgb;
+    float sheenRoughnessFactor = sheenFactor.a;
+
+    vec3 sheenColor = sheenColorFactor;
+    float sheenRoughness = sheenRoughnessFactor;
+  #endif
+
+  #ifdef HAS_SHEEN_TEXTURE
+    vec4 sheenData = readTexture(sheenTexture, sheenTextureUV);
+    sheenColor *= sheenData.rgb;
+    sheenRoughness *= sheenData.a;
+  #endif
+
       switch(outputVariable){
         case 1: debugColor = pow(albedo.rgb, vec3(0.4545)); break;
         case 2: debugColor = vec3(metal); break;
@@ -730,6 +801,10 @@ layout(std140) uniform sphericalHarmonicsUniforms{
         case 11: debugColor = uvColor1; break;
         case 12: debugColor = vec3(alpha); break;
         case 13: debugColor = transmissiveColor; break;
+  #ifdef HAS_SHEEN
+        case 14: debugColor = sheenColor; break;
+        case 15: debugColor = vec3(sheenRoughness); break;
+  #endif
         default: debugColor = vec3(1,0,1);
       };
 

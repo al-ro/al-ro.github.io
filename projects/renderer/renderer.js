@@ -81,6 +81,7 @@ models.set("MorphAnimation", "./gltf/animatedMorphCube/AnimatedMorphCube.gltf");
 models.set("MorphPrimitivesTest", "./gltf/morphPrimitivesTest/MorphPrimitivesTest.gltf");
 models.set("MorphStressTest", "./gltf/morphStressTest/MorphStressTest.gltf");
 models.set("MorphInterpolation", "./gltf/morphInterpolation/fourCube.gltf");
+models.set("Sheen Chair", "./gltf/chair/SheenChair.gltf");
 
 let modelNames = Array.from(models.keys());
 modelNames.sort();
@@ -125,7 +126,7 @@ let time = 0.0;
 
 let info = { memory: "0", buffers: "0", textures: "0", downloading: getDownloadingCount(), primitives: "0" };
 
-let modelSelector = { model: "Flight Helmet" };
+let modelSelector = { model: "Toy Car" };
 let environmentSelector = { environment: "Venice Sunrise" };
 let outputSelector = { output: outputEnum.PBR };
 let environment;
