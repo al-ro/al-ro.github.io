@@ -128,7 +128,7 @@ function getFragmentSource() {
       float NdotH = dot_c(n, h);
       float D = sheenDistribution(NdotH, roughness);
       float V = sheenVisibility(n, v, l);
-      return D * V;
+      return max(0.0, D * V);
     }
 
     // https://google.github.io/filament/Filament.html#toc9.5

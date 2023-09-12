@@ -461,7 +461,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     G = smiths(n, viewDir, lightDir, roughness);
     V = G / max(0.0001, (4.0 * dot_c(lightDir, n) * dot_c(viewDir, n)));
 
-    return D * V;
+    return max(0.0, D * V);
   }
 
 #ifdef HAS_SHEEN
