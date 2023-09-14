@@ -38,8 +38,6 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 
       Morph target stress test and correct clamp
 
-      Separate GUI code to a new file
-
       Volume
       Iridescence
       Specular/Gloss
