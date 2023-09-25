@@ -18,12 +18,11 @@ function getFragmentSource(){
 
   var fragmentSource = `
 
-  
-
-  #define PI 3.14159
-  #define TWO_PI (2.0 * PI)
+  const float PI =  3.14159;
+  const float TWO_PI = (2.0 * PI);
 
   uniform mat4 cameraMatrix;
+
   uniform sampler2D sphericalTexture;
   uniform float textureType;
   in vec3 vPosition;

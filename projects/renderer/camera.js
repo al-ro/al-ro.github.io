@@ -31,13 +31,13 @@ export class Camera {
 
   exposure = 1.0;
 
-  // [mat4, mat4]
+  // [mat4, mat4, mat4]
   matrixUniformBuffer;
-  matrixUniformArray = new Float32Array(32);
+  matrixUniformArray = new Float32Array(48);
 
-  // [vec3, float]
+  // [vec3, float, float] rest unused
   fragmentUniformBuffer;
-  fragmentUniformArray = new Float32Array(4);
+  fragmentUniformArray = new Float32Array(8);
 
   constructor(pitch, yaw, distance, target, up, fov, aspect, zNear, zFar) {
     this.pitch = pitch;
@@ -92,48 +92,16 @@ export class Camera {
     this.updatePosition([0, 0]);
   }
 
-  getPosition() {
-    return this.position;
-  }
-
   setProjectionMatrix() {
     this.projectionMatrix = m4.perspective(this.fov, this.aspect, this.zNear, this.zFar);
-  }
-
-  getProjectionMatrix() {
-    return this.projectionMatrix;
   }
 
   setCameraMatrix() {
     this.cameraMatrix = m4.lookAt(this.position, this.target, this.up);
   }
 
-  getCameraMatrix() {
-    return this.cameraMatrix;
-  }
-
   setViewMatrix() {
     this.viewMatrix = m4.inverse(this.cameraMatrix);
-  }
-
-  getViewMatrix() {
-    return this.viewMatrix;
-  }
-
-  setAspect(aspect) {
-    this.aspect = aspect;
-  }
-
-  setTarget(target) {
-    this.target = target;
-  }
-
-  getFOV() {
-    return this.fov;
-  }
-
-  getExposure() {
-    return this.exposure;
   }
 
   update() {
@@ -151,11 +119,13 @@ export class Camera {
     gl.bindBuffer(gl.UNIFORM_BUFFER, this.matrixUniformBuffer);
     this.matrixUniformArray.set(this.viewMatrix, 0);
     this.matrixUniformArray.set(this.projectionMatrix, 16);
+    this.matrixUniformArray.set(this.cameraMatrix, 32);
     gl.bufferData(gl.UNIFORM_BUFFER, this.matrixUniformArray, gl.DYNAMIC_DRAW);
 
     gl.bindBuffer(gl.UNIFORM_BUFFER, this.fragmentUniformBuffer);
     this.fragmentUniformArray.set(this.position, 0);
     this.fragmentUniformArray.set([this.exposure], 3);
+    this.fragmentUniformArray.set([this.fov], 4);
     gl.bufferData(gl.UNIFORM_BUFFER, this.fragmentUniformArray, gl.DYNAMIC_DRAW);
 
     gl.bindBuffer(gl.UNIFORM_BUFFER, null);

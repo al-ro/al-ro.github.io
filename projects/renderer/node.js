@@ -47,24 +47,31 @@ export class Node {
    */
   animations = new Map();
 
-  constructor(params) {
+  skinIndex;
+  skin;
 
-    if (params != null) {
+  constructor(parameters) {
 
-      if (params.children != null) {
-        this.children = params.children;
+    if (parameters != null) {
+
+      if (parameters.children != null) {
+        this.children = parameters.children;
       }
 
-      if (params.splitChildren != null) {
-        this.splitChildren = params.splitChildren;
+      if (parameters.splitChildren != null) {
+        this.splitChildren = parameters.splitChildren;
       }
 
-      if (params.childIndices != null) {
-        this.childIndices = params.childIndices;
+      if (parameters.childIndices != null) {
+        this.childIndices = parameters.childIndices;
       }
 
-      if (params.localMatrix != null) {
-        this.localMatrix = params.localMatrix;
+      if (parameters.localMatrix != null) {
+        this.localMatrix = parameters.localMatrix;
+      }
+
+      if (parameters.skinIndex != null) {
+        this.skinIndex = parameters.skinIndex;
       }
 
       this.idleMatrix = this.localMatrix;
@@ -87,12 +94,12 @@ export class Node {
   }
 
   setAnimation(path, animation) {
-    if (this.animations.get(animation.getName()) != null) {
-      this.animations.get(animation.getName()).set(path, animation);
+    if (this.animations.get(animation.name) != null) {
+      this.animations.get(animation.name).set(path, animation);
     } else {
       let newAnimation = new Map();
       newAnimation.set(path, animation);
-      this.animations.set(animation.getName(), newAnimation);
+      this.animations.set(animation.name, newAnimation);
     }
   }
 
@@ -122,18 +129,6 @@ export class Node {
     }
   }
 
-  getWorldMatrix() {
-    return this.worldMatrix;
-  }
-
-  getLocalMatrix() {
-    return this.localMatrix;
-  }
-
-  setIdleMatrix(matrix) {
-    this.idleMatrix = matrix;
-  }
-
   setIdle() {
     this.setIdleTransform();
     for (const child of this.children) {
@@ -146,28 +141,12 @@ export class Node {
     this.updateWorldMatrix();
   }
 
-  getParentMatrix() {
-    return this.parentMatrix;
-  }
-
   addChild(node) {
     this.children.push(node);
   }
 
-  setChildren(children) {
-    this.children = children;
-  }
-
-  getChildren() {
-    return this.children;
-  }
-
-  setChildIndices(childIndices) {
-    this.childIndices = childIndices;
-  }
-
-  setLocalMatrix(localMatrix) {
-    this.localMatrix = localMatrix;
+  hasSkin() {
+    return this.skinIndex != null;
   }
 
   isMesh() {

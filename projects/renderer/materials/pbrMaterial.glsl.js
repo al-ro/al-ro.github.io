@@ -7,40 +7,57 @@ function getVertexSource(parameters) {
   in vec3 POSITION;
 
 #ifdef HAS_NORMALS
-  in vec3 NORMAL;
+    in vec3 NORMAL;
   uniform mat4 normalMatrix;
 #endif
 
 #ifdef HAS_UV_0
-  in vec2 TEXCOORD_0;
+    in vec2 TEXCOORD_0;
 #endif
 
 #ifdef HAS_UV_1
-  in vec2 TEXCOORD_1;
+    in vec2 TEXCOORD_1;
 #endif
 
 layout(std140) uniform cameraMatrices{
-    mat4 viewMatrix;
-    mat4 projectionMatrix;
+  mat4 viewMatrix;
+  mat4 projectionMatrix;
+  mat4 cameraMatrix;
 };
 
   uniform mat4 modelMatrix;
 
 #ifdef HAS_NORMALS
-  out vec3 vNormal;
+    out vec3 vNormal;
 #endif
 
 #ifdef HAS_UV_0
-  out vec2 vUV0;
+    out vec2 vUV0;
 #endif
 
 #ifdef HAS_UV_1
-  out vec2 vUV1;
+    out vec2 vUV1;
 #endif
 
 #ifdef HAS_TANGENTS
-  in vec4 TANGENT;
-  out mat3 tbn;
+    in vec4 TANGENT;
+    out mat3 tbn;
+#endif
+
+#ifdef HAS_SKIN
+    in vec4 JOINTS_0;
+    in vec4 WEIGHTS_0;
+    uniform sampler2D jointMatricesTexture;
+    out vec4 joints_0;
+    out vec4 weights_0;
+
+    mat4 getJointMatrix(uint idx){
+      return mat4(
+        texelFetch(jointMatricesTexture, ivec2(0, idx), 0),
+        texelFetch(jointMatricesTexture, ivec2(1, idx), 0),
+        texelFetch(jointMatricesTexture, ivec2(2, idx), 0),
+        texelFetch(jointMatricesTexture, ivec2(3, idx), 0));
+    }
 #endif
 
   out vec3  vPosition;
@@ -58,7 +75,25 @@ layout(std140) uniform cameraMatrices{
 #ifdef HAS_NORMALS
     `+ getMorphedAttributeString(parameters, "NORMAL") + `
     vec4 transformedNormal = normalMatrix * vec4(normal, 0.0);
-    vNormal = transformedNormal.xyz;
+#endif
+
+    `+ getMorphedAttributeString(parameters, "POSITION") + `
+    vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
+
+#ifdef HAS_SKIN
+    mat4 skinMatrix =
+      WEIGHTS_0[0] * getJointMatrix(uint(JOINTS_0[0])) +
+      WEIGHTS_0[1] * getJointMatrix(uint(JOINTS_0[1])) +
+      WEIGHTS_0[2] * getJointMatrix(uint(JOINTS_0[2])) +
+      WEIGHTS_0[3] * getJointMatrix(uint(JOINTS_0[3]));
+
+    transformedPosition = skinMatrix * vec4(position, 1.0);
+    joints_0 = JOINTS_0;
+    weights_0 = WEIGHTS_0;
+
+  #ifdef HAS_NORMALS
+    transformedNormal = skinMatrix * vec4(normal, 0.0);
+  #endif
 #endif
 
 #ifdef HAS_TANGENTS
@@ -71,9 +106,10 @@ layout(std140) uniform cameraMatrices{
     tbn = mat3(T, B, N);
 #endif 
 
-    `+ getMorphedAttributeString(parameters, "POSITION") + `
-    vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
     vPosition = transformedPosition.xyz;
+#ifdef HAS_NORMALS
+    vNormal = transformedNormal.xyz;
+#endif
 
     gl_Position = projectionMatrix * viewMatrix * transformedPosition;
   }
@@ -110,6 +146,11 @@ function getFragmentSource() {
   in mat3 tbn;
 #endif
 
+#ifdef HAS_SKIN
+  in vec4 joints_0;
+  in vec4 weights_0;
+#endif
+
 #define DEBUG
 #ifdef DEBUG
   uniform int outputVariable;
@@ -118,18 +159,17 @@ function getFragmentSource() {
 layout(std140) uniform cameraUniforms{
   vec3 cameraPosition;
   float cameraExposure;
+  float cameraFOV;
 };
 
 layout(std140) uniform sphericalHarmonicsUniforms{
-  uniform mat4 shRedMatrix;
-  uniform mat4 shGrnMatrix;
-  uniform mat4 shBluMatrix;
+  mat4 shRedMatrix;
+  mat4 shGrnMatrix;
+  mat4 shBluMatrix;
 };
 
-  uniform float time;
-
-  uniform sampler2D brdfIntegrationMapTexture;
-  uniform samplerCube cubeMap;
+  uniform sampler2D brdfIntegrationTexture;
+  uniform samplerCube environmenCubeMap;
 
 #ifdef HAS_BASE_COLOR_TEXTURE
   uniform sampler2D baseColorTexture;
@@ -283,7 +323,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   }
 
   vec3 getBRDFIntegrationMap(vec2 texCoord){
-    return texture(brdfIntegrationMapTexture, texCoord).rgb;
+    return texture(brdfIntegrationTexture, texCoord).rgb;
   }
 
   vec3 getEnvironment(vec3 rayDir, float roughness){
@@ -292,7 +332,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     float level = roughness * 5.0;
     level = max(0.0, min(level, 5.0));
 
-    return textureLod(cubeMap, rayDir, level).rgb;
+    return textureLod(environmenCubeMap, rayDir, level).rgb;
   }
 
 #ifdef HAS_TRANSMISSION
@@ -532,7 +572,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     // https://docs.unrealengine.com/en-US/RenderingAndGraphics/Materials/PhysicallyBased/index.html 
     F0 = mix(F0, albedo.rgb, metal);
 
-    lightDir = normalize(vec3(sin(time), 0.5, cos(time)));
+    lightDir = normalize(vec3(1));
 
     vec2 envBRDF = getBRDFIntegrationMap(vec2(dot_c(normal, viewDir), roughness)).rg;
 
@@ -838,6 +878,10 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   #ifdef HAS_SHEEN
         case 14: debugColor = sheenColor; break;
         case 15: debugColor = vec3(sheenRoughness); break;
+  #endif
+  #ifdef HAS_SKIN
+        case 16: debugColor = mod(joints_0.rgb, 4.0) / 4.0; break;
+        case 17: debugColor = weights_0.rgb * mod(joints_0.rgb, 4.0) / 4.0; break;
   #endif
         default: debugColor = vec3(1,0,1);
       };

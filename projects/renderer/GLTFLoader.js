@@ -11,13 +11,13 @@ import { loadTexture } from "./texture.js"
 import { PropertyAnimation } from "./propertyAnimation.js"
 import { Animation } from "./animation.js"
 import { Object } from "./object.js"
+import { Skin } from "./skin.js"
 import { MorphTarget } from "./morphTarget.js"
 import { AlphaModes, InterpolationType } from "./enums.js"
 
 // TODO:
 //  full spec conform (color_0, sampler)
 //  image from bufferView
-//  skins
 
 const supportedExtensions = [
   "KHR_materials_transmission",
@@ -53,18 +53,18 @@ export class GLTFLoader {
   /** Drawable Mesh objects */
   meshes = [];
 
+  /** Skin objects holding joint data */
+  skins = [];
+
   /** Repository of WebGLBuffer objects */
   bufferRepository;
-
-  /** Environment object which holds IBL data for PBRMaterial */
-  environment;
 
   /** Promise which resolves when all downloads and processing has completed */
   ready;
 
   /**
    * A reference to the resolve function of the ready promise so it can be called
-   * explicitly once gltf downloads and processing have completed
+   * explicitly once GLTF downloads and processing have completed
    */
   setReady;
 
@@ -83,20 +83,17 @@ export class GLTFLoader {
   }
 
   /**
-   * Download GLTF and construct Objects with PBRMaterial using passsed environment data
+   * Download GLTF and construct Objects with PBRMaterial
    * @param {string} path 
-   * @param {Environment} environment 
    * @param {number} scene If there are multiple scenes in the GLTF file, which one to return 
    */
-  load(path, environment, scene) {
+  load(path, scene) {
 
     this.clear();
     this.controller = new AbortController();
 
     let loader = this;
     this.ready = new Promise(function (resolve, reject) { loader.setReady = resolve; });
-
-    this.environment = environment;
 
     let workingDirectory = path.substring(0, path.lastIndexOf("/") + 1);
 
@@ -137,11 +134,16 @@ export class GLTFLoader {
         }
       }
 
+      for (const skin of this.skins) {
+        skin.destroy();
+      }
+
       this.buffers = [];
       this.meshes = [];
       this.textures = [];
       this.usedTextures = [];
       this.nodes = [];
+      this.skins = [];
 
       if (this.bufferRepository != null) {
         this.bufferRepository.destroy();
@@ -163,8 +165,8 @@ export class GLTFLoader {
 
   /**
    * Parse the JSON, download images and buffers, construct meshes
-   * @param {JSON} json gltf object
-   * @param {string} workingDirectory string of gltf base folder
+   * @param {JSON} json GLTF object
+   * @param {string} workingDirectory string of GLTF base folder
    * @param {number} scene which scene to process
    */
   processGLTF(json, workingDirectory, scene) {
@@ -207,7 +209,7 @@ export class GLTFLoader {
       this.scene = this.json.scene;
     }
 
-    // Populate buffer array with promises of each gltf buffer to fetch
+    // Populate buffer array with promises of each GLTF buffer to fetch
     if (!!json.buffers) {
       for (const buffer of json.buffers) {
         let prefix = "";
@@ -245,7 +247,7 @@ export class GLTFLoader {
 
     if (json.buffers != null) {
 
-      // Once we have the buffers, we can process the gltf
+      // Once we have the buffers, we can process the GLTF
       Promise.all(this.buffers).then(buffers => {
 
         // If there are buffers and none is null and the download has not been cancelled
@@ -265,7 +267,17 @@ export class GLTFLoader {
 
           // Record current local matrix as idle state
           for (const node of this.nodes) {
-            node.setIdleMatrix(node.getLocalMatrix());
+            node.idleMatrix = node.localMatrix;
+          }
+
+          if (this.json.skins != null) {
+            this.createSkins(this.json.skins);
+          }
+
+          for (const node of this.nodes) {
+            if (node.hasSkin()) {
+              node.skin = this.skins[node.skinIndex];
+            }
           }
 
           let rootNodes = [];
@@ -274,7 +286,7 @@ export class GLTFLoader {
           }
 
           this.object = new Object(rootNodes);
-          this.object.setAnimations(this.animations);
+          this.object.animations = this.animations;
         }
 
         // Resolve ready promise
@@ -300,32 +312,32 @@ export class GLTFLoader {
       const transform = this.getTransform(gltfNode);
       const indices = gltfNode.children != null ? gltfNode.children : [];
 
-      const params = { localMatrix: transform, childIndices: indices };
+      const parameters = { localMatrix: transform, childIndices: indices };
 
       // If node describes a mesh, process it
       if (gltfNode.mesh != null) {
 
-        // Get the primitives of the gltf mesh
-        const primitives = this.processMesh(this.json.meshes[gltfNode.mesh]);
+        // Get the primitives of the GLTF mesh
+        const primitives = this.processMesh(this.json.meshes[gltfNode.mesh], gltfNode);
 
         if (primitives.length > 1) {
           // When there are multiple primitives, set them as the children of a new empty Node
           // Keep track which children were created to apply animations correctly
-          params.splitChildren = primitives;
-          const node = new Node(params);
-          node.setChildren(primitives);
+          parameters.splitChildren = primitives;
+          const node = new Node(parameters);
+          node.children = primitives;
           // Add the Node to the scene graph
           nodes.push(node);
         } else {
           // Otherwise set the Mesh object as a node of the scene graph
-          primitives[0].setChildIndices(params.childIndices);
-          primitives[0].setLocalMatrix(params.localMatrix);
+          primitives[0].childIndices = parameters.childIndices;
+          primitives[0].localMatrix = parameters.localMatrix;
           nodes.push(primitives[0]);
         }
 
       } else {
         // If it's not a mesh, add a new empty node in the scene graph
-        nodes.push(new Node(params));
+        nodes.push(new Node(parameters));
       }
     }
 
@@ -635,13 +647,50 @@ export class GLTFLoader {
       offset: accessor.byteOffset != null ? accessor.byteOffset : 0
     };
 
-    // Position min/max must be set in the gltf
+    // Position min/max must be set in the GLTF
     if (name == "POSITION") {
       descriptor.min = accessor.min;
       descriptor.max = accessor.max;
     }
 
     return new Attribute(name, glBuffer, data, descriptor);
+  }
+
+  /**
+   * Create a Skin object with joint and inverse bind matrix data
+   * @param {JSON} skins
+   */
+  createSkins(skins) {
+    for (const skin of skins) {
+      let accessor = this.json.accessors[skin.inverseBindMatrices];
+
+      const bufferView = this.json.bufferViews[accessor.bufferView];
+      const buffer = this.buffers[bufferView.buffer];
+
+      if (!buffer) {
+        continue;
+      }
+
+      const offset = bufferView.byteOffset != null ? bufferView.byteOffset : 0;
+
+      // Get a typed view of the buffer data
+      const typedArray = getTypedArray(accessor.componentType);
+      // Typed array is created of the underlying buffer. No memory is allocated.
+      let inverseBindMatricesData = new typedArray(buffer, offset, bufferView.byteLength / typedArray.BYTES_PER_ELEMENT);
+
+      let joints = [];
+
+      for (const joint of skin.joints) {
+        joints.push(this.nodes[joint]);
+      }
+
+      let parameters = {
+        inverseBindMatrices: inverseBindMatricesData,
+        joints: joints
+      };
+
+      this.skins.push(new Skin(parameters));
+    }
   }
 
   /**
@@ -684,7 +733,7 @@ export class GLTFLoader {
     const material = this.json.materials[index];
     const jsonTextures = this.json.textures;
 
-    let materialParameters = { environment: this.environment };
+    let materialParameters = {};
 
     if (material.extensions) {
       const ext = material.extensions;
@@ -848,11 +897,11 @@ export class GLTFLoader {
    * @param {object} mesh GLTF mesh object
    * @returns Array of Mesh objects
    */
-  processMesh(mesh) {
+  processMesh(mesh, node) {
 
     const accessors = this.json.accessors;
 
-    // Drawable Mesh objects described by the gltf mesh
+    // Drawable Mesh objects described by the GLTF mesh
     const primitives = [];
 
     if (mesh.primitives == null) {
@@ -918,10 +967,14 @@ export class GLTFLoader {
       if (primitive.material != null) {
         material = this.getMaterial(primitive.material);
       } else {
-        material = new PBRMaterial({ environment: this.environment });
+        material = new PBRMaterial();
       }
 
-      primitives.push(new Mesh(geometry, material, mesh.weights));
+      let parameters = { geometry: geometry, material: material, weights: mesh.weights };
+      if (node.skin != null) {
+        parameters.skinIndex = node.skin;
+      }
+      primitives.push(new Mesh(parameters));
     }
 
     for (const primitive of primitives) {

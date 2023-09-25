@@ -1,11 +1,10 @@
 import { gl } from "../canvas.js"
+import { UniformBufferBindPoints } from "../enums.js"
 import { Material } from './material.js'
 import { getVertexSource, getFragmentSource } from './textureMaterial.glsl.js'
 
 export class TextureMaterial extends Material {
 
-  projectionMatrixHandle;
-  viewMatrixHandle;
   modelMatrixHandle;
 
   textureHandle;
@@ -23,7 +22,11 @@ export class TextureMaterial extends Material {
     this.texture = texture;
   }
 
-  getVertexShaderSource(parameters) {
+  bindUniformBlocks() {
+    this.program.bindUniformBlock("cameraMatrices", UniformBufferBindPoints.CAMERA_MATRICES);
+  }
+
+  getVertexShaderSource() {
     return getVertexSource();
   }
 
@@ -31,14 +34,14 @@ export class TextureMaterial extends Material {
     return getFragmentSource();
   }
 
-  getParameterHandles() {
-    this.projectionMatrixHandle = this.program.getUniformLocation('projectionMatrix');
-    this.viewMatrixHandle = this.program.getUniformLocation('viewMatrix');
+  getUniformHandles() {
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
     this.textureHandle = this.program.getUniformLocation('tex');
   }
 
-  bindParameters() {
+  bindUniforms() {
+
+    gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
 
     // Tell WebGL we want to affect texture unit 0
     gl.activeTexture(gl.TEXTURE0);

@@ -37,24 +37,24 @@ export class Mesh extends Node {
   weights = [];
   hasWeights = false;
 
-  constructor(geometry, material, weights) {
+  constructor(parameters) {
 
-    super();
+    super(parameters);
 
-    if (weights != null) {
-      this.weights = weights;
+    if (parameters.weights != null) {
+      this.weights = parameters.weights;
       this.hasWeights = true;
     }
 
-    this.geometry = geometry;
-    this.aabb = getAABBFromExtent(this.geometry.getMin(), this.geometry.getMax());
+    this.geometry = parameters.geometry;
+    this.aabb = getAABBFromExtent(this.geometry.min, this.geometry.max);
 
-    this.originalMaterial = material;
-    this.overrideMaterial = material;
+    this.originalMaterial = parameters.material;
+    this.overrideMaterial = parameters.material;
 
     this.instanced = this.geometry.instanced;
 
-    this.setMaterial(material);
+    this.setMaterial(parameters.material);
   }
 
   setMaterial(material) {
@@ -63,26 +63,30 @@ export class Mesh extends Node {
 
     this.activeAttributes = [];
     // Determine intersection of geometry and material attributes
-    for (const attribute of this.material.getAttributes()) {
-      if (this.geometry.getAttributes().has(attribute)) {
+    for (const attribute of this.material.attributes) {
+      if (this.geometry.attributes.has(attribute)) {
         this.activeAttributes.push(attribute);
       }
     }
 
-    this.material.createProgram(this.activeAttributes, this.geometry.getMorphTargets());
     if (this.material.supportsMorphTargets) {
       this.material.setWeights(this.weights);
     }
-    this.material.getParameterHandles();
+
+    this.material.initializeProgram(this.activeAttributes, this.geometry.morphTargets);
+
+    if (this.hasSkin && this.material.supportsSkin) {
+      this.material.enableSkin();
+    }
 
     for (const attribute of this.activeAttributes) {
       const handle = this.material.program.getAttribLocation(attribute);
-      this.geometry.getAttributes().get(attribute).setHandle(handle);
-      if (this.geometry.getMorphTargets() != null && this.material.supportsMorphTargets) {
-        for (let i = 0; i < this.geometry.getMorphTargets().length; i++) {
-          if (this.geometry.getMorphTargets()[i].getAttributes().has(attribute)) {
+      this.geometry.attributes.get(attribute).handle = handle;
+      if (this.geometry.morphTargets != null && this.material.supportsMorphTargets) {
+        for (let i = 0; i < this.geometry.morphTargets.length; i++) {
+          if (this.geometry.morphTargets[i].attributes.has(attribute)) {
             let morphTargetHandle = this.material.program.getAttribLocation(attribute + "" + i);
-            this.geometry.getMorphTargets()[i].getAttributes().get(attribute).setHandle(morphTargetHandle);
+            this.geometry.morphTargets[i].attributes.get(attribute).handle = morphTargetHandle;
           }
         }
       }
@@ -157,14 +161,10 @@ export class Mesh extends Node {
     return this.material.doubleSided;
   }
 
-  getNormalMatrix() {
-    return m4.transpose(m4.inverse(this.getWorldMatrix()));
-  }
-
   setMin() {
     let min = [1e10, 1e10, 1e10];
     for (const corner of this.aabb) {
-      let transformedCorner = m4.transformPoint(this.getWorldMatrix(), corner);
+      let transformedCorner = m4.transformPoint(this.worldMatrix, corner);
       for (let i = 0; i < 3; i++) {
         min[i] = Math.min(transformedCorner[i], min[i]);
       }
@@ -175,28 +175,12 @@ export class Mesh extends Node {
   setMax() {
     let max = [-1e10, -1e10, -1e10];
     for (const corner of this.aabb) {
-      let transformedCorner = m4.transformPoint(this.getWorldMatrix(), corner);
+      let transformedCorner = m4.transformPoint(this.worldMatrix, corner);
       for (let i = 0; i < 3; i++) {
         max[i] = Math.max(transformedCorner[i], max[i]);
       }
     }
     this.max = max;
-  }
-
-  getMin() {
-    return this.min;
-  }
-
-  getMax() {
-    return this.max;
-  }
-
-  getMaterial() {
-    return this.material;
-  }
-
-  getGeometry() {
-    return this.geometry;
   }
 
   /**
@@ -205,6 +189,7 @@ export class Mesh extends Node {
    */
   updateWorldMatrix() {
     this.worldMatrix = m4.multiply(this.parentMatrix, this.localMatrix);
+    this.normalMatrix = m4.transpose(m4.inverse(this.worldMatrix));
     this.setMin();
     this.setMax();
     this.updateChildren();
@@ -258,10 +243,6 @@ export class Mesh extends Node {
 
   setCulling(cull) {
     this.cull = cull;
-  }
-
-  getWeights() {
-    return this.weights;
   }
 
   setIdleWeights() {

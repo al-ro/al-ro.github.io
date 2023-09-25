@@ -15,8 +15,8 @@ export class Object {
     primitives = [];
 
     // Combined AABB dimensions of all primitives. Must update when animating or transforming.
-    minExtent = [-1, -1, -1];
-    maxExtent = [1, 1, 1];
+    min = [-1, -1, -1];
+    max = [1, 1, 1];
 
     animations = [];
 
@@ -27,7 +27,7 @@ export class Object {
     animate(time) {
         for (const animation of this.animations) {
             if (animation.isActive()) {
-                this.node.animate(Math.max(0, time - animation.getStart()), animation.getName());
+                this.node.animate(Math.max(0, time - animation.start), animation.name);
             }
         }
         this.calculateAABB();
@@ -39,15 +39,7 @@ export class Object {
     }
 
     setIdleMatrix(matrix) {
-        this.node.setIdleMatrix(matrix);
-    }
-
-    setAnimations(animations) {
-        this.animations = animations;
-    }
-
-    getAnimations() {
-        return this.animations;
+        this.node.idleMatrix = matrix;
     }
 
     getPrimitiveCount() {
@@ -57,7 +49,7 @@ export class Object {
     // Traverse all nodes in the scene and collect drawable meshes into an array
     generatePrimitiveList() {
         this.primitives = [];
-        for (const child of this.node.getChildren()) {
+        for (const child of this.node.children) {
             this.collectPrimitives(child);
         }
     }
@@ -67,40 +59,41 @@ export class Object {
         if (node.isMesh()) {
             this.primitives.push(node);
         }
-        for (const child of node.getChildren()) {
+        for (const child of node.children) {
             this.collectPrimitives(child);
         }
     }
 
 
-    renderDepthPrepass(camera, time, cullCamera) {
+    renderDepthPrepass(camera) {
         if (this.primitives.length < 1) {
             this.generatePrimitiveList();
         }
         for (const primitive of this.primitives) {
-            let material = primitive.getMaterial();
-            let depthMaterial = new DepthMaterial({
-                baseColorFactor: material.baseColorFactor,
-                baseColorTexture: material.baseColorTexture,
-                baseColorTextureUV: material.baseColorTextureUV,
-                alphaMode: material.alphaMode,
-                alphaCutoff: material.alphaCutoff,
-                doubleSided: material.doubleSided
-            });
+            let material = primitive.material;
             if (!material.hasTransmission && material.alphaMode != AlphaModes.BLEND) {
+                let depthMaterial = new DepthMaterial({
+                    baseColorFactor: material.baseColorFactor,
+                    baseColorTexture: material.baseColorTexture,
+                    baseColorTextureUV: material.baseColorTextureUV,
+                    alphaMode: material.alphaMode,
+                    alphaCutoff: material.alphaCutoff,
+                    doubleSided: material.doubleSided
+                });
                 primitive.setMaterial(depthMaterial);
-                render(RenderPass.ALWAYS, primitive, camera, time, cullCamera);
+                render(RenderPass.ALWAYS, primitive, camera, null, null);
                 primitive.setMaterial(material);
+                depthMaterial = null;
             }
         }
     }
 
-    render(renderPass, camera, time, cullCamera) {
+    render(renderPass, camera, environment, cullCamera) {
         if (this.primitives.length < 1) {
             this.generatePrimitiveList();
         }
         for (const primitive of this.primitives) {
-            render(renderPass, primitive, camera, time, cullCamera);
+            render(renderPass, primitive, camera, environment, cullCamera);
         }
     }
 
@@ -130,14 +123,14 @@ export class Object {
             this.generatePrimitiveList();
         }
         for (const primitive of this.primitives) {
-            if (primitive != null && primitive.getMaterial() != null && primitive.getMaterial().hasTransmission) {
-                primitive.getMaterial().setBackgroundTexture(texture);
+            if (primitive != null && primitive.material != null && primitive.material.hasTransmission) {
+                primitive.material.backgroundTexture = texture;
             }
         }
     }
 
     getScale() {
-        let localMatrix = this.node.getLocalMatrix();
+        let localMatrix = this.node.localMatrix;
 
         let T = [0, 0, 0];
         let R = [0, 0, 0, 1];
@@ -148,7 +141,7 @@ export class Object {
     }
 
     setScale(scale) {
-        let localMatrix = this.node.getLocalMatrix();
+        let localMatrix = this.node.localMatrix;
 
         let T = [0, 0, 0];
         let R = [0, 0, 0, 1];
@@ -160,7 +153,7 @@ export class Object {
     }
 
     setTranslation(position) {
-        let localMatrix = this.node.getLocalMatrix();
+        let localMatrix = this.node.localMatrix;
 
         let T = [0, 0, 0];
         let R = [0, 0, 0, 1];
@@ -172,7 +165,7 @@ export class Object {
     }
 
     setRotation(rotation) {
-        let localMatrix = this.node.getLocalMatrix();
+        let localMatrix = this.node.localMatrix;
 
         let T = [0, 0, 0];
         let R = [0, 0, 0, 1];
@@ -185,7 +178,7 @@ export class Object {
 
 
     getRotation() {
-        let localMatrix = this.node.getLocalMatrix();
+        let localMatrix = this.node.localMatrix;
 
         let T = [0, 0, 0];
         let R = [0, 0, 0, 1];
@@ -198,8 +191,8 @@ export class Object {
 
     setTRS(T, R, S) {
         let matrix = m4.compose(T, R, S);
-        this.node.setLocalMatrix(matrix);
-        this.node.setIdleMatrix(matrix);
+        this.node.localMatrix = matrix;
+        this.node.idleMatrix = matrix;
         this.node.updateWorldMatrix();
         this.calculateAABB();
     }
@@ -219,22 +212,15 @@ export class Object {
         let min = [1e20, 1e20, 1e20];
         let max = [-1e20, -1e20, -1e20];
         for (const mesh of this.primitives) {
-            let meshMin = mesh.getMin();
-            let meshMax = mesh.getMax();
+            let meshMin = mesh.min;
+            let meshMax = mesh.max;
             for (let i = 0; i < 3; i++) {
                 min[i] = Math.min(min[i], meshMin[i]);
                 max[i] = Math.max(max[i], meshMax[i]);
             }
         }
-        this.minExtent = min;
-        this.maxExtent = max;
+        this.min = min;
+        this.max = max;
     }
 
-    getMin() {
-        return this.minExtent;
-    }
-
-    getMax() {
-        return this.maxExtent;
-    }
 }

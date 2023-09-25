@@ -4,12 +4,14 @@ import { getVertexSource, getFragmentSource } from './cubeMapConverterMaterial.g
 
 export class CubeMapConverterMaterial extends Material {
 
+  cameraMatrix;
   cameraMatrixHandle;
 
-  textureHandle;
-  textureTypeHandle;
   textureType = "equirectangular";
+  textureTypeHandle;
+
   texture;
+  textureHandle;
 
   constructor(texture) {
 
@@ -31,13 +33,13 @@ export class CubeMapConverterMaterial extends Material {
     return getFragmentSource();
   }
 
-  getParameterHandles() {
+  getUniformHandles() {
     this.cameraMatrixHandle = this.program.getUniformLocation('cameraMatrix');
     this.textureHandle = this.program.getUniformLocation('sphericalTexture');
     this.textureTypeHandle = this.program.getUniformLocation('textureType');
   }
 
-  bindParameters() {
+  bindUniforms() {
     gl.uniformMatrix4fv(this.cameraMatrixHandle, false, this.cameraMatrix);
 
     gl.activeTexture(gl.TEXTURE0);
@@ -48,10 +50,6 @@ export class CubeMapConverterMaterial extends Material {
 
   setCameraMatrix(cameraMatrix) {
     this.cameraMatrix = cameraMatrix;
-  }
-
-  setTextureType(type) {
-    this.textureType = type;
   }
 
 }

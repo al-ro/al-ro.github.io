@@ -1,11 +1,11 @@
 import { gl } from "../canvas.js"
+import { UniformBufferBindPoints } from "../enums.js"
 import { Material } from './material.js'
 import { getVertexSource, getFragmentSource } from './uvMaterial.glsl.js'
 
 export class UVMaterial extends Material {
 
   projectionMatrixHandle;
-  viewMatrixHandle;
   modelMatrixHandle;
 
   constructor() {
@@ -13,7 +13,11 @@ export class UVMaterial extends Material {
     this.attributes = ["POSITION", "TEXCOORD_0"];
   }
 
-  getVertexShaderSource(parameters) {
+  bindUniformBlocks() {
+    this.program.bindUniformBlock("cameraMatrices", UniformBufferBindPoints.CAMERA_MATRICES);
+  }
+
+  getVertexShaderSource() {
     return getVertexSource();
   }
 
@@ -21,10 +25,12 @@ export class UVMaterial extends Material {
     return getFragmentSource();
   }
 
-  getParameterHandles() {
-    this.projectionMatrixHandle = this.program.getUniformLocation('projectionMatrix');
-    this.viewMatrixHandle = this.program.getUniformLocation('viewMatrix');
+  getUniformHandles() {
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
+  }
+
+  bindUniforms() {
+    gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
   }
 
 }

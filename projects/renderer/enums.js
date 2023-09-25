@@ -29,8 +29,11 @@ const RenderPass = {
 }
 
 const UniformBufferBindPoints = {
+  /** View, projection and camera matrices */
   CAMERA_MATRICES: 0,
+  /** Position, exposure and FOV */
   CAMERA_UNIFORMS: 1,
+  /** Red, green and blue matrices for diffuse IBL */
   SPHERICAL_HARMONICS: 2
 }
 

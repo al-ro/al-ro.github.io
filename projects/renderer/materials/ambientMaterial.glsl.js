@@ -9,8 +9,12 @@ function getVertexSource(parameters){
 #endif
 
   uniform mat4 modelMatrix;
-  uniform mat4 viewMatrix;
-  uniform mat4 projectionMatrix;
+
+  layout(std140) uniform cameraMatrices{
+    mat4 viewMatrix;
+    mat4 projectionMatrix;
+    mat4 cameraMatrix;
+  };
 
 #ifdef HAS_NORMALS
   out vec3 vNormal;
@@ -50,9 +54,11 @@ function getFragmentSource(){
     in vec3  vPosition;
 #endif
 
-  uniform mat4 shRedMatrix;
-  uniform mat4 shGrnMatrix;
-  uniform mat4 shBluMatrix;
+  layout(std140) uniform sphericalHarmonicsUniforms{
+    mat4 shRedMatrix;
+    mat4 shGrnMatrix;
+    mat4 shBluMatrix;
+  };
 
   out vec4 fragColor;
 

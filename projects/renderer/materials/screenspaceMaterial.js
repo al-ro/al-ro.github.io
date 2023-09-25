@@ -28,11 +28,11 @@ export class ScreenspaceMaterial extends Material {
     return getFragmentSource();
   }
 
-  getParameterHandles() {
+  getUniformHandles() {
     this.textureHandle = this.program.getUniformLocation('tex');
   }
 
-  bindParameters() {
+  bindUniforms() {
 
     // Tell WebGL we want to affect texture unit 0
     gl.activeTexture(gl.TEXTURE0);

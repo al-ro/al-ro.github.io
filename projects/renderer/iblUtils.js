@@ -46,7 +46,7 @@ function getSphericalHarmonicsMatrices(cubeMap) {
   let shBluMatrix;
 
   let shMaterial = new SphericalHarmonicsMaterial(cubeMap);
-  let mesh = new Mesh(getScreenspaceQuad(), shMaterial);
+  let mesh = new Mesh({ geometry: getScreenspaceQuad(), material: shMaterial });
   mesh.setCulling(false);
 
   // Create a 4x3 framebuffer and render into it using the SH material
@@ -105,8 +105,8 @@ function convertToCubeMap(sphericalTexture, cubeMap, type = "equirectangular") {
   let texture = createAndSetupTexture();
 
   let cubeMapConverterMaterial = new CubeMapConverterMaterial(sphericalTexture);
-  cubeMapConverterMaterial.setTextureType(type);
-  let mesh = new Mesh(getScreenspaceQuad(), cubeMapConverterMaterial);
+  cubeMapConverterMaterial.textureType = type;
+  let mesh = new Mesh({ geometry: getScreenspaceQuad(), material: cubeMapConverterMaterial });
   mesh.setCulling(false);
 
   let frameBuffer = gl.createFramebuffer();
@@ -118,9 +118,7 @@ function convertToCubeMap(sphericalTexture, cubeMap, type = "equirectangular") {
 
   for (let face = 0; face < 6; face++) {
 
-    let cameraMatrix = m4.lookAt([0, 0, 0], viewDirections[face], upDirections[face]);
-
-    cubeMapConverterMaterial.setCameraMatrix(cameraMatrix);
+    cubeMapConverterMaterial.setCameraMatrix(m4.lookAt([0, 0, 0], viewDirections[face], upDirections[face]));
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -154,7 +152,7 @@ function getCubeMapConvolution(cubeMap) {
   let size;
 
   let convolutionMaterial = new ConvolutionMaterial(cubeMap);
-  let mesh = new Mesh(getScreenspaceQuad(), convolutionMaterial);
+  let mesh = new Mesh({ geometry: getScreenspaceQuad(), material: convolutionMaterial });
   mesh.setCulling(false);
 
   let frameBuffer = gl.createFramebuffer();
@@ -171,9 +169,7 @@ function getCubeMapConvolution(cubeMap) {
 
     for (let face = 0; face < 6; face++) {
 
-      let cameraMatrix = m4.lookAt([0, 0, 0], viewDirections[face], upDirections[face]);
-
-      convolutionMaterial.setCameraMatrix(cameraMatrix);
+      convolutionMaterial.setCameraMatrix(m4.lookAt([0, 0, 0], viewDirections[face], upDirections[face]));
 
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -195,13 +191,13 @@ function getCubeMapConvolution(cubeMap) {
   return cubeMap;
 }
 
-function getBRDFIntegrationMap() {
+function getBRDFIntegrationTexture() {
   let texture = createAndSetupTexture();
 
   let size = 256;
 
   let brdfMaterial = new BRDFMapMaterial([size, size]);
-  let mesh = new Mesh(getScreenspaceQuad(), brdfMaterial);
+  let mesh = new Mesh({ geometry: getScreenspaceQuad(), material: brdfMaterial });
   mesh.setCulling(false);
 
   // Create a 256x256 framebuffer and render into it using the BRDF integration material
@@ -222,4 +218,4 @@ function getBRDFIntegrationMap() {
   return texture;
 }
 
-export { getSphericalHarmonicsMatrices, getBRDFIntegrationMap, getCubeMapConvolution, convertToCubeMap }
+export { getSphericalHarmonicsMatrices, getBRDFIntegrationTexture, getCubeMapConvolution, convertToCubeMap }

@@ -42,8 +42,8 @@ class MorphTarget {
     this.attributes = attributes;
     if (this.attributes.has("POSITION")) {
       this.hasPositionTarget = true;
-      this.min = this.attributes.get("POSITION").getMin();
-      this.max = this.attributes.get("POSITION").getMax();
+      this.min = this.attributes.get("POSITION").min;
+      this.max = this.attributes.get("POSITION").max;
     }
   }
 
@@ -63,18 +63,6 @@ class MorphTarget {
 
   hasPosition() {
     return this.hasPositionTarget;
-  }
-
-  getAttributes() {
-    return this.attributes;
-  }
-
-  getMin() {
-    return this.min;
-  }
-
-  getMax() {
-    return this.max;
   }
 
 }
