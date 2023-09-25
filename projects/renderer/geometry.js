@@ -19,8 +19,8 @@ export class Geometry {
   indices;
 
   // Extent of untransformed geometry vertices
-  min = null;
-  max = null;
+  min = [-1, -1, -1];
+  max = [1, 1, 1];
 
   /**
    * Optional array of MorphTarget objects which can be used for vertex animation
@@ -39,6 +39,10 @@ export class Geometry {
   constructor(geometryData) {
 
     this.attributes = geometryData.attributes;
+
+    this.min = this.attributes.get("POSITION").min;
+    this.max = this.attributes.get("POSITION").max;
+
     if (!!geometryData.morphTargets) {
       this.morphTargets = geometryData.morphTargets.slice(0, 6);
     }
@@ -95,34 +99,6 @@ export class Geometry {
     if (this.hasIndices) {
       this.indices.bind();
     }
-  }
-
-  getMin() {
-    return this.attributes.get("POSITION").getMin();
-  }
-
-  getMax() {
-    return this.attributes.get("POSITION").getMax();
-  }
-
-  getPrimitiveType() {
-    return this.primitiveType;
-  }
-
-  getAttributes() {
-    return this.attributes;
-  }
-
-  getMorphTargets() {
-    return this.morphTargets;
-  }
-
-  getIndices() {
-    return this.indices;
-  }
-
-  getLength() {
-    return this.length;
   }
 
 }

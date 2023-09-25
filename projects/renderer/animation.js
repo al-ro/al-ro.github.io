@@ -47,19 +47,15 @@ export class Animation {
     setSpeed(speed) {
         this.speed = speed;
         for (const animation of this.propertyAnimations) {
-            animation.setSpeed(speed);
+            animation.speed = speed;
         }
     }
 
     setLooping(looping) {
         this.looping = looping;
         for (const animation of this.propertyAnimations) {
-            animation.setLooping(looping);
+            animation.looping = looping;
         }
-    }
-
-    getName() {
-        return this.name;
     }
 
     isActive() {
@@ -68,10 +64,6 @@ export class Animation {
 
     setActive(state, time) {
         state ? this.enable(time) : this.disable();
-    }
-
-    getStart() {
-        return this.start;
     }
 
     enable(time) {

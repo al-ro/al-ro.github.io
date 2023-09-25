@@ -34,6 +34,10 @@ function getDefinePrefix(material, attributes, morphTargets) {
     prefix += "#define HAS_TANGENTS \n";
   }
 
+  if (attributes.includes("JOINTS_0") && attributes.includes("WEIGHTS_0")) {
+    prefix += "#define HAS_SKIN \n";
+  }
+
   if (material.hasBaseColorTexture) {
     prefix += "#define HAS_BASE_COLOR_TEXTURE \n";
   }
@@ -111,8 +115,8 @@ function getMorphTargetDeclarationString(parameters) {
     }
     // Morph target attributes (POSITION0, POSITION1, etc.)
     for (let i = 0; i < parameters.morphTargets.length; i++) {
-      parameters.morphTargets[i].getAttributes().forEach((attribute) => {
-        declarationString += "in vec3 " + attribute.getName() + i + ";\n"
+      parameters.morphTargets[i].attributes.forEach((attribute) => {
+        declarationString += "in vec3 " + attribute.name + i + ";\n"
       });
     }
   }
@@ -129,7 +133,7 @@ function getMorphedAttributeString(parameters, name) {
   let morphString = "vec3 " + name.toLowerCase() + " = " + name + ".xyz";
   if (parameters != null && parameters.morphTargets != null) {
     for (let i = 0; i < parameters.morphTargets.length; i++) {
-      if (parameters.morphTargets[i].getAttributes().has(name)) {
+      if (parameters.morphTargets[i].attributes.has(name)) {
         morphString += "\n + w" + i + " * " + name + i;
       }
     }
@@ -211,7 +215,6 @@ layout(std140) uniform cameraMatrices{
     `+ getMorphedAttributeString(parameters, "POSITION") + `
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
     vPosition = transformedPosition.xyz;
-
     gl_Position = projectionMatrix * viewMatrix * transformedPosition;
   }
   `;
@@ -238,4 +241,4 @@ function compileShader(shaderSource, shaderType) {
   return shader;
 }
 
-export { compileShader, getDefinePrefix, getVertexSource, getMorphedAttributeString }
+export { compileShader, getDefinePrefix, getMorphedAttributeString }

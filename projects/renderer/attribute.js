@@ -11,7 +11,9 @@ const supportedAttributes = [
   "TANGENT",
   "TEXCOORD_0",
   "TEXCOORD_1",
-  "COLOR_0"
+  "COLOR_0",
+  "JOINTS_0",
+  "WEIGHTS_0"
 ];
 
 
@@ -97,14 +99,6 @@ class Attribute {
 
   }
 
-  setHandle(handle) {
-    this.handle = handle;
-  }
-
-  setBuffer(buffer) {
-    this.buffer = buffer;
-  }
-
   enableBuffer() {
     if (this.handle == null) {
       console.error("Handle is not defined: ", this);
@@ -114,23 +108,6 @@ class Attribute {
       gl.vertexAttribPointer(this.handle, this.descriptor.componentCount, this.descriptor.componentType, this.descriptor.normalized, this.descriptor.byteStride, this.descriptor.offset);
     }
   }
-
-  getName() {
-    return this.name;
-  }
-
-  getData() {
-    return this.data;
-  }
-
-  getMin() {
-    return this.min;
-  }
-
-  getMax() {
-    return this.max;
-  }
-
 }
 
 export { supportedAttributes, Attribute }

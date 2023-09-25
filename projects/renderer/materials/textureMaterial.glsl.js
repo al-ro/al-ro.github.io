@@ -6,8 +6,12 @@ function getVertexSource(parameters){
   in vec2 TEXCOORD_0;
 
   uniform mat4 modelMatrix;
-  uniform mat4 viewMatrix;
-  uniform mat4 projectionMatrix;
+
+  layout(std140) uniform cameraMatrices{
+    mat4 viewMatrix;
+    mat4 projectionMatrix;
+    mat4 cameraMatrix;
+  };
 
   out vec2 vUV;
 

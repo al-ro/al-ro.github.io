@@ -16,31 +16,22 @@ function getFragmentSource(){
 
   var fragmentSource = `
 
-  
+  layout(std140) uniform cameraMatrices{
+    mat4 viewMatrix;
+    mat4 projectionMatrix;
+    mat4 cameraMatrix;
+  };
 
-  uniform float fov;
+  layout(std140) uniform cameraUniforms{
+    vec3 cameraPosition;
+    float cameraExposure;
+    float cameraFOV;
+  };
+
   uniform vec2 resolution;
-  uniform mat4 cameraMatrix;
-  uniform float exposure;
-  uniform samplerCube cubeMap;
+  uniform samplerCube environmenCubeMap;
 
   out vec4 fragColor;
-/*
-  uniform mat4 shRedMatrix;
-  uniform mat4 shGrnMatrix;
-  uniform mat4 shBluMatrix;
-
-  vec3 getSHIrradiance(vec3 normal){
-
-    vec4 n = vec4(normal, 1.0);
-
-    float r = dot(n, shRedMatrix * n);
-    float g = dot(n, shGrnMatrix * n);
-    float b = dot(n, shBluMatrix * n);
-
-    return max(vec3(r, g, b), vec3(0));
-  }
-*/
 
   vec3 rayDirection(float fieldOfView, vec2 fragCoord) {
     vec2 xy = fragCoord - resolution.xy / 2.0;
@@ -54,8 +45,8 @@ function getFragmentSource(){
   }
 
   void main(){ 
-    vec3 rayDir = normalize(cameraMatrix * vec4(rayDirection(fov, gl_FragCoord.xy), 0.0)).rgb;
-    vec3 col = exposure * texture(cubeMap, normalize(rayDir)).rgb;
+    vec3 rayDir = normalize(cameraMatrix * vec4(rayDirection(cameraFOV, gl_FragCoord.xy), 0.0)).rgb;
+    vec3 col = cameraExposure * texture(environmenCubeMap, normalize(rayDir)).rgb;
     col = ACESFilm(col);
     col = pow(col, vec3(0.4545));
 

@@ -34,20 +34,20 @@ export class Scene {
     getAnimations() {
         let animations = [];
         for (const object of this.objects) {
-            animations = animations.concat(object.getAnimations());
+            animations = animations.concat(object.animations);
         }
         return animations;
     }
 
-    renderDepthPrepass(camera, time, cullCamera) {
+    renderDepthPrepass(camera) {
         for (const object of this.objects) {
-            object.renderDepthPrepass(camera, time, cullCamera);
+            object.renderDepthPrepass(camera);
         }
     }
 
-    render(renderPass, camera, time, cullCamera) {
+    render(renderPass, camera, environment, cullCamera) {
         for (const object of this.objects) {
-            object.render(renderPass, camera, time, cullCamera);
+            object.render(renderPass, camera, environment, cullCamera);
         }
     }
 
@@ -59,14 +59,6 @@ export class Scene {
         for (const object of this.objects) {
             object.setBackgroundTexture(texture);
         }
-    }
-
-    getObjects() {
-        return this.objects;
-    }
-
-    getPrimitiveCount() {
-        return this.primitiveCount;
     }
 
     /**
