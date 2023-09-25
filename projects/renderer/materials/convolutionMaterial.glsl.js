@@ -17,17 +17,16 @@ function getVertexSource(){
 function getFragmentSource(){
 
   var fragmentSource = `
-    
-    
-    #define PI 3.14159
-    
-    uniform samplerCube cubeMap;
+
     uniform mat4 cameraMatrix;
+    
+    uniform samplerCube environmenCubeMap;
     uniform float roughness;
 
     in vec3 vPosition;
     out vec4 fragColor;
 
+    const float PI = 3.14159;
     const int sampleCount = 512;
 
     const float minDot = 1e-5;
@@ -147,7 +146,7 @@ function getFragmentSource(){
           float mipBias = 1.0;
           level = max(0.5 * log2(omegaS / omegaP) + mipBias, 0.0);
 
-          prefilteredColor += textureLod(cubeMap, L, level).rgb * NdotL;
+          prefilteredColor += textureLod(environmenCubeMap, L, level).rgb * NdotL;
           totalWeight      += NdotL;
         }
       }
@@ -162,9 +161,7 @@ function getFragmentSource(){
     void main(){
       vec3 rayDir = normalize(vec3(vPosition.rg, -1.0));
       rayDir = normalize((cameraMatrix * vec4(rayDir, 1.0)).xyz);
-      vec3 c = getPreFilteredColor(rayDir, roughness);
-
-      fragColor = vec4(c, 1.0);
+      fragColor = vec4(getPreFilteredColor(rayDir, roughness), 1.0);
     }
     `;
 

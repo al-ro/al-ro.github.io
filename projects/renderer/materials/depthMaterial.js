@@ -31,6 +31,10 @@ export class DepthMaterial extends Material {
   baseColorTextureUVHandle;
 
   hasBaseColorTexture = false;
+  hasSkin = false;
+
+  skinTexture;
+  skinTextureHandle;
 
   weights = [];
   weightHandles = [];
@@ -42,11 +46,14 @@ export class DepthMaterial extends Material {
     this.attributes = [
       "POSITION",
       "TEXCOORD_0",
-      "TEXCOORD_1"
+      "TEXCOORD_1",
+      "JOINTS_0",
+      "WEIGHTS_0"
     ];
 
 
     this.supportsMorphTargets = true;
+    this.supportsSkin = true;
 
     if (parameters != null) {
 
@@ -93,8 +100,7 @@ export class DepthMaterial extends Material {
     this.program.bindUniformBlock("cameraMatrices", UniformBufferBindPoints.CAMERA_MATRICES);
   }
 
-  getParameterHandles() {
-
+  getUniformHandles() {
     if (this.weights != null) {
       for (let i = 0; i < this.weights.length; i++) {
         this.weightHandles.push(this.program.getOptionalUniformLocation("w" + i));
@@ -111,8 +117,6 @@ export class DepthMaterial extends Material {
     }
 
     this.baseColorHandle = this.program.getOptionalUniformLocation('baseColorFactor');
-
-
   }
 
   getInstanceParameterHandles() {
@@ -121,7 +125,16 @@ export class DepthMaterial extends Material {
     this.attributeHandles.scaleHandle = this.program.getAttribLocation('scale');
   }
 
-  bindParameters() {
+  enableSkin() {
+    if (!this.hasSkin && this.program != null) {
+      this.hasSkin = true;
+      this.skinTextureHandle = this.program.getOptionalUniformLocation('jointMatricesTexture');
+    }
+  }
+
+  bindUniforms() {
+
+    gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
 
     if (this.weights != null) {
       for (let i = 0; i < this.weights.length; i++) {
@@ -148,15 +161,17 @@ export class DepthMaterial extends Material {
     if (this.hasBaseColorTexture) {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.baseColorTexture);
-      gl.uniform1i(this.baseColorTextureHandle, this.baseColorTextureUnit);
+      gl.uniform1i(this.baseColorTextureHandle, 0);
       gl.uniform1i(this.baseColorTextureUVHandle, this.baseColorTextureUV);
     }
 
-    gl.uniform4fv(this.baseColorHandle, this.baseColorFactor);
-  }
+    if (this.hasSkin) {
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, this.skinTexture);
+      gl.uniform1i(this.skinTextureHandle, 1);
+    }
 
-  bindUniformBlocks() {
-    this.program.bindUniformBlock("cameraMatrices", UniformBufferBindPoints.CAMERA_MATRICES);
+    gl.uniform4fv(this.baseColorHandle, this.baseColorFactor);
   }
 
 }

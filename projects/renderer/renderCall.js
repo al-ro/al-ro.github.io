@@ -11,13 +11,13 @@ function rendersInPass(renderPass, material) {
   }
 }
 
-export function render(renderPass, mesh, camera, time, cullCamera) {
+export function render(renderPass, mesh, camera, environment, cullCamera) {
 
-  if (!(mesh != null && mesh.getMaterial() != null && mesh.getGeometry() != null)) {
+  if (!(mesh != null && mesh.material != null && mesh.geometry != null)) {
     return;
   }
 
-  if (!rendersInPass(renderPass, mesh.getMaterial())) {
+  if (!rendersInPass(renderPass, mesh.material)) {
     return;
   }
 
@@ -25,54 +25,57 @@ export function render(renderPass, mesh, camera, time, cullCamera) {
     if (cullCamera == null) {
       cullCamera = camera;
     }
-    if (cullCamera != null && !cullCamera.insideFrustum(mesh.getMin(), mesh.getMax())) {
+    if (cullCamera != null && !cullCamera.insideFrustum(mesh.min, mesh.max)) {
       return;
     }
   }
 
-  if (mesh.getMaterial().doubleSided) {
+  if (mesh.material.doubleSided) {
     gl.disable(gl.CULL_FACE);
   } else {
     gl.enable(gl.CULL_FACE);
   }
 
-  gl.useProgram(mesh.getMaterial().getProgram().program);
+  gl.useProgram(mesh.material.program.program);
   mesh.bindVAO();
 
-  if (camera != null) {
-    mesh.getMaterial().bindMatrices({
-      projectionMatrix: camera.getProjectionMatrix(),
-      viewMatrix: camera.getViewMatrix(),
-      modelMatrix: mesh.getWorldMatrix(),
-      normalMatrix: mesh.getNormalMatrix()
-    });
+  mesh.material.modelMatrix = mesh.worldMatrix;
+  mesh.material.normalMatrix = mesh.normalMatrix;
+
+  if (mesh.hasWeights && mesh.material.supportsMorphTargets) {
+    mesh.material.setWeights(mesh.weights);
   }
 
-  if (mesh.getMaterial().needsCamera) {
-    mesh.getMaterial().setCamera(camera);
+  if (mesh.hasSkin()) {
+    mesh.skin.update();
   }
 
-  if (mesh.getMaterial().needsTime) {
-    mesh.getMaterial().setTime(time);
+  if (mesh.material.needsEnvironmentTexture && environment != null) {
+    mesh.material.environmentTexture = environment.cubeMap;
   }
 
-  if (mesh.hasWeights && mesh.getMaterial().supportsMorphTargets) {
-    mesh.getMaterial().setWeights(mesh.getWeights());
+  if (mesh.material.needsBRDFLUT && environment != null && mesh.material.brdfIntegrationTexture == null) {
+    mesh.material.brdfIntegrationTexture = environment.brdfIntegrationTexture;
   }
-  mesh.getMaterial().bindParameters();
 
-  if (mesh.getGeometry().hasIndices) {
-    if (mesh.getGeometry().instanced) {
-      gl.drawElementsInstanced(mesh.getGeometry().getPrimitiveType(),
-        mesh.getGeometry().getLength(),
-        mesh.getGeometry().getIndices().getType(),
+  if (mesh.hasSkin() && mesh.material.supportsSkin) {
+    mesh.material.skinTexture = mesh.skin.texture;
+  }
+
+  mesh.material.bindUniforms();
+
+  if (mesh.geometry.hasIndices) {
+    if (mesh.geometry.instanced) {
+      gl.drawElementsInstanced(mesh.geometry.primitiveType,
+        mesh.geometry.length,
+        mesh.geometry.indices.type,
         0,
-        mesh.getGeometry().instances);
+        mesh.geometry.instances);
     } else {
-      gl.drawElements(mesh.getGeometry().getPrimitiveType(), mesh.getGeometry().getLength(), mesh.getGeometry().getIndices().getType(), 0);
+      gl.drawElements(mesh.geometry.primitiveType, mesh.geometry.length, mesh.geometry.indices.type, 0);
     }
   } else {
-    gl.drawArrays(mesh.getGeometry().getPrimitiveType(), 0, mesh.getGeometry().getLength());
+    gl.drawArrays(mesh.geometry.primitiveType, 0, mesh.geometry.length);
   }
 
   mesh.unbindVAO();

@@ -1,57 +1,36 @@
-import { gl } from "../canvas.js"
 import { programRepository } from "../programRepository.js"
 
 export class Material {
 
   attributeHandles = {};
 
-  // All attributes supported by the material
+  /** Names of all attributes supported by the material */
   attributes = [];
 
   program;
 
-  needsCamera = false;
-  needTime = false;
   instanced = false;
   supportsMorphTargets = false;
+  supportsSkin = false;
+  needsEnvironmentTexture = false;
+  needsBRDFLUT = false;
+
+  modelMatrix = m4.create();
+  normalMatrix = m4.create();
 
   constructor() { }
 
   destroy() { }
 
-  createProgram(attributes, morphTargets) {
-    this.program = programRepository.getProgram(this, attributes, morphTargets);
-    this.bindUniformBlocks();
-  }
-
-  getProgram() {
-    return this.program;
-  }
-
-  bindMatrices(params) {
-
-    if (this.projectionMatrixHandle != null && params.projectionMatrix != null) {
-      gl.uniformMatrix4fv(this.projectionMatrixHandle, false, params.projectionMatrix);
-    }
-
-    if (this.viewMatrixHandle != null && params.viewMatrix != null) {
-      gl.uniformMatrix4fv(this.viewMatrixHandle, false, params.viewMatrix);
-    }
-
-    if (this.modelMatrixHandle != null && params.modelMatrix != null) {
-      gl.uniformMatrix4fv(this.modelMatrixHandle, false, params.modelMatrix);
-    }
-
-    if (this.normalMatrixHandle != null && params.normalMatrix != null) {
-      gl.uniformMatrix4fv(this.normalMatrixHandle, false, params.normalMatrix);
+  initializeProgram(attributes, morphTargets) {
+    if (this.program == null) {
+      this.program = programRepository.getProgram(this, attributes, morphTargets);
+      this.bindUniformBlocks();
+      this.getUniformHandles();
     }
   }
 
-  getAttributes() {
-    return this.attributes;
-  }
-
-  bindParameters() { }
+  bindUniforms() { }
 
   bindUniformBlocks() { }
 

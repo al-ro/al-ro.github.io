@@ -20,7 +20,9 @@ export const outputEnum = {
   ALPHA: 12,
   TRANSMISSION: 13,
   SHEEN_COLOR: 14,
-  SHEEN_ROUGHNESS: 15
+  SHEEN_ROUGHNESS: 15,
+  JOINTS_0: 16,
+  WEIGHTS_0: 17
 };
 
 export class PBRMaterial extends Material {
@@ -33,7 +35,6 @@ export class PBRMaterial extends Material {
   normalMatrixHandle;
 
   timeHandle;
-  time = 0.0;
 
   // In the absence of metallicRoughnessTexture, use float uniforms
   // Either these or a texture must be supplied
@@ -75,7 +76,6 @@ export class PBRMaterial extends Material {
    * 	occlusion   r
    * 	roughness   g
    * 	metal       b
-   * Optional
    */
   metallicRoughnessTexture;
   metallicRoughnessTextureUV = 0;
@@ -102,26 +102,25 @@ export class PBRMaterial extends Material {
   sheenTextureUV = 0;
   sheenFactor = [1, 1, 1, 1];
 
+  skinTexture;
+
   /**
    * A cubemap or equirectangular texture where each mip map is a
    * prefiltered environment map of the source cubemap at level 0
    * Must be generated every time a new environment map is used
-   * Mandatory
    */
   environmentTexture;
 
-  // For transmissive materials, this holds a mipmapped square texture of the opaque scene
-  // Mandatory if hasTransmission == true
+  /** For transmissive materials, this holds a mipmapped square texture of the opaque scene */
   backgroundTexture;
 
   /**
    * The precomputed Fresnel response table for given view ray
    * and surface normal. Used in the split sum approach to specular BRDF
-   * This texture is independent from the environment and is computed
-   * and stored once any pbrMaterial is used
-   * Mandatory
+   * This texture is independent from the environment
    */
-  brdfIntegrationMapTexture;
+  brdfIntegrationTexture;
+
 
   // --------- PBR uniform handles ----------
 
@@ -162,6 +161,8 @@ export class PBRMaterial extends Material {
 
   brdfTextureHandle;
 
+  skinTextureHandle;
+
   alphaCutoffHandle;
   alphaModeHandle;
 
@@ -184,6 +185,7 @@ export class PBRMaterial extends Material {
   hasTransmissionFactor = false;
   hasSheen = false;
   hasSheenTexture = false;
+  hasSkin = false;
 
   brdfTextureUnit;
   environmentTextureUnit;
@@ -194,8 +196,7 @@ export class PBRMaterial extends Material {
   emissiveTextureUnit;
   transmissionTextureUnit;
   backgroundTextureUnit;
-
-  environment;
+  skinTextureUnit;
 
   outputVariable = outputEnum.PBR;
 
@@ -245,163 +246,161 @@ export class PBRMaterial extends Material {
       "NORMAL",
       "TANGENT",
       "TEXCOORD_0",
-      "TEXCOORD_1"
+      "TEXCOORD_1",
+      "JOINTS_0",
+      "WEIGHTS_0"
     ];
 
-    this.needsTime = true;
     this.supportsMorphTargets = true;
-
-    if (parameters.alphaMode != null) {
-      this.alphaMode = parameters.alphaMode;
-    }
-
-    if (parameters.alphaCutoff != null) {
-      this.alphaCutoff = parameters.alphaCutoff;
-    }
-
-    if (parameters.doubleSided != null) {
-      this.doubleSided = parameters.doubleSided;
-    }
+    this.supportsSkin = true;
+    this.needsEnvironmentTexture = true;
+    this.needsBRDFLUT = true;
 
     this.textureUnits = 0;
 
     this.brdfTextureUnit = this.textureUnits++;
-
     this.environmentTextureUnit = this.textureUnits++;
 
-    if (parameters.environment != null) {
-
-      this.environment = parameters.environment;
-
-      this.brdfIntegrationMapTexture = this.environment.getBRDFIntegrationMap();
-      this.environmentTexture = this.environment.getCubeMap();
-    }
-
-    if (parameters.baseColorTexture != null) {
-      this.baseColorTexture = parameters.baseColorTexture;
-      this.hasBaseColorTexture = true;
-      this.baseColorTextureUnit = this.textureUnits++;
-      if (parameters.baseColorTextureUV != null) {
-        this.baseColorTextureUV = parameters.baseColorTextureUV;
+    if (parameters != null) {
+      if (parameters.alphaMode != null) {
+        this.alphaMode = parameters.alphaMode;
       }
-      if (parameters.baseColorTextureTransform != null) {
-        this.baseColorTextureTransform = parameters.baseColorTextureTransform;
-        this.hasBaseColorTextureTransform = true;
+
+      if (parameters.alphaCutoff != null) {
+        this.alphaCutoff = parameters.alphaCutoff;
       }
-    }
 
-    if (parameters.baseColorFactor != null) {
-      this.baseColorFactor = parameters.baseColorFactor;
-    }
-
-    if (parameters.sheenTexture != null) {
-      this.sheenTexture = parameters.sheenTexture;
-      this.hasSheenTexture = true;
-      this.hasSheen = true;
-      this.sheenTextureUnit = this.textureUnits++;
-      if (parameters.sheenTextureUV != null) {
-        this.sheenTextureUV = parameters.sheenTextureUV;
+      if (parameters.doubleSided != null) {
+        this.doubleSided = parameters.doubleSided;
       }
-    }
 
-    if (parameters.sheenColorFactor != null) {
-      this.hasSheen = true;
-      this.sheenFactor[0] = parameters.sheenColorFactor[0];
-      this.sheenFactor[1] = parameters.sheenColorFactor[1];
-      this.sheenFactor[2] = parameters.sheenColorFactor[2];
-    }
 
-    if (parameters.sheenRoughnessFactor != null) {
-      this.hasSheen = true;
-      this.sheenFactor[3] = parameters.sheenRoughnessFactor;
-    }
-
-    if (parameters.normalTexture != null) {
-      this.hasNormalTexture = true;
-      this.normalTextureUnit = this.textureUnits++;
-      this.normalTexture = parameters.normalTexture;
-      if (parameters.normalScale != null) {
-        this.normalScale = parameters.normalScale;
+      if (parameters.baseColorTexture != null) {
+        this.baseColorTexture = parameters.baseColorTexture;
+        this.hasBaseColorTexture = true;
+        this.baseColorTextureUnit = this.textureUnits++;
+        if (parameters.baseColorTextureUV != null) {
+          this.baseColorTextureUV = parameters.baseColorTextureUV;
+        }
+        if (parameters.baseColorTextureTransform != null) {
+          this.baseColorTextureTransform = parameters.baseColorTextureTransform;
+          this.hasBaseColorTextureTransform = true;
+        }
       }
-      if (parameters.normalTextureUV != null) {
-        this.normalTextureUV = parameters.normalTextureUV;
-      }
-      if (parameters.normalTextureTransform != null) {
-        this.normalTextureTransform = parameters.normalTextureTransform;
-        this.hasNormalTextureTransform = true;
-      }
-    }
 
-    if (parameters.emissiveTexture != null) {
-      this.hasEmission = true;
-      this.hasEmissiveTexture = true;
-      this.emissiveTextureUnit = this.textureUnits++;
-      this.emissiveTexture = parameters.emissiveTexture;
-      if (parameters.emissiveTextureUV != null) {
-        this.emissiveTextureUV = parameters.emissiveTextureUV;
+      if (parameters.baseColorFactor != null) {
+        this.baseColorFactor = parameters.baseColorFactor;
       }
-    }
-    if (parameters.emissiveFactor != null) {
-      this.hasEmission = true;
-      this.hasEmissiveFactor = true;
-      this.emissiveFactor = parameters.emissiveFactor;
-    }
 
-    if (parameters.transmissionTexture != null) {
-      this.hasTransmission = true;
-      this.hasTransmissionTexture = true;
-      this.transmissionTextureUnit = this.textureUnits++;
-      this.transmissionTexture = parameters.transmissionTexture;
-      if (parameters.transmissionTextureUV != null) {
-        this.transmissionTextureUV = parameters.transmissionTextureUV;
+      if (parameters.sheenTexture != null) {
+        this.sheenTexture = parameters.sheenTexture;
+        this.hasSheenTexture = true;
+        this.hasSheen = true;
+        this.sheenTextureUnit = this.textureUnits++;
+        if (parameters.sheenTextureUV != null) {
+          this.sheenTextureUV = parameters.sheenTextureUV;
+        }
       }
-    }
 
-    if (parameters.transmissionFactor != null) {
-      this.hasTransmission = true;
-      this.hasTransmissionFactor = true;
-      this.transmissionFactor = parameters.transmissionFactor;
-    }
-
-    if (this.hasTransmission) {
-      this.backgroundTextureUnit = this.textureUnits++;
-    }
-
-    if (parameters.metallicRoughnessTexture != null) {
-      this.hasMetallicRoughnessTexture = true;
-      this.metallicRoughnessTextureUnit = this.textureUnits++;
-      this.metallicRoughnessTexture = parameters.metallicRoughnessTexture;
-      if (parameters.metallicRoughnessTextureUV != null) {
-        this.metallicRoughnessTextureUV = parameters.metallicRoughnessTextureUV;
+      if (parameters.sheenColorFactor != null) {
+        this.hasSheen = true;
+        this.sheenFactor[0] = parameters.sheenColorFactor[0];
+        this.sheenFactor[1] = parameters.sheenColorFactor[1];
+        this.sheenFactor[2] = parameters.sheenColorFactor[2];
       }
-    }
 
-    if (parameters.metallicFactor != null) {
-      this.metallicFactor = parameters.metallicFactor;
-    }
+      if (parameters.sheenRoughnessFactor != null) {
+        this.hasSheen = true;
+        this.sheenFactor[3] = parameters.sheenRoughnessFactor;
+      }
 
-    if (parameters.roughnessFactor != null) {
-      this.roughnessFactor = parameters.roughnessFactor;
-    }
+      if (parameters.normalTexture != null) {
+        this.hasNormalTexture = true;
+        this.normalTextureUnit = this.textureUnits++;
+        this.normalTexture = parameters.normalTexture;
+        if (parameters.normalScale != null) {
+          this.normalScale = parameters.normalScale;
+        }
+        if (parameters.normalTextureUV != null) {
+          this.normalTextureUV = parameters.normalTextureUV;
+        }
+        if (parameters.normalTextureTransform != null) {
+          this.normalTextureTransform = parameters.normalTextureTransform;
+          this.hasNormalTextureTransform = true;
+        }
+      }
 
-    if (parameters.occlusionTexture != null) {
-      this.hasAO = true;
-      if (parameters.occlusionTexture == this.metallicRoughnessTexture) {
-        this.hasAOTexture = false;
-      } else {
-        this.hasAOTexture = true;
-        this.occlusionTextureUnit = this.textureUnits++;
-        this.occlusionTexture = parameters.occlusionTexture;
+      if (parameters.emissiveTexture != null) {
+        this.hasEmission = true;
+        this.hasEmissiveTexture = true;
+        this.emissiveTextureUnit = this.textureUnits++;
+        this.emissiveTexture = parameters.emissiveTexture;
+        if (parameters.emissiveTextureUV != null) {
+          this.emissiveTextureUV = parameters.emissiveTextureUV;
+        }
       }
-      if (parameters.occlusionStrength != null) {
-        this.occlusionStrength = parameters.occlusionStrength;
+      if (parameters.emissiveFactor != null) {
+        this.hasEmission = true;
+        this.hasEmissiveFactor = true;
+        this.emissiveFactor = parameters.emissiveFactor;
       }
-      if (parameters.occlusionTextureUV != null) {
-        this.occlusionTextureUV = parameters.occlusionTextureUV;
+
+      if (parameters.transmissionTexture != null) {
+        this.hasTransmission = true;
+        this.hasTransmissionTexture = true;
+        this.transmissionTextureUnit = this.textureUnits++;
+        this.transmissionTexture = parameters.transmissionTexture;
+        if (parameters.transmissionTextureUV != null) {
+          this.transmissionTextureUV = parameters.transmissionTextureUV;
+        }
       }
-    }
-    if (parameters.ior != null) {
-      this.ior = parameters.ior;
+
+      if (parameters.transmissionFactor != null) {
+        this.hasTransmission = true;
+        this.hasTransmissionFactor = true;
+        this.transmissionFactor = parameters.transmissionFactor;
+      }
+
+      if (this.hasTransmission) {
+        this.backgroundTextureUnit = this.textureUnits++;
+      }
+
+      if (parameters.metallicRoughnessTexture != null) {
+        this.hasMetallicRoughnessTexture = true;
+        this.metallicRoughnessTextureUnit = this.textureUnits++;
+        this.metallicRoughnessTexture = parameters.metallicRoughnessTexture;
+        if (parameters.metallicRoughnessTextureUV != null) {
+          this.metallicRoughnessTextureUV = parameters.metallicRoughnessTextureUV;
+        }
+      }
+
+      if (parameters.metallicFactor != null) {
+        this.metallicFactor = parameters.metallicFactor;
+      }
+
+      if (parameters.roughnessFactor != null) {
+        this.roughnessFactor = parameters.roughnessFactor;
+      }
+
+      if (parameters.occlusionTexture != null) {
+        this.hasAO = true;
+        if (parameters.occlusionTexture == this.metallicRoughnessTexture) {
+          this.hasAOTexture = false;
+        } else {
+          this.hasAOTexture = true;
+          this.occlusionTextureUnit = this.textureUnits++;
+          this.occlusionTexture = parameters.occlusionTexture;
+        }
+        if (parameters.occlusionStrength != null) {
+          this.occlusionStrength = parameters.occlusionStrength;
+        }
+        if (parameters.occlusionTextureUV != null) {
+          this.occlusionTextureUV = parameters.occlusionTextureUV;
+        }
+      }
+      if (parameters.ior != null) {
+        this.ior = parameters.ior;
+      }
     }
   }
 
@@ -423,7 +422,7 @@ export class PBRMaterial extends Material {
     this.program.bindUniformBlock("sphericalHarmonicsUniforms", UniformBufferBindPoints.SPHERICAL_HARMONICS);
   }
 
-  getParameterHandles() {
+  getUniformHandles() {
 
     if (this.weights != null) {
       for (let i = 0; i < this.weights.length; i++) {
@@ -509,10 +508,16 @@ export class PBRMaterial extends Material {
       this.sheenFactorHandle = this.program.getOptionalUniformLocation('sheenFactor');
     }
 
-    this.timeHandle = this.program.getOptionalUniformLocation('time');
+    this.environmentTextureHandle = this.program.getUniformLocation('environmenCubeMap');
+    this.brdfTextureHandle = this.program.getUniformLocation('brdfIntegrationTexture');
+  }
 
-    this.environmentTextureHandle = this.program.getUniformLocation('cubeMap');
-    this.brdfTextureHandle = this.program.getUniformLocation('brdfIntegrationMapTexture');
+  enableSkin() {
+    if (!this.hasSkin && this.program != null) {
+      this.hasSkin = true;
+      this.skinTextureHandle = this.program.getOptionalUniformLocation('jointMatricesTexture');
+      this.skinTextureUnit = this.textureUnits++;
+    }
   }
 
   getInstanceParameterHandles() {
@@ -527,7 +532,10 @@ export class PBRMaterial extends Material {
     track GPU-side uniform values and update only uniforms which have changed since the last
     draw call. Updating this number of uniforms is likely not the current bottleneck.
    */
-  bindParameters() {
+  bindUniforms() {
+
+    gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
+    gl.uniformMatrix4fv(this.normalMatrixHandle, false, this.normalMatrix);
 
     if (this.weights != null) {
       for (let i = 0; i < this.weights.length; i++) {
@@ -536,11 +544,6 @@ export class PBRMaterial extends Material {
     }
 
     gl.uniform1i(this.outputVariableHandle, this.outputVariable);
-
-    gl.uniform1f(this.timeHandle, this.time);
-
-    this.brdfIntegrationMapTexture = this.environment.getBRDFIntegrationMap();
-    this.environmentTexture = this.environment.getCubeMap();
 
     gl.uniform1f(this.alphaCutoffHandle, this.alphaCutoff);
 
@@ -561,7 +564,7 @@ export class PBRMaterial extends Material {
     gl.uniform1i(this.alphaModeHandle, alphaModeAsInt);
 
     gl.activeTexture(gl.TEXTURE0 + this.brdfTextureUnit);
-    gl.bindTexture(gl.TEXTURE_2D, this.brdfIntegrationMapTexture);
+    gl.bindTexture(gl.TEXTURE_2D, this.brdfIntegrationTexture);
     gl.uniform1i(this.brdfTextureHandle, this.brdfTextureUnit);
 
     gl.activeTexture(gl.TEXTURE0 + this.environmentTextureUnit);
@@ -647,14 +650,12 @@ export class PBRMaterial extends Material {
     if (this.hasSheen) {
       gl.uniform4fv(this.sheenFactorHandle, this.sheenFactor);
     }
-  }
 
-  setBackgroundTexture(backgroundTexture) {
-    this.backgroundTexture = backgroundTexture;
-  }
-
-  setTime(time) {
-    this.time = time;
+    if (this.hasSkin) {
+      gl.activeTexture(gl.TEXTURE0 + this.skinTextureUnit);
+      gl.bindTexture(gl.TEXTURE_2D, this.skinTexture);
+      gl.uniform1i(this.skinTextureHandle, this.skinTextureUnit);
+    }
   }
 
   setOutput(output) {

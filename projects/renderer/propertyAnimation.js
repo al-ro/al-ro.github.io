@@ -78,7 +78,7 @@ export class PropertyAnimation {
         if (this.looping) {
             time = time % this.timeStamps[this.timeStamps.length - 1];
         }
-        // Return index of first element lager than time
+        // Return index of first element larger than time
         let upperIdx = this.timeStamps.findIndex((s) => { return s > time; });
 
         if (upperIdx < 0) {
@@ -143,18 +143,6 @@ export class PropertyAnimation {
         }
 
         return value;
-    }
-
-    setSpeed(speed) {
-        this.speed = speed;
-    }
-
-    setLooping(looping) {
-        this.looping = looping;
-    }
-
-    getName() {
-        return this.name;
     }
 
 }

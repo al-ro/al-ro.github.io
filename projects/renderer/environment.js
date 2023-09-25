@@ -8,7 +8,7 @@ import { getScreenspaceQuad } from "./screenspace.js";
 import { createAndSetupTexture } from "./texture.js"
 
 import { loadHDR } from "./hdrpng.js"
-import { getSphericalHarmonicsMatrices, getBRDFIntegrationMap, getCubeMapConvolution, convertToCubeMap } from "./iblUtils.js";
+import { getSphericalHarmonicsMatrices, getBRDFIntegrationTexture, getCubeMapConvolution, convertToCubeMap } from "./iblUtils.js";
 
 class Environment {
   /**
@@ -27,7 +27,7 @@ class Environment {
 
   shMatrices;
 
-  brdfIntegrationMap;
+  brdfIntegrationTexture;
 
   updateHDR = false;
 
@@ -43,17 +43,17 @@ class Environment {
     this.camera = parameters.camera;
 
     if (!path) {
-      console.error("Environment must be created with a file path. Parameter: ", parameters);
+      console.error("Environment must be created with a file path. Parameters: ", parameters);
     }
 
     this.cubeMap = createAndSetupCubemap();
 
     this.environmentMaterial = new EnvironmentMaterial(this.cubeMap, this.camera, this);
-    this.environmentMesh = new Mesh(getScreenspaceQuad(), this.environmentMaterial);
+    this.environmentMesh = new Mesh({ geometry: getScreenspaceQuad(), material: this.environmentMaterial });
     this.environmentMesh.setCulling(false);
 
     this.shMatrices = { red: m4.create(), green: m4.create(), blue: m4.create() };
-    this.setupBRDFIntegrationMap();
+    this.setupBRDFIntegrationTexture();
 
     this.type = parameters.type;
 
@@ -89,10 +89,6 @@ class Environment {
 
   updateFace = function (i, obj) {
     obj.loadFlags[i] = true;
-  }
-
-  needsUpdate() {
-    return this.updateHDR;
   }
 
   setupCubemap(path) {
@@ -141,7 +137,7 @@ class Environment {
       convertToCubeMap(texture, this.cubeMap, type);
       gl.deleteTexture(texture);
 
-      this.updateHDR = true;
+      this.generateIBLData();
 
     });
   }
@@ -168,8 +164,8 @@ class Environment {
     this.cubeMap = getCubeMapConvolution(this.cubeMap);
   }
 
-  setupBRDFIntegrationMap() {
-    this.brdfIntegrationMap = getBRDFIntegrationMap();
+  setupBRDFIntegrationTexture() {
+    this.brdfIntegrationTexture = getBRDFIntegrationTexture();
   }
 
   getSHMatrices() {
@@ -178,10 +174,6 @@ class Environment {
 
   getCubeMap() {
     return this.cubeMap;
-  }
-
-  getBRDFIntegrationMap() {
-    return this.brdfIntegrationMap;
   }
 
   getMesh() {

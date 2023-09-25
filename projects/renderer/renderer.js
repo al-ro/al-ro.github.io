@@ -19,6 +19,7 @@ import { getDownloadingCount } from "./download.js"
 import { outputEnum } from "./materials/pbrMaterial.js"
 import { render } from "./renderCall.js"
 import { Scene } from "./scene.js"
+import { programRepository } from "./programRepository.js"
 
 const stats = new Stats();
 stats.showPanel(0);
@@ -42,8 +43,6 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
       Iridescence
       Specular/Gloss
       Clearcoat
-
-      Skinning
 
       Instancing
       Particle class for GPU
@@ -79,6 +78,7 @@ models.set("MorphPrimitivesTest", "./gltf/morphPrimitivesTest/MorphPrimitivesTes
 models.set("MorphStressTest", "./gltf/morphStressTest/MorphStressTest.gltf");
 models.set("MorphInterpolation", "./gltf/morphInterpolation/fourCube.gltf");
 models.set("Sheen Chair", "./gltf/chair/SheenChair.gltf");
+models.set("Simple Skin", "./gltf/skin/SimpleSkin.gltf");
 
 let modelNames = Array.from(models.keys());
 modelNames.sort();
@@ -121,9 +121,16 @@ let controls = new Controls(camera);
 
 let time = 0.0;
 
-let info = { memory: "0", buffers: "0", textures: "0", downloading: getDownloadingCount(), primitives: "0" };
+let info = {
+  memory: "0",
+  buffers: "0",
+  textures: "0",
+  downloading: getDownloadingCount(),
+  primitives: "0",
+  programCount: programRepository.programs.size
+};
 
-let modelSelector = { model: "Toy Car" };
+let modelSelector = { model: "Fox" };
 let environmentSelector = { environment: "Venice Sunrise" };
 let outputSelector = { output: outputEnum.PBR };
 let environment;
@@ -178,6 +185,18 @@ memoryFolder.add(info, 'buffers').disable().listen();
 memoryFolder.add(info, 'textures').disable().listen();
 memoryFolder.add(info, 'memory').disable().listen();
 memoryFolder.close();
+
+let repositoryUI = {
+  printRepository: function () { console.log(programRepository.programs) },
+  clearRepository: function () { programRepository.programs.clear() }
+};
+
+const statsFolder = gui.addFolder('Stats');
+statsFolder.add(info, 'primitives').disable().listen();
+statsFolder.add(info, 'programCount').disable().listen();
+statsFolder.add(repositoryUI, 'printRepository');
+statsFolder.add(repositoryUI, 'clearRepository');
+statsFolder.close();
 
 gui.add(info, 'downloading').disable().listen();
 //gui.close();
@@ -239,13 +258,13 @@ function loadGLTF(model) {
   }
 
   let path = models.get(modelSelector.model);
-  gltfLoader.load(path, environment, 0);
+  gltfLoader.load(path, 0);
 
   gltfLoader.ready.then(p => {
     let object = gltfLoader.getObjects();
     centreAndScale(object);
     scene.add(object);
-    if (scene.getObjects().length > 0) {
+    if (scene.objects.length > 0) {
       materialControls.setValue("PBR");
     }
     let animations = scene.getAnimations();
@@ -255,7 +274,7 @@ function loadGLTF(model) {
         animationElements.push(animationFolder.add(playAllState, 'state').name("All").listen().onChange(e => { playAllState.state = true; if (e) { playAllAnimations() }; }));
       }
       for (const animation of animations) {
-        let animationInterface = { state: animation.isActive(), name: animation.getName(), toggle: (e) => { animation.setActive(e, time) } };
+        let animationInterface = { state: animation.isActive(), name: animation.name, toggle: (e) => { animation.setActive(e, time) } };
         animationInterfaces.push(animationInterface);
         animationElements.push(animationFolder.add(animationInterface, 'state').name(animationInterface.name).listen().onChange(e => { animationInterface.toggle(e); idleState.state = false; playAllState.state = false; }));
       }
@@ -271,8 +290,8 @@ function centreAndScale(object) {
 
   object.calculateAABB();
 
-  let min = object.getMin();
-  let max = object.getMax();
+  let min = object.min;
+  let max = object.max;
 
   let center = [
     min[0] + 0.5 * (max[0] - min[0]),
@@ -288,7 +307,7 @@ function centreAndScale(object) {
   let S = [scale, scale, scale];
 
   object.setTRS(T, R, S);
-  object.setIdleMatrix(m4.compose(T, R, S));
+  object.idleMatrix = m4.compose(T, R, S);
 
   modelManipulation.translationX = T[0];
   modelManipulation.translationY = T[1];
@@ -305,7 +324,7 @@ function centreAndScale(object) {
 function setMaterial(name) {
   let material;
   switch (name) {
-    case "Ambient": material = new AmbientMaterial(environment);
+    case "Ambient": material = new AmbientMaterial();
       break;
     case "PBR": material = null;
       break;
@@ -327,32 +346,32 @@ function setMaterial(name) {
   } else {
     outputControls.show();
   }
-  for (const object of scene.getObjects()) {
+  for (const object of scene.objects) {
     object.setMaterial(material);
   }
 }
 
 function setOutput(output) {
-  for (const object of scene.getObjects()) {
+  for (const object of scene.objects) {
     object.setOutput(output);
   }
 }
 
 function setScale(scale) {
   scale = Math.max(1e-4, scale);
-  for (const object of scene.getObjects()) {
+  for (const object of scene.objects) {
     object.setScale([scale, scale, scale]);
   }
 }
 
 function setTranslation(modelManipulation) {
-  for (const object of scene.getObjects()) {
+  for (const object of scene.objects) {
     object.setTranslation([modelManipulation.translationX, modelManipulation.translationY, modelManipulation.translationZ]);
   }
 }
 
 function setRotation(modelManipulation) {
-  for (const object of scene.getObjects()) {
+  for (const object of scene.objects) {
     object.setRotation(eulerToQuaternion(modelManipulation.rotationX, modelManipulation.rotationY, modelManipulation.rotationZ));
   }
 }
@@ -376,7 +395,7 @@ let sceneRenderTarget = new RenderTarget(sceneTexture, sceneDepthTexture);
 
 let sceneQuad = getScreenspaceQuad();
 let sceneMaterial = new ScreenspaceMaterial(sceneTexture);
-let sceneMesh = new Mesh(sceneQuad, sceneMaterial);
+let sceneMesh = new Mesh({ geometry: sceneQuad, material: sceneMaterial });
 sceneMesh.setCulling(false);
 
 // A texture of the opaque scene which is mipmapped and blurred for transmission background
@@ -387,7 +406,7 @@ gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.canvas.width, gl.canvas.height, 0, g
 
 let blurredSceneRenderTarget = new RenderTarget(blurredSceneTexture);
 let blurredSceneMaterial = new ScreenspaceMaterial(sceneTexture);
-let blurredSceneMesh = new Mesh(sceneQuad, blurredSceneMaterial);
+let blurredSceneMesh = new Mesh({ geometry: sceneQuad, material: blurredSceneMaterial });
 blurredSceneMesh.setCulling(false);
 
 function draw() {
@@ -407,9 +426,10 @@ function draw() {
     info.memory = (extMEM.getMemoryInfo().memory.total * 1e-6).toPrecision(4) + " MB";
     info.buffers = extMEM.getMemoryInfo().resources.buffer;
     info.textures = extMEM.getMemoryInfo().resources.texture;
+    info.programCount = programRepository.programs.size;
   }
 
-  info.primitives = scene.getPrimitiveCount();
+  info.primitives = scene.primitiveCount;
 
   thisFrame = Date.now();
 
@@ -419,10 +439,6 @@ function draw() {
 
   // Animate all objects with defined animations in the scene
   scene.animate(time);
-
-  if (environment.needsUpdate()) {
-    environment.generateIBLData();
-  }
 
   let renderCamera = camera;
 
@@ -443,19 +459,19 @@ function draw() {
 
   // Render background from cubemap without writing to depth
   gl.depthMask(false);
-  render(RenderPass.OPAQUE, environment.getMesh(), renderCamera, time);
+  render(RenderPass.OPAQUE, environment.getMesh(), renderCamera, environment, camera);
   gl.depthMask(true);
 
   // Render all opaque meshes with a simple shader to populate the depth texture
   // Do not write to color target
   gl.depthFunc(gl.LESS);
   gl.colorMask(false, false, false, false);
-  scene.renderDepthPrepass(renderCamera, time, camera);
+  scene.renderDepthPrepass(renderCamera);
   gl.colorMask(true, true, true, true);
 
   // Render opaque meshes corresponding the the depth values in the depth texture
   gl.depthFunc(gl.EQUAL);
-  scene.render(RenderPass.OPAQUE, renderCamera, time, camera);
+  scene.render(RenderPass.OPAQUE, renderCamera, environment, camera);
 
   // Generate background texture for transmissive objects
   gl.depthFunc(gl.ALWAYS);
@@ -474,19 +490,19 @@ function draw() {
   sceneRenderTarget.bind();
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   scene.setBackgroundTexture(blurredSceneTexture);
-  scene.render(RenderPass.TRANSMISSIVE, renderCamera, time, camera);
+  scene.render(RenderPass.TRANSMISSIVE, renderCamera, environment, camera);
 
   // Render transparent meshes using alpha blending
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  scene.render(RenderPass.TRANSPARENT, renderCamera, time, camera);
+  scene.render(RenderPass.TRANSPARENT, renderCamera, environment, camera);
   gl.disable(gl.BLEND);
 
   // Output render target color texture to screen
   gl.depthFunc(gl.ALWAYS);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  render(RenderPass.OPAQUE, sceneMesh, renderCamera, time, camera);
+  render(RenderPass.OPAQUE, sceneMesh, renderCamera, environment, camera);
 
   stats.end();
   requestAnimationFrame(draw);

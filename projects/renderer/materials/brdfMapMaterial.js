@@ -26,11 +26,11 @@ export class BRDFMapMaterial extends Material {
     return getFragmentSource();
   }
 
-  getParameterHandles() {
+  getUniformHandles() {
     this.resolutionHandle = this.program.getUniformLocation('resolution');
   }
 
-  bindParameters() {
+  bindUniforms() {
     gl.uniform2fv(this.resolutionHandle, this.resolution);
   }
 

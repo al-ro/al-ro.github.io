@@ -4,24 +4,25 @@ import { getVertexSource, getFragmentSource } from './convolutionMaterial.glsl.j
 
 export class ConvolutionMaterial extends Material {
 
-  cubeMap;
-  cameraMatrix = m4.create();
-  roughness;
-
+  environmenCubeMap;
   cubeMapHandle;
-  cameraMatrixHandle;
+
+  roughness;
   roughnessHandle;
 
-  constructor(cubeMap) {
+  cameraMatrix
+  cameraMatrixHandle;
+
+  constructor(environmenCubeMap) {
 
     super();
 
     this.attributes = ["POSITION"];
 
-    if (!cubeMap) {
-      console.error("ConvolutionMaterial must be created with a cube map. Parameter: ", cubeMap);
+    if (!environmenCubeMap) {
+      console.error("ConvolutionMaterial must be created with a cube map. Parameter: ", environmenCubeMap);
     }
-    this.cubeMap = cubeMap;
+    this.environmenCubeMap = environmenCubeMap;
   }
 
   getVertexShaderSource(parameters) {
@@ -32,16 +33,17 @@ export class ConvolutionMaterial extends Material {
     return getFragmentSource();
   }
 
-  getParameterHandles() {
-    this.cubeMapHandle = this.program.getUniformLocation('cubeMap');
-    this.cameraMatrixHandle = this.program.getUniformLocation('cameraMatrix');
+  getUniformHandles() {
+    this.cubeMapHandle = this.program.getUniformLocation('environmenCubeMap');
     this.roughnessHandle = this.program.getUniformLocation('roughness');
+    this.cameraMatrixHandle = this.program.getUniformLocation('cameraMatrix');
   }
 
-  bindParameters() {
+  bindUniforms() {
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeMap);
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.environmenCubeMap);
     gl.uniform1i(this.cubeMapHandle, 0);
+
     gl.uniform1f(this.roughnessHandle, this.roughness);
     gl.uniformMatrix4fv(this.cameraMatrixHandle, false, this.cameraMatrix);
   }

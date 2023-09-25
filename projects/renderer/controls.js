@@ -23,14 +23,14 @@ export class Controls {
     document.addEventListener('keyup', this.keyUp.bind(this));
   }
 
-  getPos(canvas, evt) {
+  getPosition(canvas, evt) {
     let rect = canvas.getBoundingClientRect();
     return [evt.clientX - rect.left, evt.clientY - rect.top];
   }
 
   mouseDown(event) {
     this.isMouseDown = true;
-    this.lastPosition = this.getPos(canvas, event);
+    this.lastPosition = this.getPosition(canvas, event);
   }
 
   mouseUp(event) {
@@ -40,13 +40,13 @@ export class Controls {
 
   mouseMove(event) {
     if (this.isMouseDown) {
-      let pos = this.getPos(canvas, event);
-      this.mouseDelta[0] = this.lastPosition[0] - pos[0];
-      this.mouseDelta[1] = this.lastPosition[1] - pos[1];
+      let position = this.getPosition(canvas, event);
+      this.mouseDelta[0] = this.lastPosition[0] - position[0];
+      this.mouseDelta[1] = this.lastPosition[1] - position[1];
 
       this.camera.updatePosition(this.mouseDelta);
 
-      this.lastPosition = pos;
+      this.lastPosition = position;
     }
   }
 
@@ -103,30 +103,28 @@ export class Controls {
     let speed = 10.0;
     let viewDirection = this.camera.viewDirection;
     let rightDirection = this.camera.rightDirection;
-    let pos = this.camera.position;
+    let position = this.camera.position;
 
     if (this.forward) {
-      pos[0] += dT * speed * viewDirection[0];
-      pos[1] += dT * speed * viewDirection[1];
-      pos[2] += dT * speed * viewDirection[2];
+      position[0] += dT * speed * viewDirection[0];
+      position[1] += dT * speed * viewDirection[1];
+      position[2] += dT * speed * viewDirection[2];
     }
     if (this.backward) {
-      pos[0] -= dT * speed * viewDirection[0];
-      pos[1] -= dT * speed * viewDirection[1];
-      pos[2] -= dT * speed * viewDirection[2];
+      position[0] -= dT * speed * viewDirection[0];
+      position[1] -= dT * speed * viewDirection[1];
+      position[2] -= dT * speed * viewDirection[2];
     }
     if (this.left) {
-      pos[0] += dT * speed * rightDirection[0];
-      pos[1] += dT * speed * rightDirection[1];
-      pos[2] += dT * speed * rightDirection[2];
+      position[0] += dT * speed * rightDirection[0];
+      position[1] += dT * speed * rightDirection[1];
+      position[2] += dT * speed * rightDirection[2];
     }
     if (this.right) {
-      pos[0] -= dT * speed * rightDirection[0];
-      pos[1] -= dT * speed * rightDirection[1];
-      pos[2] -= dT * speed * rightDirection[2];
+      position[0] -= dT * speed * rightDirection[0];
+      position[1] -= dT * speed * rightDirection[1];
+      position[2] -= dT * speed * rightDirection[2];
     }
-
-    //this.camera.setPosition(pos);
 
   }
 
@@ -153,7 +151,7 @@ export class Controls {
     this.setPageLayout(w, h);
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    this.camera.setAspect(gl.canvas.clientWidth / gl.canvas.clientHeight);
+    this.camera.aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
   }
 }
 
