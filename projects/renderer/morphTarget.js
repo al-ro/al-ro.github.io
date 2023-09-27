@@ -11,7 +11,6 @@ const supportedMorphTargets = [
   "TANGENT"
 ];
 
-
 /**
  * A morph target consisting of attributes
  */
@@ -32,8 +31,6 @@ class MorphTarget {
    */
   max;
 
-  hasPositionTarget = false;
-
   /**
    * 
    * @param {Map<string, Attribute>} attributes map of Attribute objects
@@ -41,7 +38,6 @@ class MorphTarget {
   constructor(attributes) {
     this.attributes = attributes;
     if (this.attributes.has("POSITION")) {
-      this.hasPositionTarget = true;
       this.min = this.attributes.get("POSITION").min;
       this.max = this.attributes.get("POSITION").max;
     }
@@ -59,10 +55,6 @@ class MorphTarget {
     if (this.attributes.has(name)) {
       this.attributes.get(name).enableBuffer();
     }
-  }
-
-  hasPosition() {
-    return this.hasPositionTarget;
   }
 
 }

@@ -32,7 +32,7 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
       Depth material error
       Depth material per mesh
       Override and original material refactor
-      All materials support morph and skin
+      All materials support morph
 
       Order material draw
 
@@ -45,6 +45,10 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 
       Morph target stress test and correct clamp
         Texture
+
+      Floating point rendering
+      Post-processing pass with tonemapping and gamma
+      Debug flag from output
 
       Directional light
 
@@ -457,7 +461,7 @@ function draw() {
   sceneRenderTarget.bind();
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-  gl.clearColor(0, 0, 0, 0);
+  gl.clearColor(0, 0, 0, 1);
   gl.clearDepth(1.0);
   gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 

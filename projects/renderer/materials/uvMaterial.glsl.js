@@ -53,7 +53,7 @@ function getFragmentSource(){
     out vec4 fragColor;
   
     void main(){
-      vec3 col = vec3(1, 0, 1);
+      vec3 col = mix(vec3(0.2), vec3(1, 0, 1), smoothstep(0.49, 0.5, mod(gl_FragCoord.x, 100.0)/100.0));
 #ifdef HAS_UV_0
       col = vec3(vUV, 0.0); 
 #endif

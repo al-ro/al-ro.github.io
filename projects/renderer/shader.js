@@ -144,6 +144,7 @@ function getMorphedAttributeString(parameters, name) {
 function getSkinDeclarationString() {
   return `
     #ifdef HAS_SKIN
+
     in vec4 JOINTS_0;
     in vec4 WEIGHTS_0;
     uniform sampler2D jointMatricesTexture;
@@ -162,6 +163,7 @@ function getSkinDeclarationString() {
 function getSkinCalculationString() {
   return `
     #ifdef HAS_SKIN
+
       mat4 skinMatrix =
         WEIGHTS_0[0] * getJointMatrix(uint(JOINTS_0[0])) +
         WEIGHTS_0[1] * getJointMatrix(uint(JOINTS_0[1])) +

@@ -939,7 +939,6 @@ export class GLTFLoader {
       }
 
       // ---- Create vertex attributes ---- //
-
       for (const name of supportedAttributes) {
         if (attributes.hasOwnProperty(name)) {
           const accessor = accessors[attributes[name]];
