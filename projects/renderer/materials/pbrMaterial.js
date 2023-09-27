@@ -185,7 +185,6 @@ export class PBRMaterial extends Material {
   hasTransmissionFactor = false;
   hasSheen = false;
   hasSheenTexture = false;
-  hasSkin = false;
 
   brdfTextureUnit;
   environmentTextureUnit;

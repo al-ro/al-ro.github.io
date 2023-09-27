@@ -1,3 +1,5 @@
+import { getMorphedAttributeString, getSkinDeclarationString, getSkinCalculationString } from "../shader.js"
+
 function getVertexSource(parameters){ 
 
   var vertexSource = `
@@ -22,23 +24,28 @@ function getVertexSource(parameters){
   out vec3 vPosition;
 #endif
 
+`+ getSkinDeclarationString() + `
+
   void main(){
 
+    vec3 position = POSITION.xyz;
+    vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
+
 #ifdef HAS_NORMALS
-    vec4 transformedNormal = normalMatrix * vec4(NORMAL, 0.0);
-    vNormal = transformedNormal.xyz;
+    vec3 normal = NORMAL.xyz;
+    vec4 transformedNormal = normalMatrix * vec4(normal, 0.0);
 #endif
 
-    vec4 pos = modelMatrix * vec4(POSITION, 1.0);
+`+ getSkinCalculationString() + `
 
-#ifndef HAS_NORMALS
-    vPosition = vec3((modelMatrix * vec4(POSITION, 1.0)));
+#ifdef HAS_NORMALS
+    vNormal = transformedNormal.xyz;
+#else
+    vPosition = transformedPosition.xyz;
 #endif
   
-    pos = projectionMatrix * viewMatrix * pos;
-    gl_Position = vec4(pos);
-  }
-  `;
+    gl_Position = projectionMatrix * viewMatrix * transformedPosition;
+  }`;
 
   return vertexSource;
 }

@@ -12,6 +12,7 @@ export class Material {
   instanced = false;
   supportsMorphTargets = false;
   supportsSkin = false;
+  hasSkin = false;
   needsEnvironmentTexture = false;
   needsBRDFLUT = false;
 
