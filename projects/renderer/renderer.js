@@ -29,6 +29,11 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 /*
   TODO:
 
+      Depth material error
+      Depth material per mesh
+      Override and original material refactor
+      All materials support morph and skin
+
       Order material draw
 
       Scene format and scale for specific files?
@@ -36,8 +41,12 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
         Object culling
         Camera pan
         Specify active animations in files
+        Override scale and centering
 
       Morph target stress test and correct clamp
+        Texture
+
+      Directional light
 
       Volume
       Iridescence
@@ -130,7 +139,7 @@ let info = {
 };
 
 let modelSelector = { model: "Dragon" };
-let environmentSelector = { environment: "Venice Sunrise" };
+let environmentController = { environment: "Venice Sunrise", renderBackground: true };
 let outputSelector = { output: outputEnum.PBR };
 let environment;
 let gltfLoader;
@@ -144,7 +153,7 @@ let modelManipulation = {
 let gui = new lil.GUI({ autoPlace: false });
 let customContainer = document.getElementById('canvas_overlay');
 customContainer.appendChild(gui.domElement);
-gui.domElement.style.cssText = "visibility: visible; position: absolute; top: 0px; right: 0; opacity: 0.8";
+gui.domElement.style.cssText = "visibility: visible; position: absolute; top: 0px; right: 0; opacity: 0.8; z-index: 10000";
 
 gui.add(modelSelector, 'model').options(modelNames).onChange(name => { loadGLTF(name); });
 
@@ -155,7 +164,8 @@ const materialControls = materialFolder.add(materialSelector, 'material').option
 const outputControls = materialFolder.add(outputSelector, 'output').options(outputEnum).onChange(output => { setOutput(output) });
 
 const environmentFolder = gui.addFolder('Environment');
-environmentFolder.add(environmentSelector, 'environment').options(environmentNames).onChange(name => { environment.setHDR(environments.get(name)); });
+environmentFolder.add(environmentController, 'environment').options(environmentNames).onChange(name => { environment.setHDR(environments.get(name)); });
+environmentFolder.add(environmentController, 'renderBackground');
 
 const transformFolder = gui.addFolder('Transform');
 transformFolder.close();
@@ -204,7 +214,7 @@ controls.onWindowResize();
 
 //************* GUI ***************
 
-environment = new Environment({ path: environments.get(environmentSelector.environment), type: "hdr", camera: camera });
+environment = new Environment({ path: environments.get(environmentController.environment), type: "hdr", camera: camera });
 
 let animationElements = [];
 let animationInterfaces = [];
@@ -456,10 +466,12 @@ function draw() {
   gl.cullFace(gl.BACK);
   gl.depthFunc(gl.ALWAYS);
 
-  // Render background from cubemap without writing to depth
-  gl.depthMask(false);
-  render(RenderPass.OPAQUE, environment.getMesh(), renderCamera, environment, camera);
-  gl.depthMask(true);
+  if (environmentController.renderBackground) {
+    // Render background from cubemap without writing to depth
+    gl.depthMask(false);
+    render(RenderPass.OPAQUE, environment.getMesh(), renderCamera, environment, camera);
+    gl.depthMask(true);
+  }
 
   // Render all opaque meshes with a simple shader to populate the depth texture
   // Do not write to color target

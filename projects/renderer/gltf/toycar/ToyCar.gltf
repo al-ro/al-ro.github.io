@@ -5,10 +5,34 @@
   },
   "accessors": [
     {
+      "name": "accessorIndices",
+      "type": "SCALAR",
+      "componentType": 5125,
+      "count": 266502,
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "name": "accessorIndices",
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 52815,
+      "bufferView": 0,
+      "byteOffset": 1066008
+    },
+    {
+      "name": "accessorIndices",
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 7482,
+      "bufferView": 0,
+      "byteOffset": 1171640
+    },
+    {
       "name": "accessorPositions",
       "type": "VEC3",
       "componentType": 5126,
-      "count": 50787,
+      "count": 66889,
       "max": [
         93.53763580322266,
         189.7447509765625,
@@ -16,33 +40,33 @@
       ],
       "min": [
         -93.53764343261719,
-        -194.0345001220703,
+        -194.0495147705078,
         -126.16624450683594
       ],
-      "bufferView": 0,
+      "bufferView": 1,
       "byteOffset": 0
     },
     {
       "name": "accessorNormals",
       "type": "VEC3",
       "componentType": 5126,
-      "count": 50787,
-      "bufferView": 0,
+      "count": 66889,
+      "bufferView": 1,
       "byteOffset": 12
     },
     {
       "name": "accessorUVs",
       "type": "VEC2",
       "componentType": 5126,
-      "count": 50787,
-      "bufferView": 0,
+      "count": 66889,
+      "bufferView": 1,
       "byteOffset": 24
     },
     {
       "name": "accessorPositions",
       "type": "VEC3",
       "componentType": 5126,
-      "count": 8845,
+      "count": 8954,
       "max": [
         384.478271484375,
         369.81146240234375,
@@ -53,30 +77,30 @@
         -369.8115234375,
         -10.12609577178955
       ],
-      "bufferView": 1,
+      "bufferView": 2,
       "byteOffset": 0
     },
     {
       "name": "accessorNormals",
       "type": "VEC3",
       "componentType": 5126,
-      "count": 8845,
-      "bufferView": 1,
+      "count": 8954,
+      "bufferView": 2,
       "byteOffset": 12
     },
     {
       "name": "accessorUVs",
       "type": "VEC2",
       "componentType": 5126,
-      "count": 8845,
-      "bufferView": 1,
+      "count": 8954,
+      "bufferView": 2,
       "byteOffset": 24
     },
     {
       "name": "accessorPositions",
       "type": "VEC3",
       "componentType": 5126,
-      "count": 1257,
+      "count": 1519,
       "max": [
         57.411041259765625,
         91.12582397460938,
@@ -87,77 +111,53 @@
         -93.18028259277344,
         -120.69184875488281
       ],
-      "bufferView": 2,
+      "bufferView": 3,
       "byteOffset": 0
     },
     {
       "name": "accessorNormals",
       "type": "VEC3",
       "componentType": 5126,
-      "count": 1257,
-      "bufferView": 2,
+      "count": 1519,
+      "bufferView": 3,
       "byteOffset": 12
     },
     {
       "name": "accessorUVs",
       "type": "VEC2",
       "componentType": 5126,
-      "count": 1257,
-      "bufferView": 2,
+      "count": 1519,
+      "bufferView": 3,
       "byteOffset": 24
-    },
-    {
-      "name": "accessorIndices",
-      "type": "SCALAR",
-      "componentType": 5125,
-      "count": 184662,
-      "bufferView": 3,
-      "byteOffset": 0
-    },
-    {
-      "name": "accessorIndices",
-      "type": "SCALAR",
-      "componentType": 5123,
-      "count": 52164,
-      "bufferView": 3,
-      "byteOffset": 738648
-    },
-    {
-      "name": "accessorIndices",
-      "type": "SCALAR",
-      "componentType": 5123,
-      "count": 5964,
-      "bufferView": 3,
-      "byteOffset": 842976
     }
   ],
   "bufferViews": [
     {
       "buffer": 0,
       "byteOffset": 0,
-      "byteLength": 1625184,
-      "byteStride": 32,
-      "target": 34962
-    },
-    {
-      "buffer": 0,
-      "byteOffset": 1625184,
-      "byteLength": 283040,
-      "byteStride": 32,
-      "target": 34962
-    },
-    {
-      "buffer": 0,
-      "byteOffset": 1908224,
-      "byteLength": 40224,
-      "byteStride": 32,
-      "target": 34962
-    },
-    {
-      "buffer": 0,
-      "byteOffset": 1948448,
-      "byteLength": 854904,
+      "byteLength": 1186604,
       "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 1186604,
+      "byteLength": 2140448,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 3327052,
+      "byteLength": 286528,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 3613580,
+      "byteLength": 48608,
+      "byteStride": 32,
+      "target": 34962
     }
   ],
   "samplers": [
@@ -239,7 +239,7 @@
   "buffers": [
     {
       "uri": "ToyCar.bin",
-      "byteLength": 2803352
+      "byteLength": 3662188
     }
   ],
   "materials": [
@@ -358,13 +358,13 @@
       "primitives": [
         {
           "attributes": {
-            "POSITION": 0,
-            "NORMAL": 1,
-            "TEXCOORD_0": 2
+            "POSITION": 3,
+            "NORMAL": 4,
+            "TEXCOORD_0": 5
           },
           "mode": 4,
           "material": 0,
-          "indices": 9
+          "indices": 0
         }
       ]
     },
@@ -373,13 +373,13 @@
       "primitives": [
         {
           "attributes": {
-            "POSITION": 3,
-            "NORMAL": 4,
-            "TEXCOORD_0": 5
+            "POSITION": 6,
+            "NORMAL": 7,
+            "TEXCOORD_0": 8
           },
           "mode": 4,
           "material": 1,
-          "indices": 10
+          "indices": 1
         }
       ]
     },
@@ -388,13 +388,13 @@
       "primitives": [
         {
           "attributes": {
-            "POSITION": 6,
-            "NORMAL": 7,
-            "TEXCOORD_0": 8
+            "POSITION": 9,
+            "NORMAL": 10,
+            "TEXCOORD_0": 11
           },
           "mode": 4,
           "material": 2,
-          "indices": 11
+          "indices": 2
         }
       ]
     }
