@@ -62,8 +62,6 @@ models.set("Sponza", "./gltf/sponza/Sponza.gltf");
 models.set("Damaged Helmet", "./gltf/helmet/DamagedHelmet.gltf");
 models.set("Toy Car", "./gltf/toycar/ToyCar.gltf");
 models.set("Fox", "./gltf/fox/Fox.gltf");
-models.set("Venator Corridor", "./gltf/corridor/scene.gltf");
-models.set("Jedi Fighter", "./gltf/jedifighter/scene.gltf");
 models.set("PBR Spheres", "./gltf/spheres/MetalRoughSpheres.gltf");
 models.set("Transmission", "./gltf/transmission/TransmissionTest.gltf");
 models.set("Transmission Roughness Test", "./gltf/transmissionRoughness/TransmissionRoughnessTest.gltf");
@@ -72,13 +70,14 @@ models.set("Camera", "./gltf/camera/Camera_01_1k.gltf");
 models.set("Minimal", "./gltf/minimal/scene.gltf");
 models.set("Collada Duck", "./gltf/duck/duck.gltf");
 models.set("Buster Drone", "./gltf/buster_drone/scene.gltf");
-models.set("Gyroscope", "./gltf/magical_gyroscope/scene.gltf");
 models.set("MorphAnimation", "./gltf/animatedMorphCube/AnimatedMorphCube.gltf");
 models.set("MorphPrimitivesTest", "./gltf/morphPrimitivesTest/MorphPrimitivesTest.gltf");
 models.set("MorphStressTest", "./gltf/morphStressTest/MorphStressTest.gltf");
 models.set("MorphInterpolation", "./gltf/morphInterpolation/fourCube.gltf");
 models.set("Sheen Chair", "./gltf/chair/SheenChair.gltf");
 models.set("Simple Skin", "./gltf/skin/SimpleSkin.gltf");
+models.set("Dragon", "./gltf/dragon/dragon.gltf");
+models.set("Brain Stem", "./gltf/brainStem/BrainStem.gltf");
 
 let modelNames = Array.from(models.keys());
 modelNames.sort();
@@ -130,7 +129,7 @@ let info = {
   programCount: programRepository.programs.size
 };
 
-let modelSelector = { model: "Fox" };
+let modelSelector = { model: "Dragon" };
 let environmentSelector = { environment: "Venice Sunrise" };
 let outputSelector = { output: outputEnum.PBR };
 let environment;
@@ -262,7 +261,7 @@ function loadGLTF(model) {
 
   gltfLoader.ready.then(p => {
     let object = gltfLoader.getObjects();
-    centreAndScale(object);
+    centerAndScale(object);
     scene.add(object);
     if (scene.objects.length > 0) {
       materialControls.setValue("PBR");
@@ -286,7 +285,7 @@ function loadGLTF(model) {
   });
 }
 
-function centreAndScale(object) {
+function centerAndScale(object) {
 
   object.calculateAABB();
 

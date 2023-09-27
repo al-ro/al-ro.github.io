@@ -50,6 +50,11 @@ export class Node {
   skinIndex;
   skin;
 
+  /**
+   * The position of the node for skin AABB creation
+   */
+  position = [0, 0, 0];
+
   constructor(parameters) {
 
     if (parameters != null) {
@@ -118,6 +123,7 @@ export class Node {
   updateWorldMatrix() {
     this.worldMatrix = m4.multiply(this.parentMatrix, this.localMatrix);
     this.updateChildren();
+    this.updatePosition();
   }
 
   /**
@@ -127,6 +133,10 @@ export class Node {
     for (const child of this.children) {
       child.updateMatrix(this.worldMatrix);
     }
+  }
+
+  updatePosition() {
+    this.position = m4.transformPoint(this.worldMatrix, [0, 0, 0]);
   }
 
   setIdle() {

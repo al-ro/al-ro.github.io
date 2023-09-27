@@ -1,709 +1,667 @@
 {
-    "asset": {
-        "version": "2.0",
-        "generator": "babylon.js glTF exporter for 3dsmax 2020 v20200721.1, then hand-edited to add KHR_materials_clearcoat, KHR_materials_transmission, and KHR_materials_sheen."
+  "asset": {
+    "generator": "glTF-Transform v3.7.0",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "name": "accessorPositions",
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 50787,
+      "max": [
+        93.53763580322266,
+        189.7447509765625,
+        -9.924240112304688
+      ],
+      "min": [
+        -93.53764343261719,
+        -194.0345001220703,
+        -126.16624450683594
+      ],
+      "bufferView": 0,
+      "byteOffset": 0
     },
-    "extensionsUsed": [
-        "KHR_texture_transform",
-        "KHR_materials_clearcoat",
-        "KHR_materials_transmission",
-        "KHR_materials_sheen"
-    ],
-    "scene": 0,
-    "scenes": [
-        {
-            "nodes": [
-                0,
-                1,
-                2,
+    {
+      "name": "accessorNormals",
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 50787,
+      "bufferView": 0,
+      "byteOffset": 12
+    },
+    {
+      "name": "accessorUVs",
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 50787,
+      "bufferView": 0,
+      "byteOffset": 24
+    },
+    {
+      "name": "accessorPositions",
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 8845,
+      "max": [
+        384.478271484375,
+        369.81146240234375,
+        162.06275939941406
+      ],
+      "min": [
+        -349.9508972167969,
+        -369.8115234375,
+        -10.12609577178955
+      ],
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "name": "accessorNormals",
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 8845,
+      "bufferView": 1,
+      "byteOffset": 12
+    },
+    {
+      "name": "accessorUVs",
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 8845,
+      "bufferView": 1,
+      "byteOffset": 24
+    },
+    {
+      "name": "accessorPositions",
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 1257,
+      "max": [
+        57.411041259765625,
+        91.12582397460938,
+        -89.59808349609375
+      ],
+      "min": [
+        -57.411048889160156,
+        -93.18028259277344,
+        -120.69184875488281
+      ],
+      "bufferView": 2,
+      "byteOffset": 0
+    },
+    {
+      "name": "accessorNormals",
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 1257,
+      "bufferView": 2,
+      "byteOffset": 12
+    },
+    {
+      "name": "accessorUVs",
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 1257,
+      "bufferView": 2,
+      "byteOffset": 24
+    },
+    {
+      "name": "accessorIndices",
+      "type": "SCALAR",
+      "componentType": 5125,
+      "count": 184662,
+      "bufferView": 3,
+      "byteOffset": 0
+    },
+    {
+      "name": "accessorIndices",
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 52164,
+      "bufferView": 3,
+      "byteOffset": 738648
+    },
+    {
+      "name": "accessorIndices",
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 5964,
+      "bufferView": 3,
+      "byteOffset": 842976
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 1625184,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 1625184,
+      "byteLength": 283040,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 1908224,
+      "byteLength": 40224,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 1948448,
+      "byteLength": 854904,
+      "target": 34963
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "source": 2,
+      "sampler": 0
+    },
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 3,
+      "sampler": 0
+    },
+    {
+      "source": 6,
+      "sampler": 0
+    },
+    {
+      "source": 4,
+      "sampler": 0
+    },
+    {
+      "source": 5,
+      "sampler": 0
+    },
+    {
+      "source": 7,
+      "sampler": 0
+    }
+  ],
+  "images": [
+    {
+      "mimeType": "image/png",
+      "uri": "./ToyCar_normal.png"
+    },
+    {
+      "mimeType": "image/png",
+      "uri": "./ToyCar_emissive.png"
+    },
+    {
+      "mimeType": "image/png",
+      "uri": "./ToyCar_basecolor.png"
+    },
+    {
+      "mimeType": "image/png",
+      "uri": "./ToyCar_occlusion_roughness_metallic.png"
+    },
+    {
+      "mimeType": "image/png",
+      "uri": "./Fabric_normal.png"
+    },
+    {
+      "mimeType": "image/png",
+      "uri": "./Fabric_occlusion.png"
+    },
+    {
+      "mimeType": "image/png",
+      "uri": "./Fabric_baseColor.png"
+    },
+    {
+      "mimeType": "image/png",
+      "uri": "./ToyCar_clearcoat.png"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "ToyCar.bin",
+      "byteLength": 2803352
+    }
+  ],
+  "materials": [
+    {
+      "name": "ToyCar",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 3
+        }
+      },
+      "emissiveFactor": [
+        1,
+        1,
+        1
+      ],
+      "emissiveTexture": {
+        "index": 1
+      },
+      "normalTexture": {
+        "index": 2
+      },
+      "occlusionTexture": {
+        "index": 3
+      },
+      "extensions": {
+        "KHR_materials_clearcoat": {
+          "clearcoatFactor": 1,
+          "clearcoatRoughnessFactor": 0,
+          "clearcoatTexture": {
+            "index": 7
+          }
+        }
+      }
+    },
+    {
+      "name": "Fabric",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.15,
+          0.15,
+          0.15,
+          1
+        ],
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 4,
+          "extensions": {
+            "KHR_texture_transform": {
+              "scale": [
                 3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10
-            ]
-        }
-    ],
-    "nodes": [
-        {
-            "name": "ToyCar",
-            "mesh": 0,
-            "rotation": [
-                0.7071068,
-                0,
-                0,
-                0.7071067
-            ],
-            "scale": [
-                0.0001,
-                0.0001,
-                0.0001
-            ]
-        },
-        {
-            "name": "Fabric",
-            "mesh": 1,
-            "rotation": [
-                0.7071068,
-                0,
-                0,
-                0.7071067
-            ],
-            "scale": [
-                0.0001,
-                0.0001,
-                0.0001
-            ]
-        },
-        {
-            "name": "Glass",
-            "mesh": 2,
-            "rotation": [
-                0.7071068,
-                0,
-                0,
-                0.7071067
-            ],
-            "scale": [
-                0.0001,
-                0.0001,
-                0.0001
-            ]
-        },
-        {
-            "camera": 0,
-            "translation": [
-                -0.0169006381,
-                0.0253599286,
-                0.0302319955
-            ],
-            "rotation": [
-                -0.330993533,
-                -0.274300218,
-                -0.101194724,
-                0.8971969
-            ],
-            "scale": [
-                1.00000024,
-                1,
-                1.00000012
-            ],
-            "name": "Camera001"
-        },
-        {
-            "camera": 1,
-            "translation": [
-                -0.04332856,
-                0.0235993266,
-                0.0760967
-            ],
-            "rotation": [
-                -0.12160936,
-                -0.2651013,
-                -0.03372518,
-                0.9559263
-            ],
-            "scale": [
-                0.99999994,
-                1.00000036,
-                1.00000024
-            ],
-            "name": "Camera002"
-        },
-        {
-            "camera": 2,
-            "translation": [
-                -0.0121543175,
-                0.0101683857,
-                0.0269274339
-            ],
-            "rotation": [
-                -0.103828281,
-                -0.298918,
-                -0.0327368826,
-                0.9480485
-            ],
-            "scale": [
-                0.99999994,
-                1.00000012,
-                0.99999994
-            ],
-            "name": "Camera003"
-        },
-        {
-            "camera": 3,
-            "translation": [
-                -0.0391006,
-                -0.00724446634,
-                0.0497552231
-            ],
-            "rotation": [
-                0.00262248516,
-                -0.333805561,
-                0.0009287149,
-                0.9426378
-            ],
-            "scale": [
-                1.00000012,
-                1.00000024,
-                1.00000012
-            ],
-            "name": "Camera004"
-        },
-        {
-            "camera": 4,
-            "translation": [
-                -0.00747511769,
-                0.0108056553,
-                -0.0208431184
-            ],
-            "rotation": [
-                -0.0464569926,
-                -0.9334676,
-                -0.13119027,
-                0.330558747
-            ],
-            "scale": [
-                1,
-                0.99999994,
-                1.00000036
-            ],
-            "name": "Camera005"
-        },
-        {
-            "camera": 5,
-            "translation": [
-                -0.04173353,
-                0.027297115,
-                -0.04835121
-            ],
-            "rotation": [
-                -0.118150666,
-                -0.881382942,
-                -0.307792783,
-                0.338331461
-            ],
-            "scale": [
-                0.9999998,
-                0.999999762,
-                1.00000012
-            ],
-            "name": "Camera006"
-        },
-        {
-            "camera": 6,
-            "translation": [
-                0.0137228724,
-                0.009173209,
-                -0.0244436264
-            ],
-            "rotation": [
-                0.0496652424,
-                -0.9284824,
-                -0.134623677,
-                -0.3425349
-            ],
-            "scale": [
-                0.99999994,
-                1.00000012,
-                0.999999762
-            ],
-            "name": "Camera007"
-        },
-        {
-            "camera": 7,
-            "translation": [
-                -0.006532357,
-                0.0125829373,
-                0.0118280016
-            ],
-            "rotation": [
-                -0.21798256,
-                -0.300790727,
-                -0.07082678,
-                0.9257387
-            ],
-            "scale": [
-                1,
-                1.00000012,
-                0.99999994
-            ],
-            "name": "Camera008"
-        }
-    ],
-    "cameras": [
-        {
-            "perspective": {
-                "yfov": 0.9,
-                "zfar": 2,
-                "znear": 0.001
-            },
-            "type": "perspective",
-            "name": "Camera001"
-        },
-        {
-            "perspective": {
-                "yfov": 0.41,
-                "zfar": 2,
-                "znear": 0.001
-            },
-            "type": "perspective",
-            "name": "Camera002"
-        },
-        {
-            "perspective": {
-                "yfov": 0.68,
-                "zfar": 2,
-                "znear": 0.001
-            },
-            "type": "perspective",
-            "name": "Camera003"
-        },
-        {
-            "perspective": {
-                "yfov": 0.63,
-                "zfar": 2,
-                "znear": 0.001
-            },
-            "type": "perspective",
-            "name": "Camera004"
-        },
-        {
-            "perspective": {
-                "yfov": 0.96,
-                "zfar": 2,
-                "znear": 0.001
-            },
-            "type": "perspective",
-            "name": "Camera005"
-        },
-        {
-            "perspective": {
-                "yfov": 0.96,
-                "zfar": 2,
-                "znear": 0.001
-            },
-            "type": "perspective",
-            "name": "Camera006"
-        },
-        {
-            "perspective": {
-                "yfov": 0.96,
-                "zfar": 2,
-                "znear": 0.001
-            },
-            "type": "perspective",
-            "name": "Camera007"
-        },
-        {
-            "perspective": {
-                "yfov": 0.96,
-                "zfar": 2,
-                "znear": 0.001
-            },
-            "type": "perspective",
-            "name": "Camera008"
-        }
-    ],
-    "meshes": [
-        {
-            "primitives": [
-                {
-                    "attributes": {
-                        "POSITION": 1,
-                        "NORMAL": 2,
-                        "TEXCOORD_0": 3
-                    },
-                    "indices": 0,
-                    "material": 0
-                }
-            ],
-            "name": "ToyCar"
-        },
-        {
-            "primitives": [
-                {
-                    "attributes": {
-                        "POSITION": 5,
-                        "NORMAL": 6,
-                        "TEXCOORD_0": 7
-                    },
-                    "indices": 4,
-                    "material": 1
-                }
-            ],
-            "name": "Fabric"
-        },
-        {
-            "primitives": [
-                {
-                    "attributes": {
-                        "POSITION": 9,
-                        "NORMAL": 10,
-                        "TEXCOORD_0": 11
-                    },
-                    "indices": 8,
-                    "material": 2
-                }
-            ],
-            "name": "Glass"
-        }
-    ],
-    "accessors": [
-        {
-            "bufferView": 0,
-            "componentType": 5125,
-            "count": 266511,
-            "type": "SCALAR",
-            "name": "accessorIndices"
-        },
-        {
-            "bufferView": 1,
-            "componentType": 5126,
-            "count": 66951,
-            "max": [
-                93.5376358,
-                189.744751,
-                -9.92424
-            ],
-            "min": [
-                -93.53764,
-                -194.049515,
-                -126.166245
-            ],
-            "type": "VEC3",
-            "name": "accessorPositions"
-        },
-        {
-            "bufferView": 1,
-            "byteOffset": 803412,
-            "componentType": 5126,
-            "count": 66951,
-            "type": "VEC3",
-            "name": "accessorNormals"
-        },
-        {
-            "bufferView": 2,
-            "componentType": 5126,
-            "count": 66951,
-            "type": "VEC2",
-            "name": "accessorUVs"
-        },
-        {
-            "bufferView": 0,
-            "byteOffset": 1066044,
-            "componentType": 5123,
-            "count": 52815,
-            "type": "SCALAR",
-            "name": "accessorIndices"
-        },
-        {
-            "bufferView": 1,
-            "byteOffset": 1606824,
-            "componentType": 5126,
-            "count": 8959,
-            "max": [
-                384.478271,
-                369.811462,
-                162.062759
-            ],
-            "min": [
-                -349.9509,
-                -369.811523,
-                -10.1260958
-            ],
-            "type": "VEC3",
-            "name": "accessorPositions"
-        },
-        {
-            "bufferView": 1,
-            "byteOffset": 1714332,
-            "componentType": 5126,
-            "count": 8959,
-            "type": "VEC3",
-            "name": "accessorNormals"
-        },
-        {
-            "bufferView": 2,
-            "byteOffset": 535608,
-            "componentType": 5126,
-            "count": 8959,
-            "type": "VEC2",
-            "name": "accessorUVs"
-        },
-        {
-            "bufferView": 0,
-            "byteOffset": 1171676,
-            "componentType": 5123,
-            "count": 7482,
-            "type": "SCALAR",
-            "name": "accessorIndices"
-        },
-        {
-            "bufferView": 1,
-            "byteOffset": 1821840,
-            "componentType": 5126,
-            "count": 1519,
-            "max": [
-                57.41104,
-                91.125824,
-                -89.59808
-            ],
-            "min": [
-                -57.41105,
-                -93.18028,
-                -120.691849
-            ],
-            "type": "VEC3",
-            "name": "accessorPositions"
-        },
-        {
-            "bufferView": 1,
-            "byteOffset": 1840068,
-            "componentType": 5126,
-            "count": 1519,
-            "type": "VEC3",
-            "name": "accessorNormals"
-        },
-        {
-            "bufferView": 2,
-            "byteOffset": 607280,
-            "componentType": 5126,
-            "count": 1519,
-            "type": "VEC2",
-            "name": "accessorUVs"
-        }
-    ],
-    "bufferViews": [
-        {
-            "buffer": 0,
-            "byteLength": 1186640,
-            "name": "bufferViewScalar"
-        },
-        {
-            "buffer": 0,
-            "byteOffset": 1186640,
-            "byteLength": 1858296,
-            "byteStride": 12,
-            "name": "bufferViewFloatVec3"
-        },
-        {
-            "buffer": 0,
-            "byteOffset": 3044936,
-            "byteLength": 619432,
-            "byteStride": 8,
-            "name": "bufferViewFloatVec2"
-        }
-    ],
-    "buffers": [
-        {
-            "uri": "ToyCar.bin",
-            "byteLength": 3664368
-        }
-    ],
-    "materials": [
-        {
-            "name": "ToyCar",
-            "doubleSided": true,
-            "pbrMetallicRoughness": {
-                "baseColorTexture": {
-                    "index": 2
-                },
-                "metallicRoughnessTexture": {
-                    "index": 3
-                }
-            },
-            "normalTexture": {
-                "index": 0
-            },
-            "occlusionTexture": {
-                "index": 3
-            },
-            "emissiveTexture": {
-                "index": 1
-            },
-            "emissiveFactor": [
-                1,
-                1,
-                1
-            ],
-            "extensions": {
-                "KHR_materials_clearcoat": {
-                    "clearcoatFactor": 1,
-                    "clearcoatTexture": {
-                        "index": 7,
-                        "texCoord": 0
-                    }
-                }
+                3
+              ],
+              "texCoord": 0
             }
-        },
-        {
-            "name": "Fabric",
-            "doubleSided": true,
-            "pbrMetallicRoughness": {
-                "baseColorFactor": [
-                    0.15,
-                    0.15,
-                    0.15,
-                    1
-                ],
-                "baseColorTexture": {
-                    "index": 6,
-                    "extensions": {
-                        "KHR_texture_transform": {
-                            "offset": [
-                                0,
-                                0
-                            ],
-                            "scale": [
-                                3,
-                                3
-                            ],
-                            "texCoord": 0
-                        }
-                    }
-                },
-                "metallicFactor": 0,
-                "roughnessFactor": 1
-            },
-            "normalTexture": {
-                "index": 4,
-                "extensions": {
-                    "KHR_texture_transform": {
-                        "offset": [
-                            0,
-                            0
-                        ],
-                        "scale": [
-                            3,
-                            3
-                        ],
-                        "texCoord": 0
-                    }
-                }
-            },
-            "occlusionTexture": {
-                "index": 5,
-                "extensions": {
-                    "KHR_texture_transform": {
-                        "offset": [
-                            0,
-                            0
-                        ],
-                        "scale": [
-                            1,
-                            1
-                        ],
-                        "texCoord": 0
-                    }
-                }
-            },
-            "extensions": {
-                "KHR_materials_sheen": {
-                    "sheenRoughnessFactor": 0.5,
-                    "sheenColorFactor": [
-                        1,
-                        0,
-                        0
-                    ]
-                }
-            }
-        },
-        {
-            "name": "Glass",
-            "alphaMode": "OPAQUE",
-            "pbrMetallicRoughness": {
-                "baseColorFactor": [
-                    0.3,
-                    0.8,
-                    0.3,
-                    1
-                ],
-                "metallicFactor": 0,
-                "roughnessFactor": 0
-            },
-            "extensions": {
-                "KHR_materials_transmission": {
-                    "transmissionFactor": 1
-                }
-            }
+          }
         }
-    ],
-    "textures": [
-        {
-            "sampler": 0,
-            "source": 0,
-            "name": "ToyCar_normal.png"
-        },
-        {
-            "sampler": 0,
-            "source": 1,
-            "name": "ToyCar_emissive.png"
-        },
-        {
-            "sampler": 0,
-            "source": 2,
-            "name": "ToyCar_basecolor.png"
-        },
-        {
-            "sampler": 0,
-            "source": 3,
-            "name": "ToyCar_occlusion_roughness_metallic.png"
-        },
-        {
-            "sampler": 0,
-            "source": 4,
-            "name": "Fabric_normal.png"
-        },
-        {
-            "sampler": 0,
-            "source": 5,
-            "name": "Fabric_occlusion.png"
-        },
-        {
-            "sampler": 0,
-            "source": 6,
-            "name": "Fabric_baseColor.png"
-        },
-        {
-            "sampler": 0,
-            "source": 7,
-            "name": "ToyCar_clearcoat.png"
+      },
+      "normalTexture": {
+        "index": 5,
+        "extensions": {
+          "KHR_texture_transform": {
+            "scale": [
+              3,
+              3
+            ],
+            "texCoord": 0
+          }
         }
-    ],
-    "images": [
-        {
-            "uri": "./ToyCar_normal.png"
-        },
-        {
-            "uri": "./ToyCar_emissive.png"
-        },
-        {
-            "uri": "./ToyCar_basecolor.png"
-        },
-        {
-            "uri": "./ToyCar_occlusion_roughness_metallic.png"
-        },
-        {
-            "uri": "./Fabric_normal.png"
-        },
-        {
-            "uri": "./Fabric_occlusion.png"
-        },
-        {
-            "uri": "./Fabric_baseColor.png"
-        },
-        {
-            "uri": "./ToyCar_clearcoat.png"
+      },
+      "occlusionTexture": {
+        "index": 6,
+        "extensions": {
+          "KHR_texture_transform": {
+            "texCoord": 0
+          }
         }
-    ],
-    "samplers": [
-        {
-            "magFilter": 9729,
-            "minFilter": 9987
+      },
+      "extensions": {
+        "KHR_materials_sheen": {
+          "sheenColorFactor": [
+            1,
+            0,
+            0
+          ],
+          "sheenRoughnessFactor": 0.5
         }
-    ]
+      }
+    },
+    {
+      "name": "Glass",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.3,
+          0.8,
+          0.3,
+          1
+        ],
+        "roughnessFactor": 0,
+        "metallicFactor": 0
+      },
+      "extensions": {
+        "KHR_materials_transmission": {
+          "transmissionFactor": 1
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "ToyCar",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 9
+        }
+      ]
+    },
+    {
+      "name": "Fabric",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 3,
+            "NORMAL": 4,
+            "TEXCOORD_0": 5
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 10
+        }
+      ]
+    },
+    {
+      "name": "Glass",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 6,
+            "NORMAL": 7,
+            "TEXCOORD_0": 8
+          },
+          "mode": 4,
+          "material": 2,
+          "indices": 11
+        }
+      ]
+    }
+  ],
+  "cameras": [
+    {
+      "name": "Camera001",
+      "type": "perspective",
+      "perspective": {
+        "znear": 0.001,
+        "zfar": 2,
+        "yfov": 0.9
+      }
+    },
+    {
+      "name": "Camera002",
+      "type": "perspective",
+      "perspective": {
+        "znear": 0.001,
+        "zfar": 2,
+        "yfov": 0.41
+      }
+    },
+    {
+      "name": "Camera003",
+      "type": "perspective",
+      "perspective": {
+        "znear": 0.001,
+        "zfar": 2,
+        "yfov": 0.68
+      }
+    },
+    {
+      "name": "Camera004",
+      "type": "perspective",
+      "perspective": {
+        "znear": 0.001,
+        "zfar": 2,
+        "yfov": 0.63
+      }
+    },
+    {
+      "name": "Camera005",
+      "type": "perspective",
+      "perspective": {
+        "znear": 0.001,
+        "zfar": 2,
+        "yfov": 0.96
+      }
+    },
+    {
+      "name": "Camera006",
+      "type": "perspective",
+      "perspective": {
+        "znear": 0.001,
+        "zfar": 2,
+        "yfov": 0.96
+      }
+    },
+    {
+      "name": "Camera007",
+      "type": "perspective",
+      "perspective": {
+        "znear": 0.001,
+        "zfar": 2,
+        "yfov": 0.96
+      }
+    },
+    {
+      "name": "Camera008",
+      "type": "perspective",
+      "perspective": {
+        "znear": 0.001,
+        "zfar": 2,
+        "yfov": 0.96
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "name": "ToyCar",
+      "rotation": [
+        0.7071068,
+        0,
+        0,
+        0.7071067
+      ],
+      "scale": [
+        0.0001,
+        0.0001,
+        0.0001
+      ],
+      "mesh": 0
+    },
+    {
+      "name": "Fabric",
+      "rotation": [
+        0.7071068,
+        0,
+        0,
+        0.7071067
+      ],
+      "scale": [
+        0.0001,
+        0.0001,
+        0.0001
+      ],
+      "mesh": 1
+    },
+    {
+      "name": "Glass",
+      "rotation": [
+        0.7071068,
+        0,
+        0,
+        0.7071067
+      ],
+      "scale": [
+        0.0001,
+        0.0001,
+        0.0001
+      ],
+      "mesh": 2
+    },
+    {
+      "name": "Camera001",
+      "translation": [
+        -0.0169006381,
+        0.0253599286,
+        0.0302319955
+      ],
+      "rotation": [
+        -0.330993533,
+        -0.274300218,
+        -0.101194724,
+        0.8971969
+      ],
+      "camera": 0
+    },
+    {
+      "name": "Camera002",
+      "translation": [
+        -0.04332856,
+        0.0235993266,
+        0.0760967
+      ],
+      "rotation": [
+        -0.12160936,
+        -0.2651013,
+        -0.03372518,
+        0.9559263
+      ],
+      "camera": 1
+    },
+    {
+      "name": "Camera003",
+      "translation": [
+        -0.0121543175,
+        0.0101683857,
+        0.0269274339
+      ],
+      "rotation": [
+        -0.103828281,
+        -0.298918,
+        -0.0327368826,
+        0.9480485
+      ],
+      "camera": 2
+    },
+    {
+      "name": "Camera004",
+      "translation": [
+        -0.0391006,
+        -0.00724446634,
+        0.0497552231
+      ],
+      "rotation": [
+        0.00262248516,
+        -0.333805561,
+        0.0009287149,
+        0.9426378
+      ],
+      "camera": 3
+    },
+    {
+      "name": "Camera005",
+      "translation": [
+        -0.00747511769,
+        0.0108056553,
+        -0.0208431184
+      ],
+      "rotation": [
+        -0.0464569926,
+        -0.9334676,
+        -0.13119027,
+        0.330558747
+      ],
+      "camera": 4
+    },
+    {
+      "name": "Camera006",
+      "translation": [
+        -0.04173353,
+        0.027297115,
+        -0.04835121
+      ],
+      "rotation": [
+        -0.118150666,
+        -0.881382942,
+        -0.307792783,
+        0.338331461
+      ],
+      "camera": 5
+    },
+    {
+      "name": "Camera007",
+      "translation": [
+        0.0137228724,
+        0.009173209,
+        -0.0244436264
+      ],
+      "rotation": [
+        0.0496652424,
+        -0.9284824,
+        -0.134623677,
+        -0.3425349
+      ],
+      "camera": 6
+    },
+    {
+      "name": "Camera008",
+      "translation": [
+        -0.006532357,
+        0.0125829373,
+        0.0118280016
+      ],
+      "rotation": [
+        -0.21798256,
+        -0.300790727,
+        -0.07082678,
+        0.9257387
+      ],
+      "camera": 7
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "KHR_materials_clearcoat",
+    "KHR_materials_sheen",
+    "KHR_materials_transmission",
+    "KHR_texture_transform"
+  ]
 }
