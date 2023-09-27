@@ -48,8 +48,6 @@ layout(std140) uniform cameraMatrices{
     in vec4 JOINTS_0;
     in vec4 WEIGHTS_0;
     uniform sampler2D jointMatricesTexture;
-    out vec4 joints_0;
-    out vec4 weights_0;
 
     mat4 getJointMatrix(uint idx){
       return mat4(
@@ -58,6 +56,25 @@ layout(std140) uniform cameraMatrices{
         texelFetch(jointMatricesTexture, ivec2(2, idx), 0),
         texelFetch(jointMatricesTexture, ivec2(3, idx), 0));
     }
+
+
+#define DEBUG
+  #ifdef DEBUG
+    out vec4 joints_0;
+    out vec4 weights_0;
+    vec3 getJointColor(float t){
+      float c = mod(t, 4.0);
+      if(c < 1.0){
+        return vec3(1, 0, 0);
+      } else if (c < 2.0){
+        return vec3(0, 1, 0);
+      } else if (c < 3.0){
+        return vec3(0, 0, 1);
+      } else {
+        return vec3(0, 0, 0);
+      }
+    }
+  #endif
 #endif
 
   out vec3  vPosition;
@@ -88,10 +105,18 @@ layout(std140) uniform cameraMatrices{
       WEIGHTS_0[3] * getJointMatrix(uint(JOINTS_0[3]));
 
     transformedPosition = skinMatrix * vec4(position, 1.0);
-    joints_0 = JOINTS_0;
+
+  #ifdef DEBUG
+    joints_0.rgb = 
+      WEIGHTS_0[0] * getJointColor(JOINTS_0[0]) +
+      WEIGHTS_0[1] * getJointColor(JOINTS_0[1]) +
+      WEIGHTS_0[2] * getJointColor(JOINTS_0[2]) +
+      WEIGHTS_0[3] * getJointColor(JOINTS_0[3]);
     weights_0 = WEIGHTS_0;
+  #endif
 
   #ifdef HAS_NORMALS
+    // Assuming that joint matrices do not scale the mesh, we can omit transpose(inverse())
     transformedNormal = skinMatrix * vec4(normal, 0.0);
   #endif
 #endif
@@ -146,14 +171,14 @@ function getFragmentSource() {
   in mat3 tbn;
 #endif
 
-#ifdef HAS_SKIN
-  in vec4 joints_0;
-  in vec4 weights_0;
-#endif
 
 #define DEBUG
 #ifdef DEBUG
   uniform int outputVariable;
+  #ifdef HAS_SKIN
+  in vec4 joints_0;
+  in vec4 weights_0;
+  #endif
 #endif
 
 layout(std140) uniform cameraUniforms{
@@ -734,50 +759,53 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     vec4 albedo = baseColorFactor;
 #endif
 
-    vec4 color = vec4(0);
+#ifdef DEBUG
+    if(outputVariable == 0){
+      vec4 color = vec4(0);
 
-    if(alphaMode != 0){
-      alpha = albedo.a;
-    }
+      if(alphaMode != 0){
+        alpha = albedo.a;
+      }
 
-    if(alphaMode == 2 && alpha < alphaCutoff){
-      discard;
-    }
+      if(alphaMode == 2 && alpha < alphaCutoff){
+        discard;
+      }
 
-    vec3 viewDirection = normalize(cameraPosition - vPosition);
-    color.rgb = getIrradiance(viewDirection, normal, albedo);
-    color.a = alpha;
+      vec3 viewDirection = normalize(cameraPosition - vPosition);
+      color.rgb = getIrradiance(viewDirection, normal, albedo);
+      color.a = alpha;
 
-#ifdef HAS_EMISSION
-    vec3 emissiveColor = vec3(1);
-#ifdef HAS_EMISSIVE_TEXTURE
-    vec3 emissiveData = readTexture(emissiveTexture, emissiveTextureUV).rgb;
-    emissiveColor = pow(emissiveData, vec3(2.2));
+  #ifdef HAS_EMISSION
+      vec3 emissiveColor = vec3(1);
+  #ifdef HAS_EMISSIVE_TEXTURE
+      vec3 emissiveData = readTexture(emissiveTexture, emissiveTextureUV).rgb;
+      emissiveColor = pow(emissiveData, vec3(2.2));
+  #endif
+  #ifdef HAS_EMISSIVE_FACTOR
+      emissiveColor *= emissiveFactor;
+  #endif
+      
+      color.rgb += emissiveColor.rgb;
+  #endif
+
+      color.rgb *= cameraExposure;  
+
+      color.rgb = ACESFilm(color.rgb);
+      color.rgb = pow(color.rgb, vec3(0.4545));
+
+      if(alphaMode == 1){
+        color.rgb *= alpha;
+      }
+
+      fragColor = color;
+    }   
 #endif
-#ifdef HAS_EMISSIVE_FACTOR
-    emissiveColor *= emissiveFactor;
-#endif
-    
-    color.rgb += emissiveColor.rgb;
-#endif
-
-    color.rgb *= cameraExposure;  
-
-    color.rgb = ACESFilm(color.rgb);
-    color.rgb = pow(color.rgb, vec3(0.4545));
-
-    if(alphaMode == 1){
-      color.rgb *= alpha;
-    }
-
-    fragColor = color;
-
   // ------------------------- Debug -------------------------
 
 #ifdef DEBUG
   if(outputVariable > 0){
-    // Magenta for missing data
-    vec3 debugColor = vec3(1, 0, 1);
+    // Magenta-grey stripes for missing data
+    vec3 debugColor = mix(vec3(0.2), vec3(1, 0, 1), smoothstep(0.49, 0.5, mod(gl_FragCoord.x, 100.0)/100.0));
 
     float metal = metallicFactor;
     float roughness = roughnessFactor;
@@ -803,17 +831,15 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   #endif
 
   #endif
-
+      vec3 emissiveColorDebug = debugColor;
   #ifdef HAS_EMISSION
-      emissiveColor = vec3(1);
+      emissiveColorDebug = vec3(1);
   #ifdef HAS_EMISSIVE_TEXTURE
-      emissiveColor = readTexture(emissiveTexture, emissiveTextureUV).rgb;
+      emissiveColorDebug = readTexture(emissiveTexture, emissiveTextureUV).rgb;
   #endif
   #ifdef HAS_EMISSIVE_FACTOR
-      emissiveColor *= emissiveFactor;
+      emissiveColorDebug *= emissiveFactor;
   #endif
-  #else
-      vec3 emissiveColor = debugColor;
   #endif
 
       vec3 transmissiveColor = debugColor;
@@ -870,7 +896,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
         case 6: debugColor = tangentColor; break;
         case 7: debugColor = bitangentColor; break;
         case 8: debugColor = vec3(occlusion); break;
-        case 9: debugColor = emissiveColor;; break;
+        case 9: debugColor = emissiveColorDebug; break;
         case 10: debugColor = uvColor0; break;
         case 11: debugColor = uvColor1; break;
         case 12: debugColor = vec3(alpha); break;
@@ -880,10 +906,10 @@ layout(std140) uniform sphericalHarmonicsUniforms{
         case 15: debugColor = vec3(sheenRoughness); break;
   #endif
   #ifdef HAS_SKIN
-        case 16: debugColor = mod(joints_0.rgb, 4.0) / 4.0; break;
-        case 17: debugColor = weights_0.rgb * mod(joints_0.rgb, 4.0) / 4.0; break;
+        case 16: debugColor = joints_0.rgb; break;
+        case 17: debugColor = weights_0.rgb; break;
   #endif
-        default: debugColor = vec3(1,0,1);
+        default: debugColor = debugColor;
       };
 
       fragColor = vec4(debugColor, 1.0);

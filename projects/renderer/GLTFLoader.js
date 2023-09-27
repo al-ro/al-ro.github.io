@@ -50,9 +50,6 @@ export class GLTFLoader {
   /** Scene to display */
   scene = 0;
 
-  /** Drawable Mesh objects */
-  meshes = [];
-
   /** Skin objects holding joint data */
   skins = [];
 
@@ -139,7 +136,6 @@ export class GLTFLoader {
       }
 
       this.buffers = [];
-      this.meshes = [];
       this.textures = [];
       this.usedTextures = [];
       this.nodes = [];
@@ -277,6 +273,12 @@ export class GLTFLoader {
           for (const node of this.nodes) {
             if (node.hasSkin()) {
               node.skin = this.skins[node.skinIndex];
+              // Propagate skin down to split child nodes
+              for (const child of node.children) {
+                if (child.hasSkin()) {
+                  child.skin = this.skins[node.skinIndex];
+                }
+              }
             }
           }
 
@@ -326,6 +328,7 @@ export class GLTFLoader {
           parameters.splitChildren = primitives;
           const node = new Node(parameters);
           node.children = primitives;
+          node.skinIndex = node.children[0].skinIndex;
           // Add the Node to the scene graph
           nodes.push(node);
         } else {
@@ -779,7 +782,7 @@ export class GLTFLoader {
     let pbrDesc = material.pbrMetallicRoughness;
 
     if (pbrDesc == null) {
-      return null;
+      return new PBRMaterial();
     }
 
     if (material.alphaMode != null) {
@@ -975,10 +978,6 @@ export class GLTFLoader {
         parameters.skinIndex = node.skin;
       }
       primitives.push(new Mesh(parameters));
-    }
-
-    for (const primitive of primitives) {
-      this.meshes.push(primitive);
     }
 
     return primitives;

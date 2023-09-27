@@ -15,6 +15,9 @@ export class Skin {
     /** Texture used to pass the joint matrices to the GPU */
     texture = createAndSetupTexture();
 
+    min = [];
+    max = [];
+
     constructor(parameters) {
         this.joints = parameters.joints;
         this.inverseBindMatrices = parameters.inverseBindMatrices;
@@ -32,10 +35,25 @@ export class Skin {
         this.inverseBindMatrices = null;
     }
 
+    setMinAndMax() {
+        let min = [1e10, 1e10, 1e10];
+        let max = [-1e10, -1e10, -1e10];
+        for (const joint of this.joints) {
+            for (let i = 0; i < 3; i++) {
+                min[i] = Math.min(min[i], joint.position[i]);
+                max[i] = Math.max(max[i], joint.position[i]);
+            }
+        }
+
+        this.min = min;
+        this.max = max;
+    }
+
     /**
      * Combine the global transforms of joint nodes with their inverse bind matrices and upload the data to the GPU
      */
     update() {
+        this.setMinAndMax();
         let i = 0;
         for (const joint of this.joints) {
             let worldMatrix = joint.worldMatrix;

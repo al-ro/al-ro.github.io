@@ -75,7 +75,7 @@ export class Mesh extends Node {
 
     this.material.initializeProgram(this.activeAttributes, this.geometry.morphTargets);
 
-    if (this.hasSkin && this.material.supportsSkin) {
+    if (this.hasSkin() && this.material.supportsSkin) {
       this.material.enableSkin();
     }
 

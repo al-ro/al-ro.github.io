@@ -214,6 +214,14 @@ export class Object {
         for (const mesh of this.primitives) {
             let meshMin = mesh.min;
             let meshMax = mesh.max;
+            if (mesh.hasSkin()) {
+                let skinMin = mesh.skin.min;
+                let skinMax = mesh.skin.max;
+                for (let i = 0; i < 3; i++) {
+                    meshMin[i] = Math.min(skinMin[i], meshMin[i]);
+                    meshMax[i] = Math.max(skinMax[i], meshMax[i]);
+                }
+            }
             for (let i = 0; i < 3; i++) {
                 min[i] = Math.min(min[i], meshMin[i]);
                 max[i] = Math.max(max[i], meshMax[i]);

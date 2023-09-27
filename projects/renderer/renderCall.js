@@ -46,7 +46,7 @@ export function render(renderPass, mesh, camera, environment, cullCamera) {
     mesh.material.setWeights(mesh.weights);
   }
 
-  if (mesh.hasSkin()) {
+  if (mesh.hasSkin() && mesh.skin != null) {
     mesh.skin.update();
   }
 
@@ -58,7 +58,7 @@ export function render(renderPass, mesh, camera, environment, cullCamera) {
     mesh.material.brdfIntegrationTexture = environment.brdfIntegrationTexture;
   }
 
-  if (mesh.hasSkin() && mesh.material.supportsSkin) {
+  if (mesh.hasSkin() && mesh.material.supportsSkin && mesh.skin != null) {
     mesh.material.skinTexture = mesh.skin.texture;
   }
 
