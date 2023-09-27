@@ -8,13 +8,30 @@ export class UVMaterial extends Material {
   projectionMatrixHandle;
   modelMatrixHandle;
 
+  skinTexture;
+  skinTextureHandle;
+
   constructor() {
     super();
-    this.attributes = ["POSITION", "TEXCOORD_0"];
+    this.attributes = [
+      "POSITION",
+      "TEXCOORD_0",
+      "JOINTS_0",
+      "WEIGHTS_0"
+    ];
+
+    this.supportsSkin = true;
   }
 
   bindUniformBlocks() {
     this.program.bindUniformBlock("cameraMatrices", UniformBufferBindPoints.CAMERA_MATRICES);
+  }
+
+  enableSkin() {
+    if (!this.hasSkin && this.program != null) {
+      this.hasSkin = true;
+      this.skinTextureHandle = this.program.getOptionalUniformLocation('jointMatricesTexture');
+    }
   }
 
   getVertexShaderSource() {
@@ -31,6 +48,12 @@ export class UVMaterial extends Material {
 
   bindUniforms() {
     gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
+
+    if (this.hasSkin) {
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.skinTexture);
+      gl.uniform1i(this.skinTextureHandle, 0);
+    }
   }
 
 }

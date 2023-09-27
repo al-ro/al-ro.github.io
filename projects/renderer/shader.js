@@ -141,6 +141,43 @@ function getMorphedAttributeString(parameters, name) {
   return morphString + ";\n";
 }
 
+function getSkinDeclarationString() {
+  return `
+    #ifdef HAS_SKIN
+    in vec4 JOINTS_0;
+    in vec4 WEIGHTS_0;
+    uniform sampler2D jointMatricesTexture;
+
+    mat4 getJointMatrix(uint idx){
+      return mat4(
+        texelFetch(jointMatricesTexture, ivec2(0, idx), 0),
+        texelFetch(jointMatricesTexture, ivec2(1, idx), 0),
+        texelFetch(jointMatricesTexture, ivec2(2, idx), 0),
+        texelFetch(jointMatricesTexture, ivec2(3, idx), 0));
+    }
+    #endif
+  `;
+}
+
+function getSkinCalculationString() {
+  return `
+    #ifdef HAS_SKIN
+      mat4 skinMatrix =
+        WEIGHTS_0[0] * getJointMatrix(uint(JOINTS_0[0])) +
+        WEIGHTS_0[1] * getJointMatrix(uint(JOINTS_0[1])) +
+        WEIGHTS_0[2] * getJointMatrix(uint(JOINTS_0[2])) +
+        WEIGHTS_0[3] * getJointMatrix(uint(JOINTS_0[3]));
+
+      transformedPosition = skinMatrix * vec4(position, 1.0);
+
+    #ifdef HAS_NORMALS
+      // Assuming that joint matrices do not scale the mesh, we can omit transpose(inverse())
+      transformedNormal = skinMatrix * vec4(normal, 0.0);
+    #endif
+    #endif
+  `;
+}
+
 function getVertexSource(parameters) {
 
   var vertexSource = `
@@ -241,4 +278,4 @@ function compileShader(shaderSource, shaderType) {
   return shader;
 }
 
-export { compileShader, getDefinePrefix, getMorphedAttributeString }
+export { compileShader, getDefinePrefix, getMorphedAttributeString, getSkinDeclarationString, getSkinCalculationString }

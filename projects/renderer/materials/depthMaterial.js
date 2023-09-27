@@ -31,7 +31,6 @@ export class DepthMaterial extends Material {
   baseColorTextureUVHandle;
 
   hasBaseColorTexture = false;
-  hasSkin = false;
 
   skinTexture;
   skinTextureHandle;

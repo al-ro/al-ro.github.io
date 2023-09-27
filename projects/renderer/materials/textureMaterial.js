@@ -10,20 +10,38 @@ export class TextureMaterial extends Material {
   textureHandle;
   texture;
 
+  skinTexture;
+  skinTextureHandle;
+
   constructor(texture) {
 
     super();
 
-    this.attributes = ["POSITION", "TEXCOORD_0"];
+    this.attributes = [
+      "POSITION",
+      "TEXCOORD_0",
+      "JOINTS_0",
+      "WEIGHTS_0"
+    ];
 
     if (texture == null) {
       console.error("TextureMaterial requires a texture during construction. Provided: ", texture);
     }
+
     this.texture = texture;
+
+    this.supportsSkin = true;
   }
 
   bindUniformBlocks() {
     this.program.bindUniformBlock("cameraMatrices", UniformBufferBindPoints.CAMERA_MATRICES);
+  }
+
+  enableSkin() {
+    if (!this.hasSkin && this.program != null) {
+      this.hasSkin = true;
+      this.skinTextureHandle = this.program.getOptionalUniformLocation('jointMatricesTexture');
+    }
   }
 
   getVertexShaderSource() {
@@ -43,14 +61,15 @@ export class TextureMaterial extends Material {
 
     gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
 
-    // Tell WebGL we want to affect texture unit 0
     gl.activeTexture(gl.TEXTURE0);
-
-    // Bind the texture to texture unit 0
     gl.bindTexture(gl.TEXTURE_2D, this.texture);
-
-    // Tell the shader we bound the texture to texture unit 0
     gl.uniform1i(this.textureHandle, 0);
+
+    if (this.hasSkin) {
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, this.skinTexture);
+      gl.uniform1i(this.skinTextureHandle, 1);
+    }
   }
 
 }

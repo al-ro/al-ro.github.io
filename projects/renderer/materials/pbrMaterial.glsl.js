@@ -1,8 +1,10 @@
-import { getMorphedAttributeString } from "../shader.js"
+import { getMorphedAttributeString, getSkinCalculationString, getSkinDeclarationString } from "../shader.js"
 
 function getVertexSource(parameters) {
 
   var vertexSource = `
+
+  #define DEBUG
 
   in vec3 POSITION;
 
@@ -12,6 +14,7 @@ function getVertexSource(parameters) {
 #endif
 
 #ifdef HAS_UV_0
+
     in vec2 TEXCOORD_0;
 #endif
 
@@ -44,22 +47,9 @@ layout(std140) uniform cameraMatrices{
     out mat3 tbn;
 #endif
 
-#ifdef HAS_SKIN
-    in vec4 JOINTS_0;
-    in vec4 WEIGHTS_0;
-    uniform sampler2D jointMatricesTexture;
+`+ getSkinDeclarationString() + `
 
-    mat4 getJointMatrix(uint idx){
-      return mat4(
-        texelFetch(jointMatricesTexture, ivec2(0, idx), 0),
-        texelFetch(jointMatricesTexture, ivec2(1, idx), 0),
-        texelFetch(jointMatricesTexture, ivec2(2, idx), 0),
-        texelFetch(jointMatricesTexture, ivec2(3, idx), 0));
-    }
-
-
-#define DEBUG
-  #ifdef DEBUG
+  #if defined(DEBUG) && defined(HAS_SKIN)
     out vec4 joints_0;
     out vec4 weights_0;
     vec3 getJointColor(float t){
@@ -75,7 +65,6 @@ layout(std140) uniform cameraMatrices{
       }
     }
   #endif
-#endif
 
   out vec3  vPosition;
 
@@ -97,28 +86,16 @@ layout(std140) uniform cameraMatrices{
     `+ getMorphedAttributeString(parameters, "POSITION") + `
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
 
-#ifdef HAS_SKIN
-    mat4 skinMatrix =
-      WEIGHTS_0[0] * getJointMatrix(uint(JOINTS_0[0])) +
-      WEIGHTS_0[1] * getJointMatrix(uint(JOINTS_0[1])) +
-      WEIGHTS_0[2] * getJointMatrix(uint(JOINTS_0[2])) +
-      WEIGHTS_0[3] * getJointMatrix(uint(JOINTS_0[3]));
+`+ getSkinCalculationString() + `
 
-    transformedPosition = skinMatrix * vec4(position, 1.0);
-
-  #ifdef DEBUG
+#if defined(DEBUG) && defined(HAS_SKIN)
     joints_0.rgb = 
       WEIGHTS_0[0] * getJointColor(JOINTS_0[0]) +
       WEIGHTS_0[1] * getJointColor(JOINTS_0[1]) +
       WEIGHTS_0[2] * getJointColor(JOINTS_0[2]) +
       WEIGHTS_0[3] * getJointColor(JOINTS_0[3]);
-    weights_0 = WEIGHTS_0;
-  #endif
 
-  #ifdef HAS_NORMALS
-    // Assuming that joint matrices do not scale the mesh, we can omit transpose(inverse())
-    transformedNormal = skinMatrix * vec4(normal, 0.0);
-  #endif
+    weights_0 = WEIGHTS_0;
 #endif
 
 #ifdef HAS_TANGENTS

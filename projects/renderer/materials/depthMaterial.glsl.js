@@ -1,4 +1,4 @@
-import { getMorphedAttributeString } from "../shader.js"
+import { getMorphedAttributeString, getSkinDeclarationString, getSkinCalculationString } from "../shader.js"
 
 function getVertexSource(parameters) {
 
@@ -31,21 +31,7 @@ function getVertexSource(parameters) {
 
   uniform mat4 modelMatrix;
 
-#ifdef HAS_SKIN
-    in vec4 JOINTS_0;
-    in vec4 WEIGHTS_0;
-    uniform sampler2D jointMatricesTexture;
-    out vec4 joints_0;
-    out vec4 weights_0;
-
-    mat4 getJointMatrix(uint idx){
-      return mat4(
-        texelFetch(jointMatricesTexture, ivec2(0, idx), 0),
-        texelFetch(jointMatricesTexture, ivec2(1, idx), 0),
-        texelFetch(jointMatricesTexture, ivec2(2, idx), 0),
-        texelFetch(jointMatricesTexture, ivec2(3, idx), 0));
-    }
-#endif
+  `+ getSkinDeclarationString() + `
 
   void main(){
 
@@ -60,15 +46,7 @@ function getVertexSource(parameters) {
   `+ getMorphedAttributeString(parameters, "POSITION") + `
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
 
-#ifdef HAS_SKIN
-    mat4 skinMatrix =
-      WEIGHTS_0[0] * getJointMatrix(uint(JOINTS_0[0])) +
-      WEIGHTS_0[1] * getJointMatrix(uint(JOINTS_0[1])) +
-      WEIGHTS_0[2] * getJointMatrix(uint(JOINTS_0[2])) +
-      WEIGHTS_0[3] * getJointMatrix(uint(JOINTS_0[3]));
-
-    transformedPosition = skinMatrix * vec4(position, 1.0);
-#endif
+  `+ getSkinCalculationString() + `
 
     gl_Position = projectionMatrix * viewMatrix * transformedPosition;
   }
