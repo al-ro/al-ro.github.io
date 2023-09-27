@@ -38,14 +38,6 @@ export class RenderTarget {
     this.attachTexture(texture, gl.DEPTH_ATTACHMENT);
   }
 
-  getColorTexture() {
-    return this.colorTexture;
-  }
-
-  getDepthTexture() {
-    return this.depthTexture;
-  }
-
   setSize(width, height) {
     if (this.colorTexture != null) {
       gl.activeTexture(gl.TEXTURE0);
