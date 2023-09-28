@@ -109,7 +109,7 @@ environments.set("Uffizi Gallery", "./environmentMaps/uffizi_probe.hdr");
 let environmentNames = Array.from(environments.keys());
 environmentNames.sort();
 
-let uvGridTexture = loadTexture("./defaultResources/uv_grid.jpg");
+let uvGridTexture = loadTexture({ url: "./defaultResources/uv_grid.jpg", type: gl.RGB });
 
 let materialNames = ["PBR", "Normal", "Depth", "UV", "Texture", "Lambert", "Ambient"];
 materialNames.sort();
@@ -401,7 +401,7 @@ let width = 1;
 let height = 1;
 gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, sceneTexture);
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB8, width, height, 0, gl.RGB, gl.UNSIGNED_BYTE, null);
 gl.bindTexture(gl.TEXTURE_2D, sceneDepthTexture);
 gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, width, height, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
 let sceneRenderTarget = new RenderTarget(sceneTexture, sceneDepthTexture);
@@ -415,7 +415,7 @@ sceneMesh.setCulling(false);
 let blurredSceneTexture = createAndSetupTexture();
 gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, blurredSceneTexture);
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.canvas.width, gl.canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB8, gl.canvas.width, gl.canvas.height, 0, gl.RGB, gl.UNSIGNED_BYTE, null);
 
 let blurredSceneRenderTarget = new RenderTarget(blurredSceneTexture);
 let blurredSceneMaterial = new ScreenspaceMaterial(sceneTexture);

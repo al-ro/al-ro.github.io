@@ -43,25 +43,36 @@ function createAndSetupCubemap() {
   return texture;
 }
 
-
-//
 /**
  * Initialize a texture and load an image.
  * When the image finished loading copy it into the texture.
- * @param {string} url URL to data
- * @param {AbortSignal} signal abort signal
+ * @param {Object} parameters {
+ *  string url,
+ *  AbortSignal signal,
+ *  gl.RGBA | gl.RGB format
+ * }
  * @returns WebGL Texture object
  */
-function loadTexture(url, signal = null) {
+function loadTexture(parameters) {
+
+  let signal = null;
+  if (parameters.signal != null) {
+    signal = parameters.signal;
+  }
+
+  let format = gl.RGBA;
+  if (parameters.format != null) {
+    format = parameters.format;
+  }
 
   let texture = gl.createTexture();
 
   const level = 0;
-  const internalFormat = gl.RGBA;
+  const internalFormat = format;
   const width = 1;
   const height = 1;
   const border = 0;
-  const srcFormat = gl.RGBA;
+  const srcFormat = format;
   const srcType = gl.UNSIGNED_BYTE;
 
   // Initialize texture with a grey pixel
@@ -86,7 +97,7 @@ function loadTexture(url, signal = null) {
     }
   };
 
-  download(url, "blob", signal).then(data => {
+  download(parameters.url, "blob", signal).then(data => {
     if (!!data) {
       objectURL = URL.createObjectURL(data);
       image.src = objectURL;
