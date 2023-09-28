@@ -2,7 +2,7 @@ import { getMorphedAttributeString, getSkinCalculationString, getSkinDeclaration
 
 function getVertexSource(parameters) {
 
-  var vertexSource = `
+  var vertexSource = /*GLSL*/`
 
   #define DEBUG
 
@@ -47,7 +47,7 @@ layout(std140) uniform cameraMatrices{
     out mat3 tbn;
 #endif
 
-`+ getSkinDeclarationString() + `
+`+ getSkinDeclarationString() + /*GLSL*/`
 
   #if defined(DEBUG) && defined(HAS_SKIN)
     out vec4 joints_0;
@@ -79,14 +79,14 @@ layout(std140) uniform cameraMatrices{
 #endif
 
 #ifdef HAS_NORMALS
-    `+ getMorphedAttributeString(parameters, "NORMAL") + `
+    `+ getMorphedAttributeString(parameters, "NORMAL") + /*GLSL*/`
     vec4 transformedNormal = normalMatrix * vec4(normal, 0.0);
 #endif
 
-    `+ getMorphedAttributeString(parameters, "POSITION") + `
+    `+ getMorphedAttributeString(parameters, "POSITION") + /*GLSL*/`
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
 
-`+ getSkinCalculationString() + `
+`+ getSkinCalculationString() + /*GLSL*/`
 
 #if defined(DEBUG) && defined(HAS_SKIN)
     joints_0.rgb = 
@@ -101,7 +101,7 @@ layout(std140) uniform cameraMatrices{
 #ifdef HAS_TANGENTS
     // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     vec3 N = normalize(vec3(transformedNormal));
-    `+ getMorphedAttributeString(parameters, "TANGENT") + `
+    `+ getMorphedAttributeString(parameters, "TANGENT") + /*GLSL*/`
     vec3 T = normalize(vec3(normalMatrix * vec4(tangent.xyz, 0.0)));
     T = normalize(T - dot(T, N) * N);
     vec3 B = normalize(cross(N, T)) * TANGENT.w;
@@ -122,7 +122,7 @@ layout(std140) uniform cameraMatrices{
 
 function getFragmentSource() {
 
-  var fragmentSource = `
+  var fragmentSource = /*GLSL*/`
 
   out vec4 fragColor;
 

@@ -1,8 +1,8 @@
 import { getMorphedAttributeString, getSkinDeclarationString, getSkinCalculationString } from "../shader.js"
 
-function getVertexSource(parameters){ 
+function getVertexSource(parameters) {
 
-  var vertexSource = `
+  var vertexSource = /*GLSL*/`
 
   in vec3 POSITION;
 #ifdef HAS_NORMALS
@@ -24,7 +24,7 @@ function getVertexSource(parameters){
   out vec3 vPosition;
 #endif
 
-  `+ getSkinDeclarationString() + `
+  `+ getSkinDeclarationString() + /*GLSL*/`
 
   void main(){
 
@@ -36,7 +36,7 @@ function getVertexSource(parameters){
     vec4 transformedNormal = normalMatrix * vec4(normal, 0.0);
 #endif
 
-  `+ getSkinCalculationString() + `
+  `+ getSkinCalculationString() + /*GLSL*/`
 
 #ifdef HAS_NORMALS
     vNormal = transformedNormal.xyz;
@@ -51,9 +51,9 @@ function getVertexSource(parameters){
   return vertexSource;
 }
 
-function getFragmentSource(){
+function getFragmentSource() {
 
-  var fragmentSource = `
+  var fragmentSource = /*GLSL*/`
     
 #ifdef HAS_NORMALS
     in vec3 vNormal;
@@ -88,4 +88,4 @@ function getFragmentSource(){
   return fragmentSource;
 }
 
-export {getVertexSource, getFragmentSource};
+export { getVertexSource, getFragmentSource };

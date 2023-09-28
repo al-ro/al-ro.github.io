@@ -1,6 +1,6 @@
-function getVertexSource(){ 
+function getVertexSource() {
 
-  var vertexSource = `
+  var vertexSource = /*GLSL*/`
 
     in vec3 POSITION;
     out vec3 vPosition;
@@ -14,9 +14,9 @@ function getVertexSource(){
   return vertexSource;
 }
 
-function getFragmentSource(){
+function getFragmentSource() {
 
-  var fragmentSource = `
+  var fragmentSource = /*GLSL*/`
 
     uniform mat4 cameraMatrix;
     
@@ -165,7 +165,7 @@ function getFragmentSource(){
     }
     `;
 
-    return fragmentSource;
+  return fragmentSource;
 }
 
-export {getVertexSource, getFragmentSource};
+export { getVertexSource, getFragmentSource };

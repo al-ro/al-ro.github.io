@@ -1,6 +1,6 @@
 function getVertexSource() {
 
-  var vertexSource = `
+  var vertexSource = /*GLSL*/`
 
     in vec3 POSITION;
 
@@ -14,7 +14,7 @@ function getVertexSource() {
 
 function getFragmentSource() {
 
-  var fragmentSource = `
+  var fragmentSource = /*GLSL*/`
     
     #define PI 3.14159
     #define TWO_PI (2.0 * PI)

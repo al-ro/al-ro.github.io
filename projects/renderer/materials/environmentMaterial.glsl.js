@@ -1,6 +1,6 @@
-function getVertexSource(parameters){ 
+function getVertexSource(parameters) {
 
-  var vertexSource = `
+  var vertexSource = /*GLSL*/`
 
   in vec3 POSITION;
 
@@ -12,9 +12,9 @@ function getVertexSource(parameters){
   return vertexSource;
 }
 
-function getFragmentSource(){
+function getFragmentSource() {
 
-  var fragmentSource = `
+  var fragmentSource = /*GLSL*/`
 
   layout(std140) uniform cameraMatrices{
     mat4 viewMatrix;
@@ -57,4 +57,4 @@ function getFragmentSource(){
   return fragmentSource;
 }
 
-export {getVertexSource, getFragmentSource};
+export { getVertexSource, getFragmentSource };
