@@ -22,7 +22,8 @@ import { AlphaModes, InterpolationType } from "./enums.js"
 const supportedExtensions = [
   "KHR_materials_transmission",
   "KHR_materials_ior",
-  "KHR_materials_sheen"];
+  "KHR_materials_sheen"
+];
 
 const partiallySupportedExtensions = ["KHR_texture_transform"];
 
@@ -228,12 +229,31 @@ export class GLTFLoader {
     if (json.images != null) {
       for (const image of json.images) {
         if (image.uri != null) {
+
           let prefix = "";
+
+          let format = null;
+          if (image.hasOwnProperty("mimeType")) {
+            if (image.mimeType == "image/jpeg") {
+              format = gl.RGB;
+            } else {
+              format = gl.RGBA;
+            }
+          }
 
           if (image.uri.substring(0, 5) != "data:") {
             prefix = workingDirectory;
+
+            let fileType = image.uri.substring(image.uri.lastIndexOf(".") + 1, image.uri.length);
+            if (fileType == "jpg" || fileType == "jpeg") {
+              format = gl.RGB;
+            } else {
+              format = gl.RGBA;
+            }
           }
-          this.textures.push(loadTexture(prefix.concat(image.uri), this.controller.signal));
+
+          this.textures.push(loadTexture({ url: prefix.concat(image.uri), signal: this.controller.signal, format: format }));
+
         } else {
           //TODO: image from bufferview. Might not have loaded yet.
           console.error("Image from buffer: ", image);

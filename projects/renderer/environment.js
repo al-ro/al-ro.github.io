@@ -104,8 +104,8 @@ class Environment {
         const target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + i;
 
         const level = 0;
-        const internalFormat = gl.RGBA;
-        const format = gl.RGBA;
+        const internalFormat = gl.RGB;
+        const format = gl.RGB;
         const type = gl.UNSIGNED_BYTE;
         gl.texImage2D(target, level, internalFormat, format, type, image);
 
