@@ -42,7 +42,7 @@ export class RenderTarget {
     if (this.colorTexture != null) {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.colorTexture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB8, width, height, 0, gl.RGB, gl.UNSIGNED_BYTE, null);
       gl.bindTexture(gl.TEXTURE_2D, null);
     }
     if (this.depthTexture != null) {
