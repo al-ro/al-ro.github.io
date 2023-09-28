@@ -1,5 +1,4 @@
 import { gl } from "./canvas.js"
-import { MorphTarget } from "./morphTarget.js";
 
 /**
  * Generate hash defines to toggle specific parts of shaders according to
@@ -142,7 +141,7 @@ function getMorphedAttributeString(parameters, name) {
 }
 
 function getSkinDeclarationString() {
-  return `
+  return /*GLSL*/`
     #ifdef HAS_SKIN
 
     in vec4 JOINTS_0;
@@ -161,7 +160,7 @@ function getSkinDeclarationString() {
 }
 
 function getSkinCalculationString() {
-  return `
+  return /*GLSL*/`
     #ifdef HAS_SKIN
 
       mat4 skinMatrix =
@@ -182,7 +181,7 @@ function getSkinCalculationString() {
 
 function getVertexSource(parameters) {
 
-  var vertexSource = `
+  var vertexSource = /*GLSL*/`
 
   in vec3 POSITION;
 
@@ -236,7 +235,7 @@ layout(std140) uniform cameraMatrices{
 #endif
 
 #ifdef HAS_NORMALS
-    `+ getMorphedAttributeString(parameters, "NORMAL") + `
+    `+ getMorphedAttributeString(parameters, "NORMAL") + /*GLSL*/`
     vec4 transformedNormal = normalMatrix * vec4(normal, 0.0);
     vNormal = transformedNormal.xyz;
 #endif
@@ -244,14 +243,14 @@ layout(std140) uniform cameraMatrices{
 #ifdef HAS_TANGENTS
     // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     vec3 N = normalize(vec3(transformedNormal));
-    `+ getMorphedAttributeString(parameters, "TANGENT") + `
+    `+ getMorphedAttributeString(parameters, "TANGENT") +/*GLSL*/`
     vec3 T = normalize(vec3(normalMatrix * vec4(tangent.xyz, 0.0)));
     T = normalize(T - dot(T, N) * N);
     vec3 B = normalize(cross(N, T)) * TANGENT.w;
     tbn = mat3(T, B, N);
 #endif 
 
-    `+ getMorphedAttributeString(parameters, "POSITION") + `
+    `+ getMorphedAttributeString(parameters, "POSITION") + /*GLSL*/`
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
     vPosition = transformedPosition.xyz;
     gl_Position = projectionMatrix * viewMatrix * transformedPosition;
