@@ -1,8 +1,8 @@
 import { getMorphedAttributeString, getSkinDeclarationString, getSkinCalculationString } from "../shader.js"
 
-function getVertexSource(){ 
+function getVertexSource() {
 
-  var vertexSource = `
+  var vertexSource = /*GLSL*/`
   
   in vec3 POSITION;
 #ifdef HAS_UV_0
@@ -21,7 +21,7 @@ function getVertexSource(){
   out vec2 vUV;
 #endif
 
-`+ getSkinDeclarationString() + `
+`+ getSkinDeclarationString() + /*GLSL*/`
 
   void main(){
   
@@ -32,7 +32,7 @@ function getVertexSource(){
     vec3 position = POSITION.xyz;
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
 
-    `+ getSkinCalculationString() + `
+    `+ getSkinCalculationString() + /*GLSL*/`
   
     gl_Position = projectionMatrix * viewMatrix * transformedPosition;
   }
@@ -41,9 +41,9 @@ function getVertexSource(){
   return vertexSource;
 }
 
-function getFragmentSource(){
-   
-  var fragmentSource = `
+function getFragmentSource() {
+
+  var fragmentSource = /*GLSL*/`
     
     
 #ifdef HAS_UV_0
@@ -64,4 +64,4 @@ function getFragmentSource(){
   return fragmentSource;
 }
 
-export {getVertexSource, getFragmentSource};
+export { getVertexSource, getFragmentSource };

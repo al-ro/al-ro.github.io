@@ -2,7 +2,7 @@ import { getMorphedAttributeString, getSkinDeclarationString, getSkinCalculation
 
 function getVertexSource(parameters) {
 
-  var vertexSource = `
+  var vertexSource = /*GLSL*/`
 
   in vec3 POSITION;
 
@@ -31,7 +31,7 @@ function getVertexSource(parameters) {
 
   uniform mat4 modelMatrix;
 
-  `+ getSkinDeclarationString() + `
+  `+ getSkinDeclarationString() + /*GLSL*/`
 
   void main(){
 
@@ -43,10 +43,10 @@ function getVertexSource(parameters) {
     vUV1 = TEXCOORD_1;
 #endif
 
-  `+ getMorphedAttributeString(parameters, "POSITION") + `
+  `+ getMorphedAttributeString(parameters, "POSITION") +/*GLSL*/ `
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
 
-  `+ getSkinCalculationString() + `
+  `+ getSkinCalculationString() + /*GLSL*/`
 
     gl_Position = projectionMatrix * viewMatrix * transformedPosition;
   }
@@ -57,7 +57,7 @@ function getVertexSource(parameters) {
 
 function getFragmentSource() {
 
-  var fragmentSource = `
+  var fragmentSource = /*GLSL*/`
 
   out vec4 fragColor;
 
