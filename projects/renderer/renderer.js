@@ -83,10 +83,10 @@ models.set("Camera", "./gltf/camera/Camera_01_1k.gltf");
 models.set("Minimal", "./gltf/minimal/scene.gltf");
 models.set("Collada Duck", "./gltf/duck/duck.gltf");
 models.set("Buster Drone", "./gltf/buster_drone/scene.gltf");
-models.set("MorphAnimation", "./gltf/animatedMorphCube/AnimatedMorphCube.gltf");
-models.set("MorphPrimitivesTest", "./gltf/morphPrimitivesTest/MorphPrimitivesTest.gltf");
-models.set("MorphStressTest", "./gltf/morphStressTest/MorphStressTest.gltf");
-models.set("MorphInterpolation", "./gltf/morphInterpolation/fourCube.gltf");
+models.set("Morph Animation", "./gltf/animatedMorphCube/AnimatedMorphCube.gltf");
+models.set("Morph Primitives Test", "./gltf/morphPrimitivesTest/MorphPrimitivesTest.gltf");
+models.set("Morph Stress Test", "./gltf/morphStressTest/MorphStressTest.gltf");
+models.set("Morph Interpolation", "./gltf/morphInterpolation/fourCube.gltf");
 models.set("Sheen Chair", "./gltf/chair/SheenChair.gltf");
 models.set("Simple Skin", "./gltf/skin/SimpleSkin.gltf");
 models.set("Dragon", "./gltf/dragon/dragon.gltf");
@@ -142,7 +142,7 @@ let info = {
   programCount: programRepository.programs.size
 };
 
-let modelSelector = { model: "Dragon" };
+let modelSelector = { model: "Morph Animation" };
 let environmentController = { environment: "Venice Sunrise", renderBackground: true };
 let outputSelector = { output: outputEnum.PBR };
 let environment;

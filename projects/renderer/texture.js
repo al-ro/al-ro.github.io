@@ -24,14 +24,13 @@ function createAndSetupCubemap() {
   for (let i = 0; i < 6; i++) {
     const target = gl.TEXTURE_CUBE_MAP_POSITIVE_X + i;
 
-    const level = 0;
     const internalFormat = gl.RGBA32F;
     const width = cubeMapSize;
     const height = cubeMapSize;
     const format = gl.RGBA;
     const type = gl.FLOAT;
 
-    gl.texImage2D(target, level, internalFormat, width, height, 0, format, type, null);
+    gl.texImage2D(target, 0, internalFormat, width, height, 0, format, type, null);
 
   }
 
@@ -46,11 +45,9 @@ function createAndSetupCubemap() {
 /**
  * Initialize a texture and load an image.
  * When the image finished loading copy it into the texture.
- * @param {Object} parameters {
- *  string url,
- *  AbortSignal signal,
- *  gl.RGBA | gl.RGB format
- * }
+ * @param {{url: string,
+ *          signal: AbortSignal,
+ *          format: gl.RGBA | gl.RGB }} parameters
  * @returns WebGL Texture object
  */
 function loadTexture(parameters) {
@@ -67,18 +64,14 @@ function loadTexture(parameters) {
 
   let texture = gl.createTexture();
 
-  const level = 0;
   const internalFormat = format;
-  const width = 1;
-  const height = 1;
-  const border = 0;
   const srcFormat = format;
   const srcType = gl.UNSIGNED_BYTE;
 
   // Initialize texture with a grey pixel
   const pixel = new Uint8Array([128, 128, 128, 255]);
   gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixel);
+  gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, 1, 1, 0, srcFormat, srcType, pixel);
   gl.bindTexture(gl.TEXTURE_2D, null);
 
   const image = new Image();
@@ -87,7 +80,7 @@ function loadTexture(parameters) {
   image.onload = function () {
     if (texture != null && gl.isTexture(texture)) {
       gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
+      gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, srcFormat, srcType, image);
 
       gl.generateMipmap(gl.TEXTURE_2D);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);

@@ -207,7 +207,7 @@ export class GLTFLoader {
     }
 
     // Populate buffer array with promises of each GLTF buffer to fetch
-    if (!!json.buffers) {
+    if (json.buffers != null) {
       for (const buffer of json.buffers) {
         let prefix = "";
 
@@ -267,7 +267,7 @@ export class GLTFLoader {
       Promise.all(this.buffers).then(buffers => {
 
         // If there are buffers and none is null and the download has not been cancelled
-        if (!!buffers && !buffers.some(b => b == null) && !this.controller.signal.aborted) {
+        if (buffers != null && !buffers.some(b => b == null) && !this.controller.signal.aborted) {
           // Replace promises with data
           this.buffers = buffers;
 
@@ -461,7 +461,7 @@ export class GLTFLoader {
         const parameters = {
           timeStamps: this.getAnimationTimeStamps(sampler),
           values: outputValues,
-          interpolation: !!sampler.interpolation ? sampler.interpolation : InterpolationType.LINEAR,
+          interpolation: sampler.interpolation != null ? sampler.interpolation : InterpolationType.LINEAR,
           path: channel.target.path,
           name: animationName
         };
@@ -611,7 +611,7 @@ export class GLTFLoader {
     // Typed array is created of the underlying buffer. No memory is allocated.
     const data = new typedArray(buffer, offset, accessor.count);
 
-    if (!!accessor.sparse) {
+    if (accessor.sparse != null) {
       data = this.getModifiedData(accessor, data);
     }
 
@@ -667,7 +667,8 @@ export class GLTFLoader {
       componentCount: getComponentCount(accessor.type),
       normalized: accessor.normalized != null ? accessor.normalized : false,
       byteStride: bufferView.byteStride != null ? bufferView.byteStride : 0,
-      offset: accessor.byteOffset != null ? accessor.byteOffset : 0
+      offset: accessor.byteOffset != null ? accessor.byteOffset : 0,
+      count: accessor.count
     };
 
     // Position min/max must be set in the GLTF
@@ -915,6 +916,62 @@ export class GLTFLoader {
     return new PBRMaterial(materialParameters);
   }
 
+  createMorphTarget(name, accessor) {
+
+    const bufferView = this.json.bufferViews[accessor.bufferView];
+    const buffer = this.buffers[bufferView.buffer];
+
+    if (!buffer) {
+      return null;
+    }
+
+    const offset = bufferView.byteOffset != null ? bufferView.byteOffset : 0;
+
+    // Get a typed view of the buffer data
+    const typedArray = getTypedArray(accessor.componentType);
+    // Typed array is created of the underlying buffer. No memory is allocated.
+    let data = new typedArray(buffer, offset, bufferView.byteLength / typedArray.BYTES_PER_ELEMENT);
+
+    if (accessor.sparse != null) {
+      data = this.getModifiedData(accessor, data);
+    }
+
+    const stride = (bufferView.byteStride != null ? bufferView.byteStride : 0) / typedArray.BYTES_PER_ELEMENT;
+    let componentCount = getComponentCount(accessor.type);
+
+    // New memory allocation which needs to be freed
+    let denseData = new Float32Array(componentCount * accessor.count);
+
+    // Extract morph target data into a separate densly packed array
+    for (let i = 0, idx = 0; i < componentCount * accessor.count; i += componentCount) {
+      denseData.set(data.subarray(idx, idx + componentCount), i);
+      // Move to next element start in the data array
+      idx += Math.max(componentCount, stride);
+    }
+
+    const glBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, glBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, denseData, gl.STATIC_DRAW);
+
+    const descriptor = {
+      target: gl.ARRAY_BUFFER,
+      componentType: accessor.componentType,
+      componentCount: getComponentCount(accessor.type),
+      normalized: false,
+      byteStride: 0,
+      offset: 0,
+      count: accessor.count
+    };
+
+    // Position min/max must be set in the GLTF
+    if (name == "POSITION") {
+      descriptor.min = accessor.min;
+      descriptor.max = accessor.max;
+    }
+
+    return new Attribute(name, glBuffer, denseData, descriptor);
+  }
+
   /**
    * Construct Mesh objects described by the GLTF mesh
    * @param {object} mesh GLTF mesh object
@@ -975,10 +1032,11 @@ export class GLTFLoader {
           for (const name of supportedAttributes) {
             if (target.hasOwnProperty(name)) {
               const accessor = accessors[target[name]];
-              attributes.set(name, this.createAttribute(name, accessor));
+              attributes.set(name, this.createMorphTarget(name, accessor));
+              this.createMorphTarget(name, accessor);
             }
           }
-          morphTargets.push(new MorphTarget(attributes));
+          morphTargets.push(new MorphTarget({ attributes: attributes }));
         }
         geometryParams.morphTargets = morphTargets;
       }

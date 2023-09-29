@@ -1,7 +1,7 @@
 const AlphaModes = {
-  OPAQUE: "opaque",
-  BLEND: "blend",
-  MASK: "mask",
+  OPAQUE: "OPAQUE",
+  BLEND: "BLEND",
+  MASK: "MASK",
 }
 
 const InterpolationType = {

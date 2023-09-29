@@ -1,5 +1,3 @@
-import { Attribute } from "./attribute.js";
-
 /**
  * Morph targets supported by the renderer
  * 
@@ -32,11 +30,21 @@ class MorphTarget {
   max;
 
   /**
+   * Texture which holds the morph target attribute data
+   */
+  texture;
+
+  /**
+   * Combined sequential morph target data in a 1D TypedArray
+   */
+  packedData;
+
+  /**
    * 
    * @param {Map<string, Attribute>} attributes map of Attribute objects
    */
-  constructor(attributes) {
-    this.attributes = attributes;
+  constructor(parameters) {
+    this.attributes = parameters.attributes;
     if (this.attributes.has("POSITION")) {
       this.min = this.attributes.get("POSITION").min;
       this.max = this.attributes.get("POSITION").max;

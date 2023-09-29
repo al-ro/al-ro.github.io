@@ -3,7 +3,7 @@ import { gl } from "./canvas.js"
 /**
  * Attibutes supported by the renderer
  * 
- * [POSITION, NORMAL, TANGENT, TEXCOORD_0, TEXCOORD_1, COLOR_0]
+ * [POSITION, NORMAL, TANGENT, TEXCOORD_0, TEXCOORD_1, COLOR_0, JOINTS_0, WEIGHTS_0]
  */
 const supportedAttributes = [
   "POSITION",
@@ -80,6 +80,7 @@ class Attribute {
    *          normalized: boolean,
    *          byteStride: number,
    *          offset: number,
+   *          count: number,
    *          min?: number[],  
    *          max?: number[]}} descriptor 
    */
@@ -105,7 +106,14 @@ class Attribute {
     } else {
       gl.enableVertexAttribArray(this.handle);
       gl.bindBuffer(this.descriptor.target, this.buffer);
-      gl.vertexAttribPointer(this.handle, this.descriptor.componentCount, this.descriptor.componentType, this.descriptor.normalized, this.descriptor.byteStride, this.descriptor.offset);
+      gl.vertexAttribPointer(
+        this.handle,
+        this.descriptor.componentCount,
+        this.descriptor.componentType,
+        this.descriptor.normalized,
+        this.descriptor.byteStride,
+        this.descriptor.offset
+      );
     }
   }
 }
