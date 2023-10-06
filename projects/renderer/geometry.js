@@ -25,7 +25,7 @@ export class Geometry {
   /**
    * Optional array of MorphTarget objects which can be used for vertex animation
    */
-  morphTargets;
+  morphTarget;
 
   /**
    * 
@@ -34,28 +34,28 @@ export class Geometry {
    * length: int, 
    * indices?: Indices, 
    * primitiveType?: enum, 
-   * morphTargets?: MorphTarget[]} geometryData 
+   * morphTarget?: MorphTarget} parameters 
    */
-  constructor(geometryData) {
+  constructor(parameters) {
 
-    this.attributes = geometryData.attributes;
+    this.attributes = parameters.attributes;
 
     this.min = this.attributes.get("POSITION").min;
     this.max = this.attributes.get("POSITION").max;
 
-    if (!!geometryData.morphTargets) {
-      this.morphTargets = geometryData.morphTargets.slice(0, 6);
+    if (parameters.morphTarget != null) {
+      this.morphTarget = parameters.morphTarget;
     }
 
-    this.length = geometryData.length;
+    this.length = parameters.length;
 
-    if (geometryData.indices != null) {
+    if (parameters.indices != null) {
       this.hasIndices = true;
-      this.indices = geometryData.indices;
+      this.indices = parameters.indices;
     }
 
-    if (geometryData.primitiveType != null) {
-      this.primitiveType = geometryData.primitiveType;
+    if (parameters.primitiveType != null) {
+      this.primitiveType = parameters.primitiveType;
     }
 
   }
@@ -65,35 +65,26 @@ export class Geometry {
       attribute.destroy();
       attribute = null;
     });
+
     if (this.hasIndices) {
       this.indices.destroy();
     }
 
-    if (this.morphTargets != null) {
-      for (let morphTarget of this.morphTargets) {
-        morphTarget.destroy();
-        morphTarget = null;
-      };
+    if (this.morphTarget != null) {
+      this.morphTarget.destroy();
+      this.morphTarget = null;
     }
   }
 
   /**
-   * 
    * @param {string[]} attributeNames active attributes for drawable mesh
    */
-  enableBuffers(attributeNames, enableMorphTargets = false) {
+  enableBuffers(attributeNames) {
     for (const name of attributeNames) {
       if (this.attributes.has(name)) {
         this.attributes.get(name).enableBuffer();
       } else {
         console.error("Attribute " + name + " does not exist in geometry: ", this);
-      }
-      if (enableMorphTargets) {
-        if (this.morphTargets != null) {
-          for (const morphTarget of this.morphTargets) {
-            morphTarget.enableBuffers(name);
-          }
-        }
       }
     }
     if (this.hasIndices) {

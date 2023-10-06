@@ -11,7 +11,7 @@ import { Environment } from "./environment.js"
 import { loadTexture, createAndSetupTexture } from "./texture.js"
 import { Mesh } from "./mesh.js";
 import { gl, extMEM } from "./canvas.js";
-import { RenderPass } from "./enums.js"
+import { RenderPass, MaterialType } from "./enums.js"
 import { getScreenspaceQuad } from "./screenspace.js";
 import { GLTFLoader } from "./GLTFLoader.js"
 import { RenderTarget } from "./renderTarget.js"
@@ -29,11 +29,6 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 /*
   TODO:
 
-      Depth material error
-      Depth material per mesh
-      Override and original material refactor
-      All materials support morph
-
       Order material draw
 
       Scene format and scale for specific files?
@@ -42,9 +37,6 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
         Camera pan
         Specify active animations in files
         Override scale and centering
-
-      Morph target stress test and correct clamp
-        Texture
 
       Floating point rendering
       Post-processing pass with tonemapping and gamma
@@ -109,10 +101,6 @@ environments.set("Uffizi Gallery", "./environmentMaps/uffizi_probe.hdr");
 let environmentNames = Array.from(environments.keys());
 environmentNames.sort();
 
-let uvGridTexture = loadTexture({ url: "./defaultResources/uv_grid.jpg", type: gl.RGB });
-
-let materialNames = ["PBR", "Normal", "Depth", "UV", "Texture", "Lambert", "Ambient"];
-materialNames.sort();
 let materialSelector = { material: "PBR" };
 
 let yaw = Math.PI / 3.0;
@@ -142,7 +130,7 @@ let info = {
   programCount: programRepository.programs.size
 };
 
-let modelSelector = { model: "Morph Animation" };
+let modelSelector = { model: "Dragon" };
 let environmentController = { environment: "Venice Sunrise", renderBackground: true };
 let outputSelector = { output: outputEnum.PBR };
 let environment;
@@ -164,7 +152,7 @@ gui.add(modelSelector, 'model').options(modelNames).onChange(name => { loadGLTF(
 const animationFolder = gui.addFolder('Animation');
 
 const materialFolder = gui.addFolder('Material');
-const materialControls = materialFolder.add(materialSelector, 'material').options(materialNames).onChange(name => { setMaterial(name); });
+const materialControls = materialFolder.add(materialSelector, 'material').options(MaterialType).onChange(name => { setMaterial(name); });
 const outputControls = materialFolder.add(outputSelector, 'output').options(outputEnum).onChange(output => { setOutput(output) });
 
 const environmentFolder = gui.addFolder('Environment');
@@ -335,32 +323,15 @@ function centerAndScale(object) {
 }
 
 function setMaterial(name) {
-  let material;
-  switch (name) {
-    case "Ambient": material = new AmbientMaterial();
-      break;
-    case "PBR": material = null;
-      break;
-    case "Normal": material = new NormalMaterial();
-      break;
-    case "Depth": material = new DepthMaterial();
-      break;
-    case "UV": material = new UVMaterial();
-      break;
-    case "Lambert": material = new LambertMaterial();
-      break;
-    case "Texture": material = new TextureMaterial(uvGridTexture);
-      break;
-    default: material = null;
-  }
 
-  if (material != null) {
+  if (name != MaterialType.PBR) {
     outputControls.hide();
   } else {
     outputControls.show();
   }
+
   for (const object of scene.objects) {
-    object.setMaterial(material);
+    object.setMaterial(name);
   }
 }
 
@@ -409,7 +380,7 @@ let sceneRenderTarget = new RenderTarget(sceneTexture, sceneDepthTexture);
 let sceneQuad = getScreenspaceQuad();
 let sceneMaterial = new ScreenspaceMaterial(sceneTexture);
 let sceneMesh = new Mesh({ geometry: sceneQuad, material: sceneMaterial });
-sceneMesh.setCulling(false);
+sceneMesh.cull = false;
 
 // A texture of the opaque scene which is mipmapped and blurred for transmission background
 let blurredSceneTexture = createAndSetupTexture();
@@ -420,7 +391,7 @@ gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB8, gl.canvas.width, gl.canvas.height, 0, g
 let blurredSceneRenderTarget = new RenderTarget(blurredSceneTexture);
 let blurredSceneMaterial = new ScreenspaceMaterial(sceneTexture);
 let blurredSceneMesh = new Mesh({ geometry: sceneQuad, material: blurredSceneMaterial });
-blurredSceneMesh.setCulling(false);
+blurredSceneMesh.cull = false;
 
 function draw() {
 

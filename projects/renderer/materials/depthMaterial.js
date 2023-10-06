@@ -5,9 +5,6 @@ import { gl } from "../canvas.js";
 
 export class DepthMaterial extends Material {
 
-  // CPU-side buffer for uniform buffer objects
-  vertexUniformBuffer;
-
   modelMatrixHandle;
 
   baseColorFactor = [1, 1, 1, 1];
@@ -32,11 +29,7 @@ export class DepthMaterial extends Material {
 
   hasBaseColorTexture = false;
 
-  skinTexture;
-  skinTextureHandle;
-
   weights = [];
-  weightHandles = [];
 
   constructor(parameters) {
 
@@ -49,7 +42,6 @@ export class DepthMaterial extends Material {
       "JOINTS_0",
       "WEIGHTS_0"
     ];
-
 
     this.supportsMorphTargets = true;
     this.supportsSkin = true;
@@ -83,8 +75,8 @@ export class DepthMaterial extends Material {
 
   }
 
-  getVertexShaderSource(parameters) {
-    return getVertexSource(parameters);
+  getVertexShaderSource() {
+    return getVertexSource();
   }
 
   getFragmentShaderSource() {
@@ -100,12 +92,6 @@ export class DepthMaterial extends Material {
   }
 
   getUniformHandles() {
-    if (this.weights != null) {
-      for (let i = 0; i < this.weights.length; i++) {
-        this.weightHandles.push(this.program.getOptionalUniformLocation("w" + i));
-      }
-    }
-
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
     this.alphaCutoffHandle = this.program.getOptionalUniformLocation('alphaCutoff');
     this.alphaModeHandle = this.program.getOptionalUniformLocation('alphaMode');
@@ -118,28 +104,9 @@ export class DepthMaterial extends Material {
     this.baseColorHandle = this.program.getOptionalUniformLocation('baseColorFactor');
   }
 
-  getInstanceParameterHandles() {
-    this.attributeHandles.orientationHandle = this.program.getAttribLocation('orientation');
-    this.attributeHandles.offsetHandle = this.program.getAttribLocation('offset');
-    this.attributeHandles.scaleHandle = this.program.getAttribLocation('scale');
-  }
-
-  enableSkin() {
-    if (!this.hasSkin && this.program != null) {
-      this.hasSkin = true;
-      this.skinTextureHandle = this.program.getOptionalUniformLocation('jointMatricesTexture');
-    }
-  }
-
   bindUniforms() {
 
     gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
-
-    if (this.weights != null) {
-      for (let i = 0; i < this.weights.length; i++) {
-        gl.uniform1f(this.weightHandles[i], this.weights[i]);
-      }
-    }
 
     gl.uniform1f(this.alphaCutoffHandle, this.alphaCutoff);
 
@@ -164,13 +131,21 @@ export class DepthMaterial extends Material {
       gl.uniform1i(this.baseColorTextureUVHandle, this.baseColorTextureUV);
     }
 
+    gl.uniform4fv(this.baseColorHandle, this.baseColorFactor);
+
     if (this.hasSkin) {
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, this.skinTexture);
       gl.uniform1i(this.skinTextureHandle, 1);
     }
 
-    gl.uniform4fv(this.baseColorHandle, this.baseColorFactor);
+    if (this.hasMorphTargets) {
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.morphTargetTexture);
+      gl.uniform1i(this.morphTargetTextureHandle, 2);
+      gl.uniform1fv(this.morphTargetWeightsHandle, this.weights);
+    }
+
   }
 
 }

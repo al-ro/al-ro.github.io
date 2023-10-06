@@ -8,21 +8,22 @@
 
 import { gl } from "./canvas.js"
 import { Node } from "./node.js"
-
+import { DepthMaterial } from "./materials/depthMaterial.js"
 export class Mesh extends Node {
 
   vao;
   geometry;
   material;
 
-  // Meshes can display an override material while retaining their original one
+  // Original material the mesh was created with
   originalMaterial;
-  overrideMaterial;
+
+  // Depth pre-pass material
+  depthMaterial;
 
   cull = true;
 
   instanced = false;
-  activeAttributes = [];
 
   normalMatrix = m4.create();
 
@@ -33,8 +34,9 @@ export class Mesh extends Node {
   min;
   max;
 
-  //Optional morph target weights
+  // Optional morph target weights
   weights = [];
+  idleWeights = [];
   hasWeights = false;
 
   constructor(parameters) {
@@ -50,7 +52,6 @@ export class Mesh extends Node {
     this.aabb = getAABBFromExtent(this.geometry.min, this.geometry.max);
 
     this.originalMaterial = parameters.material;
-    this.overrideMaterial = parameters.material;
 
     this.instanced = this.geometry.instanced;
 
@@ -61,53 +62,51 @@ export class Mesh extends Node {
 
     this.material = material;
 
-    this.activeAttributes = [];
+    let activeAttributes = [];
     // Determine intersection of geometry and material attributes
     for (const attribute of this.material.attributes) {
       if (this.geometry.attributes.has(attribute)) {
-        this.activeAttributes.push(attribute);
+        activeAttributes.push(attribute);
       }
     }
 
-    if (this.material.supportsMorphTargets) {
-      this.material.setWeights(this.weights);
+    this.material.initializeProgram(activeAttributes, this.geometry);
+
+    if (this.geometry.morphTarget != null && this.material.supportsMorphTargets) {
+      this.material.enableMorphTargets();
     }
 
-    this.material.initializeProgram(this.activeAttributes, this.geometry.morphTargets);
-
-    if (this.hasSkin() && this.material.supportsSkin) {
+    if (this.material.supportsSkin && !this.material.hasSkin && this.skin != null) {
       this.material.enableSkin();
     }
 
-    for (const attribute of this.activeAttributes) {
-      const handle = this.material.program.getAttribLocation(attribute);
-      this.geometry.attributes.get(attribute).handle = handle;
-      if (this.geometry.morphTargets != null && this.material.supportsMorphTargets) {
-        for (let i = 0; i < this.geometry.morphTargets.length; i++) {
-          if (this.geometry.morphTargets[i].attributes.has(attribute)) {
-            let morphTargetHandle = this.material.program.getAttribLocation(attribute + "" + i);
-            this.geometry.morphTargets[i].attributes.get(attribute).handle = morphTargetHandle;
-          }
-        }
-      }
+    for (const attribute of activeAttributes) {
+      this.geometry.attributes.get(attribute).handle = this.material.program.getAttribLocation(attribute);
     }
-    this.createVAO();
-  }
 
-  setOverrideMaterial(material) {
-    this.overrideMaterial = material;
+    this.createVAO(activeAttributes);
   }
 
   setOutput(output) {
     this.material.setOutput(output);
   }
 
-  displayOverrideMaterial() {
-    this.setMaterial(this.overrideMaterial);
-  }
-
   displayOriginalMaterial() {
     this.setMaterial(this.originalMaterial);
+  }
+
+  setDepthMaterial() {
+    if (this.depthMaterial == null) {
+      this.depthMaterial = new DepthMaterial({
+        baseColorFactor: this.originalMaterial.baseColorFactor,
+        baseColorTexture: this.originalMaterial.baseColorTexture,
+        baseColorTextureUV: this.originalMaterial.baseColorTextureUV,
+        alphaMode: this.originalMaterial.alphaMode,
+        alphaCutoff: this.originalMaterial.alphaCutoff,
+        doubleSided: this.originalMaterial.doubleSided
+      });
+    }
+    this.setMaterial(this.depthMaterial);
   }
 
   destroy() {
@@ -126,26 +125,24 @@ export class Mesh extends Node {
       this.originalMaterial = null;
     }
 
-    if (this.overrideMaterial != null) {
-      this.overrideMaterial.destroy();
-      this.overrideMaterial = null;
-    }
-
     if (this.material != null) {
       this.material.destroy();
       this.material = null;
     }
+
+    if (this.depthMaterial != null) {
+      this.depthMaterial.destroy();
+      this.depthMaterial = null;
+    }
   }
 
-  createVAO() {
+  createVAO(activeAttributes) {
     if (this.vao == null) {
       this.vao = gl.createVertexArray();
     }
 
-    this.bindVAO();
-
-    this.geometry.enableBuffers(this.activeAttributes, this.material.supportsMorphTargets);
-
+    this.bindVAO()
+    this.geometry.enableBuffers(activeAttributes);
     this.unbindVAO();
   }
 
@@ -194,6 +191,7 @@ export class Mesh extends Node {
     this.setMax();
     this.updateChildren();
   }
+
   /**
    * Override of Node function to animate morph targets
    */
@@ -202,7 +200,7 @@ export class Mesh extends Node {
       if (this.animations.get(name).size > 0) {
         this.localMatrix = this.getAnimatedTransform(time, name);
         if (this.hasWeights) {
-          this.getAnimatedWeights(time, name);
+          this.animateWeights(time, name);
         }
         this.updateWorldMatrix();
       }
@@ -226,7 +224,7 @@ export class Mesh extends Node {
    * @param {number} time 
    * @returns array of weights
    */
-  getAnimatedWeights(time, name) {
+  animateWeights(time, name) {
     const weights = this.animations.get(name).get("weights");
     if (weights != null) {
       this.weights = weights.getValue(time);
@@ -237,16 +235,11 @@ export class Mesh extends Node {
     return true;
   }
 
-  cullingEnabled() {
-    return this.cull;
-  }
-
-  setCulling(cull) {
-    this.cull = cull;
-  }
-
   setIdleWeights() {
-    this.weights = new Array(this.weights.length).fill(0);
+    if (this.idleWeights.length < 1) {
+      this.idleWeights = new Array(this.weights.length).fill(0);
+    }
+    this.weights = this.idleWeights;
   }
 
 }

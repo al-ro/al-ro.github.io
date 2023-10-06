@@ -8,9 +8,6 @@ export class AmbientMaterial extends Material {
   modelMatrixHandle;
   normalMatrixHandle;
 
-  skinTexture;
-  skinTextureHandle;
-
   constructor() {
     super();
 
@@ -21,19 +18,13 @@ export class AmbientMaterial extends Material {
       "WEIGHTS_0"
     ];
 
+    this.supportsMorphTargets = true;
     this.supportsSkin = true;
   }
 
   bindUniformBlocks() {
     this.program.bindUniformBlock("cameraMatrices", UniformBufferBindPoints.CAMERA_MATRICES);
     this.program.bindUniformBlock("sphericalHarmonicsUniforms", UniformBufferBindPoints.SPHERICAL_HARMONICS);
-  }
-
-  enableSkin() {
-    if (!this.hasSkin && this.program != null) {
-      this.hasSkin = true;
-      this.skinTextureHandle = this.program.getOptionalUniformLocation('jointMatricesTexture');
-    }
   }
 
   getVertexShaderSource(parameters) {
@@ -57,6 +48,13 @@ export class AmbientMaterial extends Material {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.skinTexture);
       gl.uniform1i(this.skinTextureHandle, 0);
+    }
+
+    if (this.hasMorphTargets) {
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.morphTargetTexture);
+      gl.uniform1i(this.morphTargetTextureHandle, 1);
+      gl.uniform1fv(this.morphTargetWeightsHandle, this.weights);
     }
 
   }

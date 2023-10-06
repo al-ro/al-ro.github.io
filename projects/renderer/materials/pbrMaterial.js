@@ -27,10 +27,6 @@ export const outputEnum = {
 
 export class PBRMaterial extends Material {
 
-  // CPU-side buffer for uniform buffer objects
-  vertexUniformBuffer;
-  fragmentUniformBuffer;
-
   modelMatrixHandle;
   normalMatrixHandle;
 
@@ -102,8 +98,6 @@ export class PBRMaterial extends Material {
   sheenTextureUV = 0;
   sheenFactor = [1, 1, 1, 1];
 
-  skinTexture;
-
   /**
    * A cubemap or equirectangular texture where each mip map is a
    * prefiltered environment map of the source cubemap at level 0
@@ -161,8 +155,6 @@ export class PBRMaterial extends Material {
 
   brdfTextureHandle;
 
-  skinTextureHandle;
-
   alphaCutoffHandle;
   alphaModeHandle;
 
@@ -196,45 +188,13 @@ export class PBRMaterial extends Material {
   transmissionTextureUnit;
   backgroundTextureUnit;
   skinTextureUnit;
+  morphTargetTextureUnit;
 
   outputVariable = outputEnum.PBR;
 
   textureUnits = 0;
 
   weights = [];
-  weightHandles = [];
-
-  destroy() {
-    if (this.baseColorTexture != null) {
-      gl.deleteTexture(this.baseColorTexture);
-      this.baseColorTexture = null;
-    }
-    if (this.metallicRoughnessTexture != null) {
-      gl.deleteTexture(this.metallicRoughnessTexture);
-      this.metallicRoughnessTexture = null;
-    }
-    if (this.normalTexture != null) {
-      gl.deleteTexture(this.normalTexture);
-      this.normalTexture = null;
-    }
-    if (this.emissiveTexture != null) {
-      gl.deleteTexture(this.emissiveTexture);
-      this.emissiveTexture = null;
-    }
-    if (this.occlusionTexture != null) {
-      gl.deleteTexture(this.occlusionTexture);
-      this.occlusionTexture = null;
-    }
-    if (this.transmissionTexture != null) {
-      gl.deleteTexture(this.transmissionTexture);
-      this.transmissionTexture = null;
-    }
-    if (this.sheenTexture != null) {
-      gl.deleteTexture(this.sheenTexture);
-      this.sheenTexture = null;
-    }
-
-  }
 
   constructor(parameters) {
 
@@ -272,7 +232,6 @@ export class PBRMaterial extends Material {
       if (parameters.doubleSided != null) {
         this.doubleSided = parameters.doubleSided;
       }
-
 
       if (parameters.baseColorTexture != null) {
         this.baseColorTexture = parameters.baseColorTexture;
@@ -411,10 +370,6 @@ export class PBRMaterial extends Material {
     return getFragmentSource();
   }
 
-  setWeights(weights) {
-    this.weights = weights;
-  }
-
   bindUniformBlocks() {
     this.program.bindUniformBlock("cameraMatrices", UniformBufferBindPoints.CAMERA_MATRICES);
     this.program.bindUniformBlock("cameraUniforms", UniformBufferBindPoints.CAMERA_UNIFORMS);
@@ -422,12 +377,6 @@ export class PBRMaterial extends Material {
   }
 
   getUniformHandles() {
-
-    if (this.weights != null) {
-      for (let i = 0; i < this.weights.length; i++) {
-        this.weightHandles.push(this.program.getOptionalUniformLocation("w" + i));
-      }
-    }
 
     this.outputVariableHandle = this.program.getUniformLocation('outputVariable');
 
@@ -519,10 +468,13 @@ export class PBRMaterial extends Material {
     }
   }
 
-  getInstanceParameterHandles() {
-    this.attributeHandles.orientationHandle = this.program.getAttribLocation('orientation');
-    this.attributeHandles.offsetHandle = this.program.getAttribLocation('offset');
-    this.attributeHandles.scaleHandle = this.program.getAttribLocation('scale');
+  enableMorphTargets() {
+    if (!this.hasMorphTargets && this.program != null && this.supportsMorphTargets) {
+      this.morphTargetTextureUnit = this.textureUnits++;
+      this.hasMorphTargets = true;
+      this.morphTargetTextureHandle = this.program.getOptionalUniformLocation('morphTargetTexture');
+      this.morphTargetWeightsHandle = this.program.getOptionalUniformLocation('morphTargetWeights');
+    }
   }
 
   /* 
@@ -535,12 +487,6 @@ export class PBRMaterial extends Material {
 
     gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
     gl.uniformMatrix4fv(this.normalMatrixHandle, false, this.normalMatrix);
-
-    if (this.weights != null) {
-      for (let i = 0; i < this.weights.length; i++) {
-        gl.uniform1f(this.weightHandles[i], this.weights[i]);
-      }
-    }
 
     gl.uniform1i(this.outputVariableHandle, this.outputVariable);
 
@@ -654,6 +600,13 @@ export class PBRMaterial extends Material {
       gl.activeTexture(gl.TEXTURE0 + this.skinTextureUnit);
       gl.bindTexture(gl.TEXTURE_2D, this.skinTexture);
       gl.uniform1i(this.skinTextureHandle, this.skinTextureUnit);
+    }
+
+    if (this.hasMorphTargets) {
+      gl.activeTexture(gl.TEXTURE0 + this.morphTargetTextureUnit);
+      gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.morphTargetTexture);
+      gl.uniform1i(this.morphTargetTextureHandle, this.morphTargetTextureUnit);
+      gl.uniform1fv(this.morphTargetWeightsHandle, this.weights);
     }
   }
 

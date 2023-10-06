@@ -1,4 +1,4 @@
-import { getMorphedAttributeString, getSkinCalculationString, getSkinDeclarationString } from "../shader.js"
+import { getMorphTargetDeclarationString, getMorphTargetCalculationString, getSkinCalculationString, getSkinDeclarationString } from "../shader.js"
 
 function getVertexSource(parameters) {
 
@@ -66,6 +66,8 @@ layout(std140) uniform cameraMatrices{
     }
   #endif
 
+  `+ getMorphTargetDeclarationString() + /*GLSL*/`
+
   out vec3  vPosition;
 
   void main(){
@@ -79,11 +81,14 @@ layout(std140) uniform cameraMatrices{
 #endif
 
 #ifdef HAS_NORMALS
-    `+ getMorphedAttributeString(parameters, "NORMAL") + /*GLSL*/`
+
+    vec3 normal = NORMAL.xyz;
+    `+ getMorphTargetCalculationString("NORMAL") + /*GLSL*/`
     vec4 transformedNormal = normalMatrix * vec4(normal, 0.0);
 #endif
 
-    `+ getMorphedAttributeString(parameters, "POSITION") + /*GLSL*/`
+    vec3 position = POSITION.xyz;
+    `+ getMorphTargetCalculationString("POSITION") + /*GLSL*/`
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
 
 `+ getSkinCalculationString() + /*GLSL*/`
@@ -101,7 +106,10 @@ layout(std140) uniform cameraMatrices{
 #ifdef HAS_TANGENTS
     // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     vec3 N = normalize(vec3(transformedNormal));
-    `+ getMorphedAttributeString(parameters, "TANGENT") + /*GLSL*/`
+
+    vec3 tangent = TANGENT.xyz;
+    `+ getMorphTargetCalculationString("TANGENT") + /*GLSL*/`
+
     vec3 T = normalize(vec3(normalMatrix * vec4(tangent.xyz, 0.0)));
     T = normalize(T - dot(T, N) * N);
     vec3 B = normalize(cross(N, T)) * TANGENT.w;

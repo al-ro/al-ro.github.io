@@ -21,7 +21,7 @@ export function render(renderPass, mesh, camera, environment, cullCamera) {
     return;
   }
 
-  if (mesh.cullingEnabled()) {
+  if (mesh.cull) {
     if (cullCamera == null) {
       cullCamera = camera;
     }
@@ -42,14 +42,6 @@ export function render(renderPass, mesh, camera, environment, cullCamera) {
   mesh.material.modelMatrix = mesh.worldMatrix;
   mesh.material.normalMatrix = mesh.normalMatrix;
 
-  if (mesh.hasWeights && mesh.material.supportsMorphTargets) {
-    mesh.material.setWeights(mesh.weights);
-  }
-
-  if (mesh.hasSkin() && mesh.skin != null) {
-    mesh.skin.update();
-  }
-
   if (mesh.material.needsEnvironmentTexture && environment != null) {
     mesh.material.environmentTexture = environment.cubeMap;
   }
@@ -58,19 +50,27 @@ export function render(renderPass, mesh, camera, environment, cullCamera) {
     mesh.material.brdfIntegrationTexture = environment.brdfIntegrationTexture;
   }
 
-  if (mesh.hasSkin() && mesh.material.supportsSkin && mesh.skin != null) {
+  if (mesh.material.supportsSkin && mesh.skin != null) {
+    mesh.skin.update();
     mesh.material.skinTexture = mesh.skin.texture;
+  }
+
+  if (mesh.hasWeights && mesh.material.supportsMorphTargets && mesh.geometry.morphTarget != null) {
+    mesh.material.weights = mesh.weights;
+    mesh.material.morphTargetTexture = mesh.geometry.morphTarget.texture;
   }
 
   mesh.material.bindUniforms();
 
   if (mesh.geometry.hasIndices) {
     if (mesh.geometry.instanced) {
-      gl.drawElementsInstanced(mesh.geometry.primitiveType,
+      gl.drawElementsInstanced(
+        mesh.geometry.primitiveType,
         mesh.geometry.length,
         mesh.geometry.indices.type,
         0,
-        mesh.geometry.instances);
+        mesh.geometry.instances
+      );
     } else {
       gl.drawElements(mesh.geometry.primitiveType, mesh.geometry.length, mesh.geometry.indices.type, 0);
     }

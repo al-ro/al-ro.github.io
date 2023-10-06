@@ -10,9 +10,6 @@ export class TextureMaterial extends Material {
   textureHandle;
   texture;
 
-  skinTexture;
-  skinTextureHandle;
-
   constructor(texture) {
 
     super();
@@ -31,17 +28,11 @@ export class TextureMaterial extends Material {
     this.texture = texture;
 
     this.supportsSkin = true;
+    this.supportsMorphTargets = true;
   }
 
   bindUniformBlocks() {
     this.program.bindUniformBlock("cameraMatrices", UniformBufferBindPoints.CAMERA_MATRICES);
-  }
-
-  enableSkin() {
-    if (!this.hasSkin && this.program != null) {
-      this.hasSkin = true;
-      this.skinTextureHandle = this.program.getOptionalUniformLocation('jointMatricesTexture');
-    }
   }
 
   getVertexShaderSource() {
@@ -61,14 +52,23 @@ export class TextureMaterial extends Material {
 
     gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
 
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, this.texture);
-    gl.uniform1i(this.textureHandle, 0);
+    if (this.textureHandle != null) {
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.texture);
+      gl.uniform1i(this.textureHandle, 0);
+    }
 
     if (this.hasSkin) {
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, this.skinTexture);
       gl.uniform1i(this.skinTextureHandle, 1);
+    }
+
+    if (this.hasMorphTargets) {
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.morphTargetTexture);
+      gl.uniform1i(this.morphTargetTextureHandle, 2);
+      gl.uniform1fv(this.morphTargetWeightsHandle, this.weights);
     }
   }
 

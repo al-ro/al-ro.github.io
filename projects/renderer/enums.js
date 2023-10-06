@@ -17,6 +17,16 @@ const AnimationType = {
   WEIGHTS: "weights"
 }
 
+const MaterialType = {
+  PBR: "PBR",
+  DEPTH: "DEPTH",
+  NORMAL: "NORMAL",
+  AMBIENT: "AMBIENT",
+  TEXTURE: "TEXTURE",
+  UV: "UV",
+  LAMBERT: "LAMBERT"
+}
+
 const RenderPass = {
   /** Opaque material draw*/
   OPAQUE: "OPAQUE",
@@ -37,4 +47,4 @@ const UniformBufferBindPoints = {
   SPHERICAL_HARMONICS: 2
 }
 
-export { AlphaModes, InterpolationType, AnimationType, RenderPass, UniformBufferBindPoints }
+export { AlphaModes, InterpolationType, AnimationType, RenderPass, UniformBufferBindPoints, MaterialType }

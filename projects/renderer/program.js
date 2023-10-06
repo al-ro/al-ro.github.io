@@ -21,7 +21,7 @@ export class Program {
       gl.validateProgram(this.program);
 
       this.vertexSource = vertexSource;
-      this.fragmentSourceSource = fragmentSource;
+      this.fragmentSource = fragmentSource;
 
       if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
         throw "Program link failed with: " + gl.getProgramInfoLog(this.program) + this.vertexSource;
@@ -41,11 +41,11 @@ export class Program {
   }
 
   getUniformLocation(name) {
-    var attributeLocation = gl.getUniformLocation(this.program, name);
-    if (attributeLocation === -1) {
+    var uniformLocation = gl.getUniformLocation(this.program, name);
+    if (uniformLocation == null) {
       console.error("Cannot find uniform: ", name);
     }
-    return attributeLocation;
+    return uniformLocation;
   }
 
   getOptionalAttribLocation(name) {

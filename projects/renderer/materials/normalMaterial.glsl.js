@@ -1,4 +1,4 @@
-import { getMorphedAttributeString, getSkinDeclarationString, getSkinCalculationString } from "../shader.js"
+import { getMorphTargetDeclarationString, getMorphTargetCalculationString, getSkinDeclarationString, getSkinCalculationString } from "../shader.js"
 
 function getVertexSource(parameters) {
 
@@ -25,14 +25,17 @@ function getVertexSource(parameters) {
 #endif
 
   `+ getSkinDeclarationString() + /*GLSL*/`
+  `+ getMorphTargetDeclarationString() + /*GLSL*/`
 
   void main(){
     
     vec3 position = POSITION.xyz;
+    `+ getMorphTargetCalculationString("POSITION") + /*GLSL*/ `
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
 
 #ifdef HAS_NORMALS
     vec3 normal = NORMAL.xyz;
+    `+ getMorphTargetCalculationString("NORMAL") + /*GLSL*/ `
     vec4 transformedNormal = normalMatrix * vec4(normal, 0.0);
 #endif
 

@@ -1,3 +1,5 @@
+import { AnimationType } from "./enums.js";
+
 /**
  * Single element in a scene. Some Node objects are Mesh objects which are
  * drawable. Others act as intermediate transforms with nothing drawable themselves
@@ -155,10 +157,6 @@ export class Node {
     this.children.push(node);
   }
 
-  hasSkin() {
-    return this.skinIndex != null;
-  }
-
   isMesh() {
     return false;
   }
@@ -182,9 +180,9 @@ export class Node {
     m4.decompose(this.localMatrix, T, R, S);
 
     // Animation overwrites TRS values instead of manipulating them
-    const translation = this.animations.get(name).get("translation");
-    const rotation = this.animations.get(name).get("rotation");
-    const scale = this.animations.get(name).get("scale");
+    const translation = this.animations.get(name).get(AnimationType.TRANSLATON);
+    const rotation = this.animations.get(name).get(AnimationType.ROTATION);
+    const scale = this.animations.get(name).get(AnimationType.SCALE);
 
     if (translation != null) {
       T = translation.getValue(time);

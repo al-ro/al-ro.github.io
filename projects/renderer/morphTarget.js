@@ -1,6 +1,7 @@
+import { gl } from "./canvas.js";
+
 /**
  * Morph targets supported by the renderer
- * 
  * [POSITION, NORMAL, TANGENT]
  */
 const supportedMorphTargets = [
@@ -9,62 +10,41 @@ const supportedMorphTargets = [
   "TANGENT"
 ];
 
-/**
- * A morph target consisting of attributes
- */
+/** Morphed attributes data */
 class MorphTarget {
 
-  /**
-   * Map of Attribute objects of the morph target
-   */
-  attributes;
-
-  /**
-   * Optional minimum extent of attribute data
-   */
+  /** Optional minimum extent of attribute data */
   min;
 
-  /**
-   * Optional maximum extent of attribute data
-   */
+  /** Optional maximum extent of attribute data */
   max;
 
-  /**
-   * Texture which holds the morph target attribute data
-   */
+  /** Texture which holds the morph target attribute data */
   texture;
 
-  /**
-   * Combined sequential morph target data in a 1D TypedArray
-   */
-  packedData;
+  /** Morphed attribute names mapped to their position in the interleaved data */
+  morphedAttributePositions;
+
+  /** Number of morph targets */
+  count;
 
   /**
-   * 
-   * @param {Map<string, Attribute>} attributes map of Attribute objects
+   * @param {{texture: WebGLTexture, morphedAttributePositions: Map<string, number>, min: number[], max: number[], count: number}} parameters
    */
   constructor(parameters) {
-    this.attributes = parameters.attributes;
-    if (this.attributes.has("POSITION")) {
-      this.min = this.attributes.get("POSITION").min;
-      this.max = this.attributes.get("POSITION").max;
-    }
+    this.min = parameters.min;
+    this.max = parameters.max;
+    this.texture = parameters.texture;
+    this.morphedAttributePositions = parameters.morphedAttributePositions;
+    this.count = parameters.count
   }
 
   destroy() {
-    this.attributes.forEach((attribute) => {
-      attribute.destroy();
-      attribute = null;
-    });
-    this.attributes = [];
+    this.min = null;
+    this.max = null;
+    this.morphedAttributePositions = null;
+    gl.deleteTexture(this.texture);
   }
-
-  enableBuffers(name) {
-    if (this.attributes.has(name)) {
-      this.attributes.get(name).enableBuffer();
-    }
-  }
-
 }
 
 export { supportedMorphTargets, MorphTarget }
