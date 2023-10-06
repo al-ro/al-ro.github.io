@@ -101,7 +101,7 @@ environments.set("Uffizi Gallery", "./environmentMaps/uffizi_probe.hdr");
 let environmentNames = Array.from(environments.keys());
 environmentNames.sort();
 
-let materialSelector = { material: "PBR" };
+let materialSelector = { material: MaterialType.PBR };
 
 let yaw = Math.PI / 3.0;
 let pitch = Math.PI / 2.0;
@@ -265,8 +265,18 @@ function loadGLTF(model) {
     let object = gltfLoader.getObjects();
     centerAndScale(object);
     scene.add(object);
+    if (modelSelector.model == "Dragon") {
+      object.setTranslation([0, 0, 0]);
+      object.setScale(0.3);
+      playAllAnimations();
+
+      modelManipulation.translationX = 0;
+      modelManipulation.translationY = 0;
+      modelManipulation.translationZ = 0;
+      modelManipulation.scale = 0.3;
+    }
     if (scene.objects.length > 0) {
-      materialControls.setValue("PBR");
+      materialControls.setValue(MaterialType.PBR);
     }
     let animations = scene.getAnimations();
     if (animations.length > 0) {

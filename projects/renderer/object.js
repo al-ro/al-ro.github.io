@@ -152,6 +152,10 @@ export class Object {
 
         m4.decompose(localMatrix, T, R, S);
 
+        if (!Array.isArray(scale)) {
+            scale = [scale, scale, scale];
+        }
+
         this.setTRS(T, R, scale);
     }
 
