@@ -269,7 +269,7 @@ function compileShader(shaderSource, shaderType) {
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
       // Print the error followed by the source with line numbers
       throw "Shader compile failed with: " + gl.getShaderInfoLog(shader) +
-      "\n <------ Shader source ------> \n" + shaderSource.split('\n').map((line, index) => `${index + 1}. ${line}`).join('\n');
+      "\n <------ Shader source ------> \n" + shaderSource.split('\n').map((line, index) => '${index + 1}. ${line}').join('\n');
     }
   } catch (error) {
     console.error(error);
