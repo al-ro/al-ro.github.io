@@ -4,16 +4,17 @@ import { gl } from "./canvas.js"
  * Generate hash defines to toggle specific parts of shaders according to
  * geometry and material data
  * @param {Material} material Material object
+ * @param {Geometry} geometry Geometry object
  * @param {string[]} attributes array of vertex attribute names
  * @returns prefix for shader string
  */
-function getDefinePrefix(material, attributes, morphTargets) {
+function getDefinePrefix(material, geometry, attributes) {
 
-  var prefix = "#version 300 es\n// " + material.constructor.name + " \n";
+  var prefix = "#version 300 es \n // " + material.constructor.name + " \n";
 
-  prefix += "precision highp float;\n";
+  prefix += "precision mediump float;\n";
 
-  if (material.isInstanced()) {
+  if (material.instanced) {
     prefix += "#define INSTANCED \n";
   }
 
@@ -93,51 +94,48 @@ function getDefinePrefix(material, attributes, morphTargets) {
     prefix += "#define HAS_TRANSMISSION_FACTOR \n";
   }
 
-  if (material.supportsMorphTargets) {
-    prefix += getMorphTargetDeclarationString({ morphTargets: morphTargets });
+  if (geometry.morphTarget != null && material.supportsMorphTargets) {
+    prefix += "#define MORPH_TARGETS " + geometry.morphTarget.count + " \n"
+    prefix += "#define MORPHED_ATTRIBUTES " + geometry.morphTarget.morphedAttributePositions.size + " \n"
+    for (const attribute of geometry.morphTarget.morphedAttributePositions) {
+      prefix += "#define " + attribute[0] + "_MORPH_TARGET " + attribute[1] + "\n";
+    }
   }
-
   return prefix;
 }
 
-/**
- * Construct a glsl string for morph target attributes and weight uniforms
- * @param {any} parameters
- * @returns shader string of attribute and uniform declaration
- */
-function getMorphTargetDeclarationString(parameters) {
-  let declarationString = "";
-  if (parameters != null && parameters.morphTargets != null) {
-    // Weight uniforms (w0, w1, etc.)
-    for (let i = 0; i < parameters.morphTargets.length; i++) {
-      declarationString += "uniform float w" + i + ";\n"
+function getMorphTargetDeclarationString() {
+  return /*GLSL*/`
+
+  #ifdef MORPH_TARGETS
+    uniform float[MORPH_TARGETS] morphTargetWeights;
+    uniform highp sampler2DArray morphTargetTexture;
+
+    vec3 getMorphTargetValue(int target, int property) {
+      float id = float(gl_VertexID * MORPHED_ATTRIBUTES + property);
+      float textureWidth = float(textureSize(morphTargetTexture, 0).x);
+      ivec2 uv = ivec2(mod(id, textureWidth), floor(id / textureWidth));
+      return texelFetch(morphTargetTexture, ivec3(uv, target), 0).rgb;
     }
-    // Morph target attributes (POSITION0, POSITION1, etc.)
-    for (let i = 0; i < parameters.morphTargets.length; i++) {
-      parameters.morphTargets[i].attributes.forEach((attribute) => {
-        declarationString += "in vec3 " + attribute.name + i + ";\n"
-      });
-    }
-  }
-  return declarationString;
+  #endif
+
+  `;
 }
 
 /**
  * Construct a glsl string for morphed attribute calculations
- * @param {any} parameters 
- * @param {string} name 
+ * @param {string} name attribute name
  * @returns shader string of morphed attributes
  */
-function getMorphedAttributeString(parameters, name) {
-  let morphString = "vec3 " + name.toLowerCase() + " = " + name + ".xyz";
-  if (parameters != null && parameters.morphTargets != null) {
-    for (let i = 0; i < parameters.morphTargets.length; i++) {
-      if (parameters.morphTargets[i].attributes.has(name)) {
-        morphString += "\n + w" + i + " * " + name + i;
-      }
+function getMorphTargetCalculationString(name) {
+  return /*GLSL*/`
+  #ifdef ` + name + /*GLSL*/`_MORPH_TARGET
+    for(int i = 0; i < MORPH_TARGETS; i++){
+      ` + name.toLowerCase() + /*GLSL*/` += morphTargetWeights[i] * getMorphTargetValue(i, ` + name + /*GLSL*/`_MORPH_TARGET);
     }
-  }
-  return morphString + ";\n";
+  #endif
+
+  `;
 }
 
 function getSkinDeclarationString() {
@@ -201,6 +199,7 @@ function getVertexSource(parameters) {
 layout(std140) uniform cameraMatrices{
     mat4 viewMatrix;
     mat4 projectionMatrix;
+    mat4 cameraMatrix;
 };
 
   uniform mat4 modelMatrix;
@@ -235,7 +234,7 @@ layout(std140) uniform cameraMatrices{
 #endif
 
 #ifdef HAS_NORMALS
-    `+ getMorphedAttributeString(parameters, "NORMAL") + /*GLSL*/`
+    `+ getMorphTargetCalculationString("NORMAL") + /*GLSL*/`
     vec4 transformedNormal = normalMatrix * vec4(normal, 0.0);
     vNormal = transformedNormal.xyz;
 #endif
@@ -243,14 +242,14 @@ layout(std140) uniform cameraMatrices{
 #ifdef HAS_TANGENTS
     // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     vec3 N = normalize(vec3(transformedNormal));
-    `+ getMorphedAttributeString(parameters, "TANGENT") +/*GLSL*/`
+    `+ getMorphTargetCalculationString("TANGENT") +/*GLSL*/`
     vec3 T = normalize(vec3(normalMatrix * vec4(tangent.xyz, 0.0)));
     T = normalize(T - dot(T, N) * N);
     vec3 B = normalize(cross(N, T)) * TANGENT.w;
     tbn = mat3(T, B, N);
 #endif 
 
-    `+ getMorphedAttributeString(parameters, "POSITION") + /*GLSL*/`
+    `+ getMorphTargetCalculationString("POSITION") + /*GLSL*/`
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
     vPosition = transformedPosition.xyz;
     gl_Position = projectionMatrix * viewMatrix * transformedPosition;
@@ -279,4 +278,4 @@ function compileShader(shaderSource, shaderType) {
   return shader;
 }
 
-export { compileShader, getDefinePrefix, getMorphedAttributeString, getSkinDeclarationString, getSkinCalculationString }
+export { compileShader, getDefinePrefix, getMorphTargetDeclarationString, getMorphTargetCalculationString, getSkinDeclarationString, getSkinCalculationString }

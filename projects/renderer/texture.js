@@ -14,6 +14,19 @@ function createAndSetupTexture() {
   return texture;
 }
 
+function createAndSetupTextureArray() {
+  var texture = gl.createTexture();
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
+
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+  return texture;
+}
+
 function createAndSetupCubemap() {
   let cubeMapSize = 1;
 
@@ -102,4 +115,12 @@ function loadTexture(parameters) {
   return texture;
 }
 
-export { loadTexture, createAndSetupTexture, createAndSetupCubemap }
+var uvGrid;
+function getDefaultTexture() {
+  if (uvGrid == null) {
+    uvGrid = loadTexture({ url: "./defaultResources/uv_grid.jpg", type: gl.RGB });
+  }
+  return uvGrid;
+}
+
+export { loadTexture, createAndSetupTexture, createAndSetupCubemap, createAndSetupTextureArray, getDefaultTexture }
