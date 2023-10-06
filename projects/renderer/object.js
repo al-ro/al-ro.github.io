@@ -4,9 +4,14 @@
 
 import { render } from "./renderCall.js"
 import { Node } from "./node.js"
-import { RenderPass } from "./enums.js";
-import { DepthMaterial } from "./materials/depthMaterial.js";
+import { RenderPass, MaterialType } from "./enums.js";
 import { AlphaModes } from "./enums.js";
+import { AmbientMaterial } from "./materials/ambientMaterial.js";
+import { NormalMaterial } from "./materials/normalMaterial.js";
+import { LambertMaterial } from "./materials/lambertMaterial.js";
+import { UVMaterial } from "./materials/uvMaterial.js";
+import { TextureMaterial } from "./materials/textureMaterial.js";
+import { getDefaultTexture } from "./texture.js";
 
 export class Object {
     // The root of the local Node graph which is used to transform the object placement
@@ -72,18 +77,9 @@ export class Object {
         for (const primitive of this.primitives) {
             let material = primitive.material;
             if (!material.hasTransmission && material.alphaMode != AlphaModes.BLEND) {
-                let depthMaterial = new DepthMaterial({
-                    baseColorFactor: material.baseColorFactor,
-                    baseColorTexture: material.baseColorTexture,
-                    baseColorTextureUV: material.baseColorTextureUV,
-                    alphaMode: material.alphaMode,
-                    alphaCutoff: material.alphaCutoff,
-                    doubleSided: material.doubleSided
-                });
-                primitive.setMaterial(depthMaterial);
+                primitive.setDepthMaterial();
                 render(RenderPass.ALWAYS, primitive, camera, null, null);
                 primitive.setMaterial(material);
-                depthMaterial = null;
             }
         }
     }
@@ -97,17 +93,24 @@ export class Object {
         }
     }
 
-    // Override the default PBR material of all primitives
-    setMaterial(material) {
+    /**
+     * @param {MaterialType} type material
+     */
+    setMaterial(type) {
+
         if (this.primitives.length < 1) {
             this.generatePrimitiveList();
         }
         for (const primitive of this.primitives) {
-            if (material != null) {
-                primitive.setOverrideMaterial(material);
-                primitive.displayOverrideMaterial();
-            } else {
-                primitive.displayOriginalMaterial();
+            switch (type) {
+                case MaterialType.AMBIENT: primitive.setMaterial(new AmbientMaterial()); break;
+                case MaterialType.NORMAL: primitive.setMaterial(new NormalMaterial()); break;
+                case MaterialType.LAMBERT: primitive.setMaterial(new LambertMaterial); break;
+                case MaterialType.UV: primitive.setMaterial(new UVMaterial()); break;
+                case MaterialType.TEXTURE: primitive.setMaterial(new TextureMaterial(getDefaultTexture())); break;
+                case MaterialType.DEPTH: primitive.setDepthMaterial(); break;
+                default: primitive.displayOriginalMaterial(); break;
+
             }
         }
     }
@@ -214,7 +217,7 @@ export class Object {
         for (const mesh of this.primitives) {
             let meshMin = mesh.min;
             let meshMax = mesh.max;
-            if (mesh.hasSkin()) {
+            if (mesh.skin != null) {
                 let skinMin = mesh.skin.min;
                 let skinMax = mesh.skin.max;
                 for (let i = 0; i < 3; i++) {

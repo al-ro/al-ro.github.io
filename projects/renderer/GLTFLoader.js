@@ -7,12 +7,12 @@ import { Mesh } from "./mesh.js"
 import { BufferRepository } from "./bufferRepository.js"
 import { Attribute, supportedAttributes } from "./attribute.js"
 import { Indices } from "./indices.js"
-import { loadTexture } from "./texture.js"
+import { loadTexture, createAndSetupTextureArray } from "./texture.js"
 import { PropertyAnimation } from "./propertyAnimation.js"
 import { Animation } from "./animation.js"
 import { Object } from "./object.js"
 import { Skin } from "./skin.js"
-import { MorphTarget } from "./morphTarget.js"
+import { MorphTarget, supportedMorphTargets } from "./morphTarget.js"
 import { AlphaModes, InterpolationType } from "./enums.js"
 
 // TODO:
@@ -42,7 +42,7 @@ export class GLTFLoader {
   /** WebGL textures for albedo, roughness and emissive maps etc. */
   textures = [];
 
-  /** Indices of textures which were passed on to PBRMaterial objects */
+  /** Indices of textures which are used */
   usedTextures = [];
 
   /** Scene graphs of Node objects */
@@ -119,17 +119,9 @@ export class GLTFLoader {
 
       this.json = null;
 
-      /**
-       * Delete textures which were not used
-       * All textures in the GLTF are downloaded and created and their ownership passes to the created materials.
-       * If a texture is not used or the feature that it is used by is not supported, the loader has to delete
-       * the texture to avoid a memory leak.
-      */
       for (let i = 0; i < this.textures.length; i++) {
-        if (!this.usedTextures.includes(i)) {
-          gl.deleteTexture(this.textures[i]);
-          this.textures[i] = null;
-        }
+        gl.deleteTexture(this.textures[i]);
+        this.textures[i] = null;
       }
 
       for (const skin of this.skins) {
@@ -291,11 +283,11 @@ export class GLTFLoader {
           }
 
           for (const node of this.nodes) {
-            if (node.hasSkin()) {
+            if (node.skinIndex != null) {
               node.skin = this.skins[node.skinIndex];
               // Propagate skin down to split child nodes
               for (const child of node.children) {
-                if (child.hasSkin()) {
+                if (child.skinIndex != null) {
                   child.skin = this.skins[node.skinIndex];
                 }
               }
@@ -916,7 +908,12 @@ export class GLTFLoader {
     return new PBRMaterial(materialParameters);
   }
 
-  createMorphTarget(name, accessor) {
+  /**
+   * Extract a dense array for a morphed attribute from the buffers
+   * @param {Object} accessor 
+   * @returns TypedArray of morphed attribute data
+   */
+  createMorphTargetData(accessor) {
 
     const bufferView = this.json.bufferViews[accessor.bufferView];
     const buffer = this.buffers[bufferView.buffer];
@@ -936,40 +933,143 @@ export class GLTFLoader {
       data = this.getModifiedData(accessor, data);
     }
 
-    const stride = (bufferView.byteStride != null ? bufferView.byteStride : 0) / typedArray.BYTES_PER_ELEMENT;
+    let stride = (bufferView.byteStride != null ? bufferView.byteStride : 0) / typedArray.BYTES_PER_ELEMENT;
     let componentCount = getComponentCount(accessor.type);
 
     // New memory allocation which needs to be freed
     let denseData = new Float32Array(componentCount * accessor.count);
 
+    // If stride is 0, element starts are componentCount number of entries apart
+    if (stride < 1) {
+      stride = componentCount;
+    }
+
     // Extract morph target data into a separate densly packed array
     for (let i = 0, idx = 0; i < componentCount * accessor.count; i += componentCount) {
       denseData.set(data.subarray(idx, idx + componentCount), i);
       // Move to next element start in the data array
-      idx += Math.max(componentCount, stride);
+      idx += stride;
+    }
+    return denseData;
+  }
+
+  /**
+   * Collect morph target data and create a texture array and other data to attach to a geometry
+   */
+  createMorphTarget(targets) {
+
+    const accessors = this.json.accessors;
+    let min = [1e10, 1e10, 1e10];
+    let max = [-1e10, -1e10, -1e10];
+    let vertexCount;
+
+    // Map of morphed attributes to their position in interleaved data
+    let morphedAttributePositions = new Map();
+    let position = 0;
+
+    // Iterate over supported morph targets and set positions of morphed attributes
+    // This assumes that all targets have the same attributes and same number of vertices
+    for (const name of supportedMorphTargets) {
+      if (targets[0].hasOwnProperty(name)) {
+        morphedAttributePositions.set(name, position);
+        position++;
+        const accessor = accessors[targets[0][name]];
+        if (name == "POSITION") {
+          // Accessort count of position attribute is the number of vertices
+          vertexCount = accessor.count;
+        }
+      }
     }
 
-    const glBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, glBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, denseData, gl.STATIC_DRAW);
+    // Array of morphed attribute names
+    let morphedAttributes = Array.from(morphedAttributePositions.keys());
 
-    const descriptor = {
-      target: gl.ARRAY_BUFFER,
-      componentType: accessor.componentType,
-      componentCount: getComponentCount(accessor.type),
-      normalized: false,
-      byteStride: 0,
-      offset: 0,
-      count: accessor.count
-    };
+    // Length of dense array holding morphed attrbutes per vertex
+    let dataLength = morphedAttributes.length * vertexCount;
 
-    // Position min/max must be set in the GLTF
-    if (name == "POSITION") {
-      descriptor.min = accessor.min;
-      descriptor.max = accessor.max;
+    // vec3 attributes
+    const componentCount = 3;
+    // RGB texture
+    const channelCount = 3;
+    // Side length of texture array element
+    let textureSize = 1;
+
+    // Find smallest power-of-two texture size which would fit morphed attributes
+    for (let i = 1; i < 11; i++) {
+      if (Math.pow(2, i) * Math.pow(2, i) > dataLength) {
+        textureSize = Math.pow(2, i);
+        break
+      }
     }
 
-    return new Attribute(name, glBuffer, denseData, descriptor);
+    if (textureSize * textureSize < dataLength) {
+      console.error("Morph target texture would be too large: ", dataLength);
+      return null;
+    }
+
+    // Array to hold interleaved attributes of one morph target. Corresponds to data of one texture in texture array
+    let packedData = new Float32Array(textureSize * textureSize * channelCount);
+
+    const vertexSize = componentCount * morphedAttributes.length;
+    // Array to hold interleaved attributes of a single vertex
+    let vertexData = new Float32Array(vertexSize);
+
+    // Create texture array to hold data of all morph targets
+    let texture = createAndSetupTextureArray();
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
+    gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGB32F, textureSize, textureSize, targets.length);
+
+    // Z-position of texture data to upload
+    let targetIdx = 0;
+
+    // Extract data from buffers, interleave attributes and upload data to a texture in the texture array
+    for (const target of targets) {
+      let denseArrays = [];
+      for (const name of supportedMorphTargets) {
+        if (target.hasOwnProperty(name)) {
+          const accessor = accessors[target[name]];
+          if (name == "POSITION") {
+            // Record the extent of each target for model positioning and scaling
+            for (let i = 0; i < 3; i++) {
+              min[i] = Math.min(min[i], accessor.min[i]);
+              max[i] = Math.max(max[i], accessor.max[i]);
+            }
+          }
+
+          // Store a dense array for each morphed attribute
+          denseArrays.push(this.createMorphTargetData(accessor));
+        }
+      }
+
+      for (let i = 0, idx = 0; i < vertexCount * vertexSize; i += vertexSize, idx += componentCount) {
+        // Interleave data for a single vertex
+        let j = 0;
+        for (const targetData of denseArrays) {
+          vertexData.set(targetData.subarray(idx, idx + componentCount), j);
+          j += componentCount;
+        }
+
+        // Place vertex data in packed data
+        packedData.set(vertexData, i);
+      }
+
+      // Place data for one target in the texture array
+      gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, targetIdx, textureSize, textureSize, 1, gl.RGB, gl.FLOAT, packedData);
+      targetIdx++;
+
+      // Free memory
+      for (let i = 0; i < denseArrays.length; i++) {
+        denseArrays[i] = null;
+      }
+    }
+
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, null);
+
+    // Free memory
+    vertexData = null;
+    packedData = null;
+
+    return new MorphTarget({ texture: texture, morphedAttributePositions: morphedAttributePositions, min: min, max: max, count: targets.length });
   }
 
   /**
@@ -1025,20 +1125,7 @@ export class GLTFLoader {
 
       // ---- Create morph targets  ---- //
       if (primitive.hasOwnProperty("targets")) {
-        let morphTargets = [];
-
-        for (const target of primitive.targets) {
-          let attributes = new Map();
-          for (const name of supportedAttributes) {
-            if (target.hasOwnProperty(name)) {
-              const accessor = accessors[target[name]];
-              attributes.set(name, this.createMorphTarget(name, accessor));
-              this.createMorphTarget(name, accessor);
-            }
-          }
-          morphTargets.push(new MorphTarget({ attributes: attributes }));
-        }
-        geometryParams.morphTargets = morphTargets;
+        geometryParams.morphTarget = this.createMorphTarget(primitive.targets);
       }
 
       const geometry = new Geometry(geometryParams);
