@@ -36,13 +36,14 @@ export class NormalMaterial extends Material {
 
   getUniformHandles() {
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
-    this.normalMatrixHandle = this.program.getUniformLocation('normalMatrix');
+    this.normalMatrixHandle = this.program.getOptionalUniformLocation('normalMatrix');
   }
 
   bindUniforms() {
     gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
-    gl.uniformMatrix4fv(this.normalMatrixHandle, false, this.normalMatrix);
-
+    if (this.normalMatrixHandle != null) {
+      gl.uniformMatrix4fv(this.normalMatrixHandle, false, this.normalMatrix);
+    }
     if (this.hasSkin) {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.skinTexture);
