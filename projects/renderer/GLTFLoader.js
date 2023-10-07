@@ -171,9 +171,9 @@ export class GLTFLoader {
         if (supported) {
           console.log(extension, ": supported");
         } else if (partiallySupported) {
-          console.log(extension, ": partially supported");
+          console.warn(extension, ": partially supported");
         } else {
-          console.error(extension, ": not supported");
+          console.warn(extension, ": not supported");
         }
       }
     };
@@ -183,11 +183,11 @@ export class GLTFLoader {
         let supported = supportedExtensions.includes(extension);
         let partiallySupported = partiallySupportedExtensions.includes(extension);
         if (supported) {
-          console.log(extension, ": supported");
+          console.log("Required extenstion ", extension, ": supported");
         } else if (partiallySupported) {
-          console.log("Required extension", extension, "is only PARTIALLY supported");
+          console.warn("Required extension ", extension, ": PARTIALLY supported");
         } else {
-          console.error("Required extension", extension, "is NOT SUPPORTED");
+          console.error("Required extension ", extension, ": NOT SUPPORTED");
         }
       }
     };
