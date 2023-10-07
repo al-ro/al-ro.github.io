@@ -45,7 +45,7 @@ export class TextureMaterial extends Material {
 
   getUniformHandles() {
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
-    this.textureHandle = this.program.getUniformLocation('tex');
+    this.textureHandle = this.program.getOptionalUniformLocation('tex');
   }
 
   bindUniforms() {

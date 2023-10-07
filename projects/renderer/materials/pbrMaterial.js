@@ -381,7 +381,7 @@ export class PBRMaterial extends Material {
     this.outputVariableHandle = this.program.getUniformLocation('outputVariable');
 
     this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
-    this.normalMatrixHandle = this.program.getUniformLocation('normalMatrix');
+    this.normalMatrixHandle = this.program.getOptionalUniformLocation('normalMatrix');
 
     this.alphaCutoffHandle = this.program.getOptionalUniformLocation('alphaCutoff');
     this.alphaModeHandle = this.program.getOptionalUniformLocation('alphaMode');
@@ -486,8 +486,9 @@ export class PBRMaterial extends Material {
   bindUniforms() {
 
     gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
-    gl.uniformMatrix4fv(this.normalMatrixHandle, false, this.normalMatrix);
-
+    if (this.normalMatrixHandle != null) {
+      gl.uniformMatrix4fv(this.normalMatrixHandle, false, this.normalMatrix);
+    }
     gl.uniform1i(this.outputVariableHandle, this.outputVariable);
 
     gl.uniform1f(this.alphaCutoffHandle, this.alphaCutoff);
