@@ -36,7 +36,7 @@ function getFragmentSource() {
 
 */
 
-    uniform samplerCube environmenCubeMap;
+    uniform samplerCube environmentCubeMap;
     
     // Constants cn from equation 12 in [1]
     const float c1 = 0.429043;
@@ -57,7 +57,7 @@ function getFragmentSource() {
     #define PI 3.14159
 
     vec3 getRadiance(vec3 dir){
-      return textureLod(environmenCubeMap, dir, 3.0).rgb;
+      return textureLod(environmentCubeMap, dir, 3.0).rgb;
     }
 
     void main(){

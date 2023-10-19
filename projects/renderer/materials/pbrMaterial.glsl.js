@@ -179,7 +179,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
 };
 
   uniform sampler2D brdfIntegrationTexture;
-  uniform samplerCube environmenCubeMap;
+  uniform samplerCube environmentCubeMap;
 
 #ifdef HAS_BASE_COLOR_TEXTURE
   uniform sampler2D baseColorTexture;
@@ -342,7 +342,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     float level = roughness * 5.0;
     level = max(0.0, min(level, 5.0));
 
-    return textureLod(environmenCubeMap, rayDir, level).rgb;
+    return textureLod(environmentCubeMap, rayDir, level).rgb;
   }
 
 #ifdef HAS_TRANSMISSION
