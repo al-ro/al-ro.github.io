@@ -12,7 +12,7 @@ function getDefinePrefix(material, geometry, attributes) {
 
   var prefix = "#version 300 es \n // " + material.constructor.name + " \n";
 
-  prefix += "precision mediump float;\n";
+  prefix += "precision highp float;\n";
 
   if (material.instanced) {
     prefix += "#define INSTANCED \n";
