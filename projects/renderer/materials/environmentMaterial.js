@@ -38,7 +38,7 @@ export class EnvironmentMaterial extends Material {
   }
 
   getUniformHandles() {
-    this.cubeMapHandle = this.program.getUniformLocation('environmenCubeMap');
+    this.cubeMapHandle = this.program.getUniformLocation('environmentCubeMap');
     this.resolutionHandle = this.program.getUniformLocation('resolution');
   }
 
