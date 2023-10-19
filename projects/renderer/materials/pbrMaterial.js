@@ -456,7 +456,7 @@ export class PBRMaterial extends Material {
       this.sheenFactorHandle = this.program.getOptionalUniformLocation('sheenFactor');
     }
 
-    this.environmentTextureHandle = this.program.getUniformLocation('environmenCubeMap');
+    this.environmentTextureHandle = this.program.getUniformLocation('environmentCubeMap');
     this.brdfTextureHandle = this.program.getUniformLocation('brdfIntegrationTexture');
   }
 

@@ -20,7 +20,7 @@ function getFragmentSource() {
 
     uniform mat4 cameraMatrix;
     
-    uniform samplerCube environmenCubeMap;
+    uniform samplerCube environmentCubeMap;
     uniform float roughness;
 
     in vec3 vPosition;
@@ -146,7 +146,7 @@ function getFragmentSource() {
           float mipBias = 1.0;
           level = max(0.5 * log2(omegaS / omegaP) + mipBias, 0.0);
 
-          prefilteredColor += textureLod(environmenCubeMap, L, level).rgb * NdotL;
+          prefilteredColor += textureLod(environmentCubeMap, L, level).rgb * NdotL;
           totalWeight      += NdotL;
         }
       }

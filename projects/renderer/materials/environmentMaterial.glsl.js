@@ -29,7 +29,7 @@ function getFragmentSource() {
   };
 
   uniform vec2 resolution;
-  uniform samplerCube environmenCubeMap;
+  uniform samplerCube environmentCubeMap;
 
   out vec4 fragColor;
 
@@ -46,7 +46,7 @@ function getFragmentSource() {
 
   void main(){ 
     vec3 rayDir = normalize(cameraMatrix * vec4(rayDirection(cameraFOV, gl_FragCoord.xy), 0.0)).rgb;
-    vec3 col = cameraExposure * texture(environmenCubeMap, normalize(rayDir)).rgb;
+    vec3 col = cameraExposure * texture(environmentCubeMap, normalize(rayDir)).rgb;
     col = ACESFilm(col);
     col = pow(col, vec3(0.4545));
 
