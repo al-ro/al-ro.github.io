@@ -141,7 +141,7 @@ export class Mesh extends Node {
       this.vao = gl.createVertexArray();
     }
 
-    this.bindVAO()
+    this.bindVAO();
     this.geometry.enableBuffers(activeAttributes);
     this.unbindVAO();
   }
