@@ -1,14 +1,8 @@
 import { Camera } from "./camera.js"
 import { Controls } from "./controls.js"
-import { AmbientMaterial } from "./materials/ambientMaterial.js"
-import { NormalMaterial } from "./materials/normalMaterial.js"
-import { DepthMaterial } from "./materials/depthMaterial.js"
-import { LambertMaterial } from "./materials/lambertMaterial.js"
-import { UVMaterial } from "./materials/uvMaterial.js"
-import { TextureMaterial } from "./materials/textureMaterial.js"
 import { ScreenspaceMaterial } from "./materials/screenspaceMaterial.js"
 import { Environment } from "./environment.js"
-import { loadTexture, createAndSetupTexture } from "./texture.js"
+import { createAndSetupTexture } from "./texture.js"
 import { Mesh } from "./mesh.js";
 import { gl, extMEM } from "./canvas.js";
 import { RenderPass, MaterialType } from "./enums.js"
