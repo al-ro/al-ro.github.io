@@ -1,6 +1,4 @@
 var canvas = document.getElementById("canvas_1");
-//import 'https://greggman.github.io/webgl-lint/webgl-lint.js';
-import 'https://greggman.github.io/webgl-memory/webgl-memory.js';
 
 /** 
  * A factor to multiply the canvas dimensions with. 
