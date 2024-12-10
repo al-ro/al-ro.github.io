@@ -1,0 +1,41 @@
+/* 
+  https://loading.io/css/ 
+*/
+
+.lds-dual-ring {
+  position: absolute;
+  display: inline-block;
+  width: 80px;
+  height: 80px;
+  z-index: 10000;
+  visibility: visible;
+  bottom: 0px;
+  right: 0px;
+}
+
+.lds-dual-ring:after {
+  position: absolute;
+  z-index: 10000;
+  visibility: visible;
+  bottom: 0px;
+  right: 0px;
+  content: " ";
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  margin: 8px;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  border-color: #fff transparent #fff transparent;
+  animation: spin 1s infinite;
+  opacity: 75%;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  99% {
+    transform: rotate(360deg);
+  }
+}
+
