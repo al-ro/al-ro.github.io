@@ -4,34 +4,34 @@ import { getVertexSource, getFragmentSource } from './brdfMapMaterial.glsl.js'
 
 export class BRDFMapMaterial extends Material {
 
-  resolution
+	resolution
 
-  constructor(resolution) {
+	constructor(resolution) {
 
-    super();
+		super();
 
-    this.attributes = ["POSITION"];
+		this.attributes = ["POSITION"];
 
-    if (!resolution || resolution.some(function (x) { return x < 1; })) {
-      console.error("BRDFMapMaterial must be created with a 2D resolution of at least [1, 1]. Parameter: ", resolution);
-    }
-    this.resolution = resolution;
-  }
+		if (!resolution || resolution.some(function (x) { return x < 1; })) {
+			console.error("BRDFMapMaterial must be created with a 2D resolution of at least [1, 1]. Parameter: ", resolution);
+		}
+		this.resolution = resolution;
+	}
 
-  getVertexShaderSource(parameters) {
-    return getVertexSource();
-  }
+	getVertexShaderSource(parameters) {
+		return getVertexSource();
+	}
 
-  getFragmentShaderSource() {
-    return getFragmentSource();
-  }
+	getFragmentShaderSource() {
+		return getFragmentSource();
+	}
 
-  getUniformHandles() {
-    this.resolutionHandle = this.program.getUniformLocation('resolution');
-  }
+	getUniformHandles() {
+		this.resolutionHandle = this.program.getUniformLocation('resolution');
+	}
 
-  bindUniforms() {
-    gl.uniform2fv(this.resolutionHandle, this.resolution);
-  }
+	bindUniforms() {
+		gl.uniform2fv(this.resolutionHandle, this.resolution);
+	}
 
 }

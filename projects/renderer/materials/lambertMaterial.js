@@ -5,59 +5,59 @@ import { getVertexSource, getFragmentSource } from './lambertMaterial.glsl.js'
 
 export class LambertMaterial extends Material {
 
-  modelMatrixHandle;
-  normalMatrixHandle;
+	modelMatrixHandle;
+	normalMatrixHandle;
 
-  constructor() {
-    super();
+	constructor() {
+		super();
 
-    this.attributes = [
-      "POSITION",
-      "NORMAL",
-      "JOINTS_0",
-      "WEIGHTS_0"
-    ];
+		this.attributes = [
+			"POSITION",
+			"NORMAL",
+			"JOINTS_0",
+			"WEIGHTS_0"
+		];
 
-    this.supportsSkin = true;
-    this.supportsMorphTargets = true;
-  }
+		this.supportsSkin = true;
+		this.supportsMorphTargets = true;
+	}
 
-  bindUniformBlocks() {
-    this.program.bindUniformBlock("cameraMatrices", UniformBufferBindPoints.CAMERA_MATRICES);
-  }
+	bindUniformBlocks() {
+		this.program.bindUniformBlock("cameraMatrices", UniformBufferBindPoints.CAMERA_MATRICES);
+	}
 
-  getVertexShaderSource() {
-    return getVertexSource();
-  }
+	getVertexShaderSource() {
+		return getVertexSource();
+	}
 
-  getFragmentShaderSource() {
-    return getFragmentSource();
-  }
+	getFragmentShaderSource() {
+		return getFragmentSource();
+	}
 
-  getUniformHandles() {
-    this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
-    this.normalMatrixHandle = this.program.getOptionalUniformLocation('normalMatrix');
-  }
+	getUniformHandles() {
+		this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
+		this.normalMatrixHandle = this.program.getOptionalUniformLocation('normalMatrix');
+	}
 
-  bindUniforms() {
+	bindUniforms() {
 
-    gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
-    if (this.normalMatrixHandle != null) {
-      gl.uniformMatrix4fv(this.normalMatrixHandle, false, this.normalMatrix);
-    }
+		gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
+		if (this.normalMatrixHandle != null) {
+			gl.uniformMatrix4fv(this.normalMatrixHandle, false, this.normalMatrix);
+		}
 
-    if (this.hasSkin) {
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, this.skinTexture);
-      gl.uniform1i(this.skinTextureHandle, 0);
-    }
+		if (this.hasSkin) {
+			gl.activeTexture(gl.TEXTURE0);
+			gl.bindTexture(gl.TEXTURE_2D, this.skinTexture);
+			gl.uniform1i(this.skinTextureHandle, 0);
+		}
 
-    if (this.hasMorphTargets) {
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.morphTargetTexture);
-      gl.uniform1i(this.morphTargetTextureHandle, 1);
-      gl.uniform1fv(this.morphTargetWeightsHandle, this.weights);
-    }
-  }
+		if (this.hasMorphTargets) {
+			gl.activeTexture(gl.TEXTURE1);
+			gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.morphTargetTexture);
+			gl.uniform1i(this.morphTargetTextureHandle, 1);
+			gl.uniform1fv(this.morphTargetWeightsHandle, this.weights);
+		}
+	}
 
 }

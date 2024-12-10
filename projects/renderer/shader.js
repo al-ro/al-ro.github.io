@@ -10,102 +10,102 @@ import { gl } from "./canvas.js"
  */
 function getDefinePrefix(material, geometry, attributes) {
 
-  var prefix = "#version 300 es \n // " + material.constructor.name + " \n";
+	var prefix = "#version 300 es \n // " + material.constructor.name + " \n";
 
-  prefix += "precision highp float;\n";
+	prefix += "precision highp float;\n";
 
-  if (material.instanced) {
-    prefix += "#define INSTANCED \n";
-  }
+	if (material.instanced) {
+		prefix += "#define INSTANCED \n";
+	}
 
-  if (attributes.includes("NORMAL")) {
-    prefix += "#define HAS_NORMALS \n";
-  }
+	if (attributes.includes("NORMAL")) {
+		prefix += "#define HAS_NORMALS \n";
+	}
 
-  if (attributes.includes("TEXCOORD_0")) {
-    prefix += "#define HAS_UV_0 \n";
-  }
+	if (attributes.includes("TEXCOORD_0")) {
+		prefix += "#define HAS_UV_0 \n";
+	}
 
-  if (attributes.includes("TEXCOORD_1")) {
-    prefix += "#define HAS_UV_1 \n";
-  }
+	if (attributes.includes("TEXCOORD_1")) {
+		prefix += "#define HAS_UV_1 \n";
+	}
 
-  if (attributes.includes("TANGENT")) {
-    prefix += "#define HAS_TANGENTS \n";
-  }
+	if (attributes.includes("TANGENT")) {
+		prefix += "#define HAS_TANGENTS \n";
+	}
 
-  if (attributes.includes("JOINTS_0") && attributes.includes("WEIGHTS_0")) {
-    prefix += "#define HAS_SKIN \n";
-  }
+	if (attributes.includes("JOINTS_0") && attributes.includes("WEIGHTS_0")) {
+		prefix += "#define HAS_SKIN \n";
+	}
 
-  if (material.hasBaseColorTexture) {
-    prefix += "#define HAS_BASE_COLOR_TEXTURE \n";
-  }
+	if (material.hasBaseColorTexture) {
+		prefix += "#define HAS_BASE_COLOR_TEXTURE \n";
+	}
 
-  if (material.hasBaseColorTextureTransform) {
-    prefix += "#define HAS_BASE_COLOR_TEXTURE_TRANSFORM \n";
-  }
+	if (material.hasBaseColorTextureTransform) {
+		prefix += "#define HAS_BASE_COLOR_TEXTURE_TRANSFORM \n";
+	}
 
-  if (material.hasSheen) {
-    prefix += "#define HAS_SHEEN \n";
-  }
+	if (material.hasSheen) {
+		prefix += "#define HAS_SHEEN \n";
+	}
 
-  if (material.hasSheenTexture) {
-    prefix += "#define HAS_SHEEN_TEXTURE \n";
-  }
+	if (material.hasSheenTexture) {
+		prefix += "#define HAS_SHEEN_TEXTURE \n";
+	}
 
-  if (material.hasNormalTexture) {
-    prefix += "#define HAS_NORMAL_TEXTURE \n";
-  }
+	if (material.hasNormalTexture) {
+		prefix += "#define HAS_NORMAL_TEXTURE \n";
+	}
 
-  if (material.hasNormalTextureTransform) {
-    prefix += "#define HAS_NORMAL_TEXTURE_TRANSFORM \n";
-  }
+	if (material.hasNormalTextureTransform) {
+		prefix += "#define HAS_NORMAL_TEXTURE_TRANSFORM \n";
+	}
 
-  if (material.hasMetallicRoughnessTexture) {
-    prefix += "#define HAS_METALLIC_ROUGHNESS_TEXTURE \n";
-  }
+	if (material.hasMetallicRoughnessTexture) {
+		prefix += "#define HAS_METALLIC_ROUGHNESS_TEXTURE \n";
+	}
 
-  if (material.hasAO) {
-    if (material.hasAOTexture) {
-      prefix += "#define HAS_AO_TEXTURE \n";
-    } else {
-      prefix += "#define AO_IN_METALLIC_ROUGHNESS_TEXTURE \n";
-    }
-  }
+	if (material.hasAO) {
+		if (material.hasAOTexture) {
+			prefix += "#define HAS_AO_TEXTURE \n";
+		} else {
+			prefix += "#define AO_IN_METALLIC_ROUGHNESS_TEXTURE \n";
+		}
+	}
 
-  if (material.hasEmission) {
-    prefix += "#define HAS_EMISSION \n";
-  }
-  if (material.hasEmissiveTexture) {
-    prefix += "#define HAS_EMISSIVE_TEXTURE \n";
-  }
-  if (material.hasEmissiveFactor) {
-    prefix += "#define HAS_EMISSIVE_FACTOR \n";
-  }
+	if (material.hasEmission) {
+		prefix += "#define HAS_EMISSION \n";
+	}
+	if (material.hasEmissiveTexture) {
+		prefix += "#define HAS_EMISSIVE_TEXTURE \n";
+	}
+	if (material.hasEmissiveFactor) {
+		prefix += "#define HAS_EMISSIVE_FACTOR \n";
+	}
 
-  if (material.hasTransmission) {
-    prefix += "#define HAS_TRANSMISSION \n";
-  }
-  if (material.hasTransmissionTexture) {
-    prefix += "#define HAS_TRANSMISSION_TEXTURE \n";
-  }
-  if (material.hasTransmissionFactor) {
-    prefix += "#define HAS_TRANSMISSION_FACTOR \n";
-  }
+	if (material.hasTransmission) {
+		prefix += "#define HAS_TRANSMISSION \n";
+	}
+	if (material.hasTransmissionTexture) {
+		prefix += "#define HAS_TRANSMISSION_TEXTURE \n";
+	}
+	if (material.hasTransmissionFactor) {
+		prefix += "#define HAS_TRANSMISSION_FACTOR \n";
+	}
 
-  if (geometry.morphTarget != null && material.supportsMorphTargets) {
-    prefix += "#define MORPH_TARGETS " + geometry.morphTarget.count + " \n"
-    prefix += "#define MORPHED_ATTRIBUTES " + geometry.morphTarget.morphedAttributePositions.size + " \n"
-    for (const attribute of geometry.morphTarget.morphedAttributePositions) {
-      prefix += "#define " + attribute[0] + "_MORPH_TARGET " + attribute[1] + "\n";
-    }
-  }
-  return prefix;
+	if (geometry.morphTarget != null && material.supportsMorphTargets) {
+		prefix += "#define MORPH_TARGETS " + geometry.morphTarget.count + " \n"
+		prefix += "#define MORPHED_ATTRIBUTES " + geometry.morphTarget.morphedAttributePositions.size + " \n"
+		for (const attribute of geometry.morphTarget.morphedAttributePositions) {
+			prefix += "#define " + attribute[0] + "_MORPH_TARGET " + attribute[1] + "\n";
+		}
+	}
+	return prefix;
 }
 
 function getMorphTargetDeclarationString() {
-  return /*GLSL*/`
+	return /*GLSL*/`
 
   #ifdef MORPH_TARGETS
     uniform float[MORPH_TARGETS] morphTargetWeights;
@@ -128,7 +128,7 @@ function getMorphTargetDeclarationString() {
  * @returns shader string of morphed attributes
  */
 function getMorphTargetCalculationString(name) {
-  return /*GLSL*/`
+	return /*GLSL*/`
   #ifdef ` + name + /*GLSL*/`_MORPH_TARGET
     for(int i = 0; i < MORPH_TARGETS; i++){
       ` + name.toLowerCase() + /*GLSL*/` += morphTargetWeights[i] * getMorphTargetValue(i, ` + name + /*GLSL*/`_MORPH_TARGET);
@@ -139,7 +139,7 @@ function getMorphTargetCalculationString(name) {
 }
 
 function getSkinDeclarationString() {
-  return /*GLSL*/`
+	return /*GLSL*/`
     #ifdef HAS_SKIN
 
     in vec4 JOINTS_0;
@@ -158,7 +158,7 @@ function getSkinDeclarationString() {
 }
 
 function getSkinCalculationString() {
-  return /*GLSL*/`
+	return /*GLSL*/`
     #ifdef HAS_SKIN
 
       mat4 skinMatrix =
@@ -179,7 +179,7 @@ function getSkinCalculationString() {
 
 function getVertexSource(parameters) {
 
-  var vertexSource = /*GLSL*/`
+	var vertexSource = /*GLSL*/`
 
   in vec3 POSITION;
 
@@ -256,26 +256,26 @@ layout(std140) uniform cameraMatrices{
   }
   `;
 
-  return vertexSource;
+	return vertexSource;
 }
 
 function compileShader(shaderSource, shaderType) {
 
-  var shader = gl.createShader(shaderType);
+	var shader = gl.createShader(shaderType);
 
-  gl.shaderSource(shader, shaderSource);
-  try {
-    gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      // Print the error followed by the source with line numbers
-      throw "Shader compile failed with: " + gl.getShaderInfoLog(shader) +
-      "\n <------ Shader source ------> \n" + shaderSource.split('\n').map((line, index) => '${index + 1}. ${line}').join('\n');
-    }
-  } catch (error) {
-    console.error(error);
-  }
+	gl.shaderSource(shader, shaderSource);
+	try {
+		gl.compileShader(shader);
+		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+			// Print the error followed by the source with line numbers
+			throw "Shader compile failed with: " + gl.getShaderInfoLog(shader) +
+			"\n <------ Shader source ------> \n" + shaderSource.split('\n').map((line, index) => '${index + 1}. ${line}').join('\n');
+		}
+	} catch (error) {
+		console.error(error);
+	}
 
-  return shader;
+	return shader;
 }
 
 export { compileShader, getDefinePrefix, getMorphTargetDeclarationString, getMorphTargetCalculationString, getSkinDeclarationString, getSkinCalculationString }

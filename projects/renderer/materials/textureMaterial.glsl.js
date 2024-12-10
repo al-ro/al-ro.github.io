@@ -2,7 +2,7 @@ import { getMorphTargetDeclarationString, getMorphTargetCalculationString, getSk
 
 function getVertexSource(parameters) {
 
-  var vertexSource = /*GLSL*/`
+	var vertexSource = /*GLSL*/`
   
   in vec3 POSITION;
 
@@ -41,12 +41,12 @@ function getVertexSource(parameters) {
   }
   `;
 
-  return vertexSource;
+	return vertexSource;
 }
 
 function getFragmentSource() {
 
-  var fragmentSource = /*GLSL*/`
+	var fragmentSource = /*GLSL*/`
     
     uniform sampler2D tex;
 #ifdef HAS_UV_0
@@ -62,7 +62,7 @@ function getFragmentSource() {
     }
   `;
 
-  return fragmentSource;
+	return fragmentSource;
 }
 
 export { getVertexSource, getFragmentSource };

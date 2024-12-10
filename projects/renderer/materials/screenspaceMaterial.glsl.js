@@ -1,6 +1,6 @@
 function getVertexSource(parameters) {
 
-  var vertexSource = /*GLSL*/`
+	var vertexSource = /*GLSL*/`
   
   in vec3 POSITION;
   in vec2 TEXCOORD_0;
@@ -13,12 +13,12 @@ function getVertexSource(parameters) {
   }
   `;
 
-  return vertexSource;
+	return vertexSource;
 }
 
 function getFragmentSource() {
 
-  var fragmentSource = /*GLSL*/`
+	var fragmentSource = /*GLSL*/`
     
     
     uniform sampler2D tex;
@@ -32,7 +32,7 @@ function getFragmentSource() {
     }
   `;
 
-  return fragmentSource;
+	return fragmentSource;
 }
 
 export { getVertexSource, getFragmentSource };

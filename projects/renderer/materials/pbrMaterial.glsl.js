@@ -2,7 +2,7 @@ import { getMorphTargetDeclarationString, getMorphTargetCalculationString, getSk
 
 function getVertexSource(parameters) {
 
-  var vertexSource = /*GLSL*/`
+	var vertexSource = /*GLSL*/`
 
   #define DEBUG
 
@@ -125,12 +125,12 @@ layout(std140) uniform cameraMatrices{
   }
   `;
 
-  return vertexSource;
+	return vertexSource;
 }
 
 function getFragmentSource() {
 
-  var fragmentSource = /*GLSL*/`
+	var fragmentSource = /*GLSL*/`
 
   out vec4 fragColor;
 
@@ -903,7 +903,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   }
   `;
 
-  return fragmentSource;
+	return fragmentSource;
 }
 
 export { getFragmentSource, getVertexSource };
