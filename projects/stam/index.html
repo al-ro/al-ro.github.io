@@ -1,83 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
 
-    <!-- THIS PAGE IS BUILT WITH SKELETON: http://getskeleton.com/
+<head>
+
+	<!-- THIS PAGE IS BUILT WITH SKELETON: http://getskeleton.com/
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
 
-    <!-- Basic Page Needs
+	<!-- Basic Page Needs
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <meta charset="utf-8">
-    <title>Fluid Dynamics</title>
-    <meta name="description" content="">
-    <meta name="author" content="">
+	<meta charset="utf-8">
+	<title>Fluid Dynamics</title>
+	<meta name="description" content="">
+	<meta name="author" content="">
 
-    <!-- Mobile Specific Metas
+	<!-- Mobile Specific Metas
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- FONT
+	<!-- FONT
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <link href="https://fonts.googleapis.com/css?family=Palanquin:400,300,600" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Palanquin:400,300,600" rel="stylesheet">
 
-    <!-- CSS
+	<!-- CSS
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <link rel="stylesheet" href="../../css/normalize.css">
-    <link rel="stylesheet" href="../../css/skeleton.css">
-    <link rel="stylesheet" href="../../css/custom.css">
-    <link rel="stylesheet" href="../../font-awesome-4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="../../css/normalize.css">
+	<link rel="stylesheet" href="../../css/skeleton.css">
+	<link rel="stylesheet" href="../../css/custom.css">
+	<link rel="stylesheet" href="../../fontawesome/css/all.min.css">
 
-    <!-- Favicon
+	<!-- Favicon
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <link rel="icon" type="image/png" href="../../images/favicon_2.png">
-  </head>
-  <body>
+	<link rel="icon" type="image/png" href="../../images/favicon_2.png">
+</head>
 
-    <!-- Primary Page Layout
+<body>
+
+	<!-- Primary Page Layout
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <div class="container" id="main-container">
-      <section class="post_header" id="header">
-      <div class="row">
-        <div class="twelve columns">
-          <h4 class="title" id="title">Fluid Dynamics</h4>
-        </div>
-      </div>
-        <div class="canvas_container u-max-full-width" id="canvas_container">
-          <canvas width=600 height=600 id="canvas_1"></canvas>
-          <canvas class="hidden_canvas" width=0 height=0 id="canvas_2"></canvas>
-          <div class='gui_container' id="gui_container"></div>
-        </div>
-      <ul class="navbar-list c_navbar">
-        <li class="navbar-item"><a class="navbar-link" href="stam.js">Source</a></li>
-        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
-      </ul>
-      </section>
-      <h5>Controls</h5>
-      <p>Drag on canvas to introduce density and velocity.</p>
-      <h5>Overview</h5>
-      <p>This fluid simulation is based on <a href='http://www.intpowertechcorp.com/GDC03.pdf'>the paper by Jos Stam</a>. In a discretised domain, every cell has three variables: density, x-velocity and y-velocity. We maintain six arrays to store the data together with the states at the last timestep. By applying rules about viscosity, diffusion and the exchange of information between neighbouring cells, we can create an interactive simulation which displays many of the intuitive characteristics of fluids. <strong>visc_</strong> controls the viscosity of the fluid where higher values lead to more rigid behaviour. <strong>diff_</strong> determines the diffusion rate of density.</p>
-      <section class="post">
-      </section>
+	<div class="container" id="main-container">
+		<section class="post_header" id="header">
+			<div class="row">
+				<div class="twelve columns">
+					<h4 class="title" id="title">Fluid Dynamics</h4>
+				</div>
+			</div>
+			<div class="canvas_container u-max-full-width" id="canvas_container">
+				<canvas width=600 height=600 id="canvas_1"></canvas>
+				<canvas class="hidden_canvas" width=0 height=0 id="canvas_2"></canvas>
+				<div class='gui_container' id="gui_container"></div>
+			</div>
+			<ul class="navbar-list c_navbar">
+				<li class="navbar-item"><a class="navbar-link" href="stam.js">Source</a></li>
+				<li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+			</ul>
+		</section>
+		<h5>Controls</h5>
+		<p>Drag on canvas to introduce density and velocity.</p>
+		<h5>Overview</h5>
+		<p>This fluid simulation is based on <a href='http://www.intpowertechcorp.com/GDC03.pdf'>the paper by Jos Stam</a>.
+			In a discretised domain, every cell has three variables: density, x-velocity and y-velocity. We maintain six
+			arrays to store the data together with the states at the last timestep. By applying rules about viscosity,
+			diffusion and the exchange of information between neighbouring cells, we can create an interactive simulation
+			which displays many of the intuitive characteristics of fluids. <strong>visc_</strong> controls the viscosity of
+			the fluid where higher values lead to more rigid behaviour. <strong>diff_</strong> determines the diffusion rate
+			of density.</p>
+		<section class="post">
+		</section>
 
 
-    </div>
-    <!-- End Document
+	</div>
+	<!-- End Document
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
-    <script type="text/javascript" src="stam.js"></script>
-  </body>
-  <footer>
-  <div class="container">
-    <section class="footer" id="links">
-    <div class="navbar-spacer"></div>
-    <nav class="navbar footer-navbar">
-    <div class="container">
-      <ul class="navbar-list">
-        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
-      </ul>
-    </div>
-    </nav>
-  </div>
-  </section>
-  </footer>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
+	<script type="text/javascript" src="stam.js"></script>
+</body>
+<footer>
+	<div class="container">
+		<section class="footer" id="links">
+			<div class="navbar-spacer"></div>
+			<nav class="navbar footer-navbar">
+				<div class="container">
+					<ul class="navbar-list">
+						<li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+					</ul>
+				</div>
+			</nav>
+	</div>
+	</section>
+</footer>
+
 </html>
