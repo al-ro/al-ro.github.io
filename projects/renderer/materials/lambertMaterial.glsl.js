@@ -2,7 +2,7 @@ import { getMorphTargetDeclarationString, getMorphTargetCalculationString, getSk
 
 function getVertexSource() {
 
-  var vertexSource = /*GLSL*/`
+	var vertexSource = /*GLSL*/`
 
   in vec3 POSITION;
 #ifdef HAS_NORMALS
@@ -51,12 +51,12 @@ function getVertexSource() {
   }
   `;
 
-  return vertexSource;
+	return vertexSource;
 }
 
 function getFragmentSource() {
 
-  var fragmentSource = /*GLSL*/`
+	var fragmentSource = /*GLSL*/`
     
 #ifdef HAS_NORMALS
     in vec3 vNormal;
@@ -88,7 +88,7 @@ function getFragmentSource() {
     }
   `;
 
-  return fragmentSource;
+	return fragmentSource;
 }
 
 export { getVertexSource, getFragmentSource };
