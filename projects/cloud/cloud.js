@@ -175,7 +175,7 @@ function getSunDirection() {
 	return normalize(dir);
 }
 
-uniformFolder.add(cloudMaterial, 'dithering');
+uniformFolder.add(cloudMaterial, 'dithering').name("Dithering");
 uniformFolder.close();
 
 const sunFolder = uniformFolder.addFolder("Sun");
