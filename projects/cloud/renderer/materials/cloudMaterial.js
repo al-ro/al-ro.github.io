@@ -66,7 +66,7 @@ export class CloudMaterial extends Material {
 	emissionStrength = 0.0;
 	emissionStrengthHandle;
 
-	densityMultiplier = 64;
+	densityMultiplier = 110;
 	densityMultiplierHandle;
 
 	fragmentSource = /*glsl*/`
