@@ -229,7 +229,7 @@ body {
 	/* currently ems cause chrome bug misinterpreting rems on body element */
 	line-height: 1.6;
 	font-weight: 400;
-	font-family: Arial, "Palanquin", "HelveticaNeue", "Helvetica Neue", Helvetica, sans-serif;
+	font-family: "Palanquin", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 	color: #222;
 }
 
