@@ -31,12 +31,11 @@ cloudMesh.cull = false;
 
 // ------------------------- Textures ------------------------- //
 
-let noiseTextureSize = 512;
+let noiseTextureSize = 1;
+let renderedNoiseTextureSize = noiseTextureSize;
 let noiseTexture = Renderer.renderTo3DTexture(noiseTextureSize, NoiseMaterial);
-cloudMaterial.noiseTexture = noiseTexture;
 
-let rabbitTextureSize = 128;
-let rabbitTexture = Renderer.renderTo3DTexture(rabbitTextureSize, DensityMaterial);
+let rabbitTexture = null;
 
 // https://github.com/Calinou/free-blue-noise-textures
 let blueNoiseTexture = Renderer.loadTexture({ url: "noiseTextures/blueNoise_1024.png", type: gl.RGBA });
@@ -192,8 +191,11 @@ sunFolder.close();
 const cloudFolder = uniformFolder.addFolder("Cloud");
 cloudFolder.add(cloudMaterial, 'densityMultiplier', 0, 512, 0.5).name("Density");
 cloudFolder.add(cloudMaterial, 'emissionStrength', 0, 1, 0.01).name("Emission strength");
-cloudFolder.add(cloudMaterial, 'detailSize', 0, 3, 0.01).name("Detail size");
-cloudFolder.add(cloudMaterial, 'detailStrength', 0, 1, 0.01).name("Detail strength");
+
+const noiseFolder = cloudFolder.addFolder("Carving");
+noiseFolder.add(cloudMaterial, 'detailStrength', 0, 1, 0.01).name("Strength");
+noiseFolder.add(cloudMaterial, 'detailSize', 0, 3, 0.01).name("Size");
+noiseFolder.hide();
 
 function setSigmaT() {
 	for (let i = 0; i < 3; i++) {
@@ -208,11 +210,25 @@ function updateCloudData(name) {
 
 	switch (name) {
 		case "Stanford Rabbit":
+			noiseFolder.show();
+			cloudMaterial.carve = true;
+			noiseTextureSize = 256;
+			if (renderedNoiseTextureSize != noiseTextureSize) {
+				renderedNoiseTextureSize = noiseTextureSize;
+				noiseTexture = Renderer.renderTo3DTexture(noiseTextureSize, NoiseMaterial);
+				cloudMaterial.noiseTexture = noiseTexture;
+			}
+			if (rabbitTexture == null) {
+				let rabbitTextureSize = 128;
+				rabbitTexture = Renderer.renderTo3DTexture(rabbitTextureSize, DensityMaterial);
+			}
 			cloudMaterial.densityTexture = rabbitTexture;
 			cloudMaterial.dataAspect = [1, 1, 1];
 			cloudMaterial.aabbScale = [1, 1, 1];
 			break;
 		default:
+			noiseFolder.hide();
+			cloudMaterial.carve = false;
 			cloudMaterial.densityTexture = Renderer.getVDBData(clouds.get(name));
 			cloudMaterial.dataAspect = [1.25, 1.8181, 1.0];
 			cloudMaterial.aabbScale = [0.8, 0.55, 1.0];
