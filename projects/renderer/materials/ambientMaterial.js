@@ -36,12 +36,14 @@ export class AmbientMaterial extends Material {
 	}
 
 	getUniformHandles() {
-		this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
+		this.modelMatrixHandle = this.program.getOptionalUniformLocation('modelMatrix');
 		this.normalMatrixHandle = this.program.getOptionalUniformLocation('normalMatrix');
 	}
 
 	bindUniforms() {
-		gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
+		if (this.modelMatrixHandle != null) {
+			gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
+		}
 		if (this.normalMatrixHandle != null) {
 			gl.uniformMatrix4fv(this.normalMatrixHandle, false, this.normalMatrix);
 		}

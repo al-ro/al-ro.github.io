@@ -380,7 +380,7 @@ export class PBRMaterial extends Material {
 
 		this.outputVariableHandle = this.program.getUniformLocation('outputVariable');
 
-		this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
+		this.modelMatrixHandle = this.program.getOptionalUniformLocation('modelMatrix');
 		this.normalMatrixHandle = this.program.getOptionalUniformLocation('normalMatrix');
 
 		this.alphaCutoffHandle = this.program.getOptionalUniformLocation('alphaCutoff');
@@ -485,7 +485,9 @@ export class PBRMaterial extends Material {
 	 */
 	bindUniforms() {
 
-		gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
+		if (this.modelMatrixHandle != null) {
+			gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
+		}
 		if (this.normalMatrixHandle != null) {
 			gl.uniformMatrix4fv(this.normalMatrixHandle, false, this.normalMatrix);
 		}
@@ -521,7 +523,9 @@ export class PBRMaterial extends Material {
 			gl.activeTexture(gl.TEXTURE0 + this.baseColorTextureUnit);
 			gl.bindTexture(gl.TEXTURE_2D, this.baseColorTexture);
 			gl.uniform1i(this.baseColorTextureHandle, this.baseColorTextureUnit);
-			gl.uniform1i(this.baseColorTextureUVHandle, this.baseColorTextureUV);
+			if (this.baseColorTextureUVHandle != null) {
+				gl.uniform1i(this.baseColorTextureUVHandle, this.baseColorTextureUV);
+			}
 			if (this.hasBaseColorTextureTransform) {
 				gl.uniformMatrix3fv(this.baseColorTextureTransformHandle, false, this.baseColorTextureTransform);
 			}
@@ -533,8 +537,13 @@ export class PBRMaterial extends Material {
 			gl.activeTexture(gl.TEXTURE0 + this.normalTextureUnit);
 			gl.bindTexture(gl.TEXTURE_2D, this.normalTexture);
 			gl.uniform1i(this.normalTextureHandle, this.normalTextureUnit);
-			gl.uniform1i(this.normalTextureUVHandle, this.normalTextureUV);
-			gl.uniform1f(this.normalScaleHandle, this.normalScale);
+
+			if (this.normalTextureUVHandle != null) {
+				gl.uniform1i(this.normalTextureUVHandle, this.normalTextureUV);
+			}
+			if (this.normalScaleHandle != null) {
+				gl.uniform1f(this.normalScaleHandle, this.normalScale);
+			}
 			if (this.hasNormalTextureTransform) {
 				gl.uniformMatrix3fv(this.normalTextureTransformHandle, false, this.normalTextureTransform);
 			}
@@ -544,7 +553,9 @@ export class PBRMaterial extends Material {
 			gl.activeTexture(gl.TEXTURE0 + this.emissiveTextureUnit);
 			gl.bindTexture(gl.TEXTURE_2D, this.emissiveTexture);
 			gl.uniform1i(this.emissiveTextureHandle, this.emissiveTextureUnit);
-			gl.uniform1i(this.emissiveTextureUVHandle, this.emissiveTextureUV);
+			if (this.emissiveTextureUVHandle != null) {
+				gl.uniform1i(this.emissiveTextureUVHandle, this.emissiveTextureUV);
+			}
 		}
 
 		if (this.hasEmissiveFactor) {
@@ -555,7 +566,9 @@ export class PBRMaterial extends Material {
 			gl.activeTexture(gl.TEXTURE0 + this.transmissionTextureUnit);
 			gl.bindTexture(gl.TEXTURE_2D, this.transmissionTexture);
 			gl.uniform1i(this.transmissionTextureHandle, this.transmissionTextureUnit);
-			gl.uniform1i(this.transmissionTextureUVHandle, this.transmissionTextureUV);
+			if (this.transmissionTextureUVHandle != null) {
+				gl.uniform1i(this.transmissionTextureUVHandle, this.transmissionTextureUV);
+			}
 		}
 		if (this.hasTransmissionFactor) {
 			gl.uniform1f(this.transmissionFactorHandle, this.transmissionFactor);
@@ -570,7 +583,9 @@ export class PBRMaterial extends Material {
 			gl.activeTexture(gl.TEXTURE0 + this.metallicRoughnessTextureUnit);
 			gl.bindTexture(gl.TEXTURE_2D, this.metallicRoughnessTexture);
 			gl.uniform1i(this.metallicRoughnessTextureHandle, this.metallicRoughnessTextureUnit);
-			gl.uniform1i(this.metallicRoughnessTextureUVHandle, this.metallicRoughnessTextureUV);
+			if (this.metallicRoughnessTextureUVHandle != null) {
+				gl.uniform1i(this.metallicRoughnessTextureUVHandle, this.metallicRoughnessTextureUV);
+			}
 		}
 
 		gl.uniform1f(this.metallicFactorHandle, this.metallicFactor);
@@ -584,14 +599,18 @@ export class PBRMaterial extends Material {
 			gl.activeTexture(gl.TEXTURE0 + this.occlusionTextureUnit);
 			gl.bindTexture(gl.TEXTURE_2D, this.occlusionTexture);
 			gl.uniform1i(this.occlusionTextureHandle, this.occlusionTextureUnit);
-			gl.uniform1i(this.occlusionTextureUVHandle, this.occlusionTextureUV);
+			if (this.occlusionTextureUVHandle != null) {
+				gl.uniform1i(this.occlusionTextureUVHandle, this.occlusionTextureUV);
+			}
 		}
 
 		if (this.hasSheenTexture) {
 			gl.activeTexture(gl.TEXTURE0 + this.sheenTextureUnit);
 			gl.bindTexture(gl.TEXTURE_2D, this.sheenTexture);
 			gl.uniform1i(this.sheenTextureHandle, this.sheenTextureUnit);
-			gl.uniform1i(this.sheenTextureUVHandle, this.sheenTextureUV);
+			if (this.sheenTextureUVHandle != null) {
+				gl.uniform1i(this.sheenTextureUVHandle, this.sheenTextureUV);
+			}
 		}
 		if (this.hasSheen) {
 			gl.uniform4fv(this.sheenFactorHandle, this.sheenFactor);

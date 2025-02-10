@@ -33,11 +33,13 @@ export class UVMaterial extends Material {
 	}
 
 	getUniformHandles() {
-		this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
+		this.modelMatrixHandle = this.program.getOptionalUniformLocation('modelMatrix');
 	}
 
 	bindUniforms() {
-		gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
+		if (this.modelMatrixHandle != null) {
+			gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
+		}
 
 		if (this.hasSkin) {
 			gl.activeTexture(gl.TEXTURE0);

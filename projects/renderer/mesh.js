@@ -81,7 +81,7 @@ export class Mesh extends Node {
 		}
 
 		for (const attribute of activeAttributes) {
-			this.geometry.attributes.get(attribute).handle = this.material.program.getAttribLocation(attribute);
+			this.geometry.attributes.get(attribute).handle = this.material.program.getOptionalAttribLocation(attribute);
 		}
 
 		this.createVAO(activeAttributes);
