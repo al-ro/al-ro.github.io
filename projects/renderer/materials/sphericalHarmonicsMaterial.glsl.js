@@ -1,30 +1,30 @@
 function getVertexSource() {
 
-	var vertexSource = /*GLSL*/`
-  
+  var vertexSource = /*GLSL*/`
+
     in vec3 POSITION;
 
-    void main(){ 
+    void main(){
       gl_Position = vec4(POSITION, 1.0);
     }
   `;
 
-	return vertexSource;
+  return vertexSource;
 }
 
 function getFragmentSource() {
 
-	var fragmentSource = /*GLSL*/`
+  var fragmentSource = /*GLSL*/`
 
 /*
-    
+
   Diffuse IBL using spherical harmonics
 
   Read the environment map and calculate 9 spherical harmonics coefficients for each channel.
   The coefficients will describe the low frequency data of the environment. We can use them
-  to construct a matrix which, when multiplied with a view vector, will give the data in 
-  that direction. The low frequency data is similar to a convoluted irradiance map and is 
-  used for diffuse image based lighting, which gives us the ambient color for shading. 
+  to construct a matrix which, when multiplied with a view vector, will give the data in
+  that direction. The low frequency data is similar to a convoluted irradiance map and is
+  used for diffuse image based lighting, which gives us the ambient color for shading.
 
   Based on:
   [1] https://cseweb.ucsd.edu/~ravir/papers/envmap/envmap.pdf
@@ -37,14 +37,14 @@ function getFragmentSource() {
 */
 
     uniform samplerCube environmentCubeMap;
-    
+
     // Constants cn from equation 12 in [1]
     const float c1 = 0.429043;
     const float c2 = 0.511664;
     const float c3 = 0.743125;
     const float c4 = 0.886227;
     const float c5 = 0.247708;
-    
+
     // First 9 spherical harmonics coefficients from equation 3 in [1]
     const float Y00 = 0.282095;
     const float Y1n = 0.488603; // 3 direction dependent values
@@ -54,7 +54,7 @@ function getFragmentSource() {
 
     out vec4 fragColor;
 
-    #define PI 3.14159
+    const float PI = 3.1415926535;
 
     vec3 getRadiance(vec3 dir){
       return textureLod(environmentCubeMap, dir, 3.0).rgb;
@@ -79,9 +79,9 @@ function getFragmentSource() {
         vec3 L22 = vec3(0);
 
         /*
-          To make the sampling rate scalable and independent of the cubemap dimensions, 
-          we can sample a set number of equidistant directions on a sphere. While this is 
-          not doable for all number of directions, a good approximation is the Fibonacci 
+          To make the sampling rate scalable and independent of the cubemap dimensions,
+          we can sample a set number of equidistant directions on a sphere. While this is
+          not doable for all number of directions, a good approximation is the Fibonacci
           spiral on a sphere.
         */
 
@@ -96,7 +96,7 @@ function getFragmentSource() {
           float y = 1.0 - (i / sampleCount) * 2.0;
 
           // Radius at y
-          float radius = sqrt(1.0 - y * y);  
+          float radius = sqrt(1.0 - y * y);
 
           // Golden angle increment
           float theta = phi * i;
@@ -191,10 +191,10 @@ function getFragmentSource() {
       }
 
       fragColor = col;
-    } 
+    }
   `;
 
-	return fragmentSource;
+  return fragmentSource;
 }
 
 export { getVertexSource, getFragmentSource };

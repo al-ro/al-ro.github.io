@@ -21,33 +21,33 @@ stats.dom.style.cssText = "visibility: visible; position: absolute; bottom: 0px;
 document.getElementById('canvas_overlay').appendChild(stats.dom);
 
 /*
-	TODO:
+  TODO:
 
-		Order material draw
+    Order material draw
 
-		Scene format and scale for specific files?
-			Multi-object scenes
-			Object culling
-			Camera pan
-			Specify active animations in files
-			Override scale and centering
+    Scene format and scale for specific files?
+      Multi-object scenes
+      Object culling
+      Camera pan
+      Specify active animations in files
+      Override scale and centering
 
-		Floating point rendering
-		Post-processing pass with tonemapping and gamma
-		Debug flag from output
+    Floating point rendering
+    Post-processing pass with tonemapping and gamma
+    Debug flag from output
 
-		Directional light
+    Directional light
 
-		Volume
-		Iridescence
-		Specular/Gloss
-		Clearcoat
+    Volume
+    Iridescence
+    Specular/Gloss
+    Clearcoat
 
-		Instancing
-		Particle class for GPU
+    Instancing
+    Particle class for GPU
 
-		Postprocessing (bloom, depth of field, SSAO)
-		PBR camera
+    Postprocessing (bloom, depth of field, SSAO)
+    PBR camera
 
 */
 
@@ -116,12 +116,12 @@ let controls = new Controls(camera);
 let time = 0.0;
 
 let info = {
-	memory: "0",
-	buffers: "0",
-	textures: "0",
-	downloading: getDownloadingCount(),
-	primitives: "0",
-	programCount: programRepository.programs.size
+  memory: "0",
+  buffers: "0",
+  textures: "0",
+  downloading: getDownloadingCount(),
+  primitives: "0",
+  programCount: programRepository.programs.size
 };
 
 let modelSelector = { model: "Dragon" };
@@ -131,7 +131,7 @@ let environment;
 let gltfLoader;
 let scene = new Scene();
 let modelManipulation = {
-	translationX: 0, translationY: 0, translationZ: 0, scale: 1, rotationX: 0, rotationY: 0, rotationZ: 0
+  translationX: 0, translationY: 0, translationZ: 0, scale: 1, rotationX: 0, rotationY: 0, rotationZ: 0
 };
 
 //************* GUI ***************
@@ -182,8 +182,8 @@ memoryFolder.add(info, 'memory').disable().listen();
 memoryFolder.close();
 
 let repositoryUI = {
-	printRepository: function () { console.log(programRepository.programs) },
-	clearRepository: function () { programRepository.programs.clear() }
+  printRepository: function () { console.log(programRepository.programs) },
+  clearRepository: function () { programRepository.programs.clear() }
 };
 
 const statsFolder = gui.addFolder('Stats');
@@ -208,160 +208,160 @@ const idleState = { state: true, name: "Idle" };
 const playAllState = { state: false, name: "All" };
 
 function setSceneIdle() {
-	for (const animation of scene.getAnimations()) {
-		animation.disable();
-	}
-	scene.setIdle();
-	for (const animationInterface of animationInterfaces) {
-		animationInterface.state = false;
-	}
-	playAllState.state = false;
+  for (const animation of scene.getAnimations()) {
+    animation.disable();
+  }
+  scene.setIdle();
+  for (const animationInterface of animationInterfaces) {
+    animationInterface.state = false;
+  }
+  playAllState.state = false;
 }
 
 function playAllAnimations() {
-	for (const animation of scene.getAnimations()) {
-		animation.enable(time);
-	}
-	for (const animationInterface of animationInterfaces) {
-		animationInterface.state = true;
-	}
-	idleState.state = false;
+  for (const animation of scene.getAnimations()) {
+    animation.enable(time);
+  }
+  for (const animationInterface of animationInterfaces) {
+    animationInterface.state = true;
+  }
+  idleState.state = false;
 }
 
 
 loadGLTF(modelSelector.model);
 
 function loadGLTF(model) {
-	if (gltfLoader != null) {
-		gltfLoader.abort();
-	} else {
-		gltfLoader = new GLTFLoader();
-	}
+  if (gltfLoader != null) {
+    gltfLoader.abort();
+  } else {
+    gltfLoader = new GLTFLoader();
+  }
 
-	scene.clear();
-	animationFolder.hide();
-	for (let element of animationElements) {
-		element.destroy();
-	}
-	animationElements = [];
-	animationInterfaces = [];
-	playAllState.state = false;
-	idleState.state = true;
+  scene.clear();
+  animationFolder.hide();
+  for (let element of animationElements) {
+    element.destroy();
+  }
+  animationElements = [];
+  animationInterfaces = [];
+  playAllState.state = false;
+  idleState.state = true;
 
-	if (model == "NONE") {
-		return;
-	}
+  if (model == "NONE") {
+    return;
+  }
 
-	let path = models.get(modelSelector.model);
-	gltfLoader.load(path, 0);
+  let path = models.get(modelSelector.model);
+  gltfLoader.load(path, 0);
 
-	gltfLoader.ready.then(p => {
-		let object = gltfLoader.getObjects();
-		centerAndScale(object);
-		scene.add(object);
-		if (modelSelector.model == "Dragon") {
-			object.setTranslation([0, 0, 0]);
-			object.setScale(0.3);
-			playAllAnimations();
+  gltfLoader.ready.then(p => {
+    let object = gltfLoader.getObjects();
+    centerAndScale(object);
+    scene.add(object);
+    if (modelSelector.model == "Dragon") {
+      object.setTranslation([0, 0, 0]);
+      object.setScale(0.3);
+      playAllAnimations();
 
-			modelManipulation.translationX = 0;
-			modelManipulation.translationY = 0;
-			modelManipulation.translationZ = 0;
-			modelManipulation.scale = 0.3;
-		}
-		if (scene.objects.length > 0) {
-			materialControls.setValue(MaterialType.PBR);
-		}
-		let animations = scene.getAnimations();
-		if (animations.length > 0) {
-			animationElements.push(animationFolder.add(idleState, 'state').name("Idle").listen().onChange(e => { idleState.state = true; if (e) { setSceneIdle() }; }));
-			if (animations.length > 1) {
-				animationElements.push(animationFolder.add(playAllState, 'state').name("All").listen().onChange(e => { playAllState.state = true; if (e) { playAllAnimations() }; }));
-			}
-			for (const animation of animations) {
-				let animationInterface = { state: animation.isActive(), name: animation.name, toggle: (e) => { animation.setActive(e, time) } };
-				animationInterfaces.push(animationInterface);
-				animationElements.push(animationFolder.add(animationInterface, 'state').name(animationInterface.name).listen().onChange(e => { animationInterface.toggle(e); idleState.state = false; playAllState.state = false; }));
-			}
-			animationFolder.show();
-		}
-		materialControls.setValue("PBR");
-		outputControls.setValue(outputEnum.PBR);
-		outputControls.show();
-	});
+      modelManipulation.translationX = 0;
+      modelManipulation.translationY = 0;
+      modelManipulation.translationZ = 0;
+      modelManipulation.scale = 0.3;
+    }
+    if (scene.objects.length > 0) {
+      materialControls.setValue(MaterialType.PBR);
+    }
+    let animations = scene.getAnimations();
+    if (animations.length > 0) {
+      animationElements.push(animationFolder.add(idleState, 'state').name("Idle").listen().onChange(e => { idleState.state = true; if (e) { setSceneIdle() }; }));
+      if (animations.length > 1) {
+        animationElements.push(animationFolder.add(playAllState, 'state').name("All").listen().onChange(e => { playAllState.state = true; if (e) { playAllAnimations() }; }));
+      }
+      for (const animation of animations) {
+        let animationInterface = { state: animation.isActive(), name: animation.name, toggle: (e) => { animation.setActive(e, time) } };
+        animationInterfaces.push(animationInterface);
+        animationElements.push(animationFolder.add(animationInterface, 'state').name(animationInterface.name).listen().onChange(e => { animationInterface.toggle(e); idleState.state = false; playAllState.state = false; }));
+      }
+      animationFolder.show();
+    }
+    materialControls.setValue("PBR");
+    outputControls.setValue(outputEnum.PBR);
+    outputControls.show();
+  });
 }
 
 function centerAndScale(object) {
 
-	object.calculateAABB();
+  object.calculateAABB();
 
-	let min = object.min;
-	let max = object.max;
+  let min = object.min;
+  let max = object.max;
 
-	let center = [
-		min[0] + 0.5 * (max[0] - min[0]),
-		min[1] + 0.5 * (max[1] - min[1]),
-		min[2] + 0.5 * (max[2] - min[2])
-	];
+  let center = [
+    min[0] + 0.5 * (max[0] - min[0]),
+    min[1] + 0.5 * (max[1] - min[1]),
+    min[2] + 0.5 * (max[2] - min[2])
+  ];
 
-	const largestExtent = Math.max(Math.max(max[0] - min[0], max[1] - min[1]), max[2] - min[2]);
-	let scale = 1.0 / largestExtent;
+  const largestExtent = Math.max(Math.max(max[0] - min[0], max[1] - min[1]), max[2] - min[2]);
+  let scale = 1.0 / largestExtent;
 
-	let T = [-center[0] * scale, -center[1] * scale, -center[2] * scale];
-	let R = object.getRotation();
-	let S = [scale, scale, scale];
+  let T = [-center[0] * scale, -center[1] * scale, -center[2] * scale];
+  let R = object.getRotation();
+  let S = [scale, scale, scale];
 
-	object.setTRS(T, R, S);
-	object.idleMatrix = m4.compose(T, R, S);
+  object.setTRS(T, R, S);
+  object.idleMatrix = m4.compose(T, R, S);
 
-	modelManipulation.translationX = T[0];
-	modelManipulation.translationY = T[1];
-	modelManipulation.translationZ = T[2];
+  modelManipulation.translationX = T[0];
+  modelManipulation.translationY = T[1];
+  modelManipulation.translationZ = T[2];
 
-	let rE = quaternionToEuler(R);
-	modelManipulation.rotationX = rE[0];
-	modelManipulation.rotationY = rE[1];
-	modelManipulation.rotationZ = rE[2];
+  let rE = quaternionToEuler(R);
+  modelManipulation.rotationX = rE[0];
+  modelManipulation.rotationY = rE[1];
+  modelManipulation.rotationZ = rE[2];
 
-	modelManipulation.scale = scale;
+  modelManipulation.scale = scale;
 }
 
 function setMaterial(name) {
 
-	if (name != MaterialType.PBR) {
-		outputControls.hide();
-	} else {
-		outputControls.show();
-	}
+  if (name != MaterialType.PBR) {
+    outputControls.hide();
+  } else {
+    outputControls.show();
+  }
 
-	for (const object of scene.objects) {
-		object.setMaterial(name);
-	}
+  for (const object of scene.objects) {
+    object.setMaterial(name);
+  }
 }
 
 function setOutput(output) {
-	for (const object of scene.objects) {
-		object.setOutput(output);
-	}
+  for (const object of scene.objects) {
+    object.setOutput(output);
+  }
 }
 
 function setScale(scale) {
-	scale = Math.max(1e-4, scale);
-	for (const object of scene.objects) {
-		object.setScale([scale, scale, scale]);
-	}
+  scale = Math.max(1e-4, scale);
+  for (const object of scene.objects) {
+    object.setScale([scale, scale, scale]);
+  }
 }
 
 function setTranslation(modelManipulation) {
-	for (const object of scene.objects) {
-		object.setTranslation([modelManipulation.translationX, modelManipulation.translationY, modelManipulation.translationZ]);
-	}
+  for (const object of scene.objects) {
+    object.setTranslation([modelManipulation.translationX, modelManipulation.translationY, modelManipulation.translationZ]);
+  }
 }
 
 function setRotation(modelManipulation) {
-	for (const object of scene.objects) {
-		object.setRotation(eulerToQuaternion(modelManipulation.rotationX, modelManipulation.rotationY, modelManipulation.rotationZ));
-	}
+  for (const object of scene.objects) {
+    object.setRotation(eulerToQuaternion(modelManipulation.rotationX, modelManipulation.rotationY, modelManipulation.rotationZ));
+  }
 }
 
 let lastFrame = Date.now();
@@ -399,103 +399,103 @@ blurredSceneMesh.cull = false;
 
 function draw() {
 
-	stats.begin();
+  stats.begin();
 
-	info.downloading = getDownloadingCount();
-	if (info.downloading != 0) {
-		document.getElementById('loading_spinner').style.display = "inline-block";
-	} else {
-		document.getElementById('loading_spinner').style.display = "none";
-	}
+  info.downloading = getDownloadingCount();
+  if (info.downloading != 0) {
+    document.getElementById('loading_spinner').style.display = "inline-block";
+  } else {
+    document.getElementById('loading_spinner').style.display = "none";
+  }
 
-	frame++;
+  frame++;
 
-	if (frame % 30 == 0) {
-		info.memory = (extMEM.getMemoryInfo().memory.total * 1e-6).toPrecision(4) + " MB";
-		info.buffers = extMEM.getMemoryInfo().resources.buffer;
-		info.textures = extMEM.getMemoryInfo().resources.texture;
-		info.programCount = programRepository.programs.size;
-	}
+  if (frame % 30 == 0) {
+    info.memory = (extMEM.getMemoryInfo().memory.total * 1e-6).toPrecision(4) + " MB";
+    info.buffers = extMEM.getMemoryInfo().resources.buffer;
+    info.textures = extMEM.getMemoryInfo().resources.texture;
+    info.programCount = programRepository.programs.size;
+  }
 
-	info.primitives = scene.primitiveCount;
+  info.primitives = scene.primitiveCount;
 
-	thisFrame = Date.now();
+  thisFrame = Date.now();
 
-	let dT = (thisFrame - lastFrame) / 1000;
-	time += dT;
-	lastFrame = thisFrame;
+  let dT = (thisFrame - lastFrame) / 1000;
+  time += dT;
+  lastFrame = thisFrame;
 
-	// Animate all objects with defined animations in the scene
-	scene.animate(time);
+  // Animate all objects with defined animations in the scene
+  scene.animate(time);
 
-	let renderCamera = camera;
+  let renderCamera = camera;
 
-	renderCamera.update();
+  renderCamera.update();
 
-	sceneRenderTarget.setSize(gl.canvas.width, gl.canvas.height);
-	sceneRenderTarget.bind();
-	gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  sceneRenderTarget.setSize(gl.canvas.width, gl.canvas.height);
+  sceneRenderTarget.bind();
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-	gl.clearColor(0, 0, 0, 1);
-	gl.clearDepth(1.0);
-	gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+  gl.clearColor(0, 0, 0, 1);
+  gl.clearDepth(1.0);
+  gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
-	gl.enable(gl.DEPTH_TEST);
-	gl.enable(gl.CULL_FACE);
-	gl.cullFace(gl.BACK);
-	gl.depthFunc(gl.ALWAYS);
+  gl.enable(gl.DEPTH_TEST);
+  gl.enable(gl.CULL_FACE);
+  gl.cullFace(gl.BACK);
+  gl.depthFunc(gl.ALWAYS);
 
-	if (environmentController.renderBackground) {
-		// Render background from cubemap without writing to depth
-		gl.depthMask(false);
-		render(RenderPass.OPAQUE, environment.getMesh(), renderCamera, environment, camera);
-		gl.depthMask(true);
-	}
+  if (environmentController.renderBackground) {
+    // Render background from cubemap without writing to depth
+    gl.depthMask(false);
+    render(RenderPass.OPAQUE, environment.getMesh(), renderCamera, environment, camera);
+    gl.depthMask(true);
+  }
 
-	// Render all opaque meshes with a simple shader to populate the depth texture
-	// Do not write to color target
-	gl.depthFunc(gl.LESS);
-	gl.colorMask(false, false, false, false);
-	scene.renderDepthPrepass(renderCamera);
-	gl.colorMask(true, true, true, true);
+  // Render all opaque meshes with a simple shader to populate the depth texture
+  // Do not write to color target
+  gl.depthFunc(gl.LESS);
+  gl.colorMask(false, false, false, false);
+  scene.renderDepthPrepass(renderCamera);
+  gl.colorMask(true, true, true, true);
 
-	// Render opaque meshes corresponding the the depth values in the depth texture
-	gl.depthFunc(gl.LEQUAL);
-	scene.render(RenderPass.OPAQUE, renderCamera, environment, camera);
+  // Render opaque meshes corresponding the the depth values in the depth texture
+  gl.depthFunc(gl.LEQUAL);
+  scene.render(RenderPass.OPAQUE, renderCamera, environment, camera);
 
-	// Generate background texture for transmissive objects
-	gl.depthFunc(gl.ALWAYS);
-	blurredSceneRenderTarget.setSize(gl.canvas.width, gl.canvas.height);
-	blurredSceneRenderTarget.bind();
-	gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-	render(RenderPass.OPAQUE, blurredSceneMesh);
+  // Generate background texture for transmissive objects
+  gl.depthFunc(gl.ALWAYS);
+  blurredSceneRenderTarget.setSize(gl.canvas.width, gl.canvas.height);
+  blurredSceneRenderTarget.bind();
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  render(RenderPass.OPAQUE, blurredSceneMesh);
 
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, blurredSceneTexture);
-	gl.generateMipmap(gl.TEXTURE_2D);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, blurredSceneTexture);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 
-	// Render transmissive objects onto the scene
-	gl.depthFunc(gl.LEQUAL);
-	sceneRenderTarget.bind();
-	gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-	scene.setBackgroundTexture(blurredSceneTexture);
-	scene.render(RenderPass.TRANSMISSIVE, renderCamera, environment, camera);
+  // Render transmissive objects onto the scene
+  gl.depthFunc(gl.LEQUAL);
+  sceneRenderTarget.bind();
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  scene.setBackgroundTexture(blurredSceneTexture);
+  scene.render(RenderPass.TRANSMISSIVE, renderCamera, environment, camera);
 
-	// Render transparent meshes using alpha blending
-	gl.enable(gl.BLEND);
-	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-	scene.render(RenderPass.TRANSPARENT, renderCamera, environment, camera);
-	gl.disable(gl.BLEND);
+  // Render transparent meshes using alpha blending
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  scene.render(RenderPass.TRANSPARENT, renderCamera, environment, camera);
+  gl.disable(gl.BLEND);
 
-	// Output render target color texture to screen
-	gl.depthFunc(gl.ALWAYS);
-	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-	gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-	render(RenderPass.OPAQUE, sceneMesh, renderCamera, environment, camera);
+  // Output render target color texture to screen
+  gl.depthFunc(gl.ALWAYS);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  render(RenderPass.OPAQUE, sceneMesh, renderCamera, environment, camera);
 
-	stats.end();
-	requestAnimationFrame(draw);
+  stats.end();
+  requestAnimationFrame(draw);
 }
 
 draw();

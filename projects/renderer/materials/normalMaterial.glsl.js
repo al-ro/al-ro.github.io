@@ -2,7 +2,7 @@ import { getMorphTargetDeclarationString, getMorphTargetCalculationString, getSk
 
 function getVertexSource(parameters) {
 
-	var vertexSource = /*GLSL*/`
+  var vertexSource = /*GLSL*/`
 
   in vec3 POSITION;
 #ifdef HAS_NORMALS
@@ -21,14 +21,14 @@ function getVertexSource(parameters) {
 #ifdef HAS_NORMALS
   out vec3 vNormal;
 #else
-  out vec3  vPosition;
+  out vec3 vPosition;
 #endif
 
   `+ getSkinDeclarationString() + /*GLSL*/`
   `+ getMorphTargetDeclarationString() + /*GLSL*/`
 
   void main(){
-    
+
     vec3 position = POSITION.xyz;
     `+ getMorphTargetCalculationString("POSITION") + /*GLSL*/ `
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
@@ -46,28 +46,28 @@ function getVertexSource(parameters) {
 #else
     vPosition = transformedPosition.xyz;
 #endif
-  
+
     gl_Position = projectionMatrix * viewMatrix * transformedPosition;
   }
   `;
 
-	return vertexSource;
+  return vertexSource;
 }
 
 function getFragmentSource() {
 
-	var fragmentSource = /*GLSL*/`
-    
-    
+  var fragmentSource = /*GLSL*/`
+
+
 #ifdef HAS_NORMALS
   in vec3 vNormal;
 #else
-  in vec3  vPosition;
+  in vec3 vPosition;
 #endif
 
   out vec4 fragColor;
 
-    void main(){ 
+    void main(){
       vec3 normal;
 #ifdef HAS_NORMALS
       normal = normalize(vNormal);
@@ -83,7 +83,7 @@ function getFragmentSource() {
     }
   `;
 
-	return fragmentSource;
+  return fragmentSource;
 }
 
 export { getVertexSource, getFragmentSource };

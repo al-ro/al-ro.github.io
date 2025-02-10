@@ -1,32 +1,32 @@
 function getVertexSource() {
 
-	var vertexSource = /*GLSL*/`
+  var vertexSource = /*GLSL*/`
 
     in vec3 POSITION;
     out vec3 vPosition;
 
-    void main(){ 
+    void main(){
       vPosition = POSITION;
       gl_Position = vec4(POSITION, 1.0);
     }
   `;
 
-	return vertexSource;
+  return vertexSource;
 }
 
 function getFragmentSource() {
 
-	var fragmentSource = /*GLSL*/`
+  var fragmentSource = /*GLSL*/`
 
     uniform mat4 cameraMatrix;
-    
+
     uniform samplerCube environmentCubeMap;
     uniform float roughness;
 
     in vec3 vPosition;
     out vec4 fragColor;
 
-    const float PI = 3.14159;
+    const float PI = 3.1415926535;
     const int sampleCount = 512;
 
     const float minDot = 1e-5;
@@ -66,8 +66,7 @@ function getFragmentSource() {
 
     // -------------------------------------------------------------------------------
 
-    //  Return a world space sample vector based on a random hemisphere point, the surface normal
-    //  and the roughness of the surface.
+    //  Return a world space sample vector based on a random hemisphere point, the surface normal and the roughness of the surface.
     //  https://google.github.io/filament/Filament.html#annex/choosingimportantdirectionsforsamplingthebrdf
 
     // From tangent-space vector to world-space sample vector
@@ -108,14 +107,14 @@ function getFragmentSource() {
     vec3 getPreFilteredColor(vec3 N, float roughness){
       vec3 R = N;
       vec3 V = R;
-      
+
       float totalWeight = 0.0;
-      vec3 prefilteredColor = vec3(0.0);    
-      
-      // Generate sampleCount number of a low discrepancy random directions in the 
+      vec3 prefilteredColor = vec3(0.0);
+
+      // Generate sampleCount number of a low discrepancy random directions in the
       // specular lobe and add the environment map data into a weighted sum.
       for(int i = 0; i < sampleCount; i++){
-    
+
         // Low discrepancy random point in uniform square
         vec2 Xi = hammersley(i, sampleCount);
         // Halfway vector
@@ -146,8 +145,8 @@ function getFragmentSource() {
           float mipBias = 1.0;
           level = max(0.5 * log2(omegaS / omegaP) + mipBias, 0.0);
 
-          prefilteredColor += textureLod(environmentCubeMap, L, level).rgb * NdotL;
-          totalWeight      += NdotL;
+          prefilteredColor  += textureLod(environmentCubeMap, L, level).rgb * NdotL;
+          totalWeight        += NdotL;
         }
       }
 
@@ -165,7 +164,7 @@ function getFragmentSource() {
     }
     `;
 
-	return fragmentSource;
+  return fragmentSource;
 }
 
 export { getVertexSource, getFragmentSource };

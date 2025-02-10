@@ -4,37 +4,37 @@ import { getVertexSource, getFragmentSource } from './sphericalHarmonicsMaterial
 
 export class SphericalHarmonicsMaterial extends Material {
 
-	cubeMapHandle;
-	cubeMap;
+  cubeMapHandle;
+  cubeMap;
 
-	constructor(cubeMap) {
+  constructor(cubeMap) {
 
-		super();
+    super();
 
-		this.attributes = ["POSITION"];
+    this.attributes = ["POSITION"];
 
-		if (!cubeMap) {
-			console.error("SphericalHarmonicsMaterial must be created with a cube map texture. Parameter: ", cubeMap);
-		}
-		this.cubeMap = cubeMap;
-	}
+    if (!cubeMap) {
+      console.error("SphericalHarmonicsMaterial must be created with a cube map texture. Parameter: ", cubeMap);
+    }
+    this.cubeMap = cubeMap;
+  }
 
-	getVertexShaderSource(parameters) {
-		return getVertexSource();
-	}
+  getVertexShaderSource(parameters) {
+    return getVertexSource();
+  }
 
-	getFragmentShaderSource() {
-		return getFragmentSource();
-	}
+  getFragmentShaderSource() {
+    return getFragmentSource();
+  }
 
-	getUniformHandles() {
-		this.cubeMapHandle = this.program.getUniformLocation('environmentCubeMap');
-	}
+  getUniformHandles() {
+    this.cubeMapHandle = this.program.getUniformLocation('environmentCubeMap');
+  }
 
-	bindUniforms() {
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeMap);
-		gl.uniform1i(this.cubeMapHandle, 0);
-	}
+  bindUniforms() {
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeMap);
+    gl.uniform1i(this.cubeMapHandle, 0);
+  }
 
 }

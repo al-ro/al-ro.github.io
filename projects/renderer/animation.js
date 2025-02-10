@@ -3,79 +3,79 @@
  */
 export class Animation {
 
-	/**
-	* A multiplier for time to control animation speed
-	*/
-	speed = 1.0;
+  /**
+  * A multiplier for time to control animation speed
+  */
+  speed = 1.0;
 
-	/**
-	* Starting time for animation to play completely when toggled
-	*/
-	start = 0.0;
+  /**
+  * Starting time for animation to play completely when toggled
+  */
+  start = 0.0;
 
-	/**
-	 * Whether animation resets to the beginning after finishing
-	 */
-	looping = true;
+  /**
+   * Whether animation resets to the beginning after finishing
+   */
+  looping = true;
 
-	/**
-	 * Identifier from GLTF file or generated automatically
-	 */
-	name;
+  /**
+   * Identifier from GLTF file or generated automatically
+   */
+  name;
 
-	/**
-	 * Whether animation is played
-	 */
-	active = false;
+  /**
+   * Whether animation is played
+   */
+  active = false;
 
-	/**
-	 * Array of individual TRS and weights animations
-	 */
-	propertyAnimations = [];
+  /**
+   * Array of individual TRS and weights animations
+   */
+  propertyAnimations = [];
 
-	/**
-	* @param {String} name 
-	*/
-	constructor(name) {
-		this.name = name;
-	}
+  /**
+  * @param {String} name
+  */
+  constructor(name) {
+    this.name = name;
+  }
 
-	addPropertyAnimation(propertyAnimation) {
-		this.propertyAnimations.push(propertyAnimation);
-	}
+  addPropertyAnimation(propertyAnimation) {
+    this.propertyAnimations.push(propertyAnimation);
+  }
 
-	setSpeed(speed) {
-		this.speed = speed;
-		for (const animation of this.propertyAnimations) {
-			animation.speed = speed;
-		}
-	}
+  setSpeed(speed) {
+    this.speed = speed;
+    for (const animation of this.propertyAnimations) {
+      animation.speed = speed;
+    }
+  }
 
-	setLooping(looping) {
-		this.looping = looping;
-		for (const animation of this.propertyAnimations) {
-			animation.looping = looping;
-		}
-	}
+  setLooping(looping) {
+    this.looping = looping;
+    for (const animation of this.propertyAnimations) {
+      animation.looping = looping;
+    }
+  }
 
-	isActive() {
-		return this.active;
-	}
+  isActive() {
+    return this.active;
+  }
 
-	setActive(state, time) {
-		state ? this.enable(time) : this.disable();
-	}
+  setActive(state, time) {
+    state ? this.enable(time) : this.disable();
+  }
 
-	enable(time) {
-		this.start = time;
-		this.active = true;
-	}
+  enable(time) {
+    this.start = time;
+    this.active = true;
+  }
 
-	disable() {
-		this.active = false;
-	}
+  disable() {
+    this.active = false;
+  }
 
-	destroy() {
-		this.propertyAnimations = [];
-	}
+  destroy() {
+    this.propertyAnimations = [];
+  }
 }

@@ -1,23 +1,23 @@
 function getVertexSource() {
 
-	var vertexSource = /*GLSL*/`
+  var vertexSource = /*GLSL*/`
 
     in vec3 POSITION;
 
-    void main(){ 
+    void main(){
       gl_Position = vec4(POSITION, 1.0);
     }
   `;
 
-	return vertexSource;
+  return vertexSource;
 }
 
 function getFragmentSource() {
 
-	var fragmentSource = /*GLSL*/`
-    
-    #define PI 3.14159
-    #define TWO_PI (2.0 * PI)
+  var fragmentSource = /*GLSL*/`
+
+    const float PI = 3.1415926535;
+    const float TWO_PI = 2.0 * PI;
 
     uniform vec2 resolution;
     out vec4 fragColor;
@@ -63,9 +63,9 @@ function getFragmentSource() {
 
     // -------------------------------------------------------------------------------
 
-    //  Return a world space sample vector based on a random hemisphere point, the surface normal
-    //  and the roughness of the surface.
-    //  https://google.github.io/filament/Filament.html#annex/choosingimportantdirectionsforsamplingthebrdf
+    // Return a world space sample vector based on a random hemisphere point, the surface normal
+    // and the roughness of the surface.
+    // https://google.github.io/filament/Filament.html#annex/choosingimportantdirectionsforsamplingthebrdf
 
     // From tangent-space vector to world-space sample vector
     vec3 rotateToNormal(vec3 L, vec3 N){
@@ -102,7 +102,7 @@ function getFragmentSource() {
 
     float smithShadowing(float NdotV, float NdotL, float roughness){
       // IBL uses a different k than direct lighting
-      float k = (roughness * roughness) / 2.0; 
+      float k = (roughness * roughness) / 2.0;
       return geometry(NdotV, k) * geometry(NdotL, k);
     }
 
@@ -133,7 +133,7 @@ function getFragmentSource() {
 
     // https://google.github.io/filament/Filament.html#toc9.5
     vec3 integrateBRDF(float NdotV, float roughness){
-      
+
       // Surface normal
       vec3 N = vec3(0.0, 0.0, 1.0);
 
@@ -142,7 +142,7 @@ function getFragmentSource() {
 
       // To accumulate
       vec3 result = vec3(0);
-      
+
       for(int i = 0; i < sampleCount; i++){
 
         // Low discrepancy random point in uniform square
@@ -159,7 +159,7 @@ function getFragmentSource() {
         if(NdotL > 0.0){
           float G = smithShadowing(NdotV, NdotL, roughness);
           float S = (G * VdotH) / (NdotH * NdotV);
-          
+
           // Fresnel-Schlick
           float F = pow(1.0 - VdotH, 5.0);
 
@@ -172,10 +172,10 @@ function getFragmentSource() {
         float phi = Xi.y * 2.0 * PI;
         float cosTheta = 1.0 - Xi.x;
         float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
-        
+
         H = normalize(vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta));
         L = normalize(reflect(-V, H));
-        
+
         NdotL = dot_c(N, L);
         VdotH = dot_c(V, H);
         result.z += 4.0 * TWO_PI * sheenBRDF(N, V, L, roughness) * NdotL * VdotH;
@@ -190,7 +190,7 @@ function getFragmentSource() {
     }
   `;
 
-	return fragmentSource;
+  return fragmentSource;
 }
 
 export { getVertexSource, getFragmentSource };
