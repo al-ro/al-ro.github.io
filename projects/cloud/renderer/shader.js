@@ -9,43 +9,43 @@ import { gl } from "./canvas.js"
  */
 function getDefinePrefix(material, attributes) {
 
-	var prefix = "#version 300 es \n// " + material.constructor.name + " \n";
+  var prefix = "#version 300 es \n// " + material.constructor.name + " \n";
 
-	if (material.timestamped) {
-		let time = new Date();
-		prefix += "\n// Created: " + time.toLocaleString() + ":" + time.getMilliseconds() + "\n\n";
-	}
+  if (material.timestamped) {
+    let time = new Date();
+    prefix += "\n// Created: " + time.toLocaleString() + ":" + time.getMilliseconds() + "\n\n";
+  }
 
-	prefix += "precision highp float;\n";
+  prefix += "precision highp float;\n";
 
-	if (attributes.includes("TEXCOORD_0")) {
-		prefix += "#define HAS_UV_0 \n";
-	}
+  if (attributes.includes("TEXCOORD_0")) {
+    prefix += "#define HAS_UV_0 \n";
+  }
 
-	if (material.hasTransmission) {
-		prefix += "#define HAS_TRANSMISSION \n";
-	}
+  if (material.hasTransmission) {
+    prefix += "#define HAS_TRANSMISSION \n";
+  }
 
-	return prefix;
+  return prefix;
 }
 
 function compileShader(shaderSource, shaderType) {
 
-	var shader = gl.createShader(shaderType);
+  var shader = gl.createShader(shaderType);
 
-	gl.shaderSource(shader, shaderSource);
-	try {
-		gl.compileShader(shader);
-		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-			// Print the error followed by the source with line numbers
-			throw "Shader compile failed with: " + gl.getShaderInfoLog(shader) +
-			"\n <------ Shader source ------> \n" + shaderSource.split('\n').map((line, index) => { return "" + (index + 1) + "\t" + line; }).join('\n');
-		}
-	} catch (error) {
-		console.error(error);
-	}
+  gl.shaderSource(shader, shaderSource);
+  try {
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      // Print the error followed by the source with line numbers
+      throw "Shader compile failed with: " + gl.getShaderInfoLog(shader) +
+      "\n <------ Shader source ------> \n" + shaderSource.split('\n').map((line, index) => { return "" + (index + 1) + "\t" + line; }).join('\n');
+    }
+  } catch (error) {
+    console.error(error);
+  }
 
-	return shader;
+  return shader;
 }
 
 export { compileShader, getDefinePrefix }
