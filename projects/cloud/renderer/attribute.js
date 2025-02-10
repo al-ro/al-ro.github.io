@@ -97,7 +97,7 @@ class Attribute {
 	enableBuffer() {
 		if (this.handle == null) {
 			console.error("Handle is not defined: ", this);
-		} else {
+		} else if (this.handle > -1) {
 			gl.enableVertexAttribArray(this.handle);
 			gl.bindBuffer(this.descriptor.target, this.buffer);
 			gl.vertexAttribPointer(
