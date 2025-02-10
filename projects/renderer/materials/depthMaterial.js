@@ -92,7 +92,7 @@ export class DepthMaterial extends Material {
 	}
 
 	getUniformHandles() {
-		this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
+		this.modelMatrixHandle = this.program.getOptionalUniformLocation('modelMatrix');
 		this.alphaCutoffHandle = this.program.getOptionalUniformLocation('alphaCutoff');
 		this.alphaModeHandle = this.program.getOptionalUniformLocation('alphaMode');
 
@@ -105,8 +105,9 @@ export class DepthMaterial extends Material {
 	}
 
 	bindUniforms() {
-
-		gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
+		if (this.modelMatrixHandle != null) {
+			gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
+		}
 
 		gl.uniform1f(this.alphaCutoffHandle, this.alphaCutoff);
 
@@ -128,7 +129,9 @@ export class DepthMaterial extends Material {
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, this.baseColorTexture);
 			gl.uniform1i(this.baseColorTextureHandle, 0);
-			gl.uniform1i(this.baseColorTextureUVHandle, this.baseColorTextureUV);
+			if (this.baseColorTextureUVHandle != null) {
+				gl.uniform1i(this.baseColorTextureUVHandle, this.baseColorTextureUV);
+			}
 		}
 
 		gl.uniform4fv(this.baseColorHandle, this.baseColorFactor);

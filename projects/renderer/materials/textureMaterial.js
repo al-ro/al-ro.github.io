@@ -44,13 +44,14 @@ export class TextureMaterial extends Material {
 	}
 
 	getUniformHandles() {
-		this.modelMatrixHandle = this.program.getUniformLocation('modelMatrix');
+		this.modelMatrixHandle = this.program.getOptionalUniformLocation('modelMatrix');
 		this.textureHandle = this.program.getOptionalUniformLocation('tex');
 	}
 
 	bindUniforms() {
-
-		gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
+		if (this.modelMatrixHandle != null) {
+			gl.uniformMatrix4fv(this.modelMatrixHandle, false, this.modelMatrix);
+		}
 
 		if (this.textureHandle != null) {
 			gl.activeTexture(gl.TEXTURE0);
