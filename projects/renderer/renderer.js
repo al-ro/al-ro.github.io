@@ -460,7 +460,7 @@ function draw() {
 	gl.colorMask(true, true, true, true);
 
 	// Render opaque meshes corresponding the the depth values in the depth texture
-	gl.depthFunc(gl.EQUAL);
+	gl.depthFunc(gl.LEQUAL);
 	scene.render(RenderPass.OPAQUE, renderCamera, environment, camera);
 
 	// Generate background texture for transmissive objects
