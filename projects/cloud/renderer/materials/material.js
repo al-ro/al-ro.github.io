@@ -2,30 +2,30 @@ import { programRepository } from "../programRepository.js"
 
 export class Material {
 
-	/** Names of all attributes supported by the material */
-	attributes = [];
+  /** Names of all attributes supported by the material */
+  attributes = [];
 
-	program;
+  program;
 
-	instanced = false;
-	timestamped = false;
-	needsEnvironmentTexture = false;
+  instanced = false;
+  timestamped = false;
+  needsEnvironmentTexture = false;
 
-	constructor() { }
+  constructor() { }
 
-	destroy() { }
+  destroy() { }
 
-	initializeProgram(attributes, geometry) {
-		if (this.program == null) {
-			this.program = programRepository.getProgram(this, geometry, attributes);
-			this.bindUniformBlocks();
-			this.getUniformHandles();
-		}
-	}
+  initializeProgram(attributes, geometry) {
+    if (this.program == null) {
+      this.program = programRepository.getProgram(this, geometry, attributes);
+      this.bindUniformBlocks();
+      this.getUniformHandles();
+    }
+  }
 
-	bindUniforms() { }
+  bindUniforms() { }
 
-	bindUniformBlocks() { }
+  bindUniformBlocks() { }
 
-	setPipeline() { }
+  setPipeline() { }
 }

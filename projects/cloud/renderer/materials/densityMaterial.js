@@ -3,31 +3,31 @@ import { getVertexSource, getFragmentSource } from './densityMaterial.glsl.js'
 
 export class DensityMaterial extends Material {
 
-	resolutionHandle;
+  resolutionHandle;
 
-	slice = 0;
-	sliceHandle;
+  slice = 0;
+  sliceHandle;
 
-	constructor() {
+  constructor() {
 
-		super();
+    super();
 
-		this.attributes = ["POSITION", "TEXCOORD_0"];
-	}
+    this.attributes = ["POSITION", "TEXCOORD_0"];
+  }
 
-	getVertexShaderSource() {
-		return getVertexSource();
-	}
+  getVertexShaderSource() {
+    return getVertexSource();
+  }
 
-	getFragmentShaderSource() {
-		return getFragmentSource();
-	}
+  getFragmentShaderSource() {
+    return getFragmentSource();
+  }
 
-	getUniformHandles() {
-		this.sliceHandle = this.program.getUniformLocation('slice');
-	}
+  getUniformHandles() {
+    this.sliceHandle = this.program.getUniformLocation('slice');
+  }
 
-	bindUniforms() {
-		gl.uniform1f(this.sliceHandle, this.slice);
-	}
+  bindUniforms() {
+    gl.uniform1f(this.sliceHandle, this.slice);
+  }
 }
