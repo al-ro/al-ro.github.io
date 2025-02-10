@@ -2,7 +2,7 @@ import { getMorphTargetDeclarationString, getMorphTargetCalculationString, getSk
 
 function getVertexSource(parameters) {
 
-	var vertexSource = /*GLSL*/`
+  var vertexSource = /*GLSL*/`
 
   #define DEBUG
 
@@ -68,7 +68,7 @@ layout(std140) uniform cameraMatrices{
 
   `+ getMorphTargetDeclarationString() + /*GLSL*/`
 
-  out vec3  vPosition;
+  out vec3 vPosition;
 
   void main(){
 
@@ -94,7 +94,7 @@ layout(std140) uniform cameraMatrices{
 `+ getSkinCalculationString() + /*GLSL*/`
 
 #if defined(DEBUG) && defined(HAS_SKIN)
-    joints_0.rgb = 
+    joints_0.rgb =
       WEIGHTS_0[0] * getJointColor(JOINTS_0[0]) +
       WEIGHTS_0[1] * getJointColor(JOINTS_0[1]) +
       WEIGHTS_0[2] * getJointColor(JOINTS_0[2]) +
@@ -114,7 +114,7 @@ layout(std140) uniform cameraMatrices{
     T = normalize(T - dot(T, N) * N);
     vec3 B = normalize(cross(N, T)) * TANGENT.w;
     tbn = mat3(T, B, N);
-#endif 
+#endif
 
     vPosition = transformedPosition.xyz;
 #ifdef HAS_NORMALS
@@ -125,18 +125,18 @@ layout(std140) uniform cameraMatrices{
   }
   `;
 
-	return vertexSource;
+  return vertexSource;
 }
 
 function getFragmentSource() {
 
-	var fragmentSource = /*GLSL*/`
+  var fragmentSource = /*GLSL*/`
 
   out vec4 fragColor;
 
-#define PI 3.14159
-#define TWO_PI (2.0 * PI)
-#define HALF_PI (0.5 * PI)
+  const float PI = 3.1415926535;
+  const float TWO_PI = 2.0 * PI;
+  const float HALF_PI = 0.5 * PI;
 
   in vec3 vPosition;
 
@@ -197,7 +197,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
 #ifdef HAS_SHEEN
   uniform vec4 sheenFactor;
 #endif
-  
+
   uniform vec4 baseColorFactor;
 
 #ifdef HAS_NORMAL_TEXTURE
@@ -260,9 +260,9 @@ layout(std140) uniform sphericalHarmonicsUniforms{
 
   /*
     Normal mapping will lead to an impossible surface where the view ray and normal dot product
-    is negative. Using PBR, this leads to negative radiance and black artefacts at detail 
-    fringes. See "Microfacet-based Normal Mapping for Robust Monte Carlo Path Tracing" by 
-    Schüssler et al. for a discussion of a physically correct solution. 
+    is negative. Using PBR, this leads to negative radiance and black artefacts at detail
+    fringes. See "Microfacet-based Normal Mapping for Robust Monte Carlo Path Tracing" by
+    Schüssler et al. for a discussion of a physically correct solution.
     We just clamp the dot product with a normal to some small value.
   */
   const float minDot = 1e-5;
@@ -386,9 +386,9 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   }
 
   vec4 bicubic(sampler2D tex, vec2 uv, vec2 textureLodSize, float lod){
-    
+
     uv = uv * textureLodSize + 0.5;
-      
+
     vec2 iuv = floor(uv);
     vec2 f = fract(uv);
 
@@ -401,7 +401,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     vec2 p1 = (iuv + vec2(h1.x, h0.y) - 0.5) / textureLodSize;
     vec2 p2 = (iuv + vec2(h0.x, h1.y) - 0.5) / textureLodSize;
     vec2 p3 = (iuv + h1 - 0.5) / textureLodSize;
-    
+
     // Weighted linear interpolation
     // g0 + g1 = 1 so only one is needed for a mix
     vec2 g0 = g0(f);
@@ -429,7 +429,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
 
     // Should this be roughness^2 ?
     float lod = mix(0.0, maxLod-1.0, roughness);
-    
+
     return textureBicubic(s, uv, lod);
   }
 
@@ -454,7 +454,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   }
 
   float smiths(vec3 n, vec3 viewDir, vec3 lightDir, float roughness){
-    float k = pow(roughness + 1.0, 2.0) / 8.0; 
+    float k = pow(roughness + 1.0, 2.0) / 8.0;
     return geometry(dot_c(n, lightDir), k) * geometry(dot_c(n, viewDir), k);
   }
 
@@ -481,7 +481,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   // Fresnel-Schlick
   vec3 fresnel(float cosTheta, vec3 F0){
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-  } 
+  }
 
   vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness){
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
@@ -503,7 +503,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     // What fraction of the microfacets are lit and visible
     float G;
 
-    // Visibility term. 
+    // Visibility term.
     // In Filament it combines the geometry term and the denominator
     float V;
 
@@ -552,7 +552,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
 #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
     vec3 data = readTexture(metallicRoughnessTexture, metallicRoughnessTextureUV).rgb;
     roughness *= data.g;
-    metal *= data.b; 
+    metal *= data.b;
 #endif
 
     float occlusion = 1.0;
@@ -579,7 +579,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     vec3 F0 = vec3(pow(IOR - 1.0, 2.0) / pow(IOR + 1.0, 2.0));
 
     // Metals tint specular reflections.
-    // https://docs.unrealengine.com/en-US/RenderingAndGraphics/Materials/PhysicallyBased/index.html 
+    // https://docs.unrealengine.com/en-US/RenderingAndGraphics/Materials/PhysicallyBased/index.html
     F0 = mix(F0, albedo.rgb, metal);
 
     lightDir = normalize(vec3(1));
@@ -641,7 +641,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
 
     // Find ambient diffuse IBL component
     F = fresnelSchlickRoughness(dot_c(normal, viewDir), F0, roughness);
-    kD = saturate(1.0 - F) * (1.0 - metal);	
+    kD = saturate(1.0 - F) * (1.0 - metal);
     vec3 irradiance = getSHIrradiance(normal);
     diffuse = irradiance * albedo.rgb / PI;
 
@@ -653,7 +653,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
     // Find ambient specular IBL component
     vec3 R = reflect(-viewDir, normal);
 
-    vec3 prefilteredColor = getEnvironment(R, roughness);   
+    vec3 prefilteredColor = getEnvironment(R, roughness);
     specular = prefilteredColor * mix(envBRDF.xxx, envBRDF.yyy, F0);
 
     // Scale the specular lobe to account for multiscattering
@@ -769,11 +769,11 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   #ifdef HAS_EMISSIVE_FACTOR
       emissiveColor *= emissiveFactor;
   #endif
-      
+
       color.rgb += emissiveColor.rgb;
   #endif
 
-      color.rgb *= cameraExposure;  
+      color.rgb *= cameraExposure;
 
       color.rgb = ACESFilm(color.rgb);
       color.rgb = pow(color.rgb, vec3(0.4545));
@@ -783,7 +783,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
       }
 
       fragColor = color;
-    }   
+    }
 #endif
   // ------------------------- Debug -------------------------
 
@@ -798,7 +798,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
       vec3 data = readTexture(metallicRoughnessTexture, metallicRoughnessTextureUV).rgb;
       roughness *= data.g;
-      metal *= data.b; 
+      metal *= data.b;
   #endif
 
       float occlusion = 1.0;
@@ -903,7 +903,7 @@ layout(std140) uniform sphericalHarmonicsUniforms{
   }
   `;
 
-	return fragmentSource;
+  return fragmentSource;
 }
 
 export { getFragmentSource, getVertexSource };

@@ -6,75 +6,75 @@ let downloadingCount = 0;
 
 /** Increment download count */
 function pushDownload() {
-	downloadingCount++;
+  downloadingCount++;
 }
 
 /** Decrement download count */
 function popDownload() {
-	downloadingCount = Math.max(0, downloadingCount - 1);
+  downloadingCount = Math.max(0, downloadingCount - 1);
 }
 
 /** Return the number of active fetch requests */
 function getDownloadingCount() {
-	return downloadingCount;
+  return downloadingCount;
 }
 
 /**
  * Fetch asset and return a promise to its data
  * @param {string} url asset path
  * @param {"gltf" | "json" | "arrayBuffer" | "blob"} type asset type for promise resolution
- * @param {AbortSignal} signal allows aborting the download 
+ * @param {AbortSignal} signal allows aborting the download
  * @returns Handled promise which resolves once asset fetch has completed
  */
 function download(url, type, signal = null) {
-	pushDownload();
-	let data = null;
-	return fetch(url, { signal }).then(response => {
+  pushDownload();
+  let data = null;
+  return fetch(url, { signal }).then(response => {
 
-		if (response.ok) {
+    if (response.ok) {
 
-			switch (type) {
-				case "gltf":
-				case "json":
-					data = response.json();
-					break;
-				case "arrayBuffer":
-					data = response.arrayBuffer();
-					break;
-				case "blob":
-					data = response.blob();
-					break;
-				default:
-					popDownload();
-					console.log("Unknown file type: ", url, type);
-			}
+      switch (type) {
+        case "gltf":
+        case "json":
+          data = response.json();
+          break;
+        case "arrayBuffer":
+          data = response.arrayBuffer();
+          break;
+        case "blob":
+          data = response.blob();
+          break;
+        default:
+          popDownload();
+          console.log("Unknown file type: ", url, type);
+      }
 
-			if (!!data) {
-				data.then(p => {
-					popDownload();
-				}).catch(e => {
-					popDownload();
-					handleError(e);
-				});
-			}
-			return data;
+      if (!!data) {
+        data.then(p => {
+          popDownload();
+        }).catch(e => {
+          popDownload();
+          handleError(e);
+        });
+      }
+      return data;
 
-		} else {
+    } else {
 
-			console.log("Error downloading: ", url);
+      console.log("Error downloading: ", url);
 
-		}
+    }
 
-	}).catch(e => {
-		popDownload();
-		handleError(e);
-	});
+  }).catch(e => {
+    popDownload();
+    handleError(e);
+  });
 }
 
 function handleError(e) {
-	if (!e.message == "The user aborted a request.") {
-		console.log('Download error: ' + e.message);
-	}
+  if (!e.message == "The user aborted a request.") {
+    console.log('Download error: ' + e.message);
+  }
 }
 
 export { download, getDownloadingCount, pushDownload, popDownload }

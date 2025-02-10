@@ -2,7 +2,7 @@ import { getMorphTargetDeclarationString, getMorphTargetCalculationString, getSk
 
 function getVertexSource() {
 
-	var vertexSource = /*GLSL*/`
+  var vertexSource = /*GLSL*/`
 
   in vec3 POSITION;
 #ifdef HAS_NORMALS
@@ -46,22 +46,22 @@ function getVertexSource() {
 #else
     vPosition = transformedPosition.xyz;
 #endif
-  
+
     gl_Position = projectionMatrix * viewMatrix * transformedPosition;
   }`;
 
-	return vertexSource;
+  return vertexSource;
 }
 
 function getFragmentSource() {
 
-	var fragmentSource = /*GLSL*/`
-    
-    
+  var fragmentSource = /*GLSL*/`
+
+
 #ifdef HAS_NORMALS
     in vec3 vNormal;
 #else
-    in vec3  vPosition;
+    in vec3 vPosition;
 #endif
 
   layout(std140) uniform sphericalHarmonicsUniforms{
@@ -87,8 +87,8 @@ function getFragmentSource() {
   vec3 ACESFilm(vec3 x){
     return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
   }
-  
-    void main(){ 
+
+    void main(){
       vec3 normal;
 #ifdef HAS_NORMALS
       normal = normalize(vNormal);
@@ -100,7 +100,7 @@ function getFragmentSource() {
         normal *= -1.0;
       }
 
-      vec3 col = getSHIrradiance(normal) / 3.1415; 
+      vec3 col = getSHIrradiance(normal) / 3.1415;
 
       col = ACESFilm(col);
       col = pow(col, vec3(0.4545));
@@ -109,7 +109,7 @@ function getFragmentSource() {
     }
   `;
 
-	return fragmentSource;
+  return fragmentSource;
 }
 
 export { getVertexSource, getFragmentSource };

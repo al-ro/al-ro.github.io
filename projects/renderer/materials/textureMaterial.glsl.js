@@ -2,8 +2,8 @@ import { getMorphTargetDeclarationString, getMorphTargetCalculationString, getSk
 
 function getVertexSource(parameters) {
 
-	var vertexSource = /*GLSL*/`
-  
+  var vertexSource = /*GLSL*/`
+
   in vec3 POSITION;
 
 #ifdef HAS_UV_0
@@ -26,7 +26,7 @@ function getVertexSource(parameters) {
   `+ getMorphTargetDeclarationString() + /*GLSL*/`
 
   void main(){
-  
+
 #ifdef HAS_UV_0
     vUV = TEXCOORD_0;
 #endif
@@ -36,24 +36,24 @@ function getVertexSource(parameters) {
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
 
     `+ getSkinCalculationString() + /*GLSL*/`
-    
+
     gl_Position = projectionMatrix * viewMatrix * transformedPosition;
   }
   `;
 
-	return vertexSource;
+  return vertexSource;
 }
 
 function getFragmentSource() {
 
-	var fragmentSource = /*GLSL*/`
-    
+  var fragmentSource = /*GLSL*/`
+
     uniform sampler2D tex;
 #ifdef HAS_UV_0
     in vec2 vUV;
-#endif 
+#endif
     out vec4 fragColor;
-  
+
     void main(){
       fragColor = vec4(mix(vec3(0.2), vec3(1, 0, 1), smoothstep(0.49, 0.5, mod(gl_FragCoord.x, 100.0)/100.0)), 1.0);
 #ifdef HAS_UV_0
@@ -62,7 +62,7 @@ function getFragmentSource() {
     }
   `;
 
-	return fragmentSource;
+  return fragmentSource;
 }
 
 export { getVertexSource, getFragmentSource };

@@ -1,20 +1,20 @@
 function getVertexSource(parameters) {
 
-	var vertexSource = /*GLSL*/`
+  var vertexSource = /*GLSL*/`
 
   in vec3 POSITION;
 
-  void main(){ 
+  void main(){
     gl_Position = vec4(POSITION, 1.0);
   }
   `;
 
-	return vertexSource;
+  return vertexSource;
 }
 
 function getFragmentSource() {
 
-	var fragmentSource = /*GLSL*/`
+  var fragmentSource = /*GLSL*/`
 
   layout(std140) uniform cameraMatrices{
     mat4 viewMatrix;
@@ -44,7 +44,7 @@ function getFragmentSource() {
     return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
   }
 
-  void main(){ 
+  void main(){
     vec3 rayDir = normalize(cameraMatrix * vec4(rayDirection(cameraFOV, gl_FragCoord.xy), 0.0)).rgb;
     vec3 col = cameraExposure * texture(environmentCubeMap, normalize(rayDir)).rgb;
     col = ACESFilm(col);
@@ -54,7 +54,7 @@ function getFragmentSource() {
   }
   `;
 
-	return fragmentSource;
+  return fragmentSource;
 }
 
 export { getVertexSource, getFragmentSource };
