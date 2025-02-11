@@ -41,8 +41,6 @@ export class Controls {
 
   pointerDown(event) {
     this.eventCache.push(event);
-
-    this.isPointerDown = true;
     this.lastPosition = this.getPosition(canvas, event);
   }
 
@@ -54,7 +52,6 @@ export class Controls {
   }
 
   pointerUp(event) {
-    this.isPointerDown = false;
     this.pointerDelta = [0, 0];
     this.removeEvent(event);
 
@@ -64,26 +61,25 @@ export class Controls {
   }
 
   pointerMove(event) {
-    if (this.isPointerDown) {
+    const index = this.eventCache.findIndex(
+      (cachedEv) => cachedEv.pointerId === event.pointerId,
+    );
+    this.eventCache[index] = event;
 
-      const index = this.eventCache.findIndex(
-        (cachedEv) => cachedEv.pointerId === event.pointerId,
-      );
-      this.eventCache[index] = event;
+    if (this.eventCache.length === 2) {
 
-      if (this.eventCache.length === 2) {
+      const curDiff = this.eventCache[0].clientX - this.eventCache[1].clientX;
 
-        const curDiff = Math.abs(this.eventCache[0].clientX - this.eventCache[1].clientX);
+      if (this.prevDiff > 0) {
+        let dist = this.camera.distance;
+        dist += (this.prevDiff - curDiff) * 0.01;
+        dist = Math.min(Math.max(0.0001, dist), this.maxDistance);
+        this.camera.updateDistance(dist);
+      }
 
-        if (this.prevDiff > 0) {
-          let dist = this.camera.distance;
-          dist += (this.prevDiff - curDiff) * 0.01;
-          dist = Math.min(Math.max(0.0001, dist), this.maxDistance);
-          this.camera.updateDistance(dist);
-        }
-
-        this.prevDiff = curDiff;
-      } else {
+      this.prevDiff = curDiff;
+    } else {
+      if (event.buttons > 0) {
         let position = this.getPosition(canvas, event);
         this.pointerDelta[0] = this.lastPosition[0] - position[0];
         this.pointerDelta[1] = this.lastPosition[1] - position[1];
