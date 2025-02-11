@@ -72,21 +72,12 @@ export class Controls {
       this.eventCache[index] = event;
 
       if (this.eventCache.length === 2) {
-        event.preventDefault();
 
         const curDiff = Math.abs(this.eventCache[0].clientX - this.eventCache[1].clientX);
 
         if (this.prevDiff > 0) {
-          let delta = 0.0;
-          if (curDiff > this.prevDiff) {
-            delta = -0.5;
-          }
-          if (curDiff < this.prevDiff) {
-            delta = 0.5;
-          }
-
           let dist = this.camera.distance;
-          dist += delta;
+          dist += (this.prevDiff - curDiff) * 0.01;
           dist = Math.min(Math.max(0.0001, dist), this.maxDistance);
           this.camera.updateDistance(dist);
         }
