@@ -68,7 +68,9 @@ export class Controls {
 
     if (this.eventCache.length === 2) {
 
-      const curDiff = this.eventCache[0].clientX - this.eventCache[1].clientX;
+      const curDiff = Math.hypot(
+        this.eventCache[0].clientX - this.eventCache[1].clientX,
+        this.eventCache[0].clientY - this.eventCache[1].clientY);
 
       if (this.prevDiff > 0) {
         let dist = this.camera.distance;
@@ -78,7 +80,9 @@ export class Controls {
       }
 
       this.prevDiff = curDiff;
+
     } else {
+
       if (event.buttons > 0) {
         let position = this.getPosition(canvas, event);
         this.pointerDelta[0] = this.lastPosition[0] - position[0];
