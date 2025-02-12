@@ -382,7 +382,7 @@ void main() {
   if(dithering > 0) {
     float blueNoise = texture(blueNoiseTexture, gl_FragCoord.xy / 1024.0, 0.0).r;
     // Make blue noise low discrepancy in time
-    offset = fract(blueNoise + float(frame % 256) * GOLDEN_RATIO);
+    offset = fract(blueNoise + float(frame) * GOLDEN_RATIO);
   }
 
   vec3 col = mainRay(cameraPosition, rayDir, cosTheta, totalTransmittance, offset);
