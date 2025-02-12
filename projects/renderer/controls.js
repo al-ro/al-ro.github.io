@@ -11,6 +11,8 @@ export class Controls {
 
   camera;
 
+  // Keep track of zooming with two pointers to prevent jump when one pointer is removed
+  zooming = false;
   eventCache = [];
   prevDiff = -1;
 
@@ -44,9 +46,7 @@ export class Controls {
   }
 
   removeEvent(event) {
-    const index = this.eventCache.findIndex(
-      (cachedEv) => cachedEv.pointerId === event.pointerId,
-    );
+    const index = this.eventCache.findIndex((cachedEv) => cachedEv.pointerId === event.pointerId);
     this.eventCache.splice(index, 1);
   }
 
@@ -57,12 +57,14 @@ export class Controls {
     if (this.eventCache.length < 2) {
       this.prevDiff = -1;
     }
+
+    if (this.eventCache.length == 0) {
+      this.zooming = false;
+    }
   }
 
   pointerMove(event) {
-    const index = this.eventCache.findIndex(
-      (cachedEv) => cachedEv.pointerId === event.pointerId,
-    );
+    const index = this.eventCache.findIndex((cachedEv) => cachedEv.pointerId === event.pointerId);
     this.eventCache[index] = event;
 
     if (this.eventCache.length === 2) {
@@ -70,6 +72,11 @@ export class Controls {
       const curDiff = Math.hypot(
         this.eventCache[0].clientX - this.eventCache[1].clientX,
         this.eventCache[0].clientY - this.eventCache[1].clientY);
+
+      if (!this.zooming) {
+        this.prevDiff = curDiff;
+      }
+      this.zooming = true;
 
       if (this.prevDiff > 0) {
         let dist = this.camera.distance;
@@ -82,7 +89,7 @@ export class Controls {
 
     } else {
 
-      if (event.buttons > 0) {
+      if (event.buttons > 0 && !this.zooming) {
         let position = this.getPosition(canvas, event);
         this.pointerDelta[0] = this.lastPosition[0] - position[0];
         this.pointerDelta[1] = this.lastPosition[1] - position[1];
