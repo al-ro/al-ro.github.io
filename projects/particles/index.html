@@ -3,70 +3,70 @@
 
 <head>
 
-	<!-- THIS PAGE IS BUILT WITH SKELETON: http://getskeleton.com/
+  <!-- THIS PAGE IS BUILT WITH SKELETON: http://getskeleton.com/
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
 
-	<!-- Basic Page Needs
+  <!-- Basic Page Needs
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-	<meta charset="utf-8">
-	<title>3D Curl Noise</title>
-	<meta name="description" content="">
-	<meta name="author" content="">
+  <meta charset="utf-8">
+  <title>3D Curl Noise</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
 
-	<!-- Mobile Specific Metas
+  <!-- Mobile Specific Metas
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-	<!-- CSS
+  <!-- CSS
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-	<link rel="stylesheet" href="../../css/normalize.css">
-	<link rel="stylesheet" href="../../css/skeleton.css">
-	<link rel="stylesheet" href="../../css/custom.css">
-	<link rel="stylesheet" href="../../fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="../../css/normalize.css">
+  <link rel="stylesheet" href="../../css/skeleton.css">
+  <link rel="stylesheet" href="../../css/custom.css">
+  <link rel="stylesheet" href="../../fontawesome/css/all.min.css">
 
-	<!-- Favicon
+  <!-- Favicon
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-	<link rel="icon" type="image/png" href="../../images/favicon_2.png">
+  <link rel="icon" type="image/png" href="../../images/favicon_2.png">
 </head>
 
 <body>
 
-	<!-- Primary Page Layout
+  <!-- Primary Page Layout
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-	<div class="container" id="main-container">
-		<section class="post_header" id="header">
-			<div class="row">
-				<div class="twelve columns">
-					<h4 class="title" id="title">3D Curl Noise</h4>
-				</div>
-			</div>
-			<div class="canvas_container u-max-full-width" id="canvas_container">
-				<canvas class="canvas" width=1440 height=900 style="background-color: #000" id="canvas_1"></canvas>
-				<div class="canvas" visibility=hidden; width=1440 height=900 style="background-color: #000" id="canvas_overlay">
-					<div class='fullscreen-button-overlay' id='fullscreen-button'><i class="fa fa-2x fa-expand"></i></div>
-				</div>
-			</div>
-			<ul class="navbar-list c_navbar">
-				<li class="navbar-item"><a class="navbar-link"
-						href="https://github.com/al-ro/al-ro.github.io/tree/master/projects/particles">Source</a></li>
-				<li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
-			</ul>
-		</section>
-		<section class="post">
-			<h5>Controls</h5>
-			<p>Drag to move camera, scroll to zoom.</p>
-			<h5>Overview</h5>
-			<p>This project renders instanced camera facing particles moving according to the curl of a 3D gradient noise FBM.
-				The curl of a vector field can be thought of as describing a local rotation. In graphics, it can be used to
-				render fluid-like flow as discussed in
-				<a href="https://www.cs.ubc.ca/~rbridson/docs/bridson-siggraph2007-curlnoise.pdf">"Curl-Noise for Procedural
-					Fluid Flow"</a> by Bridson <i>et al.</i> This shader is based on <a
-					href="https://atyuwen.github.io/posts/bitangent-noise/">a post by atyuwen</a>:
-				"<i>the divergence of the cross product of two gradient fields is always zero</i>".
-			</p>
+  <div class="container" id="main-container">
+    <section class="post_header" id="header">
+      <div class="row">
+        <div class="twelve columns">
+          <h4 class="title" id="title">3D Curl Noise</h4>
+        </div>
+      </div>
+      <div class="canvas_container u-max-full-width" id="canvas_container">
+        <canvas class="canvas" width=1440 height=900 style="background-color: #000" id="canvas_1"></canvas>
+        <div class="canvas" visibility=hidden; width=1440 height=900 style="background-color: #000" id="canvas_overlay">
+          <div class='fullscreen-button-overlay' id='fullscreen-button'><i class="fa fa-2x fa-expand"></i></div>
+        </div>
+      </div>
+      <ul class="navbar-list c_navbar">
+        <li class="navbar-item"><a class="navbar-link"
+            href="https://github.com/al-ro/al-ro.github.io/tree/master/projects/particles">Source</a></li>
+        <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+      </ul>
+    </section>
+    <section class="post">
+      <h5>Controls</h5>
+      <p>Drag to move camera, scroll to zoom.</p>
+      <h5>Overview</h5>
+      <p>This project renders instanced camera facing particles moving according to the curl of a 3D gradient noise FBM.
+        The curl of a vector field can be thought of as describing a local rotation. In graphics, it can be used to
+        render fluid-like flow as discussed in
+        <a href="https://www.cs.ubc.ca/~rbridson/docs/bridson-siggraph2007-curlnoise.pdf">"Curl-Noise for Procedural
+          Fluid Flow"</a> by Bridson <i>et al.</i> This shader is based on <a
+          href="https://atyuwen.github.io/posts/bitangent-noise/">a post by atyuwen</a>:
+        "<i>the divergence of the cross product of two gradient fields is always zero</i>".
+      </p>
 
-			<pre><code>vec3 computeCurl(vec3 p){
+      <pre><code>vec3 computeCurl(vec3 p){
   const float eps = 1e-1;
 
   float dx = noise(p + vec3(eps, 0, 0)) - noise(p - vec3(eps, 0, 0));
@@ -90,32 +90,32 @@
 
   return normalize(curl);
 }</code></pre>
-			</p>
+      </p>
 
-		</section>
-	</div>
-	<!-- End Document
+    </section>
+  </div>
+  <!-- End Document
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-	<script type="text/javascript" src="../../utility/lil.gui.min.js"></script>
-	<script type="text/javascript" src="../../utility/stats.min.js"></script>
-	<script type="text/javascript" src="../../utility/fullscreen.js"></script>
-	<script type="text/javascript" src="renderer/m4.js"></script>
-	<script type="text/javascript" src="renderer/maths.js"></script>
-	<script type="module" src="particles.js"></script>
+  <script type="text/javascript" src="../../utility/lil.gui.min.js"></script>
+  <script type="text/javascript" src="../../utility/stats.min.js"></script>
+  <script type="text/javascript" src="../../utility/fullscreen.js"></script>
+  <script type="text/javascript" src="renderer/m4.js"></script>
+  <script type="text/javascript" src="renderer/maths.js"></script>
+  <script type="module" src="particles.js"></script>
 </body>
 <footer>
-	<div class="container">
-		<section class="footer" id="links">
-			<div class="navbar-spacer"></div>
-			<nav class="navbar footer-navbar">
-				<div class="container">
-					<ul class="navbar-list">
-						<li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
-					</ul>
-				</div>
-			</nav>
-	</div>
-	</section>
+  <div class="container">
+    <section class="footer" id="links">
+      <div class="navbar-spacer"></div>
+      <nav class="navbar footer-navbar">
+        <div class="container">
+          <ul class="navbar-list">
+            <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+          </ul>
+        </div>
+      </nav>
+  </div>
+  </section>
 </footer>
 
 </html>
