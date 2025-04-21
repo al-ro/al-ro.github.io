@@ -5,7 +5,7 @@ var canvas = document.getElementById("canvas_1");
  * Values > 1.0 give supersampling as the canvas is interpolated with CSS.
  * Values < 1.0 produce lower resolution images stretched across the viewport.
 */
-var canvasMultiplier = 2.0;
+var canvasMultiplier = 1.0;
 
 let w = canvas.clientWidth;
 

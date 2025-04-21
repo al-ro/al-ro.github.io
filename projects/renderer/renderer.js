@@ -102,12 +102,11 @@ let pitch = Math.PI / 2.0;
 let dist = 1.5;
 let up = [0, 1, 0];
 
-let fov = 45 * Math.PI / 180;
 let aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 let zNear = 0.1;
 let zFar = 1000.0;
 
-let camera = new Camera(pitch, yaw, dist, [0, 0, 0], up, fov, aspect, zNear, zFar);
+let camera = new Camera(pitch, yaw, dist, [0, 0, 0], up, 45 * Math.PI / 180, aspect, zNear, zFar);
 let controls = new Controls(camera);
 
 // For rendering the scene from above to test frustum culling of the main camera
@@ -172,6 +171,11 @@ scaleFolder.add(modelManipulation, 'scale').min(1e-4).max(10).step(0.0001).liste
 scaleFolder.close();
 
 const cameraFolder = gui.addFolder('Camera');
+cameraFolder.add(controls, 'resolutionMultiplier', 0.1, 2.0, 0.1).name("Resolution multiplier").onChange(
+  (v) => { controls.setMultiplier(v) }
+).listen();
+let fov = { value: camera.fov * 180 / Math.PI };
+cameraFolder.add(fov, 'value', 10, 180, 1).name("FOV").decimals(0).listen().onChange((value) => { camera.fov = value * Math.PI / 180; });
 cameraFolder.add(camera, 'exposure').min(0.0).max(2).step(0.01);
 cameraFolder.close();
 
