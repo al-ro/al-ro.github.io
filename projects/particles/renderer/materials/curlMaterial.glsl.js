@@ -60,10 +60,8 @@ function getFragmentSource() {
       dy = noise(p + vec3(0, eps, 0)) - noise(p - vec3(0, eps, 0));
       dz = noise(p + vec3(0, 0, eps)) - noise(p - vec3(0, 0, eps));
 
-      vec3 noiseGrad1 = vec3(dx, dy, dz)/(2.0 * eps);
+      vec3 noiseGrad1 = vec3(dx, dy, dz) / (2.0 * eps);
 
-      noiseGrad0 = normalize(noiseGrad0);
-      noiseGrad1 = normalize(noiseGrad1);
       vec3 curl = cross(noiseGrad0, noiseGrad1);
 
       return normalize(curl);
