@@ -53,7 +53,7 @@ function getFragmentSource() {
 
       vec3 noiseGrad0 = vec3(dx, dy, dz) / (2.0 * eps);
 
-      // Offset position for second noise read
+      // Offset position by a random value for second uncorrelated noise read
       p += 1008.5;
 
       dx = noise(p + vec3(eps, 0, 0)) - noise(p - vec3(eps, 0, 0));
