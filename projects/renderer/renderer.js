@@ -198,7 +198,7 @@ statsFolder.add(repositoryUI, 'clearRepository');
 statsFolder.close();
 
 gui.add(info, 'downloading').disable().listen();
-//gui.close();
+gui.close();
 
 controls.onWindowResize();
 
