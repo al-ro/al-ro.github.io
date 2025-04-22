@@ -92,8 +92,6 @@ let fov = { value: camera.fov * 180 / Math.PI };
 cameraFolder.add(fov, 'value', 10, 180, 1).name("FOV").decimals(0).listen().onChange((value) => { camera.fov = value * Math.PI / 180; });
 cameraFolder.close();
 
-//gui.close();
-
 let buttons = {
   save: () => {
     draw();
@@ -123,6 +121,8 @@ curlFolder.add(curlMaterial, 'speed', 0, 10, 0.05).name("Speed");
 curlFolder.add(particleMesh, 'instances', 1000, 1024 * 1024, 1000).name("Draw Limit");
 
 uniformFolder.close();
+
+gui.close();
 
 // ------------------------ Rendering ------------------------- //
 

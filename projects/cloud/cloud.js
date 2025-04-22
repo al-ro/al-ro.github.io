@@ -122,8 +122,6 @@ cameraFolder.add(camera, 'exposure', 0, 2, 0.01).name("Exposure");
 cameraFolder.add(camera, 'distance').name("Camera distance").decimals(2).disable().listen();
 cameraFolder.close();
 
-//gui.close();
-
 let buttons = {
   updateMaterial: () => {
     Renderer.download("cloud.glsl", "text").then((shaderSource) => {
@@ -235,6 +233,8 @@ function updateCloudData(name) {
   }
 }
 updateCloudData(cloudController.cloud);
+
+gui.close();
 
 // ------------------------ Rendering ------------------------- //
 
