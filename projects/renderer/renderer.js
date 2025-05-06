@@ -133,6 +133,17 @@ let modelManipulation = {
   translationX: 0, translationY: 0, translationZ: 0, scale: 1, rotationX: 0, rotationY: 0, rotationZ: 0
 };
 
+let buttons = {
+  save: () => {
+    draw();
+    const link = document.createElement('a');
+    link.download = 'download.png';
+    link.href = gl.canvas.toDataURL();
+    link.click();
+    link.delete;
+  }
+};
+
 //************* GUI ***************
 
 let gui = new lil.GUI({ autoPlace: false });
@@ -141,6 +152,8 @@ customContainer.appendChild(gui.domElement);
 gui.domElement.style.cssText = "visibility: visible; position: absolute; top: 0px; right: 0; opacity: 0.8; z-index: 10000";
 
 gui.add(modelSelector, 'model').options(modelNames).onChange(name => { loadGLTF(name); });
+
+gui.add(buttons, 'save').name("Save Image");
 
 const animationFolder = gui.addFolder('Animation');
 
