@@ -57,6 +57,117 @@
       </ul>
     </section>
 
+    <section class="post">
+      <h5>Controls</h5>
+      <p>Drag to move camera, scroll to zoom. Use menu to view different model and materials.</p>
+      <h5>Overview</h5>
+      <p>This project is a flexible real-time physically based forward renderer based on the <a
+          href="https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html">GLTF 2.0</a> specification.
+      </p>
+      <h5>GLTF 2.0</h5>
+      <p>
+        GLTF 2.0 is a popular asset transfer format which allows PBR models to be shared in an easy
+        and compact way. The project currently supports: attribute and index extraction (sparse and
+        dense), traversing nodes and primitives, PBR material extraction (with properties and textures),
+        animations, morph targets and skinning. The engine also implements the transmission, IOR,
+        sheen and texture transform extensions.
+      </p>
+
+      <div class="row">
+        <img class="img ten columns offset-by-one columns" src="./images/renderer_examples.jpg">
+      </div>
+      <p align="center">The renderer supports environment based lighting, animation, transmission, emission and other
+        GLTF 2.0 features.</p>
+
+      <h5>Importing data</h5>
+      <p>
+        We traverse and process the GLTF scene graph of nodes, generate parameters for the internal
+        engine representation and allocate GPU buffers for mesh attributes. An internal engine node
+        graph is created which represents the hierarchy of the scene. Some nodes are drawable mesh
+        objects which correspond to geometry, morph and skinning data coupled with a shader program.
+        To avoid data and work duplication, the engine keeps track of buffer descriptions and shader
+        programs in repository maps. As different primitives are not aware of shared data, whenever
+        they seeks to create an already allocated buffer or a previously compiled shader program, we
+        can reuse the existing ones. This helps cut down on GPU memory use and shader compilation
+        times.
+      </p>
+
+      <h5>Materials</h5>
+      <p>
+        In the engine, materials correspond to GLSL programs. Each drawable primitive is created
+        with a PBR material which is generated to exactly match only the features and aspects that
+        the primitive has. The material system is modular and easily extendible and also includes textured,
+        attribute visualising and Lambertian materials. There are also materials
+        for the environment map, the generation of IBL data and a depth pre-pass. Shader authoring and
+        integration is simple and new materials can be added to the engine easily.
+      </p>
+
+      <h5>Physically Based Rendering</h5>
+      <p>
+        The engine uses physically based rendering (PBR) and image based lighting (IBL). We use
+        a Lambertian diffuse lobe and the Cook-Torrance BRDF for the specular lobe. We use the
+        Trowbridge-Reitz (GGX) microfacet distribution function, the Smith visibility/shadowing
+        function and the Schlick Fresnel approximation.
+      </p>
+
+      <div class="row">
+        <img class="img ten columns offset-by-one columns" src="./images/renderer_pbr.jpg">
+      </div>
+      <p align="center">The renderer makes use of data and colour textures to render spatially varying materials
+        illuminated by the environment.</p>
+
+      <p>
+        HDR environment maps act as the source of illumination. Whenever a new HDR environment texture is selected, a
+        pre-processing program convolves the environment data and generates spherical harmonics matrices for diffuse
+        ambient light. Another shader generates a cubemap used for ambient specular light. The lower mip-levels store
+        pre-integrated specular reflections following the approaches found in <a
+          href="https://seblagarde.wordpress.com/wp-content/uploads/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf">Frostbite</a>
+        and <a href="https://google.github.io/filament/Filament.md.html">Filament</a>. We also generate a BRDF LUT as
+        described in those renderers. The red and green channels hold the scale and bias for the GGX BRDF and
+        the blue channels holds the DG term for the Charlie BRDF used for rendering sheen.
+      </p>
+
+      <div class="row">
+        <img class="img ten columns offset-by-one columns" src="./images/renderer_spheres.jpg">
+      </div>
+      <p align="center">The mip-levels of the environment cubemap store convolved specular reflections for varying
+        roughness. Diffuse illumination is stored as spherical harmonics matrices.</p>
+
+      <div class="row">
+        <img class="img one-third column offset-by-one-third column" src="./images/split_sum.jpg">
+      </div>
+
+      <p align="center">The renderer uses the popular split-sum approach for image based lighting. The BRDF LUT
+        holds data which depends only on the view direction and material roughness. Note this is the multiple
+        scattering variant based on Filament.</p>
+
+      <h5>Render order and performance</h5>
+      <p>
+        Although the primitives exist in a common node graph, we distinguish between opaque,
+        transmissive and transparent meshes and use render-passes to achieve correct blending. The
+        PBR materials can be quite heavy for a forward renderer in a browser. We use AABB culling to
+        exclude primitives which fall outside of the camera view frustum. This takes into consideration
+        node animations and updates the bounding volumes whenever anything in the scene changes.
+        We also use a depth pre-pass of all opaque geometry to avoid shading fragments which are hidden
+        by subsequent primitive rasterisation.
+      </p>
+
+      <p>
+        Morph targets and skinning use data textures to avoid attribute limits. Morphed geometry
+        has a texture array where each level is a square texture storing the interleaved attribute offset
+        data for one target. Skins store and update a texture which holds the transform matrices of their
+        joints.
+      </p>
+
+      <div class="row">
+        <img class="img ten columns offset-by-one columns" src="./images/renderer_examples_2.jpg">
+      </div>
+      <p align="center">The renderer supports sheen, unlimited morph targets and skinning. Vertex skin joint influence
+        is visualised in the last image.</p>
+
+
+    </section>
+
   </div>
   <!-- End Document
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -70,5 +181,20 @@
   <script type="text/javascript" src="maths.js"></script>
   <script type="module" src="renderer.js"></script>
 </body>
+
+<footer>
+  <div class="container">
+    <section class="footer" id="links">
+      <div class="navbar-spacer"></div>
+      <nav class="navbar footer-navbar">
+        <div class="container">
+          <ul class="navbar-list">
+            <li class="navbar-item"><a class="navbar-link" href="../../index.html">Home</a></li>
+          </ul>
+        </div>
+      </nav>
+  </div>
+  </section>
+</footer>
 
 </html>
