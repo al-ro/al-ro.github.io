@@ -3,7 +3,7 @@
   "scenes" : [ {
     "nodes" : [ 0, 1 ]
   } ],
-  
+
   "nodes" : [ {
     "skin" : 0,
     "mesh" : 0
@@ -13,7 +13,7 @@
   }, {
     "rotation" : [ 0.0, 0.0, 0.0, 1.0 ]
   } ],
-  
+
   "meshes" : [ {
     "primitives" : [ {
       "attributes" : {
@@ -29,7 +29,7 @@
     "inverseBindMatrices" : 4,
     "joints" : [ 1, 2 ]
   } ],
-  
+
   "animations" : [ {
     "channels" : [ {
       "sampler" : 0,
@@ -44,7 +44,7 @@
       "output" : 6
     } ]
   } ],
-  
+
   "buffers" : [ {
     "uri" : "skinGeometry.bin",
     "byteLength" : 168
@@ -58,7 +58,7 @@
     "uri" : "skinAnimation.bin",
     "byteLength" : 240
   } ],
-  
+
   "bufferViews" : [ {
     "buffer" : 0,
     "byteLength" : 48,
@@ -124,8 +124,9 @@
     "max" : [ 0.0, 0.0, 0.707, 1.0 ],
     "min" : [ 0.0, 0.0, -0.707, 0.707 ]
   } ],
- 
+
   "asset" : {
-    "version" : "2.0"
+    "version" : "2.0",
+    "copyright": "CC0"
   }
 }

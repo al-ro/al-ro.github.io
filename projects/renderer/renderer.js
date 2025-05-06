@@ -51,6 +51,9 @@ document.getElementById('canvas_overlay').appendChild(stats.dom);
 
 */
 
+let modelCopyright = "";
+let hdrCopyright = "";
+
 let models = new Map();
 models.set("Flight Helmet", "./gltf/flighthelmet/FlightHelmet.gltf");
 models.set("Multiple UVs", "./gltf/multiUVTest/MultiUVTest.gltf");
@@ -144,6 +147,19 @@ let buttons = {
   }
 };
 
+function setCopyrightText() {
+  document.getElementById("copyright-text").innerHTML = hdrCopyright + "<br>" + modelCopyright;
+}
+
+function setHDRCopyrightString(name) {
+  if (name == "Uffizi Gallery") {
+    hdrCopyright = "HDR: https://www.pauldebevec.com/Probes"
+  } else {
+    hdrCopyright = "HDR: https://polyhaven.com/"
+  }
+  setCopyrightText();
+}
+
 //************* GUI ***************
 
 let gui = new lil.GUI({ autoPlace: false });
@@ -162,7 +178,7 @@ const materialControls = materialFolder.add(materialSelector, 'material').option
 const outputControls = materialFolder.add(outputSelector, 'output').options(outputEnum).onChange(output => { setOutput(output) });
 
 const environmentFolder = gui.addFolder('Environment');
-environmentFolder.add(environmentController, 'environment').options(environmentNames).onChange(name => { environment.setHDR(environments.get(name)); });
+environmentFolder.add(environmentController, 'environment').options(environmentNames).onChange(name => { environment.setHDR(environments.get(name)); setHDRCopyrightString(name); });
 environmentFolder.add(environmentController, 'renderBackground');
 
 const transformFolder = gui.addFolder('Transform');
@@ -218,6 +234,7 @@ controls.onWindowResize();
 //************* GUI ***************
 
 environment = new Environment({ path: environments.get(environmentController.environment), type: "hdr", camera: camera });
+setHDRCopyrightString(environmentController.environment);
 
 let animationElements = [];
 let animationInterfaces = [];
@@ -266,6 +283,8 @@ function loadGLTF(model) {
   idleState.state = true;
 
   if (model == "NONE") {
+    modelCopyright = "<br>"
+    setCopyrightText();
     return;
   }
 
@@ -273,6 +292,15 @@ function loadGLTF(model) {
   gltfLoader.load(path, 0);
 
   gltfLoader.ready.then(p => {
+
+    if (gltfLoader.copyright != "") {
+      modelCopyright = "Model: " + gltfLoader.copyright;
+    } else {
+      modelCopyright = "<br>";
+    }
+
+    setCopyrightText();
+
     let object = gltfLoader.getObjects();
     centerAndScale(object);
     scene.add(object);

@@ -1,7 +1,8 @@
 {
 	"asset": {
 		"generator": "Khronos glTF Blender I/O v3.6.27",
-		"version": "2.0"
+		"version": "2.0",
+		"copyright": "Ka Yin Lee and Super Genius https://leekayin.com/projects/amkDR"
 	},
 	"scene": 0,
 	"scenes": [

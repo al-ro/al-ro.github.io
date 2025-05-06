@@ -1,7 +1,8 @@
 {
     "asset": {
         "generator": "COLLADA2GLTF",
-        "version": "2.0"
+        "version": "2.0",
+        "copyright": "2006 Sony Computer Entertainment Inc. SCEA Shared Source License, Version 1.0"
     },
     "scene": 0,
     "scenes": [

@@ -1,7 +1,8 @@
 {
   "asset": {
     "generator": "glTF-Transform v3.7.0",
-    "version": "2.0"
+    "version": "2.0",
+    "copyright": "Rajil Jose Macatangay CC0"
   },
   "accessors": [
     {
