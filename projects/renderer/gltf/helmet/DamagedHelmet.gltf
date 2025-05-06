@@ -1,7 +1,8 @@
 {
   "asset": {
     "generator": "glTF-Transform v3.7.0",
-    "version": "2.0"
+    "version": "2.0",
+    "copyright": "PBR by theblueturtle_, Creative Commons Attribution-NonCommercial, https://sketchfab.com/models/b81008d513954189a063ff901f7abfe4"
   },
   "accessors": [
     {

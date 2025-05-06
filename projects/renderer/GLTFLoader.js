@@ -75,6 +75,9 @@ export class GLTFLoader {
   /** All animations from the GLTF */
   animations = [];
 
+  /** Asset copyright text */
+  copyright = "";
+
   constructor() {
     let loader = this;
     this.ready = new Promise(function (resolve, reject) { loader.setReady = resolve; });
@@ -163,6 +166,14 @@ export class GLTFLoader {
     this.bufferRepository = new BufferRepository();
 
     this.json = json;
+
+    this.copyright = "";
+
+    if (json.asset) {
+      if (json.asset.copyright) {
+        this.copyright = json.asset.copyright;
+      }
+    }
 
     if (json.extensionsUsed) {
       for (const extension of json.extensionsUsed) {
