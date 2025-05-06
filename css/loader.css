@@ -1,5 +1,3 @@
-// https://loading.io/css/
-
 .lds-dual-ring {
   position: absolute;
   display: inline-block;
@@ -28,12 +26,13 @@
   animation: spin 1s infinite;
   opacity: 75%;
 }
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);
   }
+
   99% {
     transform: rotate(360deg);
   }
 }
-
