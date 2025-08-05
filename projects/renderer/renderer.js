@@ -80,6 +80,7 @@ models.set("Sheen Chair", "./gltf/chair/SheenChair.gltf");
 models.set("Simple Skin", "./gltf/skin/SimpleSkin.gltf");
 models.set("Dragon", "./gltf/dragon/dragon.gltf");
 models.set("Brain Stem", "./gltf/brainStem/BrainStem.gltf");
+models.set("Stanford Dragon", "./gltf/stanfordDragon/scene.gltf");
 
 let modelNames = Array.from(models.keys());
 modelNames.sort();
