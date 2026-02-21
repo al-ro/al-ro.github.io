@@ -2,7 +2,7 @@ import { getMorphTargetDeclarationString, getMorphTargetCalculationString, getSk
 
 function getVertexSource(parameters) {
 
-  var vertexSource = /*GLSL*/`
+  var vertexSource = /*glsl*/`
 
   #define DEBUG
 
@@ -47,7 +47,7 @@ layout(std140) uniform cameraMatrices{
     out mat3 tbn;
 #endif
 
-`+ getSkinDeclarationString() + /*GLSL*/`
+`+ getSkinDeclarationString() + /*glsl*/`
 
   #if defined(DEBUG) && defined(HAS_SKIN)
     out vec4 joints_0;
@@ -66,7 +66,7 @@ layout(std140) uniform cameraMatrices{
     }
   #endif
 
-  `+ getMorphTargetDeclarationString() + /*GLSL*/`
+  `+ getMorphTargetDeclarationString() + /*glsl*/`
 
   out vec3 vPosition;
 
@@ -83,15 +83,15 @@ layout(std140) uniform cameraMatrices{
 #ifdef HAS_NORMALS
 
     vec3 normal = NORMAL.xyz;
-    `+ getMorphTargetCalculationString("NORMAL") + /*GLSL*/`
+    `+ getMorphTargetCalculationString("NORMAL") + /*glsl*/`
     vec4 transformedNormal = normalMatrix * vec4(normal, 0.0);
 #endif
 
     vec3 position = POSITION.xyz;
-    `+ getMorphTargetCalculationString("POSITION") + /*GLSL*/`
+    `+ getMorphTargetCalculationString("POSITION") + /*glsl*/`
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
 
-`+ getSkinCalculationString() + /*GLSL*/`
+`+ getSkinCalculationString() + /*glsl*/`
 
 #if defined(DEBUG) && defined(HAS_SKIN)
     joints_0.rgb =
@@ -108,7 +108,7 @@ layout(std140) uniform cameraMatrices{
     vec3 N = normalize(vec3(transformedNormal));
 
     vec3 tangent = TANGENT.xyz;
-    `+ getMorphTargetCalculationString("TANGENT") + /*GLSL*/`
+    `+ getMorphTargetCalculationString("TANGENT") + /*glsl*/`
 
     vec3 T = normalize(vec3(normalMatrix * vec4(tangent.xyz, 0.0)));
     T = normalize(T - dot(T, N) * N);
@@ -130,7 +130,7 @@ layout(std140) uniform cameraMatrices{
 
 function getFragmentSource() {
 
-  var fragmentSource = /*GLSL*/`
+  var fragmentSource = /*glsl*/`
 
   out vec4 fragColor;
 

@@ -105,7 +105,7 @@ function getDefinePrefix(material, geometry, attributes) {
 }
 
 function getMorphTargetDeclarationString() {
-  return /*GLSL*/`
+  return /*glsl*/`
 
   #ifdef MORPH_TARGETS
     uniform float[MORPH_TARGETS] morphTargetWeights;
@@ -128,10 +128,10 @@ function getMorphTargetDeclarationString() {
  * @returns shader string of morphed attributes
  */
 function getMorphTargetCalculationString(name) {
-  return /*GLSL*/`
-  #ifdef ` + name + /*GLSL*/`_MORPH_TARGET
+  return /*glsl*/`
+  #ifdef ` + name + /*glsl*/`_MORPH_TARGET
     for(int i = 0; i < MORPH_TARGETS; i++){
-      ` + name.toLowerCase() + /*GLSL*/` += morphTargetWeights[i] * getMorphTargetValue(i, ` + name + /*GLSL*/`_MORPH_TARGET);
+      ` + name.toLowerCase() + /*glsl*/` += morphTargetWeights[i] * getMorphTargetValue(i, ` + name + /*glsl*/`_MORPH_TARGET);
     }
   #endif
 
@@ -139,7 +139,7 @@ function getMorphTargetCalculationString(name) {
 }
 
 function getSkinDeclarationString() {
-  return /*GLSL*/`
+  return /*glsl*/`
     #ifdef HAS_SKIN
 
     in vec4 JOINTS_0;
@@ -166,7 +166,7 @@ function getSkinDeclarationString() {
 }
 
 function getSkinCalculationString() {
-  return /*GLSL*/`
+  return /*glsl*/`
     #ifdef HAS_SKIN
 
       mat4 skinMatrix =
@@ -192,7 +192,7 @@ function getSkinCalculationString() {
 
 function getVertexSource(parameters) {
 
-  var vertexSource = /*GLSL*/`
+  var vertexSource = /*glsl*/`
 
   in vec3 POSITION;
 
@@ -247,7 +247,7 @@ layout(std140) uniform cameraMatrices{
 #endif
 
 #ifdef HAS_NORMALS
-    `+ getMorphTargetCalculationString("NORMAL") + /*GLSL*/`
+    `+ getMorphTargetCalculationString("NORMAL") + /*glsl*/`
     vec4 transformedNormal = normalMatrix * vec4(normal, 0.0);
     vNormal = transformedNormal.xyz;
 #endif
@@ -255,14 +255,14 @@ layout(std140) uniform cameraMatrices{
 #ifdef HAS_TANGENTS
     // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
     vec3 N = normalize(vec3(transformedNormal));
-    `+ getMorphTargetCalculationString("TANGENT") +/*GLSL*/`
+    `+ getMorphTargetCalculationString("TANGENT") +/*glsl*/`
     vec3 T = normalize(vec3(normalMatrix * vec4(tangent.xyz, 0.0)));
     T = normalize(T - dot(T, N) * N);
     vec3 B = normalize(cross(N, T)) * TANGENT.w;
     tbn = mat3(T, B, N);
 #endif 
 
-    `+ getMorphTargetCalculationString("POSITION") + /*GLSL*/`
+    `+ getMorphTargetCalculationString("POSITION") + /*glsl*/`
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
     vPosition = transformedPosition.xyz;
     gl_Position = projectionMatrix * viewMatrix * transformedPosition;

@@ -1,6 +1,6 @@
 function getVertexSource() {
 
-  var vertexSource = /*GLSL*/`
+  var vertexSource = /*glsl*/`
 
     in vec3 POSITION;
 
@@ -14,7 +14,7 @@ function getVertexSource() {
 
 function getFragmentSource() {
 
-  var fragmentSource = /*GLSL*/`
+  var fragmentSource = /*glsl*/`
 
 /*
 

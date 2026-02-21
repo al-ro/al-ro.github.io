@@ -2,7 +2,7 @@ import { getMorphTargetDeclarationString, getMorphTargetCalculationString, getSk
 
 function getVertexSource(parameters) {
 
-  var vertexSource = /*GLSL*/`
+  var vertexSource = /*glsl*/`
 
   in vec3 POSITION;
 #ifdef HAS_NORMALS
@@ -24,8 +24,8 @@ function getVertexSource(parameters) {
   out vec3 vPosition;
 #endif
 
-  `+ getSkinDeclarationString() + /*GLSL*/`
-  `+ getMorphTargetDeclarationString() + /*GLSL*/`
+  `+ getSkinDeclarationString() + /*glsl*/`
+  `+ getMorphTargetDeclarationString() + /*glsl*/`
 
   void main(){
 
@@ -39,7 +39,7 @@ function getVertexSource(parameters) {
     vec4 transformedNormal = normalMatrix * vec4(normal, 0.0);
 #endif
 
-  `+ getSkinCalculationString() + /*GLSL*/`
+  `+ getSkinCalculationString() + /*glsl*/`
 
 #ifdef HAS_NORMALS
     vNormal = transformedNormal.xyz;
@@ -56,7 +56,7 @@ function getVertexSource(parameters) {
 
 function getFragmentSource() {
 
-  var fragmentSource = /*GLSL*/`
+  var fragmentSource = /*glsl*/`
 
 
 #ifdef HAS_NORMALS

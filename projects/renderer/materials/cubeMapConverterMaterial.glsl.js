@@ -1,6 +1,6 @@
 function getVertexSource(parameters) {
 
-  var vertexSource = /*GLSL*/`
+  var vertexSource = /*glsl*/`
 
   in vec3 POSITION;
   out vec3 vPosition;
@@ -16,7 +16,7 @@ function getVertexSource(parameters) {
 
 function getFragmentSource() {
 
-  var fragmentSource = /*GLSL*/`
+  var fragmentSource = /*glsl*/`
 
   const float PI = 3.1415926535;
   const float TWO_PI = 2.0 * PI;

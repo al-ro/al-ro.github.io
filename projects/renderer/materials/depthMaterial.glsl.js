@@ -2,7 +2,7 @@ import { getMorphTargetDeclarationString, getMorphTargetCalculationString, getSk
 
 function getVertexSource() {
 
-  var vertexSource = /*GLSL*/`
+  var vertexSource = /*glsl*/`
 
   in vec3 POSITION;
 
@@ -31,8 +31,8 @@ function getVertexSource() {
 
   uniform mat4 modelMatrix;
 
-  `+ getSkinDeclarationString() + /*GLSL*/`
-  `+ getMorphTargetDeclarationString() + /*GLSL*/`
+  `+ getSkinDeclarationString() + /*glsl*/`
+  `+ getMorphTargetDeclarationString() + /*glsl*/`
 
   void main(){
 
@@ -48,7 +48,7 @@ function getVertexSource() {
   `+ getMorphTargetCalculationString("POSITION") + /*GLSL*/ `
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
 
-  `+ getSkinCalculationString() + /*GLSL*/`
+  `+ getSkinCalculationString() + /*glsl*/`
 
     gl_Position = projectionMatrix * viewMatrix * transformedPosition;
   }
@@ -59,7 +59,7 @@ function getVertexSource() {
 
 function getFragmentSource() {
 
-  var fragmentSource = /*GLSL*/`
+  var fragmentSource = /*glsl*/`
 
   out vec4 fragColor;
 

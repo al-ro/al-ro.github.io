@@ -2,7 +2,7 @@ import { getMorphTargetDeclarationString, getMorphTargetCalculationString, getSk
 
 function getVertexSource() {
 
-  var vertexSource = /*GLSL*/`
+  var vertexSource = /*glsl*/`
 
   in vec3 POSITION;
 #ifdef HAS_UV_0
@@ -21,8 +21,8 @@ function getVertexSource() {
   out vec2 vUV;
 #endif
 
-`+ getSkinDeclarationString() + /*GLSL*/`
-`+ getMorphTargetDeclarationString() + /*GLSL*/`
+`+ getSkinDeclarationString() + /*glsl*/`
+`+ getMorphTargetDeclarationString() + /*glsl*/`
 
   void main(){
 
@@ -34,7 +34,7 @@ function getVertexSource() {
     `+ getMorphTargetCalculationString("POSITION") + /*GLSL*/ `
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
 
-    `+ getSkinCalculationString() + /*GLSL*/`
+    `+ getSkinCalculationString() + /*glsl*/`
 
     gl_Position = projectionMatrix * viewMatrix * transformedPosition;
   }
@@ -45,7 +45,7 @@ function getVertexSource() {
 
 function getFragmentSource() {
 
-  var fragmentSource = /*GLSL*/`
+  var fragmentSource = /*glsl*/`
 
 
 #ifdef HAS_UV_0

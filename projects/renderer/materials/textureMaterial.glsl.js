@@ -2,7 +2,7 @@ import { getMorphTargetDeclarationString, getMorphTargetCalculationString, getSk
 
 function getVertexSource(parameters) {
 
-  var vertexSource = /*GLSL*/`
+  var vertexSource = /*glsl*/`
 
   in vec3 POSITION;
 
@@ -22,8 +22,8 @@ function getVertexSource(parameters) {
   out vec2 vUV;
 #endif
 
-  `+ getSkinDeclarationString() + /*GLSL*/`
-  `+ getMorphTargetDeclarationString() + /*GLSL*/`
+  `+ getSkinDeclarationString() + /*glsl*/`
+  `+ getMorphTargetDeclarationString() + /*glsl*/`
 
   void main(){
 
@@ -32,10 +32,10 @@ function getVertexSource(parameters) {
 #endif
 
     vec3 position = POSITION.xyz;
-    `+ getMorphTargetCalculationString("POSITION") + /*GLSL*/`
+    `+ getMorphTargetCalculationString("POSITION") + /*glsl*/`
     vec4 transformedPosition = modelMatrix * vec4(position, 1.0);
 
-    `+ getSkinCalculationString() + /*GLSL*/`
+    `+ getSkinCalculationString() + /*glsl*/`
 
     gl_Position = projectionMatrix * viewMatrix * transformedPosition;
   }
@@ -46,7 +46,7 @@ function getVertexSource(parameters) {
 
 function getFragmentSource() {
 
-  var fragmentSource = /*GLSL*/`
+  var fragmentSource = /*glsl*/`
 
     uniform sampler2D tex;
 #ifdef HAS_UV_0

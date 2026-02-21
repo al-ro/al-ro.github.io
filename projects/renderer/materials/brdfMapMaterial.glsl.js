@@ -1,6 +1,6 @@
 function getVertexSource() {
 
-  var vertexSource = /*GLSL*/`
+  var vertexSource = /*glsl*/`
 
     in vec3 POSITION;
 
@@ -14,7 +14,7 @@ function getVertexSource() {
 
 function getFragmentSource() {
 
-  var fragmentSource = /*GLSL*/`
+  var fragmentSource = /*glsl*/`
 
     const float PI = 3.1415926535;
     const float TWO_PI = 2.0 * PI;
@@ -111,7 +111,7 @@ function getFragmentSource() {
     float sheenDistribution(float NdotH, float roughness){
       float a = clamp(roughness * roughness, 1e-5, 1.0);
       float invR = 1.0 / a;
-      float cos2h = NdotH * NdotH;
+      float cos2h = clamp(NdotH * NdotH, 0.0, 1.0);
       float sin2h = 1.0 - cos2h;
       return (2.0 + invR) * pow(sin2h, invR * 0.5) / (2.0 * PI);
     }
