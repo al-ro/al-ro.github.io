@@ -20,27 +20,15 @@ let camera = new Renderer.Camera(
 let controls = new Renderer.Controls(camera);
 controls.onWindowResize();
 
-// Main texture where the scene is rendered
-let sceneTexture = Renderer.createAndSetupTexture();
-let sceneDepthTexture = Renderer.createAndSetupTexture();
-let width = 1;
-let height = 1;
-gl.activeTexture(gl.TEXTURE0);
-gl.bindTexture(gl.TEXTURE_2D, sceneTexture);
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB8, width, height, 0, gl.RGB, gl.UNSIGNED_BYTE, null);
-gl.bindTexture(gl.TEXTURE_2D, sceneDepthTexture);
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, width, height, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
-let sceneRenderTarget = new Renderer.RenderTarget(sceneTexture, sceneDepthTexture);
-
 // Render target for particle data
 let dataTexture0 = Renderer.createAndSetupTexture();
 let dataTexture1 = Renderer.createAndSetupTexture();
 gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, dataTexture0);
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, null);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 1, 1, 0, gl.RGBA, gl.FLOAT, null);
 gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, dataTexture1);
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, null);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 1, 1, 0, gl.RGBA, gl.FLOAT, null);
 let curlRenderTarget = new Renderer.RenderTarget(dataTexture0, null);
 curlRenderTarget.internalFormat = gl.RGBA32F;
 curlRenderTarget.format = gl.RGBA;
@@ -48,14 +36,9 @@ curlRenderTarget.type = gl.FLOAT;
 
 // -------------------- Meshes --------------------- //
 
-let sceneQuad = Renderer.getScreenspaceQuad();
-let sceneMaterial = new Renderer.ScreenspaceMaterial(sceneTexture);
-let sceneMesh = new Renderer.Mesh({ geometry: sceneQuad, material: sceneMaterial });
-sceneMesh.cull = false;
-
 let curlMaterial = new CurlMaterial(noiseTexture);
 curlMaterial.setRenderTextures(dataTexture0, dataTexture1);
-let curlMesh = new Renderer.Mesh({ geometry: sceneQuad, material: curlMaterial });
+let curlMesh = new Renderer.Mesh({ geometry: Renderer.getScreenspaceQuad(), material: curlMaterial });
 curlMesh.cull = false;
 
 let particleMaterial = new ParticleMaterial(curlMaterial.thisFrameTexture);
@@ -163,8 +146,7 @@ function draw() {
   gl.depthFunc(gl.ALWAYS);
   Renderer.render(Renderer.RenderPass.OPAQUE, curlMesh);
 
-  sceneRenderTarget.setSize(gl.canvas.width, gl.canvas.height);
-  sceneRenderTarget.bind();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
   gl.clearDepth(1.0);
@@ -178,13 +160,6 @@ function draw() {
   gl.depthMask(true);
   gl.depthFunc(gl.LEQUAL);
   Renderer.render(Renderer.RenderPass.OPAQUE, particleMesh);
-
-  // Output render target color texture to screen
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  gl.depthMask(false);
-  gl.depthFunc(gl.ALWAYS);
-  //sceneMesh.material.texture = curlMesh.material.thisFrameTexture;
-  Renderer.render(Renderer.RenderPass.OPAQUE, sceneMesh);
 }
 
 render();

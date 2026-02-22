@@ -31,7 +31,7 @@ export class RenderTarget {
       this.attachTexture(depthTexture, gl.DEPTH_ATTACHMENT);
     }
     if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
-      console.log("Render target framebuffer incomplete:", gl.checkFramebufferStatus(gl.FRAMEBUFFER), this);
+      console.log("Render target framebuffer incomplete:", this);
     }
   }
 
@@ -41,12 +41,12 @@ export class RenderTarget {
 
   setColorTexture(texture) {
     this.colorTexture = texture;
-    this.attachTexture(this.colorTexture, gl.COLOR_ATTACHMENT0);
+    this.attachTexture(texture, gl.COLOR_ATTACHMENT0);
   }
 
   setDepthTexture(texture) {
     this.depthTexture = texture;
-    this.attachTexture(this.depthTexture, gl.DEPTH_ATTACHMENT);
+    this.attachTexture(texture, gl.DEPTH_ATTACHMENT);
   }
 
   setSize(width, height) {
