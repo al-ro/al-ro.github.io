@@ -1,4 +1,4 @@
-//Cloth dynamics based on the tutorial at 
+//Cloth dynamics based on the tutorial at
 //https://gamedevelopment.tutsplus.com/tutorials/simulate-tearable-cloth-and-ragdolls-with-simple-verlet-integration--gamedev-519
 
 const mobile = ( navigator.userAgent.match(/Android/i)
@@ -60,7 +60,7 @@ function generate_noise(){
       // All noise functions return values in the range of -1 to 1
       var value = noise.simplex2(x/width, y/height);
       //Set noise element to be a positive value of the simplex noise result for gusts in the wind field
-      _noise.push(Math.abs(value)); 
+      _noise.push(Math.abs(value));
     }
   }
 }
@@ -95,7 +95,7 @@ var wind_variables = {
 }
 
 //dat.gui library controls
-var gui = new dat.GUI({ autoPlace: false });
+var gui = new lil.GUI({ autoPlace: false });
 var customContainer = document.getElementById('gui_container');
 customContainer.appendChild(gui.domElement);
 var f0 = gui.addFolder('Cloth solver');
@@ -131,7 +131,7 @@ function create_links(){
   for (i = 0; i < (nodes.length-1); i++) {
     if(((i+1)%width) > 0){
       var link = {
-        first: i, 
+        first: i,
         second: i+1
       };
       links.push(link);
@@ -141,7 +141,7 @@ function create_links(){
   //Y links
   for (i = 0; i < (nodes.length-width); i++) {
     var link = {
-      first: i, 
+      first: i,
       second: i+width
     };
     links.push(link);
@@ -385,13 +385,13 @@ function move(dt, t) {
   for(i = 0; i < nodes.length; i++){
     if(nodes[i].x < 10){
       nodes[i].x = 10;
-    }  
+    }
     if(nodes[i].y < 10){
       nodes[i].y = 10;
     }
     if(nodes[i].x > canvas_1.width-10){
       nodes[i].x = canvas_1.width-10;
-    }  
+    }
     if(nodes[i].y > canvas_1.height-10){
       nodes[i].y = canvas_1.height-10;
     }
@@ -438,7 +438,7 @@ function draw() {
   //Draw nodes. Default radius is 0
   for (i = 0; i < nodes.length; i++) {
     ctx.beginPath();
-    ctx.arc(nodes[i].x, nodes[i].y, nodes[i].radius, 0, TWO_PI); 
+    ctx.arc(nodes[i].x, nodes[i].y, nodes[i].radius, 0, TWO_PI);
     ctx.fill();
   }
 
